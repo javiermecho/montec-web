@@ -1,0 +1,20 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Servir la raíz desde dist/index.html
+  RewriteRule ^$ dist/index.html [L]
+
+  # 2. Si el archivo solicitado existe exactamente en la raíz, servirlo
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3. Si el archivo existe dentro de dist (assets, favicons, etc.), reescribir a dist/
+  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f [OR]
+  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -d
+  RewriteRule ^(.*)$ dist/$1 [L]
+
+  # 4. Enrutamiento SPA general: redirigir cualquier otra ruta a dist/index.html
+  RewriteRule . dist/index.html [L]
+</IfModule>
