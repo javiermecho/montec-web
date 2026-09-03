@@ -175,9 +175,8 @@ export default function QuotationTool() {
     `%0A🔬 *Modalidad / Repuesto:* ${estimate.selectedModality.name} (${estimate.selectedModality.iosNotice})`
   ) : '';
   const qualityText = (!estimate?.isIphoneSpecialized && estimate?.qualityLabel) ? `%0A💎 *Calidad:* ${estimate.qualityLabel} (100% Sin Incell/TFT)` : '';
-  const dolarText = estimate?.dolarRate ? `%0A💵 *Dólar Blue:* $${estimate.dolarRate.toLocaleString('es-AR')}` : '';
 
-  const whatsappMessage = `¡Hola montec! Vengo de la web y coticé una reparación:%0A%0A📱 *Equipo:* ${currentModelName}%0A🛠️ *Falla:* ${issueName}${iphoneModalityText}${qualityText}${dolarText}%0A💰 *Presupuesto estimado web:* ${priceRangeStr}%0A⏱️ *Tiempo estimado:* ${estimate?.duration || 'A coordinar'}%0A🛡️ *Garantía:* ${estimate?.warranty || '30 días escrita'}%0A%0A¿Tienen disponibilidad para que me acerque al local de Montes Carballo 943?`;
+  const whatsappMessage = `¡Hola montec! Vengo de la web y coticé una reparación:%0A%0A📱 *Equipo:* ${currentModelName}%0A🛠️ *Falla:* ${issueName}${iphoneModalityText}${qualityText}%0A💰 *Presupuesto estimativo web:* ${priceRangeStr}%0A⏱️ *Tiempo estimado:* 2 a 3 horas (con cita previa: 45 minutos)%0A🛡️ *Garantía:* ${estimate?.warranty || '30 días escrita'}%0A%0A¿Me confirmás la disponibilidad y el precio final para que me acerque al local de Montes Carballo 943?`;
 
   const whatsappLink = `https://wa.me/5492235000000?text=${whatsappMessage}`;
 
@@ -602,19 +601,10 @@ export default function QuotationTool() {
                     </div>
                   </div>
                 )}
-
-                {/* Cotización Dólar Blue en Vivo */}
-                <div className="flex items-center justify-between text-[11px] text-zinc-400 mt-3 pt-2 border-t border-zinc-800/60">
-                  <span className="flex items-center gap-1.5 text-emerald-400/90 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    Dólar Blue Venta: ${estimate?.dolarRate ? estimate.dolarRate.toLocaleString('es-AR') : '1.545'}
-                  </span>
-                  <span className="text-[10px] text-zinc-500">Mano de obra mín. $30.000</span>
-                </div>
               </div>
 
               {/* Tiempos y Garantías */}
-              <div className="space-y-3 mb-6 bg-zinc-950/60 p-4 rounded-xl border border-zinc-800/80">
+              <div className="space-y-3 mb-4 bg-zinc-950/60 p-4 rounded-xl border border-zinc-800/80">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-[#FF5500]/10 text-[#FF5500]">
                     <Clock className="w-4 h-4" />
@@ -622,7 +612,7 @@ export default function QuotationTool() {
                   <div>
                     <div className="text-[11px] text-zinc-400 font-medium">Tiempo de trabajo:</div>
                     <div className="text-xs sm:text-sm font-bold text-zinc-200">
-                      {estimate?.duration}
+                      De 2 a 3 horas <span className="text-[#FF5500] text-xs font-semibold block sm:inline sm:ml-1">• Con cita previa: 45 min</span>
                     </div>
                   </div>
                 </div>
@@ -634,10 +624,17 @@ export default function QuotationTool() {
                   <div>
                     <div className="text-[11px] text-zinc-400 font-medium">Garantía montec:</div>
                     <div className="text-xs sm:text-sm font-bold text-zinc-200">
-                      {estimate?.warranty}
+                      {estimate?.warranty || '30 días escrita'}
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Aclaración Precios Estimativos */}
+              <div className="mb-6 p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 text-center">
+                <p className="text-xs text-amber-300 font-medium leading-snug">
+                  ⚠️ <strong>Precios estimativos:</strong> Sujetos a confirmación final vía WhatsApp según stock y diagnóstico físico del equipo.
+                </p>
               </div>
 
               {/* Botón CTA Derivación a WhatsApp */}

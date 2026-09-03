@@ -20,8 +20,8 @@ export default function MontecLogo({ size = 'md', className = '' }) {
     <div className={`inline-flex items-center select-none ${className}`}>
       <img
         src="/logo-montec.png"
-        alt="montec - Servicio Técnico y Accesorios"
-        className={`${currentHeight} w-auto object-contain drop-shadow-[0_0_16px_rgba(255,85,0,0.45)] transition-all duration-300 hover:drop-shadow-[0_0_24px_rgba(255,85,0,0.7)] hover:scale-[1.02]`}
+        alt="montec"
+        className={`${currentHeight} w-auto object-contain transition-all duration-200 hover:opacity-95`}
       />
     </div>
   );
