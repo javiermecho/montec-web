@@ -1,0 +1,22 @@
+{
+  "name": "montec-backend",
+  "version": "1.0.0",
+  "description": "Backend API REST y Módulo Scraper de Repuestos para montec Mar del Plata",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "scrape": "node scraper/index.js",
+    "db:init": "node db/init.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.13.3"
+  },
+  "keywords": ["montec", "repair", "scraper", "railway", "postgresql"]
+}
