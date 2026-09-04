@@ -375,7 +375,7 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
     }
 
     return result;
-  }, [allParts, selectedProvider, selectedBrand, selectedCategory, onlyInStock, searchTerm, sortBy]);
+  }, [allParts, selectedProvider, selectedBrand, selectedCategoryKeys, onlyInStock, searchTerm, sortBy, exactModelMatch]);
 
   // Copiar presupuesto o detalle del repuesto
   const handleCopyQuote = (part) => {
