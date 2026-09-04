@@ -41,6 +41,29 @@ export const VALID_MODULES = ALL_RAW_MODULES.filter(part => {
   return /MODULO|PANTALLA/i.test(upper);
 });
 
+// Repuestos de baterías para celulares
+export const VALID_BATTERIES = ALL_RAW_MODULES.filter(part => {
+  const upper = part.raw_name.toUpperCase();
+  if (/CONECTOR|FPC|PIN DE CARGA|CAMARA|LENTE|TAPA|BANDEJA|SUBPLACA|PLACA|HUELLA|HERRAMIENTA|ADHESIVO/i.test(upper)) return false;
+  return /BATERIA/i.test(upper);
+});
+
+// Repuestos de placas de carga / subplacas / pines
+export const VALID_CHARGING_BOARDS = ALL_RAW_MODULES.filter(part => {
+  const upper = part.raw_name.toUpperCase();
+  if (/HERRAMIENTA|ADHESIVO/i.test(upper)) return false;
+  return /PLACA DE CARGA|SUBPLACA|PIN DE CARGA/i.test(upper);
+});
+
+// Repuestos de parlantes / altavoces / buzzers
+export const VALID_SPEAKERS = ALL_RAW_MODULES.filter(part => {
+  const upper = part.raw_name.toUpperCase();
+  return /PARLANTE|ALTAVOZ|BUZZER/i.test(upper);
+});
+
+// Mano de obra fijada para Android en Batería, Placa de Carga y Parlantes
+export const ANDROID_PARTS_LABOR_ARS = 35000;
+
 // Parámetros de reglas de negocio
 export const PRICING_RULES = {
   MIN_LABOR_ARS: 30000,    // Mano de obra mínima garantizada
@@ -187,3 +210,91 @@ export function calculateModuleEstimate(modelName, brand, dolarRate = DEFAULT_FA
     badge: 'Repuesto de Proveedor MDP (Sin Incell)'
   };
 }
+
+/**
+ * Calcula cotización para baterías, placas de carga y parlantes en Android
+ * agregando exactamente $35.000 de mano de obra al costo del repuesto.
+ */
+export function calculateAndroidPartEstimate(issueId, modelName, brand = '', dolarRate = DEFAULT_FALLBACK_RATE) {
+  let partsList = [];
+  let fallbackCost = { min: 12000, max: 18000 };
+
+  if (issueId === 'battery') {
+    partsList = VALID_BATTERIES;
+    fallbackCost = { min: 12000, max: 19000 };
+  } else if (issueId === 'charging-port') {
+    partsList = VALID_CHARGING_BOARDS;
+    fallbackCost = { min: 6000, max: 12000 };
+  } else if (issueId === 'speaker') {
+    partsList = VALID_SPEAKERS;
+    fallbackCost = { min: 4000, max: 9000 };
+  } else {
+    return null;
+  }
+
+  const labor = ANDROID_PARTS_LABOR_ARS; // $35.000 fijados para Android
+  const tokens = extractCoreTokens(modelName);
+  const normBrand = (brand || '').toLowerCase();
+
+  const matches = partsList.filter(part => {
+    const partBrand = (part.brand || '').toLowerCase();
+    if (normBrand && partBrand && partBrand !== normBrand && !part.raw_name.toLowerCase().includes(normBrand)) {
+      return false;
+    }
+    const partName = part.raw_name.toLowerCase();
+    return tokens.every(tok => {
+      if (tok === '5g' || tok === '4g') return true;
+      const r = new RegExp('(\\b|[^a-z0-9])' + tok + '(\\b|[^a-z0-9])', 'i');
+      return r.test(partName);
+    });
+  });
+
+  let targetMatches = matches;
+  if (issueId === 'charging-port') {
+    const boardMatches = matches.filter(m => /PLACA DE CARGA|SUBPLACA/i.test(m.raw_name));
+    if (boardMatches.length > 0) targetMatches = boardMatches;
+  }
+
+  if (targetMatches.length > 0) {
+    const costs = targetMatches.map(m => m.cost_ars ? m.cost_ars : Math.round((m.cost_usd || 0) * dolarRate)).filter(c => c > 0);
+    const minPartCost = Math.min(...costs);
+    const maxPartCost = Math.max(...costs);
+
+    const minPrice = Math.round((minPartCost + labor) / 500) * 500;
+    const maxPrice = Math.round((maxPartCost + labor) / 500) * 500;
+
+    const bestOption = targetMatches.find(m => (m.cost_ars || Math.round((m.cost_usd || 0) * dolarRate)) === minPartCost) || targetMatches[0];
+
+    return {
+      success: true,
+      isDirectMatch: true,
+      minPrice,
+      maxPrice,
+      partCostArs: minPartCost,
+      laborArs: labor,
+      optionsCount: matches.length,
+      bestOption,
+      qualityLabel: 'Repuesto Original / Premium',
+      badge: `Mano de Obra $${labor.toLocaleString('es-AR')}`,
+      notes: `Repuesto ($${minPartCost.toLocaleString('es-AR')}) + Mano de obra de laboratorio ($${labor.toLocaleString('es-AR')})`
+    };
+  }
+
+  // Fallback con costo promedio estimado de repuesto + $35.000 de mano de obra
+  const minPrice = Math.round((fallbackCost.min + labor) / 500) * 500;
+  const maxPrice = Math.round((fallbackCost.max + labor) / 500) * 500;
+
+  return {
+    success: true,
+    isDirectMatch: false,
+    minPrice,
+    maxPrice,
+    partCostArs: fallbackCost.min,
+    laborArs: labor,
+    optionsCount: 1,
+    qualityLabel: 'Repuesto Original / Premium',
+    badge: `Mano de Obra $${labor.toLocaleString('es-AR')}`,
+    notes: `Repuesto estimado + Mano de obra de laboratorio ($${labor.toLocaleString('es-AR')})`
+  };
+}
+

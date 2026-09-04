@@ -36,22 +36,36 @@ export const ISSUE_TYPES = [
     icon: 'BatteryCharging',
     basePrices: {
       iphone: { min: 38000, max: 75000 },
-      android: { min: 24000, max: 42000 },
+      android: { min: 45000, max: 55000 }, // Repuesto (~$10.000-$20.000) + $35.000 mano de obra
       notebook: { min: 48000, max: 95000 }
     }
   },
   {
     id: 'charging-port',
-    name: 'Pin / Puerto de Carga',
-    description: 'Falso contacto, no carga, cable flojo o suciedad compactada.',
+    name: 'Pin / Placa de Carga',
+    description: 'Falso contacto, no carga, humedad o reemplazo de subplaca de carga completa.',
     duration: 'En 45 a 90 min',
     warranty: '90 días de garantía escrita',
     badge: 'Limpieza o Reemplazo',
     icon: 'Zap',
     basePrices: {
       iphone: { min: 25000, max: 48000 },
-      android: { min: 18000, max: 32000 },
+      android: { min: 40000, max: 48000 }, // Repuesto (~$5.000-$13.000) + $35.000 mano de obra
       notebook: { min: 35000, max: 62000 }
+    }
+  },
+  {
+    id: 'speaker',
+    name: 'Parlante / Altavoz / Buzzer',
+    description: 'Sin sonido en llamadas/música, sonido distorsionado, fritura o bajo volumen.',
+    duration: 'En 40 a 60 min',
+    warranty: '90 días de garantía escrita',
+    badge: 'Sonido Nítido',
+    icon: 'Volume2',
+    basePrices: {
+      iphone: { min: 35000, max: 65000 },
+      android: { min: 39000, max: 45000 }, // Repuesto (~$4.000-$10.000) + $35.000 mano de obra
+      notebook: { min: 42000, max: 75000 }
     }
   },
   {

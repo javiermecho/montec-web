@@ -18,7 +18,8 @@ import {
   X,
   Calculator,
   Wrench,
-  ArrowRight
+  ArrowRight,
+  Volume2
 } from 'lucide-react';
 import { DEVICE_TYPES } from '../data/repairData';
 import { useData } from '../context/DataContext';
@@ -181,6 +182,7 @@ export default function QuotationTool() {
       case 'screen': return <Maximize2 className="w-5 h-5 text-[#FF5500]" />;
       case 'battery': return <BatteryCharging className="w-5 h-5 text-[#FF5500]" />;
       case 'charging-port': return <Zap className="w-5 h-5 text-[#FF5500]" />;
+      case 'speaker': return <Volume2 className="w-5 h-5 text-[#FF5500]" />;
       case 'motherboard': return <Cpu className="w-5 h-5 text-[#FF5500]" />;
       case 'back-glass': return <Smartphone className="w-5 h-5 text-[#FF5500]" />;
       case 'thermal-maintenance': return <Fan className="w-5 h-5 text-[#FF5500]" />;
@@ -683,6 +685,17 @@ export default function QuotationTool() {
                     <span>Calidad: <strong>{estimate.qualityLabel}</strong> (100% Libre de TFT/Incell)</span>
                   </div>
                 ) : null}
+
+                {/* Badge Mano de Obra Especializada Android ($35.000) */}
+                {estimate?.laborArs === 35000 && (
+                  <div className="mb-3 px-3 py-2 rounded-xl bg-[#FF5500]/10 border border-[#FF5500]/30 text-xs text-zinc-300 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 text-zinc-300 font-medium">
+                      <Wrench className="w-4 h-4 text-[#FF5500]" />
+                      Mano de obra especializada:
+                    </span>
+                    <strong className="text-[#FF5500] font-mono font-bold">$35.000</strong>
+                  </div>
+                )}
 
                 <div className="text-3xl sm:text-4xl font-heading font-black text-white tracking-tight flex items-baseline gap-2">
                   <span className="text-[#FF5500] drop-shadow-[0_0_15px_rgba(255,85,0,0.4)]">

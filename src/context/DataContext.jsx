@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { MODELS_DATABASE, ISSUE_TYPES } from '../data/repairData';
 import { ACCESSORIES_DATABASE } from '../data/accessoriesData';
 import { fetchDolarBlueRate, DEFAULT_FALLBACK_RATE } from '../services/dolarService';
-import { calculateModuleEstimate, PRICING_RULES } from '../services/partsPricingEngine';
+import { calculateModuleEstimate, calculateAndroidPartEstimate, PRICING_RULES } from '../services/partsPricingEngine';
 import { 
   IPHONE_SCREEN_MODALITIES, 
   IPHONE_BATTERY_MODALITIES, 
@@ -17,7 +17,7 @@ const DataContext = createContext(null);
 
 const STORAGE_KEYS = {
   MODELS: 'montec_models_v7', // v7: catálogo limpio y canónico de teléfonos reales (sin conectores FPC, sin cadenas compuestas)
-  ISSUES: 'montec_issues_v2', // v2: incluye Reparación en Placa detallada y Cambio de Tapa Trasera
+  ISSUES: 'montec_issues_v3', // v3: incluye mano de obra de $35.000 para Android en batería, placas de carga y parlante
   ACCESSORIES: 'montec_accessories_v2', // v2 para actualizar datos de fotos
   PRICING_RULES: 'montec_pricing_rules_v1', // Reglas de márgenes y mano de obra Android
   IPHONE_CONFIGS: 'montec_iphone_configs_v2', // v2: Precios oficiales del gremio (iLab) y márgenes $30 a $100 USD
@@ -58,6 +58,8 @@ export function DataProvider({ children }) {
   // 2. Fallas y precios de reparación
   const [issues, setIssues] = useState(() => {
     try {
+      localStorage.removeItem('montec_issues_v2');
+      localStorage.removeItem('montec_issues_v1');
       const saved = localStorage.getItem(STORAGE_KEYS.ISSUES);
       return saved ? JSON.parse(saved) : ISSUE_TYPES;
     } catch {
@@ -456,6 +458,31 @@ export function DataProvider({ children }) {
           modelName: targetModelName,
           brand: targetBrand || (moduleEstimate.bestOption ? moduleEstimate.bestOption.brand : 'Genérico'),
           isDirectMatch: true,
+          dolarRate: dolarRate,
+          dolarInfo: dolarInfo
+        };
+      }
+    }
+
+    // B.2 LÓGICA ESPECIALIZADA PARA ANDROID: BATERÍAS, PLACAS DE CARGA Y PARLANTES (Mano de obra fija $35.000)
+    if (deviceType === 'android' && ['battery', 'charging-port', 'speaker'].includes(issueId) && targetModelName) {
+      const partEstimate = calculateAndroidPartEstimate(issueId, targetModelName, targetBrand, dolarRate);
+      if (partEstimate && partEstimate.success) {
+        return {
+          minPrice: partEstimate.minPrice,
+          maxPrice: partEstimate.maxPrice,
+          duration: issue.duration,
+          warranty: '90 días escrita',
+          issueName: issue.name,
+          issueBadge: partEstimate.badge,
+          qualityLabel: partEstimate.qualityLabel,
+          partCostArs: partEstimate.partCostArs,
+          laborArs: partEstimate.laborArs,
+          notes: partEstimate.notes,
+          bestOption: partEstimate.bestOption,
+          modelName: targetModelName,
+          brand: targetBrand || 'Genérico',
+          isDirectMatch: partEstimate.isDirectMatch,
           dolarRate: dolarRate,
           dolarInfo: dolarInfo
         };
