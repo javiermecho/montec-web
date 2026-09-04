@@ -16,11 +16,129 @@ import {
   XCircle,
   Tag,
   Share2,
-  TrendingUp
+  TrendingUp,
+  List,
+  LayoutGrid,
+  SlidersHorizontal,
+  Smartphone,
+  Wrench
 } from 'lucide-react';
 import { SMARTSUPPLY_PARTS, SMARTSUPPLY_PARTS_INFO } from '../../data/smartsupplyParts';
 import { GRUPOARMAR_PARTS, GRUPOARMAR_PARTS_INFO } from '../../data/grupoarmarParts';
 import { CELLSTORE_PARTS, CELLSTORE_PARTS_INFO } from '../../data/cellstoreParts';
+
+// Extractor inteligente de Modelo, Tipo de Repuesto y Calidad
+export function parsePartDetails(part) {
+  const name = part.name || '';
+  const upper = name.toUpperCase().trim();
+
+  // 1. Tipo de repuesto
+  let partType = 'Repuesto';
+  if (upper.startsWith('MODULO') || upper.startsWith('MODULOS')) partType = 'Módulo Display';
+  else if (upper.startsWith('BATERIA') || upper.startsWith('BATERIAS')) partType = 'Batería';
+  else if (upper.startsWith('PLACA DE CARGA') || upper.startsWith('SUBPLACA')) partType = 'Placa de Carga';
+  else if (upper.startsWith('PIN DE CARGA') || upper.startsWith('PIN ')) partType = 'Pin de Carga';
+  else if (upper.startsWith('TAPA')) partType = 'Tapa Trasera';
+  else if (upper.startsWith('CAMARA')) partType = 'Cámara';
+  else if (upper.startsWith('LENTE') || upper.startsWith('VIDRIO CAMARA')) partType = 'Vidrio Cámara';
+  else if (upper.startsWith('FLEX')) partType = 'Flex / Conector';
+  else if (upper.startsWith('PARLANTE') || upper.startsWith('BUZZER') || upper.startsWith('AURICULAR')) partType = 'Parlante / Audio';
+  else if (upper.startsWith('GLASS') || upper.startsWith('VIDRIO')) partType = 'Vidrio / Touch';
+  else if (part.part_type) {
+    partType = part.part_type.charAt(0).toUpperCase() + part.part_type.slice(1);
+  }
+
+  // 2. Calidad y Badges
+  const badges = [];
+  if (upper.includes('ORIGINAL SERVICE PACK') || upper.includes('SERVICE PACK')) {
+    badges.push({ text: 'SERVICE PACK', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' });
+  } else if (upper.includes('CALIDAD ORIGINAL') || upper.includes('ORIGINAL FOXCONN') || upper.includes(' ORIGINAL') || upper.endsWith(' ORIGINAL') || upper.startsWith('ORIGINAL')) {
+    badges.push({ text: 'ORIGINAL', color: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' });
+  }
+  
+  if (upper.includes('SOFT OLED')) {
+    badges.push({ text: 'SOFT OLED', color: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30' });
+  } else if (upper.includes('HARD OLED')) {
+    badges.push({ text: 'HARD OLED', color: 'bg-violet-500/15 text-violet-300 border-violet-500/30' });
+  } else if (upper.includes('OLED')) {
+    badges.push({ text: 'OLED', color: 'bg-purple-500/15 text-purple-300 border-purple-500/30' });
+  } else if (upper.includes('AMOLED')) {
+    badges.push({ text: 'AMOLED', color: 'bg-purple-500/15 text-purple-300 border-purple-500/30' });
+  } else if (upper.includes('INCELL')) {
+    badges.push({ text: 'INCELL', color: 'bg-amber-500/15 text-amber-300 border-amber-500/30' });
+  }
+
+  if (upper.includes('CON MARCO')) {
+    badges.push({ text: 'CON MARCO', color: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' });
+  }
+  if (upper.includes('CAMBIO IC') || upper.includes('CAMBIO DE IC') || upper.includes('APTO TRASPLANTE') || upper.includes('APTO TRANSPLANTE') || upper.includes('IC REMOVIBLE')) {
+    badges.push({ text: 'APTO IC', color: 'bg-pink-500/15 text-pink-300 border-pink-500/30' });
+  }
+  if (upper.includes('GX')) {
+    badges.push({ text: 'GX', color: 'bg-sky-500/15 text-sky-300 border-sky-500/30' });
+  }
+  if (upper.includes('JK')) {
+    badges.push({ text: 'JK', color: 'bg-blue-500/15 text-blue-300 border-blue-500/30' });
+  }
+  if (upper.includes('ZY')) {
+    badges.push({ text: 'ZY', color: 'bg-teal-500/15 text-teal-300 border-teal-500/30' });
+  }
+  if (upper.includes('ZANI') || upper.includes('CORE ZANI')) {
+    badges.push({ text: 'CORE ZANI', color: 'bg-blue-500/15 text-blue-300 border-blue-500/30' });
+  }
+  if (upper.includes('FLEX PROGRAMADO') || upper.includes('PRE PROGRAMADA')) {
+    badges.push({ text: 'FLEX PROGRAMADO', color: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' });
+  }
+  if (upper.includes('GENERICA') || upper.includes('GENERICO')) {
+    badges.push({ text: 'GENÉRICO', color: 'bg-zinc-700/40 text-zinc-300 border-zinc-600/30' });
+  }
+
+  const qualityText = badges.length > 0 
+    ? badges.map(b => b.text).join(' • ') 
+    : 'Estándar';
+
+  // 3. Extraer Modelo Limpio
+  let cleanModel = upper
+    .replace(/^(MODULO|MODULOS|BATERIA|BATERIAS|PLACA DE CARGA|SUBPLACA|PIN DE CARGA|PIN|TAPA|CAMARA FRONTAL|CAMARA TRASERA|CAMARA|LENTE DE CAMARA|LENTE|FLEX MAIN|FLEX|PARLANTE|BUZZER|AURICULAR|GLASS|VIDRIO)\s+(PARA\s+)?/i, '')
+    .trim();
+
+  const brand = (part.brand || '').toUpperCase();
+  if (brand && cleanModel.startsWith(brand + ' ')) {
+    cleanModel = cleanModel.slice(brand.length + 1).trim();
+  }
+
+  const removePatterns = [
+    /\b(SOFT OLED|HARD OLED|OLED|AMOLED|INCELL|IPS|TFT|FHD|HD)\b/gi,
+    /\b(ORIGINAL|CALIDAD ORIGINAL|SERVICE PACK|GENERICA|GENERICO)\b/gi,
+    /\b(CON MARCO|SIN MARCO|S\/MARCO|MECANICO|CAMBIO DE IC|CAMBIO IC|IC REMOVIBLE|APTO TRASPLANTE|APTO TRANSPLANTE)\b/gi,
+    /\b(GX|ZY|RJ|JK|DD|CORE ZANI|ZANI|FOXCONN)\b/gi,
+    /\b(FLEX PROGRAMADO|PRE PROGRAMADA|PROGRAMADO)\b/gi,
+    /\b(NEGRO|BLANCO|AZUL|VERDE|ROJO|DORADO|PLATEADO|GRIS|LILA|ROSA|AMARILLO|PURPURA|CELESTE|ROSE GOLD|VERDE AGUA|VERDE INGLES)\b/gi,
+    /\b(MARCA CONDICIÓN\.|CONDICIÓN\.|MARCA)\b/gi,
+    /[()]/g
+  ];
+
+  removePatterns.forEach(pattern => {
+    cleanModel = cleanModel.replace(pattern, ' ');
+  });
+
+  cleanModel = cleanModel.replace(/\s+/g, ' ').replace(/^[-/,\s]+|[-/,\s]+$/g, '').trim();
+
+  if (!cleanModel || cleanModel.length < 2) {
+    cleanModel = `${part.brand || ''} ${name}`.slice(0, 32);
+  } else {
+    if (brand && !cleanModel.toUpperCase().includes(brand) && !cleanModel.toUpperCase().startsWith('IPHONE')) {
+      cleanModel = `${part.brand} ${cleanModel}`;
+    }
+  }
+
+  return {
+    parsedPartType: partType,
+    parsedModel: cleanModel,
+    parsedQuality: qualityText,
+    qualityBadges: badges
+  };
+}
 
 // Estilos y badges por proveedor
 const PROVIDERS_CONFIG = {
@@ -61,7 +179,9 @@ function formatArs(amount) {
 }
 
 export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
-  // Estados de filtros
+  // Estados de vista y filtros
+  const [viewMode, setViewMode] = useState('list'); // 'list' o 'grid'
+  const [exactModelMatch, setExactModelMatch] = useState(true); // Evita mezclar '11' con '11 Pro', etc.
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProvider, setSelectedProvider] = useState('all');
   const [selectedBrand, setSelectedBrand] = useState('all');
@@ -76,25 +196,21 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
   const minLabor = pricingRules?.minLaborArs || 30000;
   const markupMultiplier = pricingRules?.markupMultiplier || 1.8;
 
-  // Lista unificada de repuestos (CellStore + Grupo Armar + Smart Supply + futuros proveedores)
+  // Lista unificada de repuestos con datos estructurados (Modelo, Repuesto, Calidad)
   const allParts = useMemo(() => {
-    const cellStoreFormatted = CELLSTORE_PARTS.map(p => ({
-      ...p,
-      providerId: 'cellstore',
-      providerName: 'CellStore MDP'
-    }));
+    const formatPart = (p, providerId, providerName) => {
+      const parsed = parsePartDetails(p);
+      return {
+        ...p,
+        providerId,
+        providerName,
+        ...parsed
+      };
+    };
 
-    const grupoArmarFormatted = GRUPOARMAR_PARTS.map(p => ({
-      ...p,
-      providerId: 'grupoarmar',
-      providerName: 'Grupo Armar'
-    }));
-
-    const smartSupplyFormatted = SMARTSUPPLY_PARTS.map(p => ({
-      ...p,
-      providerId: 'smartsupply',
-      providerName: 'Smart Supply'
-    }));
+    const cellStoreFormatted = CELLSTORE_PARTS.map(p => formatPart(p, 'cellstore', 'CellStore MDP'));
+    const grupoArmarFormatted = GRUPOARMAR_PARTS.map(p => formatPart(p, 'grupoarmar', 'Grupo Armar'));
+    const smartSupplyFormatted = SMARTSUPPLY_PARTS.map(p => formatPart(p, 'smartsupply', 'Smart Supply'));
 
     return [...cellStoreFormatted, ...grupoArmarFormatted, ...smartSupplyFormatted];
   }, []);
@@ -134,15 +250,63 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
         return false;
       }
 
-      // Filtro de búsqueda por texto
+      // Filtro de búsqueda por texto exhaustivo e inteligente
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase().trim();
-        const searchPool = `${part.name} ${part.brand} ${part.sku || ''} ${part.part_type || ''}`.toLowerCase();
-        
-        // Permite buscar múltiples palabras clave (ej: "11 oled", "a54 modulo", "g52 bateria")
-        const tokens = query.split(/\s+/);
-        const matchesAll = tokens.every(token => searchPool.includes(token));
-        if (!matchesAll) return false;
+        const searchPool = `${part.name} ${part.brand} ${part.sku || ''} ${part.part_type || ''} ${part.parsedModel || ''}`.toLowerCase();
+        const queryTokens = query.split(/\s+/).filter(Boolean);
+
+        // 1. Coincidencia de tokens básicos (con word-boundary para números y modelos como '11', 'g8', 's20')
+        for (const token of queryTokens) {
+          if (/^([a-z]+)?\d+([a-z]+)?$/i.test(token)) {
+            const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i');
+            if (!regex.test(searchPool)) return false;
+          } else {
+            if (!searchPool.includes(token)) return false;
+          }
+        }
+
+        // 2. Discriminación exhaustiva de modificadores de modelo si exactModelMatch está activo
+        if (exactModelMatch) {
+          const userModifiers = [];
+          if (query.includes('pro max') || query.includes('promax') || query.includes('pro/max') || query.includes('p max')) {
+            userModifiers.push('promax');
+          } else if (query.includes('pro')) {
+            userModifiers.push('pro');
+          }
+          if (query.includes('plus') || query.includes('+')) userModifiers.push('plus');
+          if (query.includes('mini')) userModifiers.push('mini');
+          if (query.includes('ultra')) userModifiers.push('ultra');
+          if (query.includes('fe')) userModifiers.push('fe');
+          if (query.includes('lite')) userModifiers.push('lite');
+          if (query.includes('play')) userModifiers.push('play');
+          if (query.includes('power')) userModifiers.push('power');
+          if (query.includes('neo')) userModifiers.push('neo');
+
+          const nameLower = part.name.toLowerCase();
+          const hasProMax = nameLower.includes('pro max') || nameLower.includes('promax') || nameLower.includes('pro/max') || nameLower.includes('p max');
+          const hasPro = hasProMax || nameLower.includes(' pro ') || nameLower.endsWith(' pro') || nameLower.includes(' pro-') || nameLower.includes(' pro(') || nameLower.includes(' pro/');
+          const hasPlus = nameLower.includes(' plus ') || nameLower.endsWith(' plus') || nameLower.includes(' plus-') || nameLower.includes(' + ') || nameLower.endsWith(' +') || nameLower.includes('+ ');
+          const hasMini = nameLower.includes(' mini ') || nameLower.endsWith(' mini');
+          const hasUltra = nameLower.includes(' ultra ') || nameLower.endsWith(' ultra');
+          const hasFE = nameLower.includes(' fe ') || nameLower.endsWith(' fe');
+          const hasLite = nameLower.includes(' lite ') || nameLower.endsWith(' lite');
+          const hasPlay = nameLower.includes(' play ') || nameLower.endsWith(' play');
+          const hasPower = nameLower.includes(' power ') || nameLower.endsWith(' power');
+          const hasNeo = nameLower.includes(' neo ') || nameLower.endsWith(' neo');
+
+          if (!userModifiers.includes('promax') && hasProMax) return false;
+          if (!userModifiers.includes('pro') && !userModifiers.includes('promax') && hasPro) return false;
+          if (!userModifiers.includes('plus') && hasPlus) return false;
+          if (!userModifiers.includes('mini') && hasMini) return false;
+          if (!userModifiers.includes('ultra') && hasUltra) return false;
+          if (!userModifiers.includes('fe') && hasFE) return false;
+          if (!userModifiers.includes('lite') && hasLite) return false;
+          if (!userModifiers.includes('play') && hasPlay) return false;
+          if (!userModifiers.includes('power') && hasPower) return false;
+          if (!userModifiers.includes('neo') && hasNeo) return false;
+        }
       }
 
       return true;
@@ -562,17 +726,66 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
         </div>
       </div>
 
-      {/* Barra de Contador de Resultados */}
-      <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
-        <div>
-          Mostrando <span className="font-bold text-white">{filteredParts.length}</span> repuestos encontrados
-          {searchTerm && <span> para "{searchTerm}"</span>}
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
-            Precios Gremio Efectivo / Transferencia
+      {/* Barra de Contador de Resultados y Selectores de Vista */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-zinc-400 px-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span>
+            Mostrando <span className="font-bold text-white">{filteredParts.length}</span> repuestos encontrados
+            {searchTerm && <span> para <strong className="text-white">"{searchTerm}"</strong></span>}
           </span>
+
+          {/* Toggle de Búsqueda Exacta de Modelo */}
+          <button
+            type="button"
+            onClick={() => setExactModelMatch(!exactModelMatch)}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all ${
+              exactModelMatch
+                ? 'bg-[#FF5500]/15 border-[#FF5500]/40 text-[#FF5500]'
+                : 'bg-zinc-900 border-zinc-700/70 text-zinc-400 hover:text-white'
+            }`}
+            title="Si está activo, al buscar 'iPhone 11' no mezclará con '11 Pro' ni '11 Pro Max'"
+          >
+            <Sparkles className="w-3 h-3" />
+            <span>Filtro Modelo Estricto: {exactModelMatch ? 'ON' : 'OFF'}</span>
+          </button>
+        </div>
+
+        {/* Selectores de Modo de Vista y Leyenda */}
+        <div className="flex items-center gap-3 self-end sm:self-auto">
+          <span className="hidden md:inline-flex items-center gap-1.5 text-[11px]">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-pulse"></span>
+            Precios Gremio Efectivo
+          </span>
+
+          {/* Selector Lista vs Tarjetas */}
+          <div className="flex items-center bg-[#121214] p-1 rounded-xl border border-zinc-800">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                viewMode === 'list'
+                  ? 'bg-[#FF5500] text-white shadow-md'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+              title="Vista en Lista / Tabla detallada (Modelo - Repuesto - Calidad - Proveedor - Precio)"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>Lista</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-[#FF5500] text-white shadow-md'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+              title="Vista en Tarjetas / Cuadrícula"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Tarjetas</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -582,15 +795,16 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
           <Package className="w-12 h-12 text-zinc-600 mx-auto mb-3 opacity-60" />
           <h3 className="text-base font-semibold text-white mb-1">No se encontraron repuestos</h3>
           <p className="text-xs text-zinc-400 max-w-md mx-auto">
-            Probá buscando con términos más generales como "12 pro max", "s21", "a04" o quitá los filtros aplicados.
+            Probá buscando con términos más generales como "12 pro max", "s21", "a04" o desactivá el botón "Filtro Modelo Estricto".
           </p>
-          {(searchTerm || selectedBrand !== 'all' || selectedCategory !== 'all' || onlyInStock) && (
+          {(searchTerm || selectedBrand !== 'all' || selectedCategory !== 'all' || onlyInStock || !exactModelMatch) && (
             <button
               onClick={() => {
                 setSearchTerm('');
                 setSelectedBrand('all');
                 setSelectedCategory('all');
                 setOnlyInStock(false);
+                setExactModelMatch(true);
               }}
               className="mt-4 px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-white transition-colors"
             >
@@ -598,10 +812,172 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
             </button>
           )}
         </div>
+      ) : viewMode === 'list' ? (
+        /* VISTA EN LISTA (TABLA): Modelo - Repuesto - Calidad - Proveedor - Precio */
+        <div className="overflow-hidden rounded-2xl border border-zinc-800/90 bg-[#18181b]/95 shadow-xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="border-b border-zinc-800 bg-[#121214]/90 text-zinc-400 uppercase tracking-wider text-[11px] font-semibold">
+                  <th className="py-3 px-4 min-w-[200px]">Modelo</th>
+                  <th className="py-3 px-4 min-w-[130px]">Repuesto</th>
+                  <th className="py-3 px-4 min-w-[140px]">Calidad</th>
+                  <th className="py-3 px-4 min-w-[100px]">Stock</th>
+                  <th className="py-3 px-4 min-w-[130px]">Proveedor</th>
+                  <th className="py-3 px-4 min-w-[130px] text-right">Costo Gremio</th>
+                  <th className="py-3 px-4 min-w-[130px] text-right">PVP Sugerido</th>
+                  <th className="py-3 px-4 min-w-[110px] text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/60">
+                {filteredParts.slice(0, 100).map((part, idx) => {
+                  const isCopied = copiedSku === (part.sku || part.name);
+                  const pvpEstimado = Math.round(Math.max(part.price_cash_ars * markupMultiplier, part.price_cash_ars + minLabor));
+
+                  return (
+                    <tr 
+                      key={`${part.providerId}-${part.sku || idx}`}
+                      className="hover:bg-[#202024]/80 transition-colors group"
+                    >
+                      {/* 1. Modelo */}
+                      <td className="py-3 px-4 align-middle">
+                        <div className="font-bold text-white text-sm group-hover:text-[#FF5500] transition-colors leading-tight">
+                          {part.parsedModel || part.name}
+                        </div>
+                        <div className="text-[11px] text-zinc-400 line-clamp-1 mt-0.5">
+                          {part.name}
+                        </div>
+                        {part.sku && (
+                          <span className="text-[10px] font-mono text-zinc-500">
+                            SKU: {part.sku}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* 2. Repuesto */}
+                      <td className="py-3 px-4 align-middle">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800/90 text-zinc-200 border border-zinc-700/60 font-medium text-xs whitespace-nowrap">
+                          <Layers className="w-3 h-3 text-[#FF5500]" />
+                          <span>{part.parsedPartType || 'Repuesto'}</span>
+                        </span>
+                      </td>
+
+                      {/* 3. Calidad */}
+                      <td className="py-3 px-4 align-middle">
+                        {part.qualityBadges && part.qualityBadges.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {part.qualityBadges.map((b, bi) => (
+                              <span 
+                                key={bi} 
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded border whitespace-nowrap ${b.color}`}
+                              >
+                                {b.text}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-zinc-400 text-xs">
+                            {part.parsedQuality || 'Estándar'}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* 4. Stock */}
+                      <td className="py-3 px-4 align-middle whitespace-nowrap">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                          part.in_stock 
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                            : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                        }`}>
+                          {part.in_stock ? (
+                            <>
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>En Stock</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="w-3 h-3" />
+                              <span>Agotado</span>
+                            </>
+                          )}
+                        </span>
+                      </td>
+
+                      {/* 5. Proveedor */}
+                      <td className="py-3 px-4 align-middle whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
+                          part.providerId === 'cellstore'
+                            ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                            : part.providerId === 'grupoarmar'
+                            ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                            : 'bg-orange-500/15 text-[#FF5500] border-orange-500/30'
+                        }`}>
+                          {part.providerName}
+                        </span>
+                      </td>
+
+                      {/* 6. Precio Costo Gremio */}
+                      <td className="py-3 px-4 align-middle text-right whitespace-nowrap">
+                        <div className="font-bold text-emerald-400 text-sm">
+                          {formatArs(part.price_cash_ars)}
+                        </div>
+                        {part.price_lista_ars > 0 && (
+                          <div className="text-[10px] text-zinc-500">
+                            Lista: {formatArs(part.price_lista_ars)}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* 7. PVP Sugerido */}
+                      <td className="py-3 px-4 align-middle text-right whitespace-nowrap">
+                        <div className="font-bold text-white text-sm">
+                          {formatArs(pvpEstimado)}
+                        </div>
+                        <div className="text-[10px] text-zinc-400">
+                          +{formatArs(pvpEstimado - part.price_cash_ars)}
+                        </div>
+                      </td>
+
+                      {/* 8. Acciones */}
+                      <td className="py-3 px-4 align-middle text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyQuote(part)}
+                            className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-all"
+                            title="Copiar cotización para WhatsApp"
+                          >
+                            {isCopied ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+
+                          {part.url && (
+                            <a
+                              href={part.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg bg-[#FF5500]/10 hover:bg-[#FF5500]/20 text-[#FF5500] border border-orange-500/30 transition-all"
+                              title="Ver en web oficial del proveedor"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       ) : (
+        /* VISTA EN TARJETAS (GRID) */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredParts.slice(0, 90).map((part, idx) => {
-            const qualityBadges = getQualityBadges(part.name);
             const isCopied = copiedSku === (part.sku || part.name);
             const pvpEstimado = Math.round(Math.max(part.price_cash_ars * markupMultiplier, part.price_cash_ars + minLabor));
 
@@ -642,21 +1018,29 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
                     </span>
                   </div>
 
-                  {/* Título y Marca */}
-                  <h4 className="text-sm font-semibold text-white leading-snug group-hover:text-[#FF5500] transition-colors mb-2 line-clamp-2">
+                  {/* Modelo Destacado */}
+                  <div className="text-xs font-bold text-[#FF5500] uppercase tracking-wide mb-0.5">
+                    {part.parsedModel || part.brand}
+                  </div>
+
+                  {/* Título Completo */}
+                  <h4 className="text-sm font-semibold text-white leading-snug group-hover:text-white transition-colors mb-2 line-clamp-2">
                     {part.name}
                   </h4>
 
-                  {/* Badges de Calidad */}
-                  {qualityBadges.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                      {qualityBadges.map((b, bi) => (
-                        <span key={bi} className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${b.color}`}>
-                          {b.text}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  {/* Badges de Calidad y Tipo */}
+                  <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700/60">
+                      <Layers className="w-2.5 h-2.5 text-[#FF5500]" />
+                      {part.parsedPartType}
+                    </span>
+
+                    {part.qualityBadges && part.qualityBadges.map((b, bi) => (
+                      <span key={bi} className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${b.color}`}>
+                        {b.text}
+                      </span>
+                    ))}
+                  </div>
 
                   {/* SKU / Código */}
                   {part.sku && (
