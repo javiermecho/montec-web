@@ -20,16 +20,17 @@ import {
 } from 'lucide-react';
 import { SMARTSUPPLY_PARTS, SMARTSUPPLY_PARTS_INFO } from '../../data/smartsupplyParts';
 import { GRUPOARMAR_PARTS, GRUPOARMAR_PARTS_INFO } from '../../data/grupoarmarParts';
+import { CELLSTORE_PARTS, CELLSTORE_PARTS_INFO } from '../../data/cellstoreParts';
 
 // Estilos y badges por proveedor
 const PROVIDERS_CONFIG = {
   all: { name: 'Todos los Proveedores', badgeColor: 'bg-zinc-800 text-zinc-300' },
-  smartsupply: { 
-    name: 'Smart Supply', 
-    badgeColor: 'bg-orange-500/15 text-[#FF5500] border-orange-500/30',
-    website: 'https://smartsupply.com.ar',
-    total: SMARTSUPPLY_PARTS.length,
-    lastUpdate: SMARTSUPPLY_PARTS_INFO?.extracted_at
+  cellstore: { 
+    name: 'CellStore MDP', 
+    badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    website: 'https://cellstoremdp.com.ar',
+    total: CELLSTORE_PARTS.length,
+    lastUpdate: CELLSTORE_PARTS_INFO?.extracted_at
   },
   grupoarmar: { 
     name: 'Grupo Armar', 
@@ -38,15 +39,16 @@ const PROVIDERS_CONFIG = {
     total: GRUPOARMAR_PARTS.length,
     lastUpdate: GRUPOARMAR_PARTS_INFO?.extracted_at
   },
-  supplier_3: { 
-    name: 'Proveedor 3 (Próximamente)', 
-    badgeColor: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-    website: '#',
-    total: 0
+  smartsupply: { 
+    name: 'Smart Supply', 
+    badgeColor: 'bg-orange-500/15 text-[#FF5500] border-orange-500/30',
+    website: 'https://smartsupply.com.ar',
+    total: SMARTSUPPLY_PARTS.length,
+    lastUpdate: SMARTSUPPLY_PARTS_INFO?.extracted_at
   },
   supplier_4: { 
     name: 'Proveedor 4 (Próximamente)', 
-    badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    badgeColor: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
     website: '#',
     total: 0
   }
@@ -74,12 +76,12 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
   const minLabor = pricingRules?.minLaborArs || 30000;
   const markupMultiplier = pricingRules?.markupMultiplier || 1.8;
 
-  // Lista unificada de repuestos (SmartSupply + Grupo Armar + futuros proveedores)
+  // Lista unificada de repuestos (CellStore + Grupo Armar + Smart Supply + futuros proveedores)
   const allParts = useMemo(() => {
-    const smartSupplyFormatted = SMARTSUPPLY_PARTS.map(p => ({
+    const cellStoreFormatted = CELLSTORE_PARTS.map(p => ({
       ...p,
-      providerId: 'smartsupply',
-      providerName: 'Smart Supply'
+      providerId: 'cellstore',
+      providerName: 'CellStore MDP'
     }));
 
     const grupoArmarFormatted = GRUPOARMAR_PARTS.map(p => ({
@@ -88,7 +90,13 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
       providerName: 'Grupo Armar'
     }));
 
-    return [...smartSupplyFormatted, ...grupoArmarFormatted];
+    const smartSupplyFormatted = SMARTSUPPLY_PARTS.map(p => ({
+      ...p,
+      providerId: 'smartsupply',
+      providerName: 'Smart Supply'
+    }));
+
+    return [...cellStoreFormatted, ...grupoArmarFormatted, ...smartSupplyFormatted];
   }, []);
 
   // Extraer marcas únicas
@@ -260,17 +268,22 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
 
           <div className="flex flex-wrap items-center gap-2 mt-2 pt-1">
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-zinc-800 text-[11px] text-zinc-300">
-              <Building2 className="w-3 h-3 text-[#FF5500]" />
-              <span className="font-semibold text-white">Smart Supply:</span>
-              <span className="text-[#FF5500] font-bold">{SMARTSUPPLY_PARTS.length}</span>
+              <Building2 className="w-3 h-3 text-emerald-400" />
+              <span className="font-semibold text-white">CellStore MDP:</span>
+              <span className="text-emerald-400 font-bold">{CELLSTORE_PARTS.length}</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-zinc-800 text-[11px] text-zinc-300">
               <Building2 className="w-3 h-3 text-blue-400" />
               <span className="font-semibold text-white">Grupo Armar:</span>
               <span className="text-blue-400 font-bold">{GRUPOARMAR_PARTS.length}</span>
             </div>
-            <div className="text-[11px] text-zinc-500 font-medium">
-              (Total: {allParts.length} repuestos)
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-zinc-800 text-[11px] text-zinc-300">
+              <Building2 className="w-3 h-3 text-[#FF5500]" />
+              <span className="font-semibold text-white">Smart Supply:</span>
+              <span className="text-[#FF5500] font-bold">{SMARTSUPPLY_PARTS.length}</span>
+            </div>
+            <div className="text-[11px] text-zinc-400 font-bold bg-zinc-800/60 px-2 py-0.5 rounded-lg border border-zinc-700/50">
+              Total: {allParts.length} repuestos
             </div>
           </div>
         </div>
@@ -330,21 +343,21 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
 
             {/* Estado actual de proveedores */}
             <div className="space-y-3">
-              {/* Proveedor 1: Smart Supply */}
+              {/* Proveedor 1: CellStore MDP */}
               <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-white flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-[#FF5500]" />
-                    Smart Supply (smartsupply.com.ar)
+                    <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+                    CellStore MDP (cellstoremdp.com.ar)
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                     Conectado
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 text-zinc-400">
-                  <div>Total: <span className="font-bold text-white">{SMARTSUPPLY_PARTS.length}</span></div>
-                  <div>En Stock: <span className="font-bold text-emerald-400">{SMARTSUPPLY_PARTS.filter(p => p.in_stock).length}</span></div>
-                  <div>Agotados: <span className="font-bold text-rose-400">{SMARTSUPPLY_PARTS.filter(p => !p.in_stock).length}</span></div>
+                  <div>Total: <span className="font-bold text-white">{CELLSTORE_PARTS.length}</span></div>
+                  <div>En Stock: <span className="font-bold text-emerald-400">{CELLSTORE_PARTS.filter(p => p.in_stock).length}</span></div>
+                  <div>Agotados: <span className="font-bold text-rose-400">{CELLSTORE_PARTS.filter(p => !p.in_stock).length}</span></div>
                 </div>
               </div>
 
@@ -363,6 +376,24 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
                   <div>Total: <span className="font-bold text-white">{GRUPOARMAR_PARTS.length}</span></div>
                   <div>En Stock: <span className="font-bold text-emerald-400">{GRUPOARMAR_PARTS.filter(p => p.in_stock).length}</span></div>
                   <div>Agotados: <span className="font-bold text-rose-400">{GRUPOARMAR_PARTS.filter(p => !p.in_stock).length}</span></div>
+                </div>
+              </div>
+
+              {/* Proveedor 3: Smart Supply */}
+              <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-white flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-[#FF5500]" />
+                    Smart Supply (smartsupply.com.ar)
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    Conectado
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 text-zinc-400">
+                  <div>Total: <span className="font-bold text-white">{SMARTSUPPLY_PARTS.length}</span></div>
+                  <div>En Stock: <span className="font-bold text-emerald-400">{SMARTSUPPLY_PARTS.filter(p => p.in_stock).length}</span></div>
+                  <div>Agotados: <span className="font-bold text-rose-400">{SMARTSUPPLY_PARTS.filter(p => !p.in_stock).length}</span></div>
                 </div>
               </div>
 
@@ -395,7 +426,7 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
             {/* Acciones del Modal */}
             <div className="flex items-center justify-between gap-3 pt-2 border-t border-zinc-800/80">
               <div className="text-[11px] text-zinc-500">
-                Consola: <code className="text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded">npm run scrape:smartsupply</code>
+                Consola: <code className="text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded">npm run scrape:all</code>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -456,9 +487,9 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
               className="w-full bg-[#121214] border border-zinc-700/70 rounded-xl px-3 py-2 text-xs font-medium text-white focus:border-[#FF5500] outline-none"
             >
               <option value="all">Todos los Proveedores ({allParts.length})</option>
-              <option value="smartsupply">Smart Supply ({SMARTSUPPLY_PARTS.length})</option>
+              <option value="cellstore">CellStore MDP ({CELLSTORE_PARTS.length})</option>
               <option value="grupoarmar">Grupo Armar ({GRUPOARMAR_PARTS.length})</option>
-              <option value="supplier_3" disabled>Proveedor 3 (Próximamente)</option>
+              <option value="smartsupply">Smart Supply ({SMARTSUPPLY_PARTS.length})</option>
               <option value="supplier_4" disabled>Proveedor 4 (Próximamente)</option>
             </select>
           </div>
@@ -583,7 +614,9 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2.5">
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
-                      part.providerId === 'grupoarmar'
+                      part.providerId === 'cellstore'
+                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                        : part.providerId === 'grupoarmar'
                         ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
                         : 'bg-orange-500/15 text-[#FF5500] border-orange-500/30'
                     }`}>

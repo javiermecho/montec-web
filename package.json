@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "scrape:smartsupply": "node scripts/scrape_smartsupply.cjs",
     "scrape:grupoarmar": "node scripts/scrape_grupoarmar.cjs",
-    "scrape:all": "node scripts/scrape_smartsupply.cjs && node scripts/scrape_grupoarmar.cjs"
+    "scrape:cellstore": "node scripts/scrape_cellstore.cjs",
+    "scrape:all": "node scripts/scrape_smartsupply.cjs && node scripts/scrape_grupoarmar.cjs && node scripts/scrape_cellstore.cjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",
