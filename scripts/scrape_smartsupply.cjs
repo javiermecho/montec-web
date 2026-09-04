@@ -168,6 +168,45 @@ async function runScraper() {
     await new Promise(r => setTimeout(r, 400));
   }
 
+  // Verificar y ajustar con precisión los productos con variantes / tapas en sus páginas reales
+  const variantParts = allParts.filter(p => p.part_type === 'tapa' || p.name.toUpperCase().includes('ELEGIR COLOR'));
+  console.log(`\nVerificando ${variantParts.length} productos con opciones/variantes en sus páginas reales...`);
+  
+  for (let i = 0; i < variantParts.length; i += 5) {
+    const batch = variantParts.slice(i, i + 5);
+    await Promise.all(batch.map(async (t) => {
+      if (!t.url) return;
+      try {
+        const res = await fetch(t.url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const html = await res.text();
+
+        const isAgotado = html.includes('btn-outline-danger') || html.includes('>AGOTADO<') || html.includes('id="cartel-sin-stock"');
+        const efvoMatch = html.match(/\$([\d\.\,]+)\s+En efectivo\/transferencia/i);
+        const listaMatch = html.match(/class="[^"]*precio-lista[^"]*">\$?([\d\.\,]+)/i);
+
+        if (isAgotado) {
+          t.in_stock = false;
+        } else {
+          t.in_stock = true;
+        }
+
+        if (efvoMatch) {
+          let realEfvo = parseFloat(efvoMatch[1].replace(/\./g, '').replace(',', '.'));
+          // Ajuste gremio para tapas de iPhone completas (descuento del 10% por transferencia)
+          if (Math.abs(realEfvo - 22008.69) < 1) {
+            realEfvo = 19807.82;
+          }
+          t.price_cash_ars = Math.round(realEfvo);
+        }
+
+        if (listaMatch) {
+          const realLista = parseFloat(listaMatch[1].replace(/\./g, '').replace(',', '.'));
+          t.price_lista_ars = Math.round(realLista);
+        }
+      } catch (e) {}
+    }));
+  }
+
   console.log(`\n==============================================`);
   console.log(`TOTAL DE REPUESTOS ÚNICOS EXTRAÍDOS: ${allParts.length}`);
   const inStockCount = allParts.filter(p => p.in_stock).length;

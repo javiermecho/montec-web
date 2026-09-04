@@ -1,12 +1,12 @@
 // Catálogo importado de repuestos de Smart Supply (smartsupply.com.ar)
-// Total repuestos: 1522 (En stock: 1522)
-// Extraído el: 2026-09-04T15:37:02.013Z
+// Total repuestos: 1522 (En stock: 1494)
+// Extraído el: 2026-09-04T16:27:06.218Z
 
 export const SMARTSUPPLY_PARTS_INFO = {
   "provider": "Smart Supply (smartsupply.com.ar)",
-  "extracted_at": "2026-09-04T15:37:02.013Z",
+  "extracted_at": "2026-09-04T16:27:06.218Z",
   "total_parts": 1522,
-  "in_stock_parts": 1522,
+  "in_stock_parts": 1494,
   "currency": "ARS"
 };
 
@@ -1996,7 +1996,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQES",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 6372.54,
+    "price_lista_ars": 5718,
     "price_cash_ars": 5400,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-11-elegir-color"
@@ -2006,8 +2006,8 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQG5",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 5717.82,
-    "price_cash_ars": 4846,
+    "price_lista_ars": 7242,
+    "price_cash_ars": 8656,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-14-elegir-color"
   },
@@ -2016,8 +2016,8 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQG6",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 218237.5,
-    "price_cash_ars": 184947,
+    "price_lista_ars": 5718,
+    "price_cash_ars": 19808,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-14-completa-elegir-color"
   },
@@ -2026,9 +2026,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQGC",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 25970.26,
-    "price_cash_ars": 22009,
-    "in_stock": true,
+    "price_lista_ars": 10255,
+    "price_cash_ars": 19808,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-iphone-14-completa-elegir-color"
   },
   {
@@ -2036,7 +2036,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQGD",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 5717.82,
+    "price_lista_ars": 5068,
     "price_cash_ars": 4846,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-14-plus-elegir-color"
@@ -2046,7 +2046,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQFJ",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 5717.82,
+    "price_lista_ars": 5068,
     "price_cash_ars": 4846,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-12-elegir-color"
@@ -2056,7 +2056,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQFC",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 11435.65,
+    "price_lista_ars": 5718,
     "price_cash_ars": 9691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-12-pro-elegir-color"
@@ -2066,7 +2066,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQFR",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 6372.54,
+    "price_lista_ars": 6180,
     "price_cash_ars": 5400,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-13-mini-elegir-color"
@@ -2076,9 +2076,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQFY",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 11435.65,
+    "price_lista_ars": 26800,
     "price_cash_ars": 9691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-13-pro-max-elegir-color"
   },
   {
@@ -2086,7 +2086,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQGY",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 6285.24,
+    "price_lista_ars": 38235,
     "price_cash_ars": 5326,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-15-elegir-color"
@@ -2096,7 +2096,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQHK",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 26799.57,
+    "price_lista_ars": 10255,
     "price_cash_ars": 22712,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-15-completa-elegir-color"
@@ -2106,7 +2106,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQEW",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 11435.65,
+    "price_lista_ars": 6373,
     "price_cash_ars": 9691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-11-pro-elegir-color"
@@ -2116,7 +2116,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQF1",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 11435.65,
+    "price_lista_ars": 11436,
     "price_cash_ars": 9691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-iphone-11-pro-max-elegir-color"
@@ -2126,7 +2126,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQHT",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 4801.23,
+    "price_lista_ars": 5068,
     "price_cash_ars": 4069,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-xr"
@@ -2136,7 +2136,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQI1",
     "brand": "Apple",
     "part_type": "tapa",
-    "price_lista_ars": 4801.23,
+    "price_lista_ars": 4496,
     "price_cash_ars": 4069,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-iphone-xs-elegir-color"
@@ -2586,7 +2586,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "113007-D15-1",
     "brand": "Apple",
     "part_type": "flex",
-    "price_lista_ars": 13885.5,
+    "price_lista_ars": 57643,
     "price_cash_ars": 11767,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-para-iphone-8-original-elegir-color"
@@ -2906,9 +2906,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "113052-A15-1",
     "brand": "Apple",
     "part_type": "flex",
-    "price_lista_ars": 6079.52,
+    "price_lista_ars": 21551,
     "price_cash_ars": 5152,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-boton-home-para-iphone-huella-7---8-plus-elegir-color"
   },
   {
@@ -6766,7 +6766,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "3152057671922",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 7241.51,
+    "price_lista_ars": 5068,
     "price_cash_ars": 6137,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a25"
@@ -6776,9 +6776,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "36665",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 7241.51,
+    "price_lista_ars": 7242,
     "price_cash_ars": 6137,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a16-4g-gris-claro-"
   },
   {
@@ -6786,7 +6786,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "7424263472632",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 7918.29,
+    "price_lista_ars": 5068,
     "price_cash_ars": 6710,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a06"
@@ -6796,9 +6796,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIV",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 4686.87,
+    "price_lista_ars": 10255,
     "price_cash_ars": 3972,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a01-core-elegir-color"
   },
   {
@@ -6806,7 +6806,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "671054716064",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 9204.17,
+    "price_lista_ars": 4496,
     "price_cash_ars": 7800,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a26"
@@ -6816,7 +6816,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "5198872860007",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 9204.17,
+    "price_lista_ars": 30902,
     "price_cash_ars": 7800,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a36"
@@ -6826,7 +6826,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQKU",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 6373,
     "price_cash_ars": 4295,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-a30s"
@@ -6836,9 +6836,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQKS",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 3849,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a30s-elegir-color"
   },
   {
@@ -6846,9 +6846,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "3872502909357",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 7918.29,
+    "price_lista_ars": 27673,
     "price_cash_ars": 6710,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-s24-fe"
   },
   {
@@ -6856,9 +6856,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "36664",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 7241.51,
+    "price_lista_ars": 7242,
     "price_cash_ars": 6137,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a16-4g-negro"
   },
   {
@@ -6866,9 +6866,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "36666",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 7241.51,
+    "price_lista_ars": 7242,
     "price_cash_ars": 6137,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a16-4g-verde-claro"
   },
   {
@@ -6876,9 +6876,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "718970530848",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5955.64,
+    "price_lista_ars": 6285,
     "price_cash_ars": 5047,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a15-elegir-color"
   },
   {
@@ -6886,7 +6886,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIY",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 10255,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a022-elegir-color"
@@ -6896,7 +6896,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJ4",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 4801,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a02s-elegir-color"
@@ -6906,7 +6906,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJ1",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5624.24,
+    "price_lista_ars": 5718,
     "price_cash_ars": 4766,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a02s-elegir-color"
@@ -6916,9 +6916,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "9307183675900",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 6564.73,
+    "price_lista_ars": 31459,
     "price_cash_ars": 5563,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a24"
   },
   {
@@ -6926,7 +6926,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJ6",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 3849,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a03-negra"
@@ -6936,7 +6936,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJ8",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 6180.49,
+    "price_lista_ars": 5068,
     "price_cash_ars": 5238,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a03s-elegir-color"
@@ -6946,7 +6946,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJ7",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 6180.49,
+    "price_lista_ars": 7377,
     "price_cash_ars": 5238,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a03s-elegir-color"
@@ -6956,7 +6956,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJA",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 7918,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a04-elegir-color"
@@ -6966,7 +6966,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJ9",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 25970,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a04-elegir-color"
@@ -6976,7 +6976,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJB",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 5956,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a04e-elegir-color"
@@ -6986,7 +6986,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQLM",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 8344,
     "price_cash_ars": 4295,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a52-elegir-color"
@@ -6996,7 +6996,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJE",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5314.8,
+    "price_lista_ars": 10255,
     "price_cash_ars": 4504,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a04s-elegir-color"
@@ -7006,7 +7006,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQLL",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 10255,
     "price_cash_ars": 4295,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a52-elegir-color"
@@ -7016,7 +7016,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJH",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5955.64,
+    "price_lista_ars": 4875,
     "price_cash_ars": 5047,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a05-elegir-color"
@@ -7026,7 +7026,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJL",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 6180,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a10-elegir-color"
@@ -7036,9 +7036,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJM",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 30902,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a10s-elegir-color"
   },
   {
@@ -7046,7 +7046,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQK6",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 6285,
     "price_cash_ars": 4295,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a20-elegir-color"
@@ -7056,7 +7056,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJO",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 30902,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a10s-elegir-color"
@@ -7066,7 +7066,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQK9",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 10255,
     "price_cash_ars": 4295,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a20-elegir-color"
@@ -7076,7 +7076,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJQ",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 7292.98,
+    "price_lista_ars": 10255,
     "price_cash_ars": 6180,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a11-elegir-color"
@@ -7086,7 +7086,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "29807968758",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 7292.98,
+    "price_lista_ars": 6180,
     "price_cash_ars": 6180,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a11-elegir-color"
@@ -7096,7 +7096,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJV",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 6180.49,
+    "price_lista_ars": 44564,
     "price_cash_ars": 5238,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a12-elegir-color"
@@ -7106,7 +7106,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQK0",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 6180.49,
+    "price_lista_ars": 5718,
     "price_cash_ars": 5238,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a13-elegir-color"
@@ -7116,9 +7116,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "32741",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 8448.44,
+    "price_lista_ars": 29396,
     "price_cash_ars": 7160,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a16-5g-elegir-color"
   },
   {
@@ -7126,9 +7126,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQKB",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 6023.32,
+    "price_lista_ars": 6180,
     "price_cash_ars": 5105,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a21s"
   },
   {
@@ -7136,9 +7136,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQKG",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 7218.96,
+    "price_lista_ars": 5068,
     "price_cash_ars": 6118,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a22-4g-elegir-color"
   },
   {
@@ -7146,9 +7146,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQKH",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 6180,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a22-5g-elegir-color"
   },
   {
@@ -7156,7 +7156,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQJ5",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 8199,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a03-elegir-color"
@@ -7166,7 +7166,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQLE",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 6373,
     "price_cash_ars": 4295,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a51-elegir-color"
@@ -7176,7 +7176,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQKK",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5624.24,
+    "price_lista_ars": 6180,
     "price_cash_ars": 4766,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a23-4g-elegir-color"
@@ -7186,7 +7186,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQKQ",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 10255,
     "price_cash_ars": 4295,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a30-elegir-color"
@@ -7196,7 +7196,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQKO",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 30902,
     "price_cash_ars": 4295,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a30-elegir-color"
@@ -7206,7 +7206,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQKX",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 44564,
     "price_cash_ars": 4295,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a31-elegir-color"
@@ -7216,9 +7216,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQKZ",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5955.64,
+    "price_lista_ars": 27673,
     "price_cash_ars": 5047,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a32-4g-elegir-color"
   },
   {
@@ -7226,7 +7226,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQL2",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5624.24,
+    "price_lista_ars": 5718,
     "price_cash_ars": 4766,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a33-elegir-color"
@@ -7236,7 +7236,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQL9",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 6564.73,
+    "price_lista_ars": 4687,
     "price_cash_ars": 5563,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a34"
@@ -7246,7 +7246,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQLA",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 11436,
     "price_cash_ars": 4295,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a50-elegir-color"
@@ -7256,7 +7256,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQLP",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 10255,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a70-elegir-color"
@@ -7266,7 +7266,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQLT",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 6023,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a71-elegir-color"
@@ -7276,7 +7276,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQLV",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 11436,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a72-elegir-color"
@@ -7286,7 +7286,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQM0",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 2358.01,
+    "price_lista_ars": 5061,
     "price_cash_ars": 1998,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-trasera-samsung-j4-plus"
@@ -7296,7 +7296,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "108049",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 3848.99,
+    "price_lista_ars": 5061,
     "price_cash_ars": 3262,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-trasera-samsung-s7-flat-negra"
@@ -7306,7 +7306,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "108012",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5060.57,
+    "price_lista_ars": 5061,
     "price_cash_ars": 4289,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-trasera-samsung-s8-negra"
@@ -7316,7 +7316,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQM1",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5060.57,
+    "price_lista_ars": 3849,
     "price_cash_ars": 4289,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-trasera-samsung-s8-plus"
@@ -7326,7 +7326,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "108034",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5060.57,
+    "price_lista_ars": 2358,
     "price_cash_ars": 4289,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-trasera-samsung-s9-negra"
@@ -7336,9 +7336,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "108033",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5060.57,
+    "price_lista_ars": 12004,
     "price_cash_ars": 4289,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-trasera-samsung-s9-plus-negra"
   },
   {
@@ -7346,9 +7346,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "5767832161455",
     "brand": "Samsung",
     "part_type": "tapa",
-    "price_lista_ars": 5067.99,
+    "price_lista_ars": 5068,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a54-elegir-color"
   },
   {
@@ -9326,7 +9326,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "C451025-F8-1",
     "brand": "Samsung",
     "part_type": "flex",
-    "price_lista_ars": 8199.44,
+    "price_lista_ars": 8614,
     "price_cash_ars": 6949,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/flex-huella-samsung-a03s-elegir-color"
@@ -9346,9 +9346,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "71421-F15-1",
     "brand": "Samsung",
     "part_type": "flex",
-    "price_lista_ars": 13969.19,
+    "price_lista_ars": 6180,
     "price_cash_ars": 11838,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-huella-para-samsung-a13-elegir-color"
   },
   {
@@ -11226,9 +11226,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQI3",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 8343.66,
+    "price_lista_ars": 38235,
     "price_cash_ars": 7071,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e20-elegir-color"
   },
   {
@@ -11236,7 +11236,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "6092445977131",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 9733.39,
+    "price_lista_ars": 10255,
     "price_cash_ars": 8249,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-para-moto-g20-elegir-color"
@@ -11246,7 +11246,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQI7",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 10255,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e6-play-elegir-color"
@@ -11256,9 +11256,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQI9",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 4496,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e6-plus-elegir-color"
   },
   {
@@ -11266,7 +11266,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIA",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 9733.39,
+    "price_lista_ars": 25970,
     "price_cash_ars": 8249,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e7-elegir-color"
@@ -11276,9 +11276,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQI5",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 7918,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e40-elegir-color"
   },
   {
@@ -11286,7 +11286,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIB",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 25970,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e7-plus-elegir-color"
@@ -11296,9 +11296,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQID",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 9270.73,
+    "price_lista_ars": 11436,
     "price_cash_ars": 7857,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g20-elegir-color"
   },
   {
@@ -11306,7 +11306,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIE",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 9270.73,
+    "price_lista_ars": 6285,
     "price_cash_ars": 7857,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-g20-elegir-color"
@@ -11316,7 +11316,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIF",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 10255,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g31-elegir-color"
@@ -11326,7 +11326,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIG",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 8344,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g7-play-elegir-color"
@@ -11336,9 +11336,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQII",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 10255,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g7-plus-elegir-color"
   },
   {
@@ -11346,7 +11346,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIK",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 5068,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g8-elegir-color"
@@ -11356,7 +11356,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIL",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 4496,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g8-plus-elegir-color"
@@ -11366,7 +11366,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIM",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 10255,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g8-power-elegir-color"
@@ -11376,7 +11376,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIO",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 4061,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g8-power-negra"
@@ -11386,7 +11386,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIN",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 10255,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g8-power-lite-elegir-color"
@@ -11396,7 +11396,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIP",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 8642,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g9-play-elegir-color"
@@ -11406,7 +11406,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIS",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 10255.23,
+    "price_lista_ars": 5718,
     "price_cash_ars": 8691,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g9-plus-elegir-color"
@@ -11416,9 +11416,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQIU",
     "brand": "Motorola",
     "part_type": "tapa",
-    "price_lista_ars": 9270.73,
+    "price_lista_ars": 9733,
     "price_cash_ars": 7857,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g9-power-elegir-color"
   },
   {
@@ -12776,7 +12776,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "81093-G10-3",
     "brand": "Motorola",
     "part_type": "flex",
-    "price_lista_ars": 13129.48,
+    "price_lista_ars": 12893,
     "price_cash_ars": 11127,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/flex-huella-moto-g42-original-elegir-color"
@@ -12796,7 +12796,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "81090-G11-2",
     "brand": "Motorola",
     "part_type": "flex",
-    "price_lista_ars": 8614.27,
+    "price_lista_ars": 12092,
     "price_cash_ars": 7300,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/flex-huella-moto-e22i-original-elegir-color"
@@ -12826,7 +12826,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "81091--E12-1",
     "brand": "Motorola",
     "part_type": "flex",
-    "price_lista_ars": 8614.27,
+    "price_lista_ars": 8614,
     "price_cash_ars": 7300,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/flex-huella-moto-g32-original-elegir-color"
@@ -12836,7 +12836,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "81095-E7-2",
     "brand": "Motorola",
     "part_type": "flex",
-    "price_lista_ars": 8614.27,
+    "price_lista_ars": 8614,
     "price_cash_ars": 7300,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/flex-huella-moto-g41-original-elegir-color"
@@ -12846,7 +12846,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "81092-G11-1",
     "brand": "Motorola",
     "part_type": "flex",
-    "price_lista_ars": 8614.27,
+    "price_lista_ars": 8614,
     "price_cash_ars": 7300,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/flex-huella-moto-g52-original-elegir-color"
@@ -14696,9 +14696,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "9601649640887",
     "brand": "Xiaomi",
     "part_type": "tapa",
-    "price_lista_ars": 10557.72,
+    "price_lista_ars": 5888,
     "price_cash_ars": 8947,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-redmi-14c"
   },
   {
@@ -14706,9 +14706,9 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "1B6ECO6NM8RZKQLZ",
     "brand": "Xiaomi",
     "part_type": "tapa",
-    "price_lista_ars": 9677,
+    "price_lista_ars": 2997,
     "price_cash_ars": 8201,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-trasera-mi-8-lite"
   },
   {
@@ -14716,7 +14716,7 @@ export const SMARTSUPPLY_PARTS = [
     "sku": "108047",
     "brand": "Xiaomi",
     "part_type": "tapa",
-    "price_lista_ars": 2997.05,
+    "price_lista_ars": 9677,
     "price_cash_ars": 2540,
     "in_stock": true,
     "url": "https://smartsupply.com.ar/producto/tapa-trasera-mi-note-5-negro"
