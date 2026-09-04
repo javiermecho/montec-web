@@ -339,9 +339,8 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
 
           const nameLower = part.name.toLowerCase();
           const hasProMax = nameLower.includes('pro max') || nameLower.includes('promax') || nameLower.includes('pro/max') || nameLower.includes('p max');
-          const hasPro = hasProMax || nameLower.includes(' pro ') || nameLower.endsWith(' pro') || nameLower.includes(' pro-') || nameLower.includes(' pro(') || nameLower.includes(' pro/');
+          const hasMini = nameLower.includes(' mini ') || nameLower.endsWith(' mini') || nameLower.includes(' mini-') || nameLower.includes(' mini(');
           const hasPlus = nameLower.includes(' plus ') || nameLower.endsWith(' plus') || nameLower.includes(' plus-') || nameLower.includes(' + ') || nameLower.endsWith(' +') || nameLower.includes('+ ');
-          const hasMini = nameLower.includes(' mini ') || nameLower.endsWith(' mini');
           const hasUltra = nameLower.includes(' ultra ') || nameLower.endsWith(' ultra');
           const hasFE = nameLower.includes(' fe ') || nameLower.endsWith(' fe');
           const hasLite = nameLower.includes(' lite ') || nameLower.endsWith(' lite');
@@ -349,10 +348,32 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
           const hasPower = nameLower.includes(' power ') || nameLower.endsWith(' power');
           const hasNeo = nameLower.includes(' neo ') || nameLower.endsWith(' neo');
 
+          // Piezas multi-compatibles con el modelo base (ej: pantallas de "iPhone 12 / 12 Pro" que sirven para ambos)
+          const isDualCompatibleWithBase = 
+            nameLower.includes('/12 pro') || 
+            nameLower.includes('/ 12 pro') || 
+            nameLower.includes('- 12 pro') || 
+            nameLower.includes('-12 pro') || 
+            nameLower.includes('/12pro') ||
+            nameLower.includes('12/12') ||
+            nameLower.includes('12 - 12') ||
+            nameLower.includes('/13 pro') ||
+            nameLower.includes('/ 13 pro');
+
+          let hasProExclusive = false;
+          if (hasProMax) {
+            hasProExclusive = false; // Lo gestiona hasProMax
+          } else {
+            const hasProWord = nameLower.includes(' pro ') || nameLower.endsWith(' pro') || nameLower.includes(' pro-') || nameLower.includes(' pro(') || nameLower.includes(' pro/') || nameLower.includes('pro ');
+            if (hasProWord && !isDualCompatibleWithBase) {
+              hasProExclusive = true;
+            }
+          }
+
           if (!userModifiers.includes('promax') && hasProMax) return false;
-          if (!userModifiers.includes('pro') && !userModifiers.includes('promax') && hasPro) return false;
-          if (!userModifiers.includes('plus') && hasPlus) return false;
+          if (!userModifiers.includes('pro') && !userModifiers.includes('promax') && hasProExclusive) return false;
           if (!userModifiers.includes('mini') && hasMini) return false;
+          if (!userModifiers.includes('plus') && hasPlus) return false;
           if (!userModifiers.includes('ultra') && hasUltra) return false;
           if (!userModifiers.includes('fe') && hasFE) return false;
           if (!userModifiers.includes('lite') && hasLite) return false;
