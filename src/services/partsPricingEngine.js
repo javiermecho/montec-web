@@ -28,12 +28,17 @@ const ALL_RAW_MODULES = [
   ...SOULFIX_PARTS.map(p => formatToModule(p, 'soulfix'))
 ];
 
-// 1. Filtrar repuestos válidos: solo módulos, excluyendo estrictamente INCELL y TFT
+// 1. Filtrar repuestos válidos: solo módulos reales de pantalla completa (excluyendo conectores FPC, flex, herramientas y calidad Incell/TFT)
 export const VALID_MODULES = ALL_RAW_MODULES.filter(part => {
-  if (part.part_type !== 'modulo' && !part.raw_name.toUpperCase().startsWith('MODULO')) return false;
   const upper = part.raw_name.toUpperCase();
+  // Excluir estrictamente partes secundarias, conectores y herramientas
+  if (/CONECTOR|FPC|FLEX|PIN DE CARGA|CAMARA|LENTE|TAPA|BANDEJA|SUBPLACA|PLACA|HUELLA|ANTENA|HERRAMIENTA|ESTACION|ALCOHOL|MALLA|ESTAÑO|PEGAMENTO|MAQUINA|DESTORNILLADOR|BATERIA|CABLE|CARGADOR|AURICULAR|PARLANTE|ALTAVOZ|MICROFONO|SENSOR/.test(upper)) {
+    return false;
+  }
+  // Excluir Incell y TFT
   if (upper.includes('INCELL') || upper.includes('TFT')) return false;
-  return true;
+  // Debe ser módulo o pantalla
+  return /MODULO|PANTALLA/i.test(upper);
 });
 
 // Parámetros de reglas de negocio
