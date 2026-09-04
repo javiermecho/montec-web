@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import MontecLogo from './MontecLogo';
+import PartsSearchTab from './admin/PartsSearchTab';
 
 export default function AdminPanel() {
   const {
@@ -59,7 +60,7 @@ export default function AdminPanel() {
   // Estados de interfaz
   const [pinInput, setPinInput] = useState('');
   const [loginError, setLoginError] = useState(false);
-  const [activeTab, setActiveTab] = useState('models'); // 'models', 'iphone_lab', 'pricing', 'accessories', 'settings'
+  const [activeTab, setActiveTab] = useState('models'); // 'models', 'parts_search', 'iphone_lab', 'pricing', 'accessories', 'settings'
   const [toastMessage, setToastMessage] = useState(null);
 
   // Estados para filtro y modales
@@ -304,6 +305,18 @@ export default function AdminPanel() {
         >
           <Smartphone className="w-4 h-4" />
           <span>Catálogo de Modelos ({models.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('parts_search')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
+            activeTab === 'parts_search' 
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+          }`}
+        >
+          <Search className="w-4 h-4 text-orange-400" />
+          <span>Buscador de Repuestos (Proveedores)</span>
         </button>
 
         <button
@@ -1292,6 +1305,13 @@ export default function AdminPanel() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* PESTAÑA: BUSCADOR DE REPUESTOS Y PROVEEDORES */}
+        {/* ============================================================== */}
+        {activeTab === 'parts_search' && (
+          <PartsSearchTab dolarRate={dolarRate} pricingRules={pricingRules} />
         )}
 
       </div>
