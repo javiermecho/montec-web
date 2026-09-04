@@ -26,6 +26,7 @@ import {
 import { SMARTSUPPLY_PARTS, SMARTSUPPLY_PARTS_INFO } from '../../data/smartsupplyParts';
 import { GRUPOARMAR_PARTS, GRUPOARMAR_PARTS_INFO } from '../../data/grupoarmarParts';
 import { CELLSTORE_PARTS, CELLSTORE_PARTS_INFO } from '../../data/cellstoreParts';
+import { SOULFIX_PARTS, SOULFIX_PARTS_INFO } from '../../data/soulfixParts';
 
 // Extractor inteligente de Modelo, Tipo de Repuesto y Calidad
 export function parsePartDetails(part) {
@@ -200,11 +201,12 @@ const PROVIDERS_CONFIG = {
     total: SMARTSUPPLY_PARTS.length,
     lastUpdate: SMARTSUPPLY_PARTS_INFO?.extracted_at
   },
-  supplier_4: { 
-    name: 'Proveedor 4 (Próximamente)', 
+  soulfix: { 
+    name: 'SoulFix', 
     badgeColor: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-    website: '#',
-    total: 0
+    website: 'https://soulfix.com.ar',
+    total: SOULFIX_PARTS.length,
+    lastUpdate: SOULFIX_PARTS_INFO?.extracted_at
   }
 };
 
@@ -269,8 +271,9 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
       }, 'grupoarmar', 'Grupo Armar');
     });
     const smartSupplyFormatted = SMARTSUPPLY_PARTS.map(p => formatPart(p, 'smartsupply', 'Smart Supply'));
+    const soulfixFormatted = SOULFIX_PARTS.map(p => formatPart(p, 'soulfix', 'SoulFix'));
 
-    return [...cellStoreFormatted, ...grupoArmarFormatted, ...smartSupplyFormatted];
+    return [...cellStoreFormatted, ...grupoArmarFormatted, ...smartSupplyFormatted, ...soulfixFormatted];
   }, [dolarRate]);
 
   // Extraer marcas únicas
@@ -532,6 +535,11 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
               <span className="font-semibold text-white">Smart Supply:</span>
               <span className="text-[#FF5500] font-bold">{SMARTSUPPLY_PARTS.length}</span>
             </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-zinc-800 text-[11px] text-zinc-300">
+              <Building2 className="w-3 h-3 text-purple-400" />
+              <span className="font-semibold text-white">SoulFix:</span>
+              <span className="text-purple-400 font-bold">{SOULFIX_PARTS.length}</span>
+            </div>
             <div className="text-[11px] text-zinc-400 font-bold bg-zinc-800/60 px-2 py-0.5 rounded-lg border border-zinc-700/50">
               Total: {allParts.length} repuestos
             </div>
@@ -647,6 +655,24 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
                 </div>
               </div>
 
+              {/* Proveedor 4: SoulFix */}
+              <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-white flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-purple-400" />
+                    SoulFix (soulfix.com.ar)
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    Conectado
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 text-zinc-400">
+                  <div>Total: <span className="font-bold text-white">{SOULFIX_PARTS.length}</span></div>
+                  <div>En Stock: <span className="font-bold text-emerald-400">{SOULFIX_PARTS.filter(p => p.in_stock).length}</span></div>
+                  <div>Agotados: <span className="font-bold text-rose-400">{SOULFIX_PARTS.filter(p => !p.in_stock).length}</span></div>
+                </div>
+              </div>
+
               {/* ID de sesión / Cookie */}
               <div>
                 <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
@@ -741,7 +767,7 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
               <option value="cellstore">CellStore MDP ({CELLSTORE_PARTS.length})</option>
               <option value="grupoarmar">Grupo Armar ({GRUPOARMAR_PARTS.length})</option>
               <option value="smartsupply">Smart Supply ({SMARTSUPPLY_PARTS.length})</option>
-              <option value="supplier_4" disabled>Proveedor 4 (Próximamente)</option>
+              <option value="soulfix">SoulFix ({SOULFIX_PARTS.length})</option>
             </select>
           </div>
 
@@ -1061,6 +1087,8 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
                             ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
                             : part.providerId === 'grupoarmar'
                             ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                            : part.providerId === 'soulfix'
+                            ? 'bg-purple-500/15 text-purple-400 border-purple-500/30'
                             : 'bg-orange-500/15 text-[#FF5500] border-orange-500/30'
                         }`}>
                           {part.providerName}
@@ -1149,6 +1177,8 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
                         ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
                         : part.providerId === 'grupoarmar'
                         ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                        : part.providerId === 'soulfix'
+                        ? 'bg-purple-500/15 text-purple-400 border-purple-500/30'
                         : 'bg-orange-500/15 text-[#FF5500] border-orange-500/30'
                     }`}>
                       {part.providerName}

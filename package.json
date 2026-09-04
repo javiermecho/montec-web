@@ -10,7 +10,8 @@
     "scrape:smartsupply": "node scripts/scrape_smartsupply.cjs",
     "scrape:grupoarmar": "node scripts/scrape_grupoarmar.cjs",
     "scrape:cellstore": "node scripts/scrape_cellstore.cjs",
-    "scrape:all": "node scripts/scrape_smartsupply.cjs && node scripts/scrape_grupoarmar.cjs && node scripts/scrape_cellstore.cjs"
+    "scrape:soulfix": "node scripts/scrape_soulfix.cjs",
+    "scrape:all": "node scripts/scrape_smartsupply.cjs && node scripts/scrape_grupoarmar.cjs && node scripts/scrape_cellstore.cjs && node scripts/scrape_soulfix.cjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",
