@@ -34,18 +34,40 @@ export function parsePartDetails(part) {
 
   // 1. Tipo de repuesto
   let partType = 'Repuesto';
-  if (upper.startsWith('MODULO') || upper.startsWith('MODULOS')) partType = 'Módulo Display';
-  else if (upper.startsWith('BATERIA') || upper.startsWith('BATERIAS')) partType = 'Batería';
-  else if (upper.startsWith('PLACA DE CARGA') || upper.startsWith('SUBPLACA')) partType = 'Placa de Carga';
-  else if (upper.startsWith('PIN DE CARGA') || upper.startsWith('PIN ')) partType = 'Pin de Carga';
-  else if (upper.startsWith('TAPA')) partType = 'Tapa Trasera';
-  else if (upper.startsWith('CAMARA')) partType = 'Cámara';
-  else if (upper.startsWith('LENTE') || upper.startsWith('VIDRIO CAMARA')) partType = 'Vidrio Cámara';
-  else if (upper.startsWith('FLEX')) partType = 'Flex / Conector';
-  else if (upper.startsWith('PARLANTE') || upper.startsWith('BUZZER') || upper.startsWith('AURICULAR')) partType = 'Parlante / Audio';
-  else if (upper.startsWith('GLASS') || upper.startsWith('VIDRIO')) partType = 'Vidrio / Touch';
-  else if (part.part_type) {
+  let categoryKey = 'otros';
+  if (upper.startsWith('MODULO') || upper.startsWith('MODULOS')) {
+    partType = 'Módulo Display';
+    categoryKey = 'modulo';
+  } else if (upper.startsWith('BATERIA') || upper.startsWith('BATERIAS')) {
+    partType = 'Batería';
+    categoryKey = 'bateria';
+  } else if (upper.startsWith('PLACA DE CARGA') || upper.startsWith('SUBPLACA')) {
+    partType = 'Placa de Carga';
+    categoryKey = 'placa_carga';
+  } else if (upper.startsWith('PIN DE CARGA') || upper.startsWith('PIN ')) {
+    partType = 'Pin de Carga';
+    categoryKey = 'pin_carga';
+  } else if (upper.startsWith('TAPA')) {
+    partType = 'Tapa Trasera';
+    categoryKey = 'tapa';
+  } else if (upper.startsWith('CAMARA')) {
+    partType = 'Cámara';
+    categoryKey = 'camara';
+  } else if (upper.startsWith('LENTE') || upper.startsWith('VIDRIO CAMARA')) {
+    partType = 'Vidrio Cámara';
+    categoryKey = 'vidrio_camara';
+  } else if (upper.startsWith('FLEX')) {
+    partType = 'Flex / Conector';
+    categoryKey = 'flex';
+  } else if (upper.startsWith('PARLANTE') || upper.startsWith('BUZZER') || upper.startsWith('AURICULAR')) {
+    partType = 'Parlante / Audio';
+    categoryKey = 'otros';
+  } else if (upper.startsWith('GLASS') || upper.startsWith('VIDRIO')) {
+    partType = 'Vidrio / Touch';
+    categoryKey = 'otros';
+  } else if (part.part_type) {
     partType = part.part_type.charAt(0).toUpperCase() + part.part_type.slice(1);
+    categoryKey = part.part_type.toLowerCase();
   }
 
   // 2. Calidad y Badges
@@ -134,11 +156,25 @@ export function parsePartDetails(part) {
 
   return {
     parsedPartType: partType,
+    categoryKey,
     parsedModel: cleanModel,
     parsedQuality: qualityText,
     qualityBadges: badges
   };
 }
+
+// Tipos de repuestos seleccionables con check
+export const PART_TYPE_CHECKBOXES = [
+  { id: 'modulo', label: 'Módulos' },
+  { id: 'bateria', label: 'Baterías' },
+  { id: 'placa_carga', label: 'Placas de Carga' },
+  { id: 'pin_carga', label: 'Pines de Carga' },
+  { id: 'tapa', label: 'Tapas' },
+  { id: 'camara', label: 'Cámaras' },
+  { id: 'vidrio_camara', label: 'Vidrios Cámara' },
+  { id: 'flex', label: 'Flex / Conectores' },
+  { id: 'otros', label: 'Otros' }
+];
 
 // Estilos y badges por proveedor
 const PROVIDERS_CONFIG = {
@@ -185,8 +221,8 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProvider, setSelectedProvider] = useState('all');
   const [selectedBrand, setSelectedBrand] = useState('all');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [onlyInStock, setOnlyInStock] = useState(false);
+  const [selectedCategoryKeys, setSelectedCategoryKeys] = useState([]); // Selección tipo check: vacío = Todos
+  const [onlyInStock, setOnlyInStock] = useState(true); // POR DEFAULT SOLO EN STOCK
   const [sortBy, setSortBy] = useState('relevance'); // 'relevance', 'price_asc', 'price_desc', 'name_asc'
   
   // Estado para copiar al portapapeles
@@ -195,6 +231,17 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
   // Margen estimado para cálculo de precio sugerido al cliente (PVP)
   const minLabor = pricingRules?.minLaborArs || 30000;
   const markupMultiplier = pricingRules?.markupMultiplier || 1.8;
+
+  // Manejo de checks de categorías
+  const handleToggleCategory = (catId) => {
+    setSelectedCategoryKeys(prev => 
+      prev.includes(catId) ? prev.filter(id => id !== catId) : [...prev, catId]
+    );
+  };
+
+  const handleClearCategories = () => {
+    setSelectedCategoryKeys([]);
+  };
 
   // Lista unificada de repuestos con datos estructurados (Modelo, Repuesto, Calidad)
   const allParts = useMemo(() => {
@@ -221,11 +268,17 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
     return ['all', ...Array.from(brands).sort()];
   }, [allParts]);
 
-  // Extraer tipos/categorías únicas
-  const availableCategories = useMemo(() => {
-    const cats = new Set(allParts.map(p => p.part_type).filter(Boolean));
-    return ['all', ...Array.from(cats).sort()];
-  }, [allParts]);
+  // Conteo de repuestos por tipo para los checks
+  const categoryCounts = useMemo(() => {
+    const counts = {};
+    allParts.forEach(p => {
+      // Si onlyInStock está activo, contar los que tienen stock para reflejar la disponibilidad real
+      if (!onlyInStock || p.in_stock) {
+        counts[p.categoryKey] = (counts[p.categoryKey] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [allParts, onlyInStock]);
 
   // Filtrado y ordenamiento de resultados
   const filteredParts = useMemo(() => {
@@ -240,12 +293,12 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
         return false;
       }
 
-      // Filtro por categoría
-      if (selectedCategory !== 'all' && part.part_type !== selectedCategory) {
+      // Filtro por tipo de repuesto (selección múltiple tipo check)
+      if (selectedCategoryKeys.length > 0 && !selectedCategoryKeys.includes(part.categoryKey)) {
         return false;
       }
 
-      // Filtro por stock
+      // Filtro por stock (por default activo)
       if (onlyInStock && !part.in_stock) {
         return false;
       }
@@ -639,7 +692,8 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
         </div>
 
         {/* Fila de Filtros Selectores */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-1">
+        {/* Fila de Filtros Selectores Principales */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
           {/* Proveedor */}
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">
@@ -675,23 +729,6 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
             </select>
           </div>
 
-          {/* Tipo de Repuesto */}
-          <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">
-              Tipo de Pieza
-            </label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-[#121214] border border-zinc-700/70 rounded-xl px-3 py-2 text-xs font-medium text-white focus:border-[#FF5500] outline-none capitalize"
-            >
-              <option value="all">Todas las Piezas</option>
-              {availableCategories.filter(c => c !== 'all').map(c => (
-                <option key={c} value={c} className="capitalize">{c.replace('_', ' ')}</option>
-              ))}
-            </select>
-          </div>
-
           {/* Ordenar Por */}
           <div>
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">
@@ -709,19 +746,100 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
             </select>
           </div>
 
-          {/* Switch de Solo en Stock */}
+          {/* Switch de Solo en Stock (Por Default Activo) */}
           <div className="flex flex-col justify-end">
             <button
+              type="button"
               onClick={() => setOnlyInStock(!onlyInStock)}
               className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
                 onlyInStock 
                   ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
                   : 'bg-[#121214] border-zinc-700/70 text-zinc-400 hover:text-white'
               }`}
+              title="Filtra solo repuestos con stock disponible en proveedores"
             >
               {onlyInStock ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Package className="w-3.5 h-3.5" />}
-              <span>Solo en Stock</span>
+              <span>Solo en Stock: {onlyInStock ? 'ON' : 'OFF'}</span>
             </button>
+          </div>
+        </div>
+
+        {/* Sección de Selección de Tipos de Repuesto tipo CHECK */}
+        <div className="pt-2 border-t border-zinc-800/70 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-300">
+              <Layers className="w-3.5 h-3.5 text-[#FF5500]" />
+              <span>Tipo de Repuesto (Filtro por Check):</span>
+              {selectedCategoryKeys.length > 0 && (
+                <span className="text-xs text-[#FF5500] font-semibold lowercase">
+                  ({selectedCategoryKeys.length} seleccionados)
+                </span>
+              )}
+            </div>
+
+            {selectedCategoryKeys.length > 0 && (
+              <button
+                type="button"
+                onClick={handleClearCategories}
+                className="text-[11px] text-zinc-400 hover:text-[#FF5500] underline transition-colors"
+              >
+                Limpiar selección (Ver Todos)
+              </button>
+            )}
+          </div>
+
+          {/* Lista de Checkboxes de Tipos */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Check de "Todos" */}
+            <button
+              type="button"
+              onClick={handleClearCategories}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                selectedCategoryKeys.length === 0
+                  ? 'bg-[#FF5500]/15 border-[#FF5500] text-white shadow-[0_0_10px_rgba(255,85,0,0.2)]'
+                  : 'bg-[#121214] border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+              }`}
+            >
+              <span className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-all ${
+                selectedCategoryKeys.length === 0
+                  ? 'bg-[#FF5500] border-[#FF5500] text-white'
+                  : 'border-zinc-600 bg-zinc-800'
+              }`}>
+                {selectedCategoryKeys.length === 0 && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+              </span>
+              <span>Todos los Repuestos</span>
+            </button>
+
+            {/* Checkboxes individuales */}
+            {PART_TYPE_CHECKBOXES.map(type => {
+              const isChecked = selectedCategoryKeys.includes(type.id);
+              const count = categoryCounts[type.id] || 0;
+
+              return (
+                <button
+                  key={type.id}
+                  type="button"
+                  onClick={() => handleToggleCategory(type.id)}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                    isChecked
+                      ? 'bg-[#FF5500]/15 border-[#FF5500] text-white shadow-[0_0_10px_rgba(255,85,0,0.25)]'
+                      : 'bg-[#121214] border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+                  }`}
+                >
+                  <span className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-all ${
+                    isChecked
+                      ? 'bg-[#FF5500] border-[#FF5500] text-white'
+                      : 'border-zinc-600 bg-zinc-800'
+                  }`}>
+                    {isChecked && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                  </span>
+                  <span>{type.label}</span>
+                  <span className="text-[10px] text-zinc-500 font-normal">
+                    ({count})
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -797,13 +915,13 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
           <p className="text-xs text-zinc-400 max-w-md mx-auto">
             Probá buscando con términos más generales como "12 pro max", "s21", "a04" o desactivá el botón "Filtro Modelo Estricto".
           </p>
-          {(searchTerm || selectedBrand !== 'all' || selectedCategory !== 'all' || onlyInStock || !exactModelMatch) && (
+          {(searchTerm || selectedBrand !== 'all' || selectedCategoryKeys.length > 0 || !onlyInStock || !exactModelMatch) && (
             <button
               onClick={() => {
                 setSearchTerm('');
                 setSelectedBrand('all');
-                setSelectedCategory('all');
-                setOnlyInStock(false);
+                setSelectedCategoryKeys([]);
+                setOnlyInStock(true);
                 setExactModelMatch(true);
               }}
               className="mt-4 px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-white transition-colors"
