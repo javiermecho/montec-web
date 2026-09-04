@@ -1,9 +1,9 @@
 // Catálogo importado de repuestos de Smart Supply (smartsupply.com.ar)
-// Generado automáticamente el 4/9/2026, 07:51:51
+// Generado automáticamente el 4/9/2026, 08:09:29
 
 export const SMARTSUPPLY_PARTS_INFO = {
   provider: "Smart Supply (smartsupply.com.ar)",
-  extracted_at: "2026-09-04T10:51:51.418Z",
+  extracted_at: "2026-09-04T11:09:29.596Z",
   total_parts: 895
 };
 
@@ -15,7 +15,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 31774.12,
     "price_cash_ars": 26927,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-11-hd-apto-trasplante"
   },
   {
@@ -25,7 +25,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 48290.31,
     "price_cash_ars": 40924,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-11-jk"
   },
   {
@@ -35,7 +35,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 80525.02,
     "price_cash_ars": 68242,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-11-pro-hard-oled-ic-removible"
   },
   {
@@ -45,7 +45,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 106621.09,
     "price_cash_ars": 90357,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-11-pro-max-oled-hard-ic-removible"
   },
   {
@@ -55,7 +55,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 54687.04,
     "price_cash_ars": 46345,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-11-pro-max-incell-fhd-jk"
   },
   {
@@ -65,7 +65,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 119755.15,
     "price_cash_ars": 101487,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-12---12-pro-oled-hard-ic-removible"
   },
   {
@@ -75,7 +75,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 131378.9,
     "price_cash_ars": 111338,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-12---12-pro-oled-soft-ic-removible"
   },
   {
@@ -95,7 +95,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 113943.28,
     "price_cash_ars": 96562,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-12-pro-max-incell-fhd-jk-apto-transplante"
   },
   {
@@ -115,7 +115,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 178982.72,
     "price_cash_ars": 151680,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-12-pro-max-soft-oled-gx-move-ic"
   },
   {
@@ -125,7 +125,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 117403.64,
     "price_cash_ars": 99495,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-programado-ms-hard-oled"
   },
   {
@@ -135,7 +135,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 75678.6,
     "price_cash_ars": 64134,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-programado-ms-incell-fhd-ltps"
   },
   {
@@ -145,7 +145,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 140890.1,
     "price_cash_ars": 119398,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-programado-ms-soft-oled"
   },
   {
@@ -155,7 +155,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 60749.36,
     "price_cash_ars": 51483,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-incell-fhd-jk"
   },
   {
@@ -165,7 +165,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 45913.79,
     "price_cash_ars": 38910,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-incell-gx"
   },
   {
@@ -175,7 +175,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 63075.63,
     "price_cash_ars": 53454,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-mini-incell-ms-apto-trasplante"
   },
   {
@@ -185,7 +185,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 161235.48,
     "price_cash_ars": 136640,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-mini-hard-ms-apto-trasplante"
   },
   {
@@ -195,7 +195,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 123805.11,
     "price_cash_ars": 104920,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-mini-soft-jk-apto-trasplante"
   },
   {
@@ -205,7 +205,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 117116.87,
     "price_cash_ars": 99252,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-oled-hard-apto-trasplante"
   },
   {
@@ -215,7 +215,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 149693.94,
     "price_cash_ars": 126859,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-oled-soft-apto-trasplante"
   },
   {
@@ -225,7 +225,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 134829.7,
     "price_cash_ars": 114262,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-pro-programado-ms-hard-oled"
   },
   {
@@ -235,7 +235,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 88987.6,
     "price_cash_ars": 75413,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-pro-programado-ms-incell-fhd-ltps"
   },
   {
@@ -245,7 +245,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 156402.45,
     "price_cash_ars": 132544,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-pro-programado-ms-soft-oled"
   },
   {
@@ -255,7 +255,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 142889.84,
     "price_cash_ars": 121093,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-pro-max-programado-ms-hard-oled"
   },
   {
@@ -265,7 +265,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 103481.91,
     "price_cash_ars": 87697,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-pro-max-programado-ms-incell-fhd"
   },
   {
@@ -275,7 +275,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 151009.26,
     "price_cash_ars": 127974,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-pro-max-programado-ms-soft-oled"
   },
   {
@@ -285,7 +285,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 62466.54,
     "price_cash_ars": 52938,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-13-pro-max-incell-hd--ms-ic-removible"
   },
   {
@@ -315,7 +315,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 97394.74,
     "price_cash_ars": 82538,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-pro-programado-ms-incell-fhd"
   },
   {
@@ -325,7 +325,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 172552.38,
     "price_cash_ars": 146231,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-pro-programado-ms-soft-oled"
   },
   {
@@ -335,7 +335,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 406066.32,
     "price_cash_ars": 344124,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-pro-soft-jc-pantalla-programada"
   },
   {
@@ -345,7 +345,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 134829.7,
     "price_cash_ars": 114262,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-pro-max-programado-ms-hard-oled"
   },
   {
@@ -355,7 +355,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 130828.3,
     "price_cash_ars": 110871,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-pro-max-programado-ms-incell-fhd"
   },
   {
@@ -365,7 +365,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 161766,
     "price_cash_ars": 137090,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-pro-max-programado-ms-soft-oled"
   },
   {
@@ -375,7 +375,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 61722.08,
     "price_cash_ars": 52307,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-14-pro-max-incell-hd--ms-ic-removible"
   },
   {
@@ -385,7 +385,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 191638.83,
     "price_cash_ars": 162406,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-pro-max-soft-dd-ic-removible"
   },
   {
@@ -405,7 +405,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 133644.38,
     "price_cash_ars": 113258,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-gx-soft-ic-removible"
   },
   {
@@ -435,7 +435,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 179311.55,
     "price_cash_ars": 151959,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-hard-ic-removible"
   },
   {
@@ -445,7 +445,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 140193.25,
     "price_cash_ars": 118808,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-pro-programado-ms-incell-fhd"
   },
   {
@@ -455,7 +455,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 231847.81,
     "price_cash_ars": 196481,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-pro-programado-ms-soft-oled"
   },
   {
@@ -465,7 +465,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 161308.13,
     "price_cash_ars": 136702,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-pro-hard-ic-removible"
   },
   {
@@ -475,7 +475,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 222042.19,
     "price_cash_ars": 188171,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-pro-max-programado-ms-hard-oled"
   },
   {
@@ -485,7 +485,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 180671.79,
     "price_cash_ars": 153112,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-pro-max-programado-ms-incell-fhd"
   },
   {
@@ -495,7 +495,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 231847.81,
     "price_cash_ars": 196481,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-pro-max-programado-ms-soft-oled"
   },
   {
@@ -505,7 +505,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 205801.45,
     "price_cash_ars": 174408,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-pro-max-soft-ic-remobible"
   },
   {
@@ -515,7 +515,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 196294.07,
     "price_cash_ars": 166351,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-pro-soft-ic-removible"
   },
   {
@@ -525,7 +525,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 150898.37,
     "price_cash_ars": 127880,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-soft-ic-removible"
   },
   {
@@ -545,7 +545,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 215077.5,
     "price_cash_ars": 182269,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-hard-ic-remobible"
   },
   {
@@ -555,7 +555,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 253114.67,
     "price_cash_ars": 214504,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-plus-soft-ic-removible"
   },
   {
@@ -565,7 +565,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 245360.41,
     "price_cash_ars": 207933,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-pro-programado-ms-hard-oled"
   },
   {
@@ -585,7 +585,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 350497.94,
     "price_cash_ars": 297032,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-pro-programado-ms-soft-oled"
   },
   {
@@ -595,7 +595,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 196529.22,
     "price_cash_ars": 166550,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-pro-hard"
   },
   {
@@ -615,7 +615,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 113256.94,
     "price_cash_ars": 95980,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-pro-max-programado-ms-incell-fhd"
   },
   {
@@ -625,7 +625,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 463725.25,
     "price_cash_ars": 392988,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-pro-max-programado-ms-soft-oled"
   },
   {
@@ -675,7 +675,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 86222.18,
     "price_cash_ars": 73070,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16e-incell-fhd-jk-move-ic"
   },
   {
@@ -705,7 +705,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 20245.96,
     "price_cash_ars": 17158,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-7-plus-blanco"
   },
   {
@@ -725,7 +725,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22253.35,
     "price_cash_ars": 18859,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-8-plus-blanco"
   },
   {
@@ -735,7 +735,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22253.35,
     "price_cash_ars": 18859,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-8-plus-negro"
   },
   {
@@ -755,7 +755,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 38350.71,
     "price_cash_ars": 32501,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-11-gx-apto-trasplante"
   },
   {
@@ -765,7 +765,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 52923.97,
     "price_cash_ars": 44851,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-12---12-pro-incell-jx-apto-trasplante"
   },
   {
@@ -775,7 +775,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 174173.12,
     "price_cash_ars": 147604,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-12--12-pro-oled-hard-jc-pantalla-programada"
   },
   {
@@ -795,7 +795,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 153319.37,
     "price_cash_ars": 129932,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-13-pro-incell-jc-pantalla-programada"
   },
   {
@@ -815,7 +815,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 194124.51,
     "price_cash_ars": 164512,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-13-pro-max-jc-incell-pantalla-programada"
   },
   {
@@ -865,7 +865,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 485567.34,
     "price_cash_ars": 411498,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-14-pro-max-oled-soft-jc-pantalla-programada"
   },
   {
@@ -885,7 +885,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 127910.89,
     "price_cash_ars": 108399,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-incell-apto-trasplante-fhd"
   },
   {
@@ -905,7 +905,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 94478.09,
     "price_cash_ars": 80066,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-xs-max-oled-soft-jk"
   },
   {
@@ -935,7 +935,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 72019.42,
     "price_cash_ars": 61033,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-x-hard"
   },
   {
@@ -945,7 +945,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 43015.5,
     "price_cash_ars": 36454,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-xr-fhd"
   },
   {
@@ -955,7 +955,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 95221.98,
     "price_cash_ars": 80697,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-xs-max-oled-hard"
   },
   {
@@ -985,7 +985,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 82127.98,
     "price_cash_ars": 69600,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-14-plus-incell-apto-transplante"
   },
   {
@@ -1055,7 +1055,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 129373.18,
     "price_cash_ars": 109638,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-x-oled-original-100"
   },
   {
@@ -1065,7 +1065,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 31751.17,
     "price_cash_ars": 26908,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-xr-incell"
   },
   {
@@ -1075,7 +1075,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 81865.67,
     "price_cash_ars": 69378,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-xr-original-100"
   },
   {
@@ -1105,7 +1105,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "bateria",
     "price_lista_ars": 57315.76,
     "price_cash_ars": 48573,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/bateria-para-iphone-11-con-flex-programado"
   },
   {
@@ -1175,7 +1175,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "bateria",
     "price_lista_ars": 69398.34,
     "price_cash_ars": 58812,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/bateria-para-iphone-12--12-pro-gen-decode-diagnostica"
   },
   {
@@ -1775,7 +1775,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "bateria",
     "price_lista_ars": 34453.72,
     "price_cash_ars": 29198,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/bateria-para-iphone-11-pro-con-flex-programado"
   },
   {
@@ -1995,7 +1995,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 18498.58,
     "price_cash_ars": 15677,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-flash-para-iphone-14-pro"
   },
   {
@@ -2015,7 +2015,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 18498.58,
     "price_cash_ars": 15677,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-flash-para-iphone-15-pro-max"
   },
   {
@@ -2025,7 +2025,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 8188.22,
     "price_cash_ars": 6939,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-power-para-iphone-15"
   },
   {
@@ -2035,7 +2035,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 18498.58,
     "price_cash_ars": 15677,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-flash-para-iphone-14-pro-max"
   },
   {
@@ -2045,7 +2045,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 18498.58,
     "price_cash_ars": 15677,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-flash-para-iphone-15-pro"
   },
   {
@@ -2055,7 +2055,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 18498.58,
     "price_cash_ars": 15677,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-flash-para-iphone-14"
   },
   {
@@ -2065,7 +2065,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 27595.86999,
     "price_cash_ars": 23386,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-sensor-de-luz-para-iphone-15"
   },
   {
@@ -2075,7 +2075,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 8188.22,
     "price_cash_ars": 6939,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-power-para-iphone-15-pro-max"
   },
   {
@@ -2085,7 +2085,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 18498.58,
     "price_cash_ars": 15677,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-flash-para-iphone-15"
   },
   {
@@ -2095,7 +2095,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 27595.86999,
     "price_cash_ars": 23386,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-sensor-de-luz-para-iphone-15-pro-max"
   },
   {
@@ -2105,7 +2105,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 8188.22,
     "price_cash_ars": 6939,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-power-para-iphone-15-pro"
   },
   {
@@ -2115,7 +2115,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 27595.86999,
     "price_cash_ars": 23386,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-sensor-de-luz-para-iphone-15-pro"
   },
   {
@@ -2125,7 +2125,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 17342.98,
     "price_cash_ars": 14697,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-flash-para-iphone-11"
   },
   {
@@ -2135,7 +2135,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 6763.45,
     "price_cash_ars": 5732,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-power---volumen-iphone-8-plus"
   },
   {
@@ -2255,7 +2255,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 21679.811999999994,
     "price_cash_ars": 18373,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-para-iphone-15-original"
   },
   {
@@ -2265,7 +2265,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 21679.811999999994,
     "price_cash_ars": 18373,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-para-iphone-15-pro-max-original"
   },
   {
@@ -2275,7 +2275,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 6550.55,
     "price_cash_ars": 5551,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-power---volumen-iphone-12---12-pro"
   },
   {
@@ -2295,7 +2295,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 21679.811999999994,
     "price_cash_ars": 18373,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-para-iphone-15-pro-original"
   },
   {
@@ -2315,7 +2315,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 17415.74,
     "price_cash_ars": 14759,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-para-iphone-8-plus-original"
   },
   {
@@ -2335,7 +2335,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 69159.64,
     "price_cash_ars": 58610,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-iphone-11-pro-con-ic-original"
   },
   {
@@ -2345,7 +2345,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 57317.26,
     "price_cash_ars": 48574,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-iphone-11-pro-max-con-ic-original"
   },
   {
@@ -2365,7 +2365,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 23115.02,
     "price_cash_ars": 19589,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-iphone-12-original"
   },
   {
@@ -2405,7 +2405,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 47672.15,
     "price_cash_ars": 40400,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-iphone-13-original"
   },
   {
@@ -2425,7 +2425,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 56118.82,
     "price_cash_ars": 47558,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-iphone-13-pro-original"
   },
   {
@@ -2435,7 +2435,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 13885.5,
     "price_cash_ars": 11767,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-para-iphone-8-original-elegir-color"
   },
   {
@@ -2455,7 +2455,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 10106.54,
     "price_cash_ars": 8565,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-sensor-de-luz-para-iphone-13-original"
   },
   {
@@ -2465,7 +2465,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 9610.23,
     "price_cash_ars": 8144,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-sensor-de-luz-para-iphone-13-pro-max-original"
   },
   {
@@ -2505,7 +2505,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 19729.78,
     "price_cash_ars": 16720,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-para-iphone-11-original"
   },
   {
@@ -2575,7 +2575,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 26202.15,
     "price_cash_ars": 22205,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-flash-para-iphone-13-pro"
   },
   {
@@ -2585,7 +2585,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 27054.28,
     "price_cash_ars": 22927,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-flash-para-iphone-13-pro-max"
   },
   {
@@ -2595,7 +2595,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 5895.59,
     "price_cash_ars": 4996,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-power-iphone-11"
   },
   {
@@ -2705,7 +2705,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 2767.91,
     "price_cash_ars": 2346,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-boton-home-para-iphone-6s-6s-plus-blanco"
   },
   {
@@ -2755,7 +2755,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 6079.52,
     "price_cash_ars": 5152,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-boton-home-para-iphone-huella-7---8-plus-elegir-color"
   },
   {
@@ -2825,7 +2825,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "flex",
     "price_lista_ars": 9847.57,
     "price_cash_ars": 8345,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/flex-de-carga-iphone-7-plus"
   },
   {
@@ -2835,7 +2835,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 19894.95,
     "price_cash_ars": 16860,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a30-incell-con-marco"
   },
   {
@@ -2845,7 +2845,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 78882.78,
     "price_cash_ars": 66850,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a16-incell-con-marco"
   },
   {
@@ -2855,7 +2855,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 19894.95,
     "price_cash_ars": 16860,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a22-4g-incell-con-marco"
   },
   {
@@ -2875,7 +2875,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 93630.41,
     "price_cash_ars": 79348,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a53-incell-con-marco"
   },
   {
@@ -2885,7 +2885,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 21928.35,
     "price_cash_ars": 18583,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-a02s---a03s---a03---a04e-crown"
   },
   {
@@ -2905,7 +2905,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 18640.05,
     "price_cash_ars": 15797,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a04-calidad-original"
   },
   {
@@ -2945,7 +2945,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 29273.48,
     "price_cash_ars": 24808,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a06-crown"
   },
   {
@@ -2965,7 +2965,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22568.8,
     "price_cash_ars": 19126,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a10-crown"
   },
   {
@@ -3015,7 +3015,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 24536.04,
     "price_cash_ars": 20793,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a13-a135f"
   },
   {
@@ -3035,7 +3035,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 16262.17,
     "price_cash_ars": 13782,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a14-4g-a145f-original"
   },
   {
@@ -3045,7 +3045,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 26817.77,
     "price_cash_ars": 22727,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a15-incell"
   },
   {
@@ -3055,7 +3055,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 32685.09,
     "price_cash_ars": 27699,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a15-incell-con-marco"
   },
   {
@@ -3065,7 +3065,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 76349.64,
     "price_cash_ars": 64703,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a15-oled-sin-marco"
   },
   {
@@ -3075,7 +3075,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 101196.35,
     "price_cash_ars": 85760,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a15-oled-con-marco"
   },
   {
@@ -3085,7 +3085,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 26817.77,
     "price_cash_ars": 22727,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a16-5g--a17-incell-sin-marco"
   },
   {
@@ -3095,7 +3095,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22492.33,
     "price_cash_ars": 19061,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a16-5g--a17-oled-sin-marco-calidad-original"
   },
   {
@@ -3105,7 +3105,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 78882.78,
     "price_cash_ars": 66850,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a16-oled-con-marco"
   },
   {
@@ -3155,7 +3155,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22906.23,
     "price_cash_ars": 19412,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a21s-sin-marco"
   },
   {
@@ -3165,7 +3165,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 39094.4,
     "price_cash_ars": 33131,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a21s-con-marco"
   },
   {
@@ -3185,7 +3185,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 19894.95,
     "price_cash_ars": 16860,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a22-4g-incell-sin-marco"
   },
   {
@@ -3215,7 +3215,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 31458.67,
     "price_cash_ars": 26660,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a24-incell-con-marco"
   },
   {
@@ -3235,7 +3235,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 98897.41,
     "price_cash_ars": 83811,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a24-oled-con-marco-pantalla-grande"
   },
   {
@@ -3245,7 +3245,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 196953.64,
     "price_cash_ars": 166910,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-a24-original-con-marco"
   },
   {
@@ -3255,7 +3255,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 104313.93,
     "price_cash_ars": 88402,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a25-oled-con-marco-pantalla-grande"
   },
   {
@@ -3275,7 +3275,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 94722.04,
     "price_cash_ars": 80273,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a26-oled-con-marco-pantalla-grande"
   },
   {
@@ -3285,7 +3285,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 24891.64,
     "price_cash_ars": 21095,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a30--a50-incell-sin-marco"
   },
   {
@@ -3295,7 +3295,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 68126.04,
     "price_cash_ars": 57734,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a30--a50-oled-sin-marco"
   },
   {
@@ -3305,7 +3305,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 29393.93,
     "price_cash_ars": 24910,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a31-incell-con-marco"
   },
   {
@@ -3315,7 +3315,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 71889.42,
     "price_cash_ars": 60923,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a31-oled-con-marco"
   },
   {
@@ -3325,7 +3325,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 31458.67,
     "price_cash_ars": 26660,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a32-4g-incell-con-marco"
   },
   {
@@ -3335,7 +3335,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 75060.14,
     "price_cash_ars": 63610,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a32-4g-oled-con-marco"
   },
   {
@@ -3375,7 +3375,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 99107.71,
     "price_cash_ars": 83990,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a35-oled-con-marco-pantalla-grande"
   },
   {
@@ -3385,7 +3385,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 86231.74,
     "price_cash_ars": 73078,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a36-oled-con-marco-pantalla-grande"
   },
   {
@@ -3395,7 +3395,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 254516.98,
     "price_cash_ars": 215692,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a37-calidad-original-con-marco"
   },
   {
@@ -3405,7 +3405,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 29395.84,
     "price_cash_ars": 24912,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a51-incellcon-marco"
   },
   {
@@ -3415,7 +3415,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 82073.57,
     "price_cash_ars": 69554,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a51-oled-con-marco"
   },
   {
@@ -3425,7 +3425,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 36596.63,
     "price_cash_ars": 31014,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a52-4g-incell-con-marco"
   },
   {
@@ -3435,7 +3435,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 85283.49,
     "price_cash_ars": 72274,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a52-4g-oled-con-marco-pantalla-completa"
   },
   {
@@ -3465,7 +3465,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 102440.94,
     "price_cash_ars": 86814,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a56-oled-sin-marco"
   },
   {
@@ -3475,7 +3475,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 105240.77,
     "price_cash_ars": 89187,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-a70-oled-sin-marco"
   },
   {
@@ -3485,7 +3485,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 86960.13,
     "price_cash_ars": 73695,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a71-oled-con-marco"
   },
   {
@@ -3495,7 +3495,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 93171.57,
     "price_cash_ars": 78959,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a72-oled-con-marco"
   },
   {
@@ -3515,7 +3515,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 23382.66,
     "price_cash_ars": 19816,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-j4-plus--j4-core-j6-plus"
   },
   {
@@ -3545,7 +3545,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 49209.73,
     "price_cash_ars": 41703,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-j7-2016-oled"
   },
   {
@@ -3555,7 +3555,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 76567.59,
     "price_cash_ars": 64888,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-s20-fe-con-marco-pantalla-completa"
   },
   {
@@ -3565,7 +3565,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 194688.15,
     "price_cash_ars": 164990,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-smasung-s21-5g-oled-soft-con-marco-pantalla-completa"
   },
   {
@@ -3585,7 +3585,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 213831.01,
     "price_cash_ars": 181213,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-s21-ultra-oled-soft-con-marco-pantalla-completa"
   },
   {
@@ -3595,7 +3595,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 446627.07,
     "price_cash_ars": 378498,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-s22-ultra-oled-soft-con-marco-pantalla-completa"
   },
   {
@@ -3615,7 +3615,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 87209.62,
     "price_cash_ars": 73906,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-s24-fe-oled-hard-con-marco-pantalla-completa"
   },
   {
@@ -3625,7 +3625,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 446034.41,
     "price_cash_ars": 377995,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-s24-ultra-oled-soft-con-marco-pantalla-completa"
   },
   {
@@ -3655,7 +3655,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 446034.41,
     "price_cash_ars": 377995,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-s25-ultra-oled-soft-con-marco-pantalla-completa"
   },
   {
@@ -3665,7 +3665,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 25513.93,
     "price_cash_ars": 21622,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a14-5g-a146b"
   },
   {
@@ -3765,7 +3765,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 121819.9,
     "price_cash_ars": 103237,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a54-original-con-marco-pantalla-grande"
   },
   {
@@ -3805,7 +3805,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 19615.07,
     "price_cash_ars": 16623,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-j7-prime-negro"
   },
   {
@@ -3825,7 +3825,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 236872.02,
     "price_cash_ars": 200739,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-s23-con-marco-oled"
   },
   {
@@ -3835,7 +3835,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 32041.89,
     "price_cash_ars": 27154,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-samsung-a12-a127f-127m-a032f-con-marco"
   },
   {
@@ -3845,7 +3845,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 68456.02,
     "price_cash_ars": 58014,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a20-oled-con-marco"
   },
   {
@@ -3855,7 +3855,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 102520.28,
     "price_cash_ars": 86882,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-samsung-a34-original-con-marco"
   },
   {
@@ -3885,7 +3885,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 155902.8,
     "price_cash_ars": 132121,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-samsung-s21-con-marco-amoled"
   },
   {
@@ -3895,7 +3895,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 24536.04,
     "price_cash_ars": 20793,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-samsung-a23-4g-a235---m336"
   },
   {
@@ -3965,7 +3965,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "bateria",
     "price_lista_ars": 18814.41,
     "price_cash_ars": 15944,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/bateria-para-samsung-a10-eb-ba750abu"
   },
   {
@@ -4375,7 +4375,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 338271.47,
     "price_cash_ars": 286671,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a13-4g-aaa"
   },
   {
@@ -4395,7 +4395,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 3747.13,
     "price_cash_ars": 3176,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a12-a125-aaa"
   },
   {
@@ -4405,7 +4405,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 4175.37,
     "price_cash_ars": 3538,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a04-aaa"
   },
   {
@@ -4415,7 +4415,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 2810.35,
     "price_cash_ars": 2382,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a02s-aaa"
   },
   {
@@ -4425,7 +4425,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 3747.13,
     "price_cash_ars": 3176,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a03-core-aaa"
   },
   {
@@ -4435,7 +4435,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 4091.25,
     "price_cash_ars": 3467,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a32-4g-aaa"
   },
   {
@@ -4445,7 +4445,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 3747.13,
     "price_cash_ars": 3176,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a01-aaa"
   },
   {
@@ -4455,7 +4455,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 2810.35,
     "price_cash_ars": 2382,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a10s-m16-aaa"
   },
   {
@@ -4475,7 +4475,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 8220.74,
     "price_cash_ars": 6967,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a23-aaa"
   },
   {
@@ -4495,7 +4495,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 20539.26,
     "price_cash_ars": 17406,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a15-aaa"
   },
   {
@@ -4505,7 +4505,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 22282.03,
     "price_cash_ars": 18883,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-s23-ultra-original"
   },
   {
@@ -4515,7 +4515,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 11099.15,
     "price_cash_ars": 9406,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a06"
   },
   {
@@ -4525,7 +4525,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 2997.7,
     "price_cash_ars": 2540,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a11-aaa"
   },
   {
@@ -4575,7 +4575,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 11099.15,
     "price_cash_ars": 9406,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a24-original"
   },
   {
@@ -4675,7 +4675,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 18308.34,
     "price_cash_ars": 15516,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a20s-m14-original"
   },
   {
@@ -4755,7 +4755,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 15497.05,
     "price_cash_ars": 13133,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a13-4g-original"
   },
   {
@@ -4775,7 +4775,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 8450.39,
     "price_cash_ars": 7161,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-samsung-s20-plus"
   },
   {
@@ -4805,7 +4805,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 11099.15,
     "price_cash_ars": 9406,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a06-original"
   },
   {
@@ -4815,7 +4815,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 24656.02,
     "price_cash_ars": 20895,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a55-original"
   },
   {
@@ -4825,7 +4825,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 8993.11,
     "price_cash_ars": 7621,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a04-original"
   },
   {
@@ -4845,7 +4845,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 19133.29,
     "price_cash_ars": 16215,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-s20-fe-5g-original"
   },
   {
@@ -4875,7 +4875,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 22291.59,
     "price_cash_ars": 18891,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a54-original"
   },
   {
@@ -4895,7 +4895,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 12595.59,
     "price_cash_ars": 10674,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a15-original"
   },
   {
@@ -4915,7 +4915,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 29669.91,
     "price_cash_ars": 25144,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a36-original"
   },
   {
@@ -4925,7 +4925,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 11088.44,
     "price_cash_ars": 9397,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a33-original"
   },
   {
@@ -4945,7 +4945,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 11126.68,
     "price_cash_ars": 9429,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a04e-original"
   },
   {
@@ -4975,7 +4975,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 11126.68,
     "price_cash_ars": 9429,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-samsung-a12-a127-original"
   },
   {
@@ -4985,7 +4985,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 17799.8,
     "price_cash_ars": 15085,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-samsung-a03-original"
   },
   {
@@ -5005,7 +5005,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 17160.92,
     "price_cash_ars": 14543,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a21s"
   },
   {
@@ -5015,7 +5015,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 21508.1,
     "price_cash_ars": 18227,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-samsung-a14-a145-fm-original"
   },
   {
@@ -5055,7 +5055,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 19085.11,
     "price_cash_ars": 16174,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-s24-fe-original"
   },
   {
@@ -5125,7 +5125,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 33724.15,
     "price_cash_ars": 28580,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-samsung-a72-original"
   },
   {
@@ -5155,7 +5155,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 6436.06,
     "price_cash_ars": 5454,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-samsung-a30s"
   },
   {
@@ -5165,7 +5165,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 10644.73,
     "price_cash_ars": 9021,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-samsung-a12-alternativo"
   },
   {
@@ -5185,7 +5185,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 49.21,
     "price_cash_ars": 42,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-samsung-s10"
   },
   {
@@ -5215,7 +5215,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 49.21,
     "price_cash_ars": 42,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-samsung-s10-plus"
   },
   {
@@ -5225,7 +5225,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 12528.43,
     "price_cash_ars": 10617,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-samsung-a21s-original"
   },
   {
@@ -5235,7 +5235,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 4405.54,
     "price_cash_ars": 3734,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-samsung-a01"
   },
   {
@@ -5245,7 +5245,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 7241.51,
     "price_cash_ars": 6137,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a25"
   },
   {
@@ -5255,7 +5255,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 7241.51,
     "price_cash_ars": 6137,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a16-4g-gris-claro-"
   },
   {
@@ -5265,7 +5265,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 7918.29,
     "price_cash_ars": 6710,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a06"
   },
   {
@@ -5275,7 +5275,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 4686.87,
     "price_cash_ars": 3972,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a01-core-elegir-color"
   },
   {
@@ -5285,7 +5285,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 9204.17,
     "price_cash_ars": 7800,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a26"
   },
   {
@@ -5295,7 +5295,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 9204.17,
     "price_cash_ars": 7800,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a36"
   },
   {
@@ -5305,7 +5305,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-a30s"
   },
   {
@@ -5315,7 +5315,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a30s-elegir-color"
   },
   {
@@ -5325,7 +5325,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 7918.29,
     "price_cash_ars": 6710,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-s24-fe"
   },
   {
@@ -5335,7 +5335,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 7241.51,
     "price_cash_ars": 6137,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a16-4g-negro"
   },
   {
@@ -5345,7 +5345,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 7241.51,
     "price_cash_ars": 6137,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a16-4g-verde-claro"
   },
   {
@@ -5355,7 +5355,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5955.64,
     "price_cash_ars": 5047,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a15-elegir-color"
   },
   {
@@ -5365,7 +5365,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a022-elegir-color"
   },
   {
@@ -5375,7 +5375,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a02s-elegir-color"
   },
   {
@@ -5385,7 +5385,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5624.24,
     "price_cash_ars": 4766,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a02s-elegir-color"
   },
   {
@@ -5395,7 +5395,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 6564.73,
     "price_cash_ars": 5563,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a24"
   },
   {
@@ -5415,7 +5415,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 6180.49,
     "price_cash_ars": 5238,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a03s-elegir-color"
   },
   {
@@ -5425,7 +5425,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 6180.49,
     "price_cash_ars": 5238,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a03s-elegir-color"
   },
   {
@@ -5435,7 +5435,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a04-elegir-color"
   },
   {
@@ -5445,7 +5445,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a04-elegir-color"
   },
   {
@@ -5455,7 +5455,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a04e-elegir-color"
   },
   {
@@ -5465,7 +5465,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a52-elegir-color"
   },
   {
@@ -5475,7 +5475,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5314.8,
     "price_cash_ars": 4504,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a04s-elegir-color"
   },
   {
@@ -5485,7 +5485,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a52-elegir-color"
   },
   {
@@ -5495,7 +5495,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5955.64,
     "price_cash_ars": 5047,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a05-elegir-color"
   },
   {
@@ -5505,7 +5505,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a10-elegir-color"
   },
   {
@@ -5515,7 +5515,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a10s-elegir-color"
   },
   {
@@ -5525,7 +5525,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a20-elegir-color"
   },
   {
@@ -5535,7 +5535,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a10s-elegir-color"
   },
   {
@@ -5545,7 +5545,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a20-elegir-color"
   },
   {
@@ -5555,7 +5555,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 7292.98,
     "price_cash_ars": 6180,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a11-elegir-color"
   },
   {
@@ -5565,7 +5565,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 7292.98,
     "price_cash_ars": 6180,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a11-elegir-color"
   },
   {
@@ -5575,7 +5575,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 6180.49,
     "price_cash_ars": 5238,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a12-elegir-color"
   },
   {
@@ -5585,7 +5585,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 6180.49,
     "price_cash_ars": 5238,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a13-elegir-color"
   },
   {
@@ -5595,7 +5595,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 8448.44,
     "price_cash_ars": 7160,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a16-5g-elegir-color"
   },
   {
@@ -5605,7 +5605,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 6023.32,
     "price_cash_ars": 5105,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a21s"
   },
   {
@@ -5615,7 +5615,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 7218.96,
     "price_cash_ars": 6118,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a22-4g-elegir-color"
   },
   {
@@ -5625,7 +5625,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a22-5g-elegir-color"
   },
   {
@@ -5635,7 +5635,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a03-elegir-color"
   },
   {
@@ -5645,7 +5645,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a51-elegir-color"
   },
   {
@@ -5655,7 +5655,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5624.24,
     "price_cash_ars": 4766,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a23-4g-elegir-color"
   },
   {
@@ -5665,7 +5665,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a30-elegir-color"
   },
   {
@@ -5675,7 +5675,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a30-elegir-color"
   },
   {
@@ -5685,7 +5685,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a31-elegir-color"
   },
   {
@@ -5695,7 +5695,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5955.64,
     "price_cash_ars": 5047,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a32-4g-elegir-color"
   },
   {
@@ -5705,7 +5705,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5624.24,
     "price_cash_ars": 4766,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a33-elegir-color"
   },
   {
@@ -5715,7 +5715,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 6564.73,
     "price_cash_ars": 5563,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a34"
   },
   {
@@ -5725,7 +5725,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a50-elegir-color"
   },
   {
@@ -5735,7 +5735,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a70-elegir-color"
   },
   {
@@ -5745,7 +5745,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a71-elegir-color"
   },
   {
@@ -5755,7 +5755,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-samsung-a72-elegir-color"
   },
   {
@@ -5815,7 +5815,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5060.57,
     "price_cash_ars": 4289,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-trasera-samsung-s9-plus-negra"
   },
   {
@@ -5825,7 +5825,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 5067.99,
     "price_cash_ars": 4295,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-samsung-a54-elegir-color"
   },
   {
@@ -5875,7 +5875,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "camara",
     "price_lista_ars": 7989.41,
     "price_cash_ars": 6771,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/camara-frontal-para-samsung-a51-ori"
   },
   {
@@ -5895,7 +5895,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "camara",
     "price_lista_ars": 35400,
     "price_cash_ars": 30000,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/camara-principal-para-samsung-a31-original"
   },
   {
@@ -5965,7 +5965,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "camara",
     "price_lista_ars": 22559.24,
     "price_cash_ars": 19118,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/kit-camaras-para-samsung-a52-original"
   },
   {
@@ -5995,7 +5995,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "camara",
     "price_lista_ars": 12004.09,
     "price_cash_ars": 10173,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/camara-trasera-samsung-s9"
   },
   {
@@ -6005,7 +6005,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "camara",
     "price_lista_ars": 12004.09,
     "price_cash_ars": 10173,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/camara-trasera-samsung-s9-plus"
   },
   {
@@ -6015,7 +6015,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 94519.39,
     "price_cash_ars": 80101,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-edge-40---edge-40-neo-original-con-marco"
   },
   {
@@ -6025,7 +6025,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 21983.18,
     "price_cash_ars": 18630,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g77-5g"
   },
   {
@@ -6035,7 +6035,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 19930.52,
     "price_cash_ars": 16890,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-e13-original"
   },
   {
@@ -6045,7 +6045,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 21306.06,
     "price_cash_ars": 18056,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-e14---g04---g04s---g24---g24-power"
   },
   {
@@ -6065,7 +6065,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22568.8,
     "price_cash_ars": 19126,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-moto-e22---e22i-crown"
   },
   {
@@ -6075,7 +6075,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22167.32,
     "price_cash_ars": 18786,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-e32---g22-crown"
   },
   {
@@ -6085,7 +6085,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 23916.62,
     "price_cash_ars": 20268,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-e40-crown"
   },
   {
@@ -6095,7 +6095,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 3239457.28,
     "price_cash_ars": 2745303,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-e6-plus"
   },
   {
@@ -6115,7 +6115,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 97358.42,
     "price_cash_ars": 82507,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-moto-edge-20-lite-original-s-marco"
   },
   {
@@ -6125,7 +6125,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 74556.38,
     "price_cash_ars": 63183,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-edge-30--g52--g82--g71s-original"
   },
   {
@@ -6145,7 +6145,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 165440.48,
     "price_cash_ars": 140204,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-moto-edge-40-original-con-marco"
   },
   {
@@ -6155,7 +6155,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 94519.39,
     "price_cash_ars": 80101,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-moto-edge-40---edge-40-neo-original-sm"
   },
   {
@@ -6165,7 +6165,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 91307.57,
     "price_cash_ars": 77379,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-edge-60-5g--60-fusion-5g-original"
   },
   {
@@ -6185,7 +6185,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 25187.97,
     "price_cash_ars": 21346,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g05-4g--e15--g15-crown"
   },
   {
@@ -6205,7 +6205,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 21306.06,
     "price_cash_ars": 18056,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g10g20g30"
   },
   {
@@ -6215,7 +6215,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 23558.16,
     "price_cash_ars": 19965,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g13---g23"
   },
   {
@@ -6235,7 +6235,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 26165.85,
     "price_cash_ars": 22174,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g17-calidad-original"
   },
   {
@@ -6245,7 +6245,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 34640.86,
     "price_cash_ars": 29357,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g200"
   },
   {
@@ -6255,7 +6255,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 69370.62,
     "price_cash_ars": 58789,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g31---g41---g71-calidad-original"
   },
   {
@@ -6285,7 +6285,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 75879.34,
     "price_cash_ars": 64305,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g42-oled"
   },
   {
@@ -6295,7 +6295,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22224.68,
     "price_cash_ars": 18834,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g51---g60---g60s-crown"
   },
   {
@@ -6305,7 +6305,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22402.47,
     "price_cash_ars": 18985,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g51---g60---g60s-original"
   },
   {
@@ -6315,7 +6315,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 33188.85,
     "price_cash_ars": 28126,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-motorola-g56-5g-original"
   },
   {
@@ -6325,7 +6325,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 25691.72,
     "price_cash_ars": 21773,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g7--g7-plus"
   },
   {
@@ -6335,7 +6335,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 17206.2,
     "price_cash_ars": 14582,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-moto-g7-play"
   },
   {
@@ -6345,7 +6345,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 21928.35,
     "price_cash_ars": 18583,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-moto-g7-power"
   },
   {
@@ -6355,7 +6355,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 113969.28,
     "price_cash_ars": 96584,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-moto-g72-original"
   },
   {
@@ -6375,7 +6375,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22322.18,
     "price_cash_ars": 18917,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g8"
   },
   {
@@ -6395,7 +6395,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22798.22,
     "price_cash_ars": 19321,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g8-plus"
   },
   {
@@ -6405,7 +6405,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 24570.45,
     "price_cash_ars": 20822,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g8-power-original"
   },
   {
@@ -6425,7 +6425,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 70496.67,
     "price_cash_ars": 59743,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g85--edge-50-fusion-original"
   },
   {
@@ -6445,7 +6445,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 16832.63,
     "price_cash_ars": 14265,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g9---g9-play---e7-plus-original"
   },
   {
@@ -6455,7 +6455,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 25507.24,
     "price_cash_ars": 21616,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-motorola-g9-plus-original"
   },
   {
@@ -6465,7 +6465,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 26698.29,
     "price_cash_ars": 22626,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-g9-power"
   },
   {
@@ -6495,7 +6495,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 157418.37,
     "price_cash_ars": 133405,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-edge-40-pro-5g-original"
   },
   {
@@ -6515,7 +6515,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 19930.52,
     "price_cash_ars": 16890,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-moto-one-fusion"
   },
   {
@@ -6645,7 +6645,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 21081.61,
     "price_cash_ars": 17866,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-moto-g8-power-lite"
   },
   {
@@ -6705,7 +6705,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 170611.02,
     "price_cash_ars": 144586,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-moto-edge-30-neo-oled-con-marco"
   },
   {
@@ -6865,7 +6865,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 6782.68,
     "price_cash_ars": 5748,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-g22-aaa"
   },
   {
@@ -6875,7 +6875,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 10038.86,
     "price_cash_ars": 8508,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-edge-60-original"
   },
   {
@@ -6885,7 +6885,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 5630.78,
     "price_cash_ars": 4772,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-g56-5g-original"
   },
   {
@@ -6895,7 +6895,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 5038.06,
     "price_cash_ars": 4270,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-g17-ori"
   },
   {
@@ -6915,7 +6915,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 5735.4,
     "price_cash_ars": 4861,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-g20-aaa"
   },
   {
@@ -6925,7 +6925,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 15069.57,
     "price_cash_ars": 12771,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-e40-alternativa"
   },
   {
@@ -6935,7 +6935,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 10409.75,
     "price_cash_ars": 8822,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-one-fusion-original"
   },
   {
@@ -6945,7 +6945,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 31294.18,
     "price_cash_ars": 26520,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-edge-40-pro-original"
   },
   {
@@ -6955,7 +6955,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 14590.86,
     "price_cash_ars": 12365,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-g06-original"
   },
   {
@@ -6965,7 +6965,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 6538.36,
     "price_cash_ars": 5541,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-g51-aaa"
   },
   {
@@ -6975,7 +6975,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 8172.95,
     "price_cash_ars": 6926,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-g13-aaa"
   },
   {
@@ -6985,7 +6985,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 6538.36,
     "price_cash_ars": 5541,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-e13-aaa"
   },
   {
@@ -6995,7 +6995,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 28705.68,
     "price_cash_ars": 24327,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-edge-moto-50-pro-ori"
   },
   {
@@ -7005,7 +7005,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 6194.23,
     "price_cash_ars": 5249,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-e22-aaa"
   },
   {
@@ -7015,7 +7015,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 4955.39,
     "price_cash_ars": 4199,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-g60s-aaa"
   },
   {
@@ -7025,7 +7025,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 9482.53,
     "price_cash_ars": 8036,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-e6s---e6i-alternativa"
   },
   {
@@ -7085,7 +7085,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 10558.33,
     "price_cash_ars": 8948,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-edge-30-fusion-aaa"
   },
   {
@@ -7225,7 +7225,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 9482.53,
     "price_cash_ars": 8036,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-e6s---e6i-original"
   },
   {
@@ -7305,7 +7305,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 13114.95,
     "price_cash_ars": 11114,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-e13-original"
   },
   {
@@ -7315,7 +7315,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 16873.96,
     "price_cash_ars": 14300,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-g22-original"
   },
   {
@@ -7475,7 +7475,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 16468.25,
     "price_cash_ars": 13956,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-g60-original"
   },
   {
@@ -7495,7 +7495,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 16728.52,
     "price_cash_ars": 14177,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-e32-original"
   },
   {
@@ -7505,7 +7505,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 18318.11,
     "price_cash_ars": 15524,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-para-moto-g51-original"
   },
   {
@@ -7545,7 +7545,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 8516.11,
     "price_cash_ars": 7217,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-g32-aaa"
   },
   {
@@ -7555,7 +7555,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 8798.1,
     "price_cash_ars": 7456,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-g54-aaa"
   },
   {
@@ -7585,7 +7585,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 5630.78,
     "price_cash_ars": 4772,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-g56-5g"
   },
   {
@@ -7605,7 +7605,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 8798.1,
     "price_cash_ars": 7456,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-g71-original"
   },
   {
@@ -7695,7 +7695,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 14663.51,
     "price_cash_ars": 12427,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-g9-power-original"
   },
   {
@@ -7705,7 +7705,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 6065.11,
     "price_cash_ars": 5140,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-g23-aaa"
   },
   {
@@ -7715,7 +7715,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 4060.93,
     "price_cash_ars": 3441,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-g8"
   },
   {
@@ -7735,7 +7735,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 5060.57,
     "price_cash_ars": 4289,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-g9-power"
   },
   {
@@ -7745,7 +7745,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 4060.93,
     "price_cash_ars": 3441,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-moto-g8-power"
   },
   {
@@ -7775,7 +7775,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 8343.66,
     "price_cash_ars": 7071,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e20-elegir-color"
   },
   {
@@ -7785,7 +7785,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 9733.39,
     "price_cash_ars": 8249,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-para-moto-g20-elegir-color"
   },
   {
@@ -7795,7 +7795,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e6-play-elegir-color"
   },
   {
@@ -7805,7 +7805,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e6-plus-elegir-color"
   },
   {
@@ -7815,7 +7815,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 9733.39,
     "price_cash_ars": 8249,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e7-elegir-color"
   },
   {
@@ -7825,7 +7825,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e40-elegir-color"
   },
   {
@@ -7835,7 +7835,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-e7-plus-elegir-color"
   },
   {
@@ -7845,7 +7845,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 9270.73,
     "price_cash_ars": 7857,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g20-elegir-color"
   },
   {
@@ -7855,7 +7855,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 9270.73,
     "price_cash_ars": 7857,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-g20-elegir-color"
   },
   {
@@ -7865,7 +7865,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g31-elegir-color"
   },
   {
@@ -7875,7 +7875,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g7-play-elegir-color"
   },
   {
@@ -7885,7 +7885,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g7-plus-elegir-color"
   },
   {
@@ -7895,7 +7895,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g8-elegir-color"
   },
   {
@@ -7905,7 +7905,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g8-plus-elegir-color"
   },
   {
@@ -7915,7 +7915,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g8-power-elegir-color"
   },
   {
@@ -7935,7 +7935,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g8-power-lite-elegir-color"
   },
   {
@@ -7945,7 +7945,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g9-play-elegir-color"
   },
   {
@@ -7955,7 +7955,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10255.23,
     "price_cash_ars": 8691,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g9-plus-elegir-color"
   },
   {
@@ -7965,7 +7965,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 9270.73,
     "price_cash_ars": 7857,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-moto-g9-power-elegir-color"
   },
   {
@@ -7975,7 +7975,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 83386.98,
     "price_cash_ars": 70667,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-13-pro-4g-oled"
   },
   {
@@ -7995,7 +7995,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22167.32,
     "price_cash_ars": 18786,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-redmi-13c--13r--poco-m6--c65-version-v-5"
   },
   {
@@ -8005,7 +8005,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 24713.84,
     "price_cash_ars": 20944,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-redmi-13c-version-v5"
   },
   {
@@ -8055,7 +8055,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 33655.33,
     "price_cash_ars": 28521,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-redmi-mi-9t-incell"
   },
   {
@@ -8075,7 +8075,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 25981.36,
     "price_cash_ars": 22018,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-10-5g--poco-m3-pro"
   },
   {
@@ -8085,7 +8085,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 78517.63,
     "price_cash_ars": 66540,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-11-pro-oled"
   },
   {
@@ -8105,7 +8105,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 29491.43,
     "price_cash_ars": 24993,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-13-4g-incell"
   },
   {
@@ -8115,7 +8115,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 70526.3,
     "price_cash_ars": 59768,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-13-4g-oled-pantalla-completa"
   },
   {
@@ -8145,7 +8145,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 86076.88,
     "price_cash_ars": 72947,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-13-pro-4g-m6-pro-4g-oled-con-marco"
   },
   {
@@ -8165,7 +8165,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 22941.6,
     "price_cash_ars": 19442,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-13-pro-5g-incell"
   },
   {
@@ -8175,7 +8175,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 97726.63,
     "price_cash_ars": 82819,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-13-pro-5g-original-sin-marco"
   },
   {
@@ -8195,7 +8195,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 73222.9,
     "price_cash_ars": 62053,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-redmi-note-14-oled-4g"
   },
   {
@@ -8215,7 +8215,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 91032.27,
     "price_cash_ars": 77146,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-14-pro-oled-original"
   },
   {
@@ -8225,7 +8225,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 171690875.01,
     "price_cash_ars": 145500742,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-14-pro-plus-oled"
   },
   {
@@ -8255,7 +8255,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 24807.52,
     "price_cash_ars": 21023,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-50"
   },
   {
@@ -8265,7 +8265,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 25264.44,
     "price_cash_ars": 21411,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-note-8"
   },
   {
@@ -8275,7 +8275,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 34001.29,
     "price_cash_ars": 28815,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-redmi-note-9s---9-pro-original"
   },
   {
@@ -8295,7 +8295,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 21583.51,
     "price_cash_ars": 18291,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-redmi-10c-original"
   },
   {
@@ -8325,7 +8325,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 24666.27,
     "price_cash_ars": 20904,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-redmi-note-7"
   },
   {
@@ -8365,7 +8365,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 97726.63,
     "price_cash_ars": 82819,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-redmi-poco-x6-pro-oled"
   },
   {
@@ -8375,7 +8375,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 41876.07,
     "price_cash_ars": 35488,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-15-original"
   },
   {
@@ -8385,7 +8385,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 23645.14,
     "price_cash_ars": 20038,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-redmi-a5"
   },
   {
@@ -8405,7 +8405,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 235868.74,
     "price_cash_ars": 199889,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-xiaomi-poco-m6-pro-4g-oled"
   },
   {
@@ -8415,7 +8415,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 29935.43,
     "price_cash_ars": 25369,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-xiaomi-poco-m6-pro-5g-original"
   },
   {
@@ -8425,7 +8425,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 23645.14,
     "price_cash_ars": 20038,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-xiaomi-redmi-12c"
   },
   {
@@ -8485,7 +8485,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 106446.25,
     "price_cash_ars": 90209,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-mi-9t---9t-pro---k20---k20-pro-oled"
   },
   {
@@ -8545,7 +8545,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 23041.33,
     "price_cash_ars": 19527,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-redmi-note-9"
   },
   {
@@ -8605,7 +8605,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "bateria",
     "price_lista_ars": 25511.06,
     "price_cash_ars": 21620,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/bateria-para-xiaomi-redmi-note-13-5g-bn5p-zani"
   },
   {
@@ -8735,7 +8735,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 15611,
     "price_cash_ars": 13230,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-redmi-note-13-pro-alternativa"
   },
   {
@@ -8745,7 +8745,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 15611,
     "price_cash_ars": 13230,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-redmi-note-13-pro-original"
   },
   {
@@ -8895,7 +8895,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 15611,
     "price_cash_ars": 13230,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-redmi-note-11-original"
   },
   {
@@ -8905,7 +8905,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 4060.93,
     "price_cash_ars": 3441,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-redmi-note-7"
   },
   {
@@ -8915,7 +8915,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "placa_carga",
     "price_lista_ars": 5747.82,
     "price_cash_ars": 4871,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/placa-de-carga-redmi-note-8-pro"
   },
   {
@@ -8935,7 +8935,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 10557.72,
     "price_cash_ars": 8947,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-redmi-14c"
   },
   {
@@ -8945,7 +8945,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "tapa",
     "price_lista_ars": 9677,
     "price_cash_ars": 8201,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/tapa-trasera-mi-8-lite"
   },
   {

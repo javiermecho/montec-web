@@ -73,30 +73,42 @@ async function scrapeCategory(cat) {
     });
 
     const ajaxText = await res.text();
-    const regex = /<div itemscope itemtype="http:\/\/schema\.org\/Product">([\s\S]*?)<\/div>\s*<\/div>/gi;
-    let m;
+    // Dividir por tarjetas de producto
+    const rawCards = ajaxText.split(/(?=<div class="col-6)/gi).filter(c => c.includes('carta-producto'));
     const items = [];
 
-    while ((m = regex.exec(ajaxText)) !== null) {
-      const block = m[1];
-      const nameMatch = block.match(/itemprop="name" content="([^"]+)"/i);
-      const skuMatch = block.match(/itemprop="sku" content="([^"]+)"/i);
-      const priceMatch = block.match(/itemprop="price" content="([^"]+)"/i);
-      const availMatch = block.match(/itemprop="availability" href="([^"]+)"/i);
-      const urlMatch = block.match(/itemprop="url" content="([^"]+)"/i);
+    for (const card of rawCards) {
+      // Remover estilos incrustados que confunden el texto
+      const cleanCard = card.replace(/<style>[\s\S]*?<\/style>/gi, '');
+
+      const nameMatch = cleanCard.match(/itemprop="name" content="([^"]+)"/i) || cleanCard.match(/class="descripcion-producto[^>]*><span>([\s\S]*?)<\/span>/i);
+      const skuMatch = cleanCard.match(/itemprop="sku" content="([^"]+)"/i);
+      const priceMatch = cleanCard.match(/itemprop="price" content="([^"]+)"/i) || cleanCard.match(/class="carta2-precio-lista">\$?\s*([\d\.\,]+)/i);
+      const urlMatch = cleanCard.match(/itemprop="url" content="([^"]+)"/i) || cleanCard.match(/href="(producto\/[^"]+)"/i);
+
+      // STOCK REAL: Solo está en stock si tiene el botón "Agregar al carrito" o la clase "carrito-comprar-producto"
+      // Si dice "Ver el producto" o no tiene clase de compra directa, está AGOTADO en el sistema de SmartSupply
+      const hasRealStock = cleanCard.includes('carrito-comprar-producto') || 
+                           /<a[^>]*class="[^"]*carta2-boton[^"]*"[^>]*>\s*Agregar al carrito\s*<\/a>/i.test(cleanCard);
 
       if (nameMatch && priceMatch) {
-        const rawPrice = parseFloat(priceMatch[1]);
+        let strPrice = priceMatch[1].trim();
+        let rawPrice = 0;
+        if (strPrice.includes(',')) {
+          rawPrice = parseFloat(strPrice.replace(/\./g, '').replace(',', '.'));
+        } else {
+          rawPrice = parseFloat(strPrice);
+        }
         if (rawPrice > 0) {
           items.push({
-            name: nameMatch[1].trim(),
+            name: nameMatch[1].replace(/<[^>]+>/g, '').trim(),
             sku: skuMatch ? skuMatch[1].trim() : '',
             brand: cat.brand,
             part_type: cat.type,
             price_lista_ars: rawPrice,
             price_cash_ars: Math.round(rawPrice / 1.18),
-            in_stock: availMatch ? availMatch[1].includes('InStock') : false,
-            url: urlMatch ? urlMatch[1] : ''
+            in_stock: hasRealStock,
+            url: urlMatch ? (urlMatch[1].startsWith('http') ? urlMatch[1] : `https://smartsupply.com.ar/${urlMatch[1].replace(/^\//, '')}`) : ''
           });
         }
       }
