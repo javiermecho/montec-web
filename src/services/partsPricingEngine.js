@@ -1,12 +1,36 @@
 // Motor de Cotización Inteligente de Módulos
 // Basado en repuestos reales del proveedor, tasa Dólar Blue y reglas comerciales de Montec
 
-import { SUPPLIER_PARTS } from '../data/supplierParts.js';
+import { CELLSTORE_PARTS } from '../data/cellstoreParts.js';
+import { GRUPOARMAR_PARTS } from '../data/grupoarmarParts.js';
+import { SMARTSUPPLY_PARTS } from '../data/smartsupplyParts.js';
+import { SOULFIX_PARTS } from '../data/soulfixParts.js';
 import { DEFAULT_FALLBACK_RATE } from './dolarService.js';
 
+function formatToModule(p, provider) {
+  const usd = p.price_usd || (p.price_cash_ars ? p.price_cash_ars / DEFAULT_FALLBACK_RATE : 0);
+  return {
+    id: `${provider}-${p.sku || p.name}`,
+    raw_name: p.name || '',
+    brand: p.brand || '',
+    part_type: p.part_type || (p.name && p.name.toUpperCase().startsWith('MODULO') ? 'modulo' : ''),
+    cost_usd: usd,
+    cost_ars: p.price_cash_ars || Math.round(usd * DEFAULT_FALLBACK_RATE),
+    in_stock: p.in_stock !== false,
+    provider
+  };
+}
+
+const ALL_RAW_MODULES = [
+  ...CELLSTORE_PARTS.map(p => formatToModule(p, 'cellstore')),
+  ...GRUPOARMAR_PARTS.map(p => formatToModule(p, 'grupoarmar')),
+  ...SMARTSUPPLY_PARTS.map(p => formatToModule(p, 'smartsupply')),
+  ...SOULFIX_PARTS.map(p => formatToModule(p, 'soulfix'))
+];
+
 // 1. Filtrar repuestos válidos: solo módulos, excluyendo estrictamente INCELL y TFT
-export const VALID_MODULES = SUPPLIER_PARTS.filter(part => {
-  if (part.part_type !== 'modulo') return false;
+export const VALID_MODULES = ALL_RAW_MODULES.filter(part => {
+  if (part.part_type !== 'modulo' && !part.raw_name.toUpperCase().startsWith('MODULO')) return false;
   const upper = part.raw_name.toUpperCase();
   if (upper.includes('INCELL') || upper.includes('TFT')) return false;
   return true;
@@ -21,7 +45,7 @@ export const PRICING_RULES = {
 
 /**
  * Calcula el precio final de un módulo en ARS según las reglas de Montec:
- * - costo_ars = costo_usd * dolar_rate
+ * - costo_ars = costo real en efectivo (o costo_usd * dolar_rate)
  * - ganancia = min(maxMargin, max(minLabor, markupProfit))
  * - precio_final = round(costo_ars + ganancia)
  */
@@ -31,7 +55,7 @@ export function calculatePartPrice(part, dolarRate = DEFAULT_FALLBACK_RATE, cust
   const multiplier = customRules?.markupMultiplier !== undefined ? Number(customRules.markupMultiplier) : 2.0;
 
   const costoUsd = part.cost_usd || 0;
-  const costoArs = costoUsd * dolarRate;
+  const costoArs = part.cost_ars ? part.cost_ars : (costoUsd * dolarRate);
 
   // Ganancia: multiplicador sobre costo con piso de mano de obra mínima y tope para gama alta
   const markupProfit = costoArs * Math.max(0.5, multiplier - 1);

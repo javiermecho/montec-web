@@ -245,7 +245,7 @@ export default function QuotationTool() {
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900/80 px-2.5 py-1.5 rounded-lg border border-zinc-800/80">
                     <Smartphone className="w-4 h-4 text-blue-400 shrink-0" />
-                    <span>+600 Modelos</span>
+                    <span>+1.000 Modelos</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900/80 px-2.5 py-1.5 rounded-lg border border-zinc-800/80">
                     <Cpu className="w-4 h-4 text-amber-400 shrink-0" />
@@ -321,7 +321,7 @@ export default function QuotationTool() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
                 {/* Lado Izquierdo: Pasos de Configuración (7 cols) */}
-                <div className="lg:col-span-7 space-y-8 bg-[#121212]/90 border border-zinc-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
+                <div className="lg:col-span-7 min-w-0 max-w-full overflow-hidden space-y-8 bg-[#121212]/90 border border-zinc-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
             
             {/* PASO 1: Tipo de Dispositivo */}
             <div>
@@ -367,7 +367,7 @@ export default function QuotationTool() {
             </div>
 
             {/* PASO 2: Marca y Modelo */}
-            <div>
+            <div className="min-w-0 max-w-full">
               <div className="flex items-center justify-between mb-3.5">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#FF5500] flex items-center gap-2">
                   <span className="w-5 h-5 rounded-full bg-[#FF5500] text-black font-bold flex items-center justify-center text-xs">2</span>
@@ -381,7 +381,7 @@ export default function QuotationTool() {
               </div>
 
               {/* Lista desplazable con las marcas */}
-              <div className="mb-3.5">
+              <div className="mb-3.5 w-full min-w-0 max-w-full">
                 <div className="flex items-center justify-between mb-1.5 px-0.5">
                   <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
                     Marcas disponibles:
@@ -397,42 +397,44 @@ export default function QuotationTool() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-2 pt-0.5 no-scrollbar scroll-smooth">
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedBrand('all'); setSearchQuery(''); }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 shrink-0 border ${
-                      selectedBrand === 'all'
-                        ? 'bg-[#FF5500] text-black border-[#FF5500] shadow-[0_0_12px_rgba(255,85,0,0.35)] font-bold'
-                        : 'bg-zinc-900/80 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:text-white'
-                    }`}
-                  >
-                    Todas ({models.filter(m => m.type === selectedDevice).length})
-                  </button>
+                <div className="w-full min-w-0 max-w-full overflow-hidden">
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-2 pt-0.5 no-scrollbar scroll-smooth w-full min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedBrand('all'); setSearchQuery(''); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 shrink-0 border ${
+                        selectedBrand === 'all'
+                          ? 'bg-[#FF5500] text-black border-[#FF5500] shadow-[0_0_12px_rgba(255,85,0,0.35)] font-bold'
+                          : 'bg-zinc-900/80 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:text-white'
+                      }`}
+                    >
+                      Todas ({models.filter(m => m.type === selectedDevice).length})
+                    </button>
 
-                  {availableBrands.map((brandName) => {
-                    const isSelected = selectedBrand.toLowerCase() === brandName.toLowerCase();
-                    const brandCount = models.filter(m => m.type === selectedDevice && m.brand === brandName).length;
-                    return (
-                      <button
-                        type="button"
-                        key={brandName}
-                        onClick={() => handleBrandSelect(brandName)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5 ${
-                          isSelected
-                            ? 'bg-[#FF5500] text-black border-[#FF5500] shadow-[0_0_12px_rgba(255,85,0,0.35)] font-bold'
-                            : 'bg-zinc-900/80 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:text-white'
-                        }`}
-                      >
-                        <span>{brandName}</span>
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                          isSelected ? 'bg-black/25 text-black font-bold' : 'bg-zinc-800 text-zinc-400'
-                        }`}>
-                          {brandCount}
-                        </span>
-                      </button>
-                    );
-                  })}
+                    {availableBrands.map((brandName) => {
+                      const isSelected = selectedBrand.toLowerCase() === brandName.toLowerCase();
+                      const brandCount = models.filter(m => m.type === selectedDevice && m.brand === brandName).length;
+                      return (
+                        <button
+                          type="button"
+                          key={brandName}
+                          onClick={() => handleBrandSelect(brandName)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'bg-[#FF5500] text-black border-[#FF5500] shadow-[0_0_12px_rgba(255,85,0,0.35)] font-bold'
+                              : 'bg-zinc-900/80 text-zinc-300 border-zinc-800 hover:border-zinc-700 hover:text-white'
+                          }`}
+                        >
+                          <span>{brandName}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                            isSelected ? 'bg-black/25 text-black font-bold' : 'bg-zinc-800 text-zinc-400'
+                          }`}>
+                            {brandCount}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -456,8 +458,8 @@ export default function QuotationTool() {
                 )}
               </div>
 
-              {/* Sugerencias de Modelos desde DataContext (Catálogo de 626 equipos) */}
-              <div className="max-h-52 overflow-y-auto pr-1 space-y-1 rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-1.5">
+              {/* Sugerencias de Modelos desde DataContext (Catálogo de +1.000 equipos) */}
+              <div className="max-h-52 overflow-y-auto pr-1 space-y-1 rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-1.5 w-full min-w-0 max-w-full">
                 {filteredModels.length > 0 ? (
                   <>
                     {filteredModels.slice(0, 60).map((item) => {
@@ -627,7 +629,7 @@ export default function QuotationTool() {
           </div>
 
           {/* Lado Derecho: Tarjeta de Resultado & Conversión a WhatsApp (5 cols) */}
-          <div className="lg:col-span-5 sticky top-24">
+          <div className="lg:col-span-5 min-w-0 max-w-full sticky top-24">
             <div className="bg-gradient-to-b from-[#18181B] to-[#101012] border-2 border-[#FF5500]/50 rounded-2xl p-6 sm:p-7 shadow-[0_0_35px_rgba(255,85,0,0.2)] relative overflow-hidden">
               
               {/* Badge Destacado */}

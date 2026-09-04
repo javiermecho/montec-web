@@ -16,7 +16,7 @@ import {
 const DataContext = createContext(null);
 
 const STORAGE_KEYS = {
-  MODELS: 'montec_models_v5', // v5: catálogo oficial con IDs 100% únicos sin colisiones
+  MODELS: 'montec_models_v6', // v6: catálogo completo con 1.090 modelos de 4 proveedores oficiales
   ISSUES: 'montec_issues_v2', // v2: incluye Reparación en Placa detallada y Cambio de Tapa Trasera
   ACCESSORIES: 'montec_accessories_v2', // v2 para actualizar datos de fotos
   PRICING_RULES: 'montec_pricing_rules_v1', // Reglas de márgenes y mano de obra Android
@@ -34,10 +34,17 @@ export function DataProvider({ children }) {
   // 1. Modelos de equipos
   const [models, setModels] = useState(() => {
     try {
+      // Limpiar versiones obsoletas para forzar actualización con el catálogo completo
+      localStorage.removeItem('montec_models_v5');
+      localStorage.removeItem('montec_models_v4');
+      localStorage.removeItem('montec_models_v3');
+      localStorage.removeItem('montec_models_v2');
+      localStorage.removeItem('montec_models_v1');
+
       const saved = localStorage.getItem(STORAGE_KEYS.MODELS);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length >= 600) {
+        if (Array.isArray(parsed) && parsed.length >= MODELS_DATABASE.length) {
           return parsed;
         }
       }
