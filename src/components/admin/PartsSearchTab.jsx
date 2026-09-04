@@ -19,6 +19,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { SMARTSUPPLY_PARTS, SMARTSUPPLY_PARTS_INFO } from '../../data/smartsupplyParts';
+import { GRUPOARMAR_PARTS, GRUPOARMAR_PARTS_INFO } from '../../data/grupoarmarParts';
 
 // Estilos y badges por proveedor
 const PROVIDERS_CONFIG = {
@@ -30,11 +31,12 @@ const PROVIDERS_CONFIG = {
     total: SMARTSUPPLY_PARTS.length,
     lastUpdate: SMARTSUPPLY_PARTS_INFO?.extracted_at
   },
-  supplier_2: { 
-    name: 'Proveedor 2 (Próximamente)', 
+  grupoarmar: { 
+    name: 'Grupo Armar', 
     badgeColor: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    website: '#',
-    total: 0
+    website: 'https://grupoarmar.com.ar',
+    total: GRUPOARMAR_PARTS.length,
+    lastUpdate: GRUPOARMAR_PARTS_INFO?.extracted_at
   },
   supplier_3: { 
     name: 'Proveedor 3 (Próximamente)', 
@@ -72,7 +74,7 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
   const minLabor = pricingRules?.minLaborArs || 30000;
   const markupMultiplier = pricingRules?.markupMultiplier || 1.8;
 
-  // Lista unificada de repuestos (SmartSupply + futuros proveedores)
+  // Lista unificada de repuestos (SmartSupply + Grupo Armar + futuros proveedores)
   const allParts = useMemo(() => {
     const smartSupplyFormatted = SMARTSUPPLY_PARTS.map(p => ({
       ...p,
@@ -80,7 +82,13 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
       providerName: 'Smart Supply'
     }));
 
-    return smartSupplyFormatted;
+    const grupoArmarFormatted = GRUPOARMAR_PARTS.map(p => ({
+      ...p,
+      providerId: 'grupoarmar',
+      providerName: 'Grupo Armar'
+    }));
+
+    return [...smartSupplyFormatted, ...grupoArmarFormatted];
   }, []);
 
   // Extraer marcas únicas
@@ -249,6 +257,22 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
           <p className="text-xs sm:text-sm text-zinc-400">
             Precios de costo, calidades y disponibilidad verificada en tiempo real.
           </p>
+
+          <div className="flex flex-wrap items-center gap-2 mt-2 pt-1">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-zinc-800 text-[11px] text-zinc-300">
+              <Building2 className="w-3 h-3 text-[#FF5500]" />
+              <span className="font-semibold text-white">Smart Supply:</span>
+              <span className="text-[#FF5500] font-bold">{SMARTSUPPLY_PARTS.length}</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/40 border border-zinc-800 text-[11px] text-zinc-300">
+              <Building2 className="w-3 h-3 text-blue-400" />
+              <span className="font-semibold text-white">Grupo Armar:</span>
+              <span className="text-blue-400 font-bold">{GRUPOARMAR_PARTS.length}</span>
+            </div>
+            <div className="text-[11px] text-zinc-500 font-medium">
+              (Total: {allParts.length} repuestos)
+            </div>
+          </div>
         </div>
 
         {/* Acciones y Botón de Actualizar Stock */}
@@ -306,6 +330,7 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
 
             {/* Estado actual de proveedores */}
             <div className="space-y-3">
+              {/* Proveedor 1: Smart Supply */}
               <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-white flex items-center gap-1.5">
@@ -317,12 +342,27 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 text-zinc-400">
-                  <div>Total: <span className="font-bold text-white">{stockStats.total}</span></div>
-                  <div>En Stock: <span className="font-bold text-emerald-400">{stockStats.inStock}</span></div>
-                  <div>Agotados: <span className="font-bold text-rose-400">{stockStats.outOfStock}</span></div>
+                  <div>Total: <span className="font-bold text-white">{SMARTSUPPLY_PARTS.length}</span></div>
+                  <div>En Stock: <span className="font-bold text-emerald-400">{SMARTSUPPLY_PARTS.filter(p => p.in_stock).length}</span></div>
+                  <div>Agotados: <span className="font-bold text-rose-400">{SMARTSUPPLY_PARTS.filter(p => !p.in_stock).length}</span></div>
                 </div>
-                <div className="text-[10px] text-zinc-500 pt-1 border-t border-zinc-800/60">
-                  Última sincronización: {lastSyncDate}
+              </div>
+
+              {/* Proveedor 2: Grupo Armar */}
+              <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-white flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-blue-400" />
+                    Grupo Armar (grupoarmar.com.ar)
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    Conectado
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 text-zinc-400">
+                  <div>Total: <span className="font-bold text-white">{GRUPOARMAR_PARTS.length}</span></div>
+                  <div>En Stock: <span className="font-bold text-emerald-400">{GRUPOARMAR_PARTS.filter(p => p.in_stock).length}</span></div>
+                  <div>Agotados: <span className="font-bold text-rose-400">{GRUPOARMAR_PARTS.filter(p => !p.in_stock).length}</span></div>
                 </div>
               </div>
 
@@ -415,9 +455,9 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
               onChange={(e) => setSelectedProvider(e.target.value)}
               className="w-full bg-[#121214] border border-zinc-700/70 rounded-xl px-3 py-2 text-xs font-medium text-white focus:border-[#FF5500] outline-none"
             >
-              <option value="all">Todos los Proveedores</option>
+              <option value="all">Todos los Proveedores ({allParts.length})</option>
               <option value="smartsupply">Smart Supply ({SMARTSUPPLY_PARTS.length})</option>
-              <option value="supplier_2" disabled>Proveedor 2 (Próximamente)</option>
+              <option value="grupoarmar">Grupo Armar ({GRUPOARMAR_PARTS.length})</option>
               <option value="supplier_3" disabled>Proveedor 3 (Próximamente)</option>
               <option value="supplier_4" disabled>Proveedor 4 (Próximamente)</option>
             </select>
@@ -542,7 +582,11 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
                 {/* Cabecera de la tarjeta: Proveedor + Stock */}
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2.5">
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-orange-500/15 text-[#FF5500] border border-orange-500/30">
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
+                      part.providerId === 'grupoarmar'
+                        ? 'bg-blue-500/15 text-blue-400 border-blue-500/30'
+                        : 'bg-orange-500/15 text-[#FF5500] border-orange-500/30'
+                    }`}>
                       {part.providerName}
                     </span>
 
