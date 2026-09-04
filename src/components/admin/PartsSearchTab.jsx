@@ -245,6 +245,8 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
 
   // Lista unificada de repuestos con datos estructurados (Modelo, Repuesto, Calidad)
   const allParts = useMemo(() => {
+    const activeDolarRate = Number(dolarRate) > 0 ? Number(dolarRate) : 1545;
+
     const formatPart = (p, providerId, providerName) => {
       const parsed = parsePartDetails(p);
       return {
@@ -256,11 +258,20 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
     };
 
     const cellStoreFormatted = CELLSTORE_PARTS.map(p => formatPart(p, 'cellstore', 'CellStore MDP'));
-    const grupoArmarFormatted = GRUPOARMAR_PARTS.map(p => formatPart(p, 'grupoarmar', 'Grupo Armar'));
+    const grupoArmarFormatted = GRUPOARMAR_PARTS.map(p => {
+      const usdPrice = p.price_usd || (p.price_cash_ars < 1000 ? p.price_cash_ars : p.price_cash_ars / 1545);
+      const arsPrice = Math.round(usdPrice * activeDolarRate);
+      return formatPart({
+        ...p,
+        price_usd: usdPrice,
+        price_cash_ars: arsPrice,
+        price_lista_ars: arsPrice
+      }, 'grupoarmar', 'Grupo Armar');
+    });
     const smartSupplyFormatted = SMARTSUPPLY_PARTS.map(p => formatPart(p, 'smartsupply', 'Smart Supply'));
 
     return [...cellStoreFormatted, ...grupoArmarFormatted, ...smartSupplyFormatted];
-  }, []);
+  }, [dolarRate]);
 
   // Extraer marcas únicas
   const availableBrands = useMemo(() => {
@@ -401,7 +412,8 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
   // Copiar presupuesto o detalle del repuesto
   const handleCopyQuote = (part) => {
     const pvp = Math.round(Math.max(part.price_cash_ars * markupMultiplier, part.price_cash_ars + minLabor));
-    const text = `🛠️ *Cotización de Repuesto - Montec*\n📱 *Pieza:* ${part.name}\n🏷️ *Marca:* ${part.brand}\n📦 *Estado:* ${part.in_stock ? 'En Stock' : 'A confirmar disponibilidad'}\n💵 *Costo Gremio:* ${formatArs(part.price_cash_ars)}\n⭐ *PVP Sugerido Cliente:* ${formatArs(pvp)}`;
+    const usdRefText = part.price_usd ? ` (USD $${part.price_usd.toFixed(2)})` : '';
+    const text = `🛠️ *Cotización de Repuesto - Montec*\n📱 *Pieza:* ${part.name}\n🏷️ *Marca:* ${part.brand}\n📦 *Estado:* ${part.in_stock ? 'En Stock' : 'A confirmar disponibilidad'}\n💵 *Costo Gremio:* ${formatArs(part.price_cash_ars)}${usdRefText}\n⭐ *PVP Sugerido Cliente:* ${formatArs(pvp)}`;
     
     navigator.clipboard.writeText(text);
     setCopiedSku(part.sku || part.name);
@@ -1060,11 +1072,15 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
                         <div className="font-bold text-emerald-400 text-sm">
                           {formatArs(part.price_cash_ars)}
                         </div>
-                        {part.price_lista_ars > 0 && (
+                        {part.price_usd ? (
+                          <div className="text-[10px] text-blue-400 font-mono font-medium">
+                            USD ${part.price_usd.toFixed(2)}
+                          </div>
+                        ) : part.price_lista_ars > 0 && part.price_lista_ars !== part.price_cash_ars ? (
                           <div className="text-[10px] text-zinc-500">
                             Lista: {formatArs(part.price_lista_ars)}
                           </div>
-                        )}
+                        ) : null}
                       </td>
 
                       {/* 7. PVP Sugerido */}
@@ -1200,11 +1216,15 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
                       <div className="text-lg font-bold text-emerald-400">
                         {formatArs(part.price_cash_ars)}
                       </div>
-                      {part.price_lista_ars > 0 && (
+                      {part.price_usd ? (
+                        <div className="text-[11px] text-blue-400 font-mono font-medium">
+                          USD ${part.price_usd.toFixed(2)} <span className="text-zinc-500 text-[10px] font-normal">(@ ${dolarRate || 1545})</span>
+                        </div>
+                      ) : part.price_lista_ars > 0 && part.price_lista_ars !== part.price_cash_ars ? (
                         <div className="text-[11px] text-zinc-500">
                           Lista: {formatArs(part.price_lista_ars)}
                         </div>
-                      )}
+                      ) : null}
                     </div>
 
                     {/* PVP Sugerido con margen Montec */}

@@ -115,6 +115,10 @@ async function scrapeCategory(cat, authCookies) {
         const stockClass = stockMatch ? stockMatch[1].toLowerCase() : '';
         const inStock = stockClass.includes('disponible') && !stockClass.includes('no');
 
+        const DOLAR_VENTA_REF = 1545;
+        const priceUsd = price;
+        const priceArs = Math.round(priceUsd * DOLAR_VENTA_REF);
+
         if (price > 0 && !seen.has(sku || rawName)) {
           seen.add(sku || rawName);
           items.push({
@@ -122,8 +126,9 @@ async function scrapeCategory(cat, authCookies) {
             sku: sku,
             brand: detectBrand(rawName),
             part_type: cat.type,
-            price_lista_ars: price,
-            price_cash_ars: price, // En Grupo Armar el precio exhibido con sesión es el costo gremio directo
+            price_usd: priceUsd,
+            price_lista_ars: priceArs,
+            price_cash_ars: priceArs, // Grupo Armar cotiza en USD, convertido a ARS con dolar venta ref
             in_stock: inStock,
             url: artUrl
           });
