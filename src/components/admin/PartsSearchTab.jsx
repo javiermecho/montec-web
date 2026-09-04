@@ -115,6 +115,12 @@ export function parsePartDetails(part) {
   if (upper.includes('GENERICA') || upper.includes('GENERICO')) {
     badges.push({ text: 'GENÉRICO', color: 'bg-zinc-700/40 text-zinc-300 border-zinc-600/30' });
   }
+  if (upper.includes('COMPLETA') || upper.includes('CON LENTE')) {
+    badges.push({ text: 'COMPLETA', color: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30' });
+  }
+  if (upper.includes('ELEGIR COLOR')) {
+    badges.push({ text: 'VARIOS COLORES', color: 'bg-purple-500/15 text-purple-300 border-purple-500/30' });
+  }
 
   const qualityText = badges.length > 0 
     ? badges.map(b => b.text).join(' • ') 
@@ -136,6 +142,7 @@ export function parsePartDetails(part) {
     /\b(CON MARCO|SIN MARCO|S\/MARCO|MECANICO|CAMBIO DE IC|CAMBIO IC|IC REMOVIBLE|APTO TRASPLANTE|APTO TRANSPLANTE)\b/gi,
     /\b(GX|ZY|RJ|JK|DD|CORE ZANI|ZANI|FOXCONN)\b/gi,
     /\b(FLEX PROGRAMADO|PRE PROGRAMADA|PROGRAMADO)\b/gi,
+    /\b(ELEGIR COLOR|VARIOS COLORES|COMPLETA|COMPLETO)\b/gi,
     /\b(NEGRO|BLANCO|AZUL|VERDE|ROJO|DORADO|PLATEADO|GRIS|LILA|ROSA|AMARILLO|PURPURA|CELESTE|ROSE GOLD|VERDE AGUA|VERDE INGLES)\b/gi,
     /\b(MARCA CONDICIÓN\.|CONDICIÓN\.|MARCA)\b/gi,
     /[()]/g
