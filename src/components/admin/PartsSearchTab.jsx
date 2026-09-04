@@ -138,6 +138,7 @@ export function parsePartDetails(part) {
 
   const removePatterns = [
     /\b(SOFT OLED|HARD OLED|OLED|AMOLED|INCELL|IPS|TFT|FHD|HD)\b/gi,
+    /\b(SOFT|HARD)\b/gi,
     /\b(ORIGINAL|CALIDAD ORIGINAL|SERVICE PACK|GENERICA|GENERICO)\b/gi,
     /\b(CON MARCO|SIN MARCO|S\/MARCO|MECANICO|CAMBIO DE IC|CAMBIO IC|IC REMOVIBLE|APTO TRASPLANTE|APTO TRANSPLANTE)\b/gi,
     /\b(GX|ZY|RJ|JK|DD|CORE ZANI|ZANI|FOXCONN)\b/gi,
@@ -241,11 +242,21 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
   const minLabor = pricingRules?.minLaborArs || 30000;
   const markupMultiplier = pricingRules?.markupMultiplier || 1.8;
 
+  const [isMultiCategoryMode, setIsMultiCategoryMode] = useState(false);
+
   // Manejo de checks de categorías
   const handleToggleCategory = (catId) => {
-    setSelectedCategoryKeys(prev => 
-      prev.includes(catId) ? prev.filter(id => id !== catId) : [...prev, catId]
-    );
+    if (isMultiCategoryMode) {
+      setSelectedCategoryKeys(prev => 
+        prev.includes(catId) ? prev.filter(id => id !== catId) : [...prev, catId]
+      );
+    } else {
+      // Modo exclusivo directo: al hacer clic en "Tapas", filtra SOLO Tapas.
+      // Si ya estaba seleccionada esa única, vuelve a "Todos".
+      setSelectedCategoryKeys(prev => 
+        prev.length === 1 && prev[0] === catId ? [] : [catId]
+      );
+    }
   };
 
   const handleClearCategories = () => {
@@ -280,7 +291,17 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
     const smartSupplyFormatted = SMARTSUPPLY_PARTS.map(p => formatPart(p, 'smartsupply', 'Smart Supply'));
     const soulfixFormatted = SOULFIX_PARTS.map(p => formatPart(p, 'soulfix', 'SoulFix'));
 
-    return [...cellStoreFormatted, ...grupoArmarFormatted, ...smartSupplyFormatted, ...soulfixFormatted];
+    const rawParts = [...cellStoreFormatted, ...grupoArmarFormatted, ...smartSupplyFormatted, ...soulfixFormatted];
+    const seenUnique = new Set();
+    const deduplicated = [];
+    for (const part of rawParts) {
+      const key = `${part.providerId}-${part.sku || ''}-${part.name}-${part.price_cash_ars}`;
+      if (!seenUnique.has(key)) {
+        seenUnique.add(key);
+        deduplicated.push(part);
+      }
+    }
+    return deduplicated;
   }, [dolarRate]);
 
   // Extraer marcas únicas
@@ -327,6 +348,28 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
       // Filtro de búsqueda por texto exhaustivo e inteligente
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase().trim();
+
+        // 0. Detección automática de categoría por términos de búsqueda si no hay categoría seleccionada
+        if (selectedCategoryKeys.length === 0) {
+          if (/\btapas?\b/i.test(query)) {
+            if (part.categoryKey !== 'tapa' && !part.parsedPartType.toLowerCase().includes('tapa')) {
+              return false;
+            }
+          } else if (/\b(modulos?|pantallas?|display)\b/i.test(query)) {
+            if (part.categoryKey !== 'modulo' && !part.parsedPartType.toLowerCase().includes('módulo')) {
+              return false;
+            }
+          } else if (/\bbater[ií]as?\b/i.test(query)) {
+            if (part.categoryKey !== 'bateria' && !part.parsedPartType.toLowerCase().includes('batería')) {
+              return false;
+            }
+          } else if (/\b(c[aá]maras?)\b/i.test(query)) {
+            if (part.categoryKey !== 'camara' && part.categoryKey !== 'vidrio_camara') {
+              return false;
+            }
+          }
+        }
+
         const searchPool = `${part.name} ${part.brand} ${part.sku || ''} ${part.part_type || ''} ${part.parsedModel || ''}`.toLowerCase();
         const queryTokens = query.split(/\s+/).filter(Boolean);
 
@@ -832,26 +875,45 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
 
         {/* Sección de Selección de Tipos de Repuesto tipo CHECK */}
         <div className="pt-2 border-t border-zinc-800/70 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-300">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-zinc-300">
               <Layers className="w-3.5 h-3.5 text-[#FF5500]" />
-              <span>Tipo de Repuesto (Filtro por Check):</span>
-              {selectedCategoryKeys.length > 0 && (
-                <span className="text-xs text-[#FF5500] font-semibold lowercase">
-                  ({selectedCategoryKeys.length} seleccionados)
+              <span>Tipo de Repuesto:</span>
+              {selectedCategoryKeys.length > 0 ? (
+                <span className="text-xs text-[#FF5500] font-bold normal-case bg-[#FF5500]/10 px-2 py-0.5 rounded-md border border-[#FF5500]/30">
+                  {selectedCategoryKeys.map(k => PART_TYPE_CHECKBOXES.find(c => c.id === k)?.label || k).join(' + ')}
+                </span>
+              ) : (
+                <span className="text-xs text-zinc-500 font-normal lowercase">
+                  (todos los tipos)
                 </span>
               )}
             </div>
 
-            {selectedCategoryKeys.length > 0 && (
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleClearCategories}
-                className="text-[11px] text-zinc-400 hover:text-[#FF5500] underline transition-colors"
+                onClick={() => setIsMultiCategoryMode(!isMultiCategoryMode)}
+                className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
+                  isMultiCategoryMode
+                    ? 'bg-[#FF5500]/20 text-[#FF5500] border-[#FF5500]/40 font-semibold'
+                    : 'bg-zinc-850 text-zinc-400 border-zinc-700/60 hover:text-white'
+                }`}
+                title="Permite seleccionar múltiples categorías a la vez o filtrar de a una"
               >
-                Limpiar selección (Ver Todos)
+                {isMultiCategoryMode ? '✓ Selección Múltiple' : 'Selección Única (Click directo)'}
               </button>
-            )}
+
+              {selectedCategoryKeys.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearCategories}
+                  className="text-[11px] text-zinc-400 hover:text-[#FF5500] underline transition-colors ml-1"
+                >
+                  Ver Todos
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Lista de Checkboxes de Tipos */}
