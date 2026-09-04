@@ -87,6 +87,9 @@ export function DataProvider({ children }) {
   // 5. Estado de apertura del modal de admin
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
+  // 5.1 Estado de apertura del modal de cotizador interactivo
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+
   // 6. Cotización del Dólar Blue Venta (Bluelytics API)
   const [dolarRate, setDolarRate] = useState(DEFAULT_FALLBACK_RATE);
   const [dolarInfo, setDolarInfo] = useState({
@@ -501,6 +504,8 @@ export function DataProvider({ children }) {
       isAdminAuthenticated,
       isAdminOpen,
       setIsAdminOpen,
+      isQuoteModalOpen,
+      setIsQuoteModalOpen,
       loginAdmin,
       logoutAdmin,
       addModel,

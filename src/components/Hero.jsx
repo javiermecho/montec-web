@@ -1,8 +1,10 @@
 import React from 'react';
 import { Wrench, ShieldCheck, Clock, ArrowRight, Sparkles, CheckCircle2, ChevronDown } from 'lucide-react';
 import MontecLogo from './MontecLogo';
+import { useData } from '../context/DataContext';
 
 export default function Hero() {
+  const { setIsQuoteModalOpen } = useData();
   const brands = [
     { name: 'Apple', icon: '', desc: 'iPhone • iPad • Mac' },
     { name: 'Samsung', icon: 'SAMSUNG', desc: 'Galaxy S • A • Z' },
@@ -62,14 +64,14 @@ export default function Hero() {
 
         {/* Botones de Acción (CTAs) */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-          <a
-            href="#cotizador"
+          <button
+            onClick={() => setIsQuoteModalOpen(true)}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 text-base font-bold text-white bg-[#FF5500] hover:bg-[#FF6600] rounded-xl shadow-[0_0_25px_rgba(255,85,0,0.45)] hover:shadow-[0_0_35px_rgba(255,85,0,0.7)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0"
           >
             <Wrench className="w-5 h-5 text-white" />
             <span>Cotizar Reparación</span>
             <ArrowRight className="w-4 h-4 text-white/80" />
-          </a>
+          </button>
 
           <a
             href="#accesorios"

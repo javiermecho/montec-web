@@ -4,7 +4,7 @@ import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
 
 export default function Navbar() {
-  const { setIsAdminOpen, isAdminAuthenticated } = useData();
+  const { setIsAdminOpen, isAdminAuthenticated, setIsQuoteModalOpen } = useData();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isOpenNow, setIsOpenNow] = useState(true);
@@ -62,20 +62,39 @@ export default function Navbar() {
 
           {/* Links para Desktop */}
           <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="relative px-3.5 py-1.5 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-white/5 flex items-center gap-1.5"
-              >
-                {link.name}
-                {link.badge && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/30 animate-pulse">
-                    {link.badge}
-                  </span>
-                )}
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              if (link.name === 'Cotizador') {
+                return (
+                  <button
+                    key={link.name}
+                    onClick={() => setIsQuoteModalOpen(true)}
+                    className="relative px-3.5 py-1.5 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-white/5 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>{link.name}</span>
+                    {link.badge && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/30 animate-pulse">
+                        {link.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              }
+
+              return (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="relative px-3.5 py-1.5 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-white/5 flex items-center gap-1.5"
+                >
+                  <span>{link.name}</span>
+                  {link.badge && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/30 animate-pulse">
+                      {link.badge}
+                    </span>
+                  )}
+                </a>
+              );
+            })}
           </div>
 
           {/* CTA WhatsApp + Estado de Local + Botón Admin */}
@@ -143,21 +162,43 @@ export default function Navbar() {
         {/* Menú desplegable Móvil */}
         {mobileMenuOpen && (
           <div className="md:hidden mt-3 pt-3 border-t border-zinc-800/80 space-y-1 pb-2">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between px-3 py-2 text-base font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/60 rounded-lg transition-colors"
-              >
-                <span>{link.name}</span>
-                {link.badge && (
-                  <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-[#FF5500]/20 text-[#FF5500]">
-                    {link.badge}
-                  </span>
-                )}
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              if (link.name === 'Cotizador') {
+                return (
+                  <button
+                    key={link.name}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setIsQuoteModalOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2 text-base font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/60 rounded-lg transition-colors text-left"
+                  >
+                    <span>{link.name}</span>
+                    {link.badge && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-[#FF5500]/20 text-[#FF5500]">
+                        {link.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              }
+
+              return (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between px-3 py-2 text-base font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/60 rounded-lg transition-colors"
+                >
+                  <span>{link.name}</span>
+                  {link.badge && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-[#FF5500]/20 text-[#FF5500]">
+                      {link.badge}
+                    </span>
+                  )}
+                </a>
+              );
+            })}
 
             <button
               onClick={() => {

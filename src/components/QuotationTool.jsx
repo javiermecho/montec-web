@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Smartphone, 
   Cpu, 
@@ -14,13 +14,40 @@ import {
   Zap,
   Fan,
   HardDrive,
-  Info
+  Info,
+  X,
+  Calculator,
+  Wrench,
+  ArrowRight
 } from 'lucide-react';
 import { DEVICE_TYPES } from '../data/repairData';
 import { useData } from '../context/DataContext';
 
 export default function QuotationTool() {
-  const { models, issues, calculateCurrentEstimate } = useData();
+  const { models, issues, calculateCurrentEstimate, isQuoteModalOpen, setIsQuoteModalOpen } = useData();
+
+  // Bloquear scroll de la página de fondo cuando el modal esté abierto
+  useEffect(() => {
+    if (isQuoteModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isQuoteModalOpen]);
+
+  // Cerrar con tecla Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isQuoteModalOpen) {
+        setIsQuoteModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isQuoteModalOpen, setIsQuoteModalOpen]);
 
   const [selectedDevice, setSelectedDevice] = useState('iphone');
   const [selectedBrand, setSelectedBrand] = useState('all');
@@ -181,31 +208,120 @@ export default function QuotationTool() {
   const whatsappLink = `https://wa.me/5492235000000?text=${whatsappMessage}`;
 
   return (
-    <section id="cotizador" className="py-20 px-4 sm:px-6 lg:px-8 relative">
-      {/* Glow decorativo */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[450px] bg-[#FF5500]/10 blur-[130px] rounded-full pointer-events-none -z-10" />
+    <>
+      {/* SECCIÓN COMPACTA EN LA PÁGINA PRINCIPAL */}
+      <section id="cotizador" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 relative">
+        {/* Glow decorativo de fondo */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#FF5500]/10 blur-[120px] rounded-full pointer-events-none -z-10" />
 
-      <div className="max-w-6xl mx-auto">
-        
-        {/* Encabezado de Sección */}
-        <div className="text-center max-w-3xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF5500]/10 border border-[#FF5500]/30 text-[#FF5500] text-xs font-bold uppercase tracking-wider mb-4">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Cotizador Online Inmediato</span>
+        <div className="max-w-5xl mx-auto">
+          {/* Banner Tarjeta Compacta y Atractiva */}
+          <div className="relative overflow-hidden bg-gradient-to-b from-[#18181B]/95 to-[#121214]/95 border border-zinc-800 rounded-3xl p-6 sm:p-10 shadow-2xl backdrop-blur-xl">
+            {/* Acento superior naranja */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-[#FF5500] to-transparent opacity-80" />
+
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+              <div className="space-y-4 text-center lg:text-left max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF5500]/15 border border-[#FF5500]/30 text-[#FF5500] text-xs font-bold uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Presupuesto Inmediato Online</span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-heading font-extrabold text-white tracking-tight">
+                  Cotizá tu Reparación en <span className="text-[#FF5500]">3 simples pasos</span>
+                </h2>
+                <p className="text-zinc-400 text-sm sm:text-base leading-relaxed">
+                  Seleccioná tu equipo (<strong className="text-zinc-200">iPhone</strong>, <strong className="text-zinc-200">Android</strong> o <strong className="text-zinc-200">Notebook</strong>) y conocé al instante el valor estimado de mano de obra y repuesto con instrumental de precisión y garantía escrita.
+                </p>
+
+                {/* Badges de Beneficios */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900/80 px-2.5 py-1.5 rounded-lg border border-zinc-800/80">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>30 días escrita</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900/80 px-2.5 py-1.5 rounded-lg border border-zinc-800/80">
+                    <Clock className="w-4 h-4 text-[#FF5500] shrink-0" />
+                    <span>2 a 3 hs (45m cita)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900/80 px-2.5 py-1.5 rounded-lg border border-zinc-800/80">
+                    <Smartphone className="w-4 h-4 text-blue-400 shrink-0" />
+                    <span>+600 Modelos</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900/80 px-2.5 py-1.5 rounded-lg border border-zinc-800/80">
+                    <Cpu className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>Sin Incell / TFT</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botón Principal para Abrir el Modal */}
+              <div className="w-full lg:w-auto flex flex-col items-center sm:items-stretch gap-2.5 shrink-0">
+                <button
+                  onClick={() => setIsQuoteModalOpen(true)}
+                  className="w-full sm:w-auto px-8 py-5 rounded-2xl font-heading font-black text-base sm:text-lg text-white bg-gradient-to-r from-[#FF5500] to-[#FF6600] hover:from-[#FF6600] hover:to-[#FF7700] shadow-[0_0_30px_rgba(255,85,0,0.5)] hover:shadow-[0_0_40px_rgba(255,85,0,0.7)] transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-3 cursor-pointer"
+                >
+                  <Calculator className="w-6 h-6" />
+                  <span>Abrir Cotizador Online</span>
+                  <ArrowRight className="w-5 h-5 text-white/80" />
+                </button>
+                <span className="text-center text-[11px] text-zinc-500">
+                  ⚡ Presupuesto estimado en el acto
+                </span>
+              </div>
+            </div>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-heading font-extrabold text-white tracking-tight mb-4">
-            Calculá el valor de tu reparación en <span className="text-[#FF5500]">3 simples pasos</span>
-          </h2>
-          <p className="text-zinc-400 text-base sm:text-lg">
-            Transparencia total: repuestos seleccionados, tiempo estimado de taller y garantía por escrito antes de venir al local.
-          </p>
         </div>
+      </section>
 
-        {/* Card Principal del Cotizador */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* Lado Izquierdo: Pasos de Configuración (7 cols) */}
-          <div className="lg:col-span-7 space-y-8 bg-[#121212]/90 border border-zinc-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
+      {/* VENTANA MODAL SUPERPUESTA (POPUP) */}
+      {isQuoteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md overflow-hidden animate-fadeIn">
+          {/* Backdrop para cerrar al hacer click afuera */}
+          <div 
+            className="absolute inset-0 -z-10" 
+            onClick={() => setIsQuoteModalOpen(false)} 
+          />
+
+          {/* Contenedor del Modal con tamaño controlado */}
+          <div className="w-full max-w-6xl max-h-[94vh] flex flex-col bg-[#121214] border border-zinc-800/90 rounded-2xl sm:rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.95)] overflow-hidden relative">
+            
+            {/* Header Fijo Superior del Modal */}
+            <div className="flex items-center justify-between px-5 sm:px-8 py-4 border-b border-zinc-800/80 bg-[#151518]/95 backdrop-blur-md shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-[#FF5500]/15 text-[#FF5500]">
+                  <Wrench className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-xl font-heading font-bold text-white flex items-center gap-2">
+                    <span>Cotizador de Reparaciones</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-sans font-bold bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/30 hidden sm:inline-block">
+                      Online MDP
+                    </span>
+                  </h3>
+                  <p className="text-xs text-zinc-400 hidden sm:block">
+                    Completá los pasos para obtener el presupuesto de tu equipo
+                  </p>
+                </div>
+              </div>
+
+              {/* Botón Cerrar (X) */}
+              <button
+                onClick={() => setIsQuoteModalOpen(false)}
+                className="p-2 text-zinc-400 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                title="Cerrar ventana (Esc)"
+              >
+                <X className="w-5 h-5" />
+                <span className="text-xs hidden sm:inline">Cerrar</span>
+              </button>
+            </div>
+
+            {/* Contenido con Scroll Interior Suave */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+              {/* Card Principal del Cotizador */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* Lado Izquierdo: Pasos de Configuración (7 cols) */}
+                <div className="lg:col-span-7 space-y-8 bg-[#121212]/90 border border-zinc-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl">
             
             {/* PASO 1: Tipo de Dispositivo */}
             <div>
@@ -656,8 +772,10 @@ export default function QuotationTool() {
           </div>
 
         </div>
-
-      </div>
-    </section>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
