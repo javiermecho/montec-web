@@ -245,7 +245,7 @@ export default function QuotationTool() {
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900/80 px-2.5 py-1.5 rounded-lg border border-zinc-800/80">
                     <Smartphone className="w-4 h-4 text-blue-400 shrink-0" />
-                    <span>+1.000 Modelos</span>
+                    <span>+600 Modelos</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900/80 px-2.5 py-1.5 rounded-lg border border-zinc-800/80">
                     <Cpu className="w-4 h-4 text-amber-400 shrink-0" />
