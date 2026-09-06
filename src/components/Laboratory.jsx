@@ -17,9 +17,9 @@ export default function Laboratory() {
     },
     {
       icon: Zap,
-      title: 'Reparaciones Express',
-      subtitle: 'En 45 a 60 Minutos en el Acto',
-      desc: 'El 80% de los cambios de pantalla, pines de carga y baterías se entregan en menos de una hora para que no te quedes incomunicado.'
+      title: 'Reparaciones en el Día',
+      subtitle: '2 a 3 hs • Express con Cita Previa',
+      desc: 'Realizamos reparaciones en el día (de 2 a 3 hs). Servicio express en 45 min únicamente con cita previa y seña confirmada para que no te quedes incomunicado.'
     },
     {
       icon: ShieldCheck,

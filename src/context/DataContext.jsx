@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { MODELS_DATABASE, ISSUE_TYPES, MINIMUM_REPAIR_PRICES, getMinimumRepairPrice } from '../data/repairData';
+import { MODELS_DATABASE, ISSUE_TYPES, MINIMUM_REPAIR_PRICES, getMinimumRepairPrice, getRepairTimeInfo } from '../data/repairData';
 import { ACCESSORIES_DATABASE } from '../data/accessoriesData';
 import { fetchDolarBlueRate, DEFAULT_FALLBACK_RATE } from '../services/dolarService';
 import { calculateModuleEstimate, calculateAndroidPartEstimate, PRICING_RULES } from '../services/partsPricingEngine';
@@ -337,10 +337,14 @@ export function DataProvider({ children }) {
         const selectedKey = extraOptions.iphoneOptionKey;
         const activeMod = modalities.find(m => m.key === selectedKey) || modalities[0];
 
+        const modTime = getRepairTimeInfo('iphone', 'screen', activeMod.key);
         return {
           minPrice: activeMod.finalPrice,
           maxPrice: activeMod.finalPrice,
-          duration: activeMod.key === 'ic_transplant' ? '90 a 120 min (Microelectrónica)' : '45 a 60 min (Express)',
+          duration: modTime.label,
+          timeCondition: modTime.condition,
+          timeFullText: modTime.fullText,
+          repairTime: modTime,
           warranty: '90 días de garantía escrita',
           issueName: 'Módulo / Pantalla Completa',
           issueBadge: activeMod.badge,
@@ -394,10 +398,14 @@ export function DataProvider({ children }) {
           || modalities.find(m => m.key === 'bms_transplant') 
           || modalities[0];
 
+        const batteryTime = getRepairTimeInfo('iphone', 'battery', activeMod.key);
         return {
           minPrice: activeMod.finalPrice,
           maxPrice: activeMod.finalPrice,
-          duration: activeMod.key === 'bms_transplant' ? '60 a 90 min (Trasplante BMS + Programación)' : '35 a 50 min (Express)',
+          duration: batteryTime.label,
+          timeCondition: batteryTime.condition,
+          timeFullText: batteryTime.fullText,
+          repairTime: batteryTime,
           warranty: '90 días de garantía escrita',
           issueName: 'Cambio de Batería Original / Premium',
           issueBadge: activeMod.badge,
@@ -422,10 +430,14 @@ export function DataProvider({ children }) {
         const placaFloor = getMinimumRepairPrice('iphone', 'motherboard');
         const finalPrice = Math.max(placaFloor, Math.round((totalUsd * dolarRate) / 1000) * 1000);
 
+        const mbTime = getRepairTimeInfo('iphone', 'motherboard');
         return {
           minPrice: finalPrice,
           maxPrice: finalPrice,
-          duration: '24 a 48 hs (Laboratorio Especializado)',
+          duration: mbTime.label,
+          timeCondition: mbTime.condition,
+          timeFullText: mbTime.fullText,
+          repairTime: mbTime,
           warranty: '30 días escrita',
           issueName: issue.name,
           issueBadge: 'Garantía Escrita',
@@ -452,10 +464,14 @@ export function DataProvider({ children }) {
         const tapaFloor = getMinimumRepairPrice('iphone', 'back-glass');
         const finalPrice = Math.max(tapaFloor, Math.round((totalUsd * dolarRate) / 1000) * 1000);
 
+        const bgTime = getRepairTimeInfo('iphone', 'back-glass');
         return {
           minPrice: finalPrice,
           maxPrice: finalPrice,
-          duration: 'En el día (2 a 4 hs)',
+          duration: bgTime.label,
+          timeCondition: bgTime.condition,
+          timeFullText: bgTime.fullText,
+          repairTime: bgTime,
           warranty: '30 días escrita',
           issueName: 'Cambio de Tapa Trasera de Vidrio (Láser / Proceso Térmico)',
           issueBadge: 'Láser & Precisión',
@@ -474,10 +490,14 @@ export function DataProvider({ children }) {
     if (issueId === 'screen' && targetModelName) {
       const moduleEstimate = calculateModuleEstimate(targetModelName, targetBrand, dolarRate, pricingRules);
       if (moduleEstimate && moduleEstimate.success) {
+        const screenTime = getRepairTimeInfo(deviceType, 'screen');
         return {
           minPrice: moduleEstimate.minPrice,
           maxPrice: moduleEstimate.maxPrice,
-          duration: moduleEstimate.duration,
+          duration: screenTime.label,
+          timeCondition: screenTime.condition,
+          timeFullText: screenTime.fullText,
+          repairTime: screenTime,
           warranty: '90 días escrita',
           issueName: issue.name,
           issueBadge: moduleEstimate.badge,
@@ -498,10 +518,14 @@ export function DataProvider({ children }) {
     if (deviceType === 'android' && ['battery', 'charging-port', 'speaker'].includes(issueId) && targetModelName) {
       const partEstimate = calculateAndroidPartEstimate(issueId, targetModelName, targetBrand, dolarRate);
       if (partEstimate && partEstimate.success) {
+        const partTime = getRepairTimeInfo('android', issueId);
         return {
           minPrice: partEstimate.minPrice,
           maxPrice: partEstimate.maxPrice,
-          duration: issue.duration,
+          duration: partTime.label,
+          timeCondition: partTime.condition,
+          timeFullText: partTime.fullText,
+          repairTime: partTime,
           warranty: '90 días escrita',
           issueName: issue.name,
           issueBadge: partEstimate.badge,
@@ -549,10 +573,15 @@ export function DataProvider({ children }) {
     const min = Math.max(floorMin, Math.round((baseRange.min * multiplier) / 500) * 500);
     const max = Math.max(min, Math.round((baseRange.max * multiplier) / 500) * 500);
 
+    const fallbackTime = getRepairTimeInfo(deviceType, issueId, extraOptions?.iphoneOptionKey);
+
     return {
       minPrice: min,
       maxPrice: max,
-      duration: issue.duration,
+      duration: fallbackTime.label,
+      timeCondition: fallbackTime.condition,
+      timeFullText: fallbackTime.fullText,
+      repairTime: fallbackTime,
       warranty: '90 días escrita',
       issueName: issue.name,
       issueBadge: 'Instalación Incluida',

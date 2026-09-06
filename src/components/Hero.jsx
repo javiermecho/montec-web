@@ -15,7 +15,7 @@ export default function Hero() {
   ];
 
   const highlights = [
-    { text: 'Reparaciones Express en 45-60 min' },
+    { text: 'Reparaciones en el día (2 a 3 hs)' },
     { text: '90 días de Garantía Escrita' },
     { text: 'Diagnóstico Honesto Sin Cargo' },
     { text: 'Laboratorio Propio en Mar del Plata' }
@@ -59,7 +59,7 @@ export default function Hero() {
 
         {/* Subtítulo descriptivo */}
         <p className="max-w-2xl mx-auto text-base sm:text-lg lg:text-xl text-zinc-400 font-normal leading-relaxed mb-8">
-          Reparación profesional de celulares <strong className="text-zinc-200">iPhone</strong>, <strong className="text-zinc-200">Android</strong> y <strong className="text-zinc-200">Notebooks</strong> con repuestos seleccionados, instrumental de precisión y entrega express en Montes Carballo 943.
+          Reparación profesional de celulares <strong className="text-zinc-200">iPhone</strong>, <strong className="text-zinc-200">Android</strong> y <strong className="text-zinc-200">Notebooks</strong> con repuestos seleccionados, instrumental de precisión y entrega en el día en Montes Carballo 943.
         </p>
 
         {/* Botones de Acción (CTAs) */}

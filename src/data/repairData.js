@@ -47,12 +47,53 @@ export function getMinimumRepairPrice(deviceType, issueId) {
   return deviceFloors[issueId] || 0;
 }
 
+/**
+ * Matriz oficial de tiempos de reparación y condiciones de entrega de Montec:
+ * 1. Reparaciones Estándar: 'De 2 a 3 horas' • 'Express en 45 min con cita previa y seña'
+ * 2. Reparaciones de Precisión & Programación: '24 horas hábiles' • 'Ingresando antes de las 12:00 hs se entrega en el mismo día.'
+ * 3. Laboratorio Avanzado & Diagnóstico Complejo: '24 a 48 horas hábiles' • 'Sujeto a pruebas de estabilidad y diagnóstico en laboratorio.'
+ */
+export function getRepairTimeInfo(deviceType, issueId, selectedModalityKey = null) {
+  // 3. Laboratorio Avanzado & Diagnóstico Complejo (Placa madre, mojados, en corto)
+  if (issueId === 'motherboard') {
+    return {
+      label: '24 a 48 horas hábiles',
+      condition: 'Sujeto a pruebas de estabilidad y diagnóstico en laboratorio.',
+      badge: 'Laboratorio Avanzado',
+      fullText: '24 a 48 horas hábiles (Sujeto a pruebas de estabilidad y diagnóstico en laboratorio)'
+    };
+  }
+
+  // 2. Reparaciones de Precisión & Programación (Tapa trasera iPhone, Batería iPhone, Reprogramación flex / IC)
+  const isPrecision = (
+    (deviceType === 'iphone' && (issueId === 'back-glass' || issueId === 'battery')) ||
+    (deviceType === 'iphone' && issueId === 'screen' && selectedModalityKey === 'ic_transplant')
+  );
+
+  if (isPrecision) {
+    return {
+      label: '24 horas hábiles',
+      condition: 'Ingresando antes de las 12:00 hs se entrega en el mismo día.',
+      badge: 'Precisión & Programación',
+      fullText: '24 horas hábiles (Ingresando antes de las 12:00 hs se entrega en el mismo día)'
+    };
+  }
+
+  // 1. Reparaciones Estándar (Pantalla común, Pin de carga, Sonido, Baterías Android, Software, etc.)
+  return {
+    label: 'De 2 a 3 horas',
+    condition: 'Express en 45 min con cita previa y seña',
+    badge: 'Servicio en el Día',
+    fullText: 'De 2 a 3 horas (Express en 45 min con cita previa y seña)'
+  };
+}
+
 export const ISSUE_TYPES = [
   {
     id: 'screen',
     name: 'Módulo / Pantalla Completa',
     description: 'Vidrio roto, líneas en display, pantalla en negro o falla de táctil.',
-    duration: 'En 45 a 60 min (Express)',
+    duration: 'De 2 a 3 horas (Express en 45 min con cita previa y seña)',
     warranty: '90 días de garantía escrita',
     badge: 'Repuesto Seleccionado',
     icon: 'Maximize2',
@@ -67,7 +108,7 @@ export const ISSUE_TYPES = [
     id: 'battery',
     name: 'Cambio de Batería Original/Premium',
     description: 'Se descarga rápido, se apaga de golpe o batería hinchada con riesgo.',
-    duration: 'En 40 a 60 min (En el acto)',
+    duration: 'De 2 a 3 horas en Android / 24 hs hábiles en iPhone',
     warranty: '90 días de garantía escrita',
     badge: 'Celdas Nuevas 100%',
     icon: 'BatteryCharging',
@@ -82,7 +123,7 @@ export const ISSUE_TYPES = [
     id: 'charging-port',
     name: 'Reparación de Carga (Pin / Placa)',
     description: 'Falso contacto, no carga, humedad o reemplazo de pin / subplaca de carga completa.',
-    duration: 'En 45 a 90 min',
+    duration: 'De 2 a 3 horas (Express en 45 min con cita previa y seña)',
     warranty: '90 días de garantía escrita',
     badge: 'Limpieza o Reemplazo',
     icon: 'Zap',
@@ -97,7 +138,7 @@ export const ISSUE_TYPES = [
     id: 'software',
     name: 'Reparación de Software / Sistema',
     description: 'Flasheo, recuperación de booteo o reinicios en logo, reinstalación de sistema operativo, desbrickeo y optimización.',
-    duration: 'En el día (1 a 3 hs)',
+    duration: 'De 2 a 3 horas',
     warranty: 'Garantía de funcionamiento y estabilidad',
     badge: 'Soporte Especializado',
     icon: 'Terminal',
@@ -112,7 +153,7 @@ export const ISSUE_TYPES = [
     id: 'speaker',
     name: 'Reparación de Sonido (Parlante / Altavoz / Buzzer)',
     description: 'Sin sonido en llamadas/música, sonido distorsionado, fritura, bajo volumen o falla de buzzer.',
-    duration: 'En 40 a 60 min',
+    duration: 'De 2 a 3 horas (Express en 45 min con cita previa y seña)',
     warranty: '90 días de garantía escrita',
     badge: 'Sonido Nítido',
     icon: 'Volume2',
@@ -127,7 +168,7 @@ export const ISSUE_TYPES = [
     id: 'motherboard',
     name: 'Reparación en Placa (Sonido, Señal, Mojado, En Corto, Face ID)',
     description: 'Fallas de audio IC (sin sonido/micrófono), baseband (sin señal), equipo mojado, en corto, Face ID desactivado o reinicios constantes.',
-    duration: '24 a 48 hs (Laboratorio Especializado)',
+    duration: '24 a 48 horas hábiles (Sujeto a pruebas de estabilidad)',
     warranty: '30 días escrita',
     badge: 'Microelectrónica Gremio',
     icon: 'Cpu',
@@ -142,7 +183,7 @@ export const ISSUE_TYPES = [
     id: 'back-glass',
     name: 'Cambio de Tapa Trasera de Vidrio (Láser / Proceso Térmico)',
     description: 'Tapa trasera trizada o rota. En iPhone remoción con láser preservando chasis y MagSafe; en Android cambio de tapa original o carcasa.',
-    duration: 'En el día (2 a 4 hs)',
+    duration: '24 horas hábiles en iPhone / De 2 a 3 hs en Android',
     warranty: '30 días escrita',
     badge: 'Láser & Precisión',
     icon: 'Smartphone',

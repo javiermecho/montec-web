@@ -262,7 +262,10 @@ export default function QuotationTool() {
   ) : '';
   const qualityText = (!estimate?.isIphoneSpecialized && estimate?.qualityLabel) ? `%0A💎 *Calidad / Servicio:* ${estimate.qualityLabel}` : '';
 
-  const whatsappMessage = `¡Hola montec! Vengo de la web y coticé una reparación:%0A%0A📱 *Equipo:* ${currentModelName}%0A🛠️ *Falla:* ${issueName}${iphoneModalityText}${qualityText}%0A💰 *Presupuesto estimativo web:* ${priceRangeStr}%0A⏱️ *Tiempo estimado:* 2 a 3 horas (con cita previa: 45 minutos)%0A🛡️ *Garantía:* ${estimate?.warranty || '30 días escrita'}%0A%0A¿Me confirmás la disponibilidad y el precio final para que me acerque al local de Montes Carballo 943?`;
+  const repairTimeLabel = estimate?.repairTime?.label || estimate?.duration || 'De 2 a 3 horas';
+  const repairTimeCondition = estimate?.repairTime?.condition || estimate?.timeCondition || 'Express en 45 min con cita previa y seña';
+
+  const whatsappMessage = `¡Hola Montec! Estuve cotizando en la web la reparación de mi ${currentModelName} (${issueName}):%0A%0A📱 *Equipo:* ${currentModelName}%0A🛠️ *Falla:* ${issueName}${iphoneModalityText}${qualityText}%0A💰 *Presupuesto estimativo web:* ${priceRangeStr}%0A⏱️ *Tiempo estimado de trabajo:* ${repairTimeLabel} (${repairTimeCondition})%0A🛡️ *Garantía:* ${estimate?.warranty || '90 días escrita'}%0A%0AQuisiera consultar disponibilidad o coordinar un turno para llevarlo al local de Montes Carballo 943.`;
 
   const whatsappLink = `https://wa.me/5492235000000?text=${whatsappMessage}`;
 
@@ -300,7 +303,7 @@ export default function QuotationTool() {
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900/80 px-2.5 py-1.5 rounded-lg border border-zinc-800/80">
                     <Clock className="w-4 h-4 text-[#FF5500] shrink-0" />
-                    <span>2 a 3 hs (45m cita)</span>
+                    <span>En el día (2 a 3 hs)</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900/80 px-2.5 py-1.5 rounded-lg border border-zinc-800/80">
                     <Smartphone className="w-4 h-4 text-blue-400 shrink-0" />
@@ -813,14 +816,17 @@ export default function QuotationTool() {
 
               {/* Tiempos y Garantías */}
               <div className="space-y-3 mb-4 bg-zinc-950/60 p-4 rounded-xl border border-zinc-800/80">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-[#FF5500]/10 text-[#FF5500]">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-[#FF5500]/10 text-[#FF5500] shrink-0 mt-0.5">
                     <Clock className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="text-[11px] text-zinc-400 font-medium">Tiempo de trabajo:</div>
-                    <div className="text-xs sm:text-sm font-bold text-zinc-200">
-                      De 2 a 3 horas <span className="text-[#FF5500] text-xs font-semibold block sm:inline sm:ml-1">• Con cita previa: 45 min</span>
+                    <div className="text-[11px] text-zinc-400 font-medium">Tiempo de trabajo estimado:</div>
+                    <div className="text-xs sm:text-sm font-bold text-zinc-100">
+                      {estimate?.repairTime?.label || estimate?.duration || 'De 2 a 3 horas'}
+                    </div>
+                    <div className="text-[11px] text-[#FF5500] font-semibold mt-0.5 leading-snug">
+                      • {estimate?.repairTime?.condition || estimate?.timeCondition || 'Express en 45 min con cita previa y seña'}
                     </div>
                   </div>
                 </div>
