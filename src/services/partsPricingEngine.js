@@ -6,6 +6,7 @@ import { GRUPOARMAR_PARTS } from '../data/grupoarmarParts.js';
 import { SMARTSUPPLY_PARTS } from '../data/smartsupplyParts.js';
 import { SOULFIX_PARTS } from '../data/soulfixParts.js';
 import { DEFAULT_FALLBACK_RATE } from './dolarService.js';
+import { MINIMUM_REPAIR_PRICES } from '../data/repairData.js';
 
 function formatToModule(p, provider) {
   const usd = p.price_usd || (p.price_cash_ars ? p.price_cash_ars / DEFAULT_FALLBACK_RATE : 0);
@@ -76,6 +77,7 @@ export const PRICING_RULES = {
  * - costo_ars = costo real en efectivo (o costo_usd * dolar_rate)
  * - ganancia = min(maxMargin, max(minLabor, markupProfit))
  * - precio_final = round(costo_ars + ganancia)
+ * - Piso mínimo garantizado para módulo de pantalla: $55.000
  */
 export function calculatePartPrice(part, dolarRate = DEFAULT_FALLBACK_RATE, customRules = null) {
   const minLabor = customRules?.minLaborArs !== undefined ? Number(customRules.minLaborArs) : PRICING_RULES.MIN_LABOR_ARS;
@@ -89,7 +91,13 @@ export function calculatePartPrice(part, dolarRate = DEFAULT_FALLBACK_RATE, cust
   const markupProfit = costoArs * Math.max(0.5, multiplier - 1);
   const ganancia = Math.min(maxMargin, Math.max(minLabor, markupProfit));
   const rawFinal = costoArs + ganancia;
-  const finalPrice = Math.round(rawFinal / PRICING_RULES.ROUND_STEP) * PRICING_RULES.ROUND_STEP;
+  let finalPrice = Math.round(rawFinal / PRICING_RULES.ROUND_STEP) * PRICING_RULES.ROUND_STEP;
+
+  // Piso mínimo garantizado para cambio de módulo de pantalla: $55.000
+  const screenFloor = MINIMUM_REPAIR_PRICES.screen || 55000;
+  if (finalPrice < screenFloor) {
+    finalPrice = screenFloor;
+  }
 
   return {
     id: part.id,
@@ -189,14 +197,18 @@ export function calculateModuleEstimate(modelName, brand, dolarRate = DEFAULT_FA
   // Ordenar por precio ascendente
   pricedOptions.sort((a, b) => a.final_price - b.final_price);
 
+  const screenFloor = MINIMUM_REPAIR_PRICES.screen || 55000;
   const minOption = pricedOptions[0];
   const maxOption = pricedOptions[pricedOptions.length - 1];
+
+  const finalMinPrice = Math.max(screenFloor, minOption.final_price);
+  const finalMaxPrice = Math.max(finalMinPrice, maxOption.final_price);
 
   return {
     success: true,
     isDirectMatch: true,
-    minPrice: minOption.final_price,
-    maxPrice: maxOption.final_price,
+    minPrice: finalMinPrice,
+    maxPrice: finalMaxPrice,
     minCostUsd: minOption.cost_usd,
     maxCostUsd: maxOption.cost_usd,
     optionsCount: pricedOptions.length,
@@ -213,7 +225,7 @@ export function calculateModuleEstimate(modelName, brand, dolarRate = DEFAULT_FA
 
 /**
  * Calcula cotización para baterías, placas de carga y parlantes en Android
- * agregando exactamente $35.000 de mano de obra al costo del repuesto.
+ * agregando exactamente $35.000 de mano de obra al costo del repuesto con pisos mínimos garantizados.
  */
 export function calculateAndroidPartEstimate(issueId, modelName, brand = '', dolarRate = DEFAULT_FALLBACK_RATE) {
   let partsList = [];
@@ -221,13 +233,13 @@ export function calculateAndroidPartEstimate(issueId, modelName, brand = '', dol
 
   if (issueId === 'battery') {
     partsList = VALID_BATTERIES;
-    fallbackCost = { min: 12000, max: 19000 };
+    fallbackCost = { min: 10000, max: 19000 };
   } else if (issueId === 'charging-port') {
     partsList = VALID_CHARGING_BOARDS;
-    fallbackCost = { min: 6000, max: 12000 };
+    fallbackCost = { min: 5000, max: 12000 };
   } else if (issueId === 'speaker') {
     partsList = VALID_SPEAKERS;
-    fallbackCost = { min: 4000, max: 9000 };
+    fallbackCost = { min: 3000, max: 8000 };
   } else {
     return null;
   }
@@ -235,6 +247,7 @@ export function calculateAndroidPartEstimate(issueId, modelName, brand = '', dol
   const labor = ANDROID_PARTS_LABOR_ARS; // $35.000 fijados para Android
   const tokens = extractCoreTokens(modelName);
   const normBrand = (brand || '').toLowerCase();
+  const floorMin = MINIMUM_REPAIR_PRICES[issueId] || 0;
 
   const matches = partsList.filter(part => {
     const partBrand = (part.brand || '').toLowerCase();
@@ -260,8 +273,8 @@ export function calculateAndroidPartEstimate(issueId, modelName, brand = '', dol
     const minPartCost = Math.min(...costs);
     const maxPartCost = Math.max(...costs);
 
-    const minPrice = Math.round((minPartCost + labor) / 500) * 500;
-    const maxPrice = Math.round((maxPartCost + labor) / 500) * 500;
+    const minPrice = Math.max(floorMin, Math.round((minPartCost + labor) / 500) * 500);
+    const maxPrice = Math.max(minPrice, Math.round((maxPartCost + labor) / 500) * 500);
 
     const bestOption = targetMatches.find(m => (m.cost_ars || Math.round((m.cost_usd || 0) * dolarRate)) === minPartCost) || targetMatches[0];
 
@@ -280,9 +293,9 @@ export function calculateAndroidPartEstimate(issueId, modelName, brand = '', dol
     };
   }
 
-  // Fallback con costo promedio estimado de repuesto + $35.000 de mano de obra
-  const minPrice = Math.round((fallbackCost.min + labor) / 500) * 500;
-  const maxPrice = Math.round((fallbackCost.max + labor) / 500) * 500;
+  // Fallback con costo promedio estimado de repuesto + $35.000 de mano de obra y piso mínimo
+  const minPrice = Math.max(floorMin, Math.round((fallbackCost.min + labor) / 500) * 500);
+  const maxPrice = Math.max(minPrice, Math.round((fallbackCost.max + labor) / 500) * 500);
 
   return {
     success: true,

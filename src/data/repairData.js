@@ -11,6 +11,14 @@ import { ALL_MODELS } from './allModels.js';
 
 export const MODELS_DATABASE = ALL_MODELS;
 
+export const MINIMUM_REPAIR_PRICES = {
+  'screen': 55000,        // cambio de modulo de pantalla $55.000
+  'battery': 45000,       // cambio de bateria $45.000
+  'charging-port': 30000, // reparacion de carga $30.000
+  'software': 25000,      // reparacion de software $25.000
+  'speaker': 38000        // reparacion de sonido $38.000
+};
+
 export const ISSUE_TYPES = [
   {
     id: 'screen',
@@ -21,8 +29,8 @@ export const ISSUE_TYPES = [
     badge: 'Repuesto Seleccionado',
     icon: 'Maximize2',
     basePrices: {
-      iphone: { min: 45000, max: 145000 },
-      android: { min: 28000, max: 78000 },
+      iphone: { min: 55000, max: 145000 },
+      android: { min: 55000, max: 95000 },
       notebook: { min: 75000, max: 165000 }
     }
   },
@@ -35,36 +43,50 @@ export const ISSUE_TYPES = [
     badge: 'Celdas Nuevas 100%',
     icon: 'BatteryCharging',
     basePrices: {
-      iphone: { min: 38000, max: 75000 },
-      android: { min: 45000, max: 55000 }, // Repuesto (~$10.000-$20.000) + $35.000 mano de obra
+      iphone: { min: 45000, max: 85000 },
+      android: { min: 45000, max: 65000 }, // Piso mínimo $45.000 (Repuesto + $35.000 mano de obra)
       notebook: { min: 48000, max: 95000 }
     }
   },
   {
     id: 'charging-port',
-    name: 'Pin / Placa de Carga',
-    description: 'Falso contacto, no carga, humedad o reemplazo de subplaca de carga completa.',
+    name: 'Reparación de Carga (Pin / Placa)',
+    description: 'Falso contacto, no carga, humedad o reemplazo de pin / subplaca de carga completa.',
     duration: 'En 45 a 90 min',
     warranty: '90 días de garantía escrita',
     badge: 'Limpieza o Reemplazo',
     icon: 'Zap',
     basePrices: {
-      iphone: { min: 25000, max: 48000 },
-      android: { min: 40000, max: 48000 }, // Repuesto (~$5.000-$13.000) + $35.000 mano de obra
+      iphone: { min: 30000, max: 55000 },
+      android: { min: 30000, max: 48000 }, // Piso mínimo $30.000
       notebook: { min: 35000, max: 62000 }
     }
   },
   {
+    id: 'software',
+    name: 'Reparación de Software / Sistema',
+    description: 'Flasheo, recuperación de booteo o reinicios en logo, reinstalación de sistema operativo, desbrickeo y optimización.',
+    duration: 'En el día (1 a 3 hs)',
+    warranty: 'Garantía de funcionamiento y estabilidad',
+    badge: 'Soporte Especializado',
+    icon: 'Terminal',
+    basePrices: {
+      iphone: { min: 25000, max: 45000 },
+      android: { min: 25000, max: 38000 }, // Piso mínimo $25.000
+      notebook: { min: 25000, max: 48000 }
+    }
+  },
+  {
     id: 'speaker',
-    name: 'Parlante / Altavoz / Buzzer',
-    description: 'Sin sonido en llamadas/música, sonido distorsionado, fritura o bajo volumen.',
+    name: 'Reparación de Sonido (Parlante / Altavoz / Buzzer)',
+    description: 'Sin sonido en llamadas/música, sonido distorsionado, fritura, bajo volumen o falla de buzzer.',
     duration: 'En 40 a 60 min',
     warranty: '90 días de garantía escrita',
     badge: 'Sonido Nítido',
     icon: 'Volume2',
     basePrices: {
-      iphone: { min: 35000, max: 65000 },
-      android: { min: 39000, max: 45000 }, // Repuesto (~$4.000-$10.000) + $35.000 mano de obra
+      iphone: { min: 38000, max: 65000 },
+      android: { min: 38000, max: 48000 }, // Piso mínimo $38.000
       notebook: { min: 42000, max: 75000 }
     }
   },
@@ -147,8 +169,9 @@ export function calculateEstimate(deviceType, modelId, issueId) {
     else if (isRecent) multiplier = 1.1;
   }
 
-  const min = Math.round((baseRange.min * multiplier) / 500) * 500;
-  const max = Math.round((baseRange.max * multiplier) / 500) * 500;
+  const floorMin = MINIMUM_REPAIR_PRICES[issueId] || 0;
+  const min = Math.max(floorMin, Math.round((baseRange.min * multiplier) / 500) * 500);
+  const max = Math.max(min, Math.round((baseRange.max * multiplier) / 500) * 500);
 
   return {
     minPrice: min,

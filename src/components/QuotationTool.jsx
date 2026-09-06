@@ -19,7 +19,8 @@ import {
   Calculator,
   Wrench,
   ArrowRight,
-  Volume2
+  Volume2,
+  Terminal
 } from 'lucide-react';
 import { DEVICE_TYPES } from '../data/repairData';
 import { useData } from '../context/DataContext';
@@ -182,6 +183,7 @@ export default function QuotationTool() {
       case 'screen': return <Maximize2 className="w-5 h-5 text-[#FF5500]" />;
       case 'battery': return <BatteryCharging className="w-5 h-5 text-[#FF5500]" />;
       case 'charging-port': return <Zap className="w-5 h-5 text-[#FF5500]" />;
+      case 'software': return <Terminal className="w-5 h-5 text-[#FF5500]" />;
       case 'speaker': return <Volume2 className="w-5 h-5 text-[#FF5500]" />;
       case 'motherboard': return <Cpu className="w-5 h-5 text-[#FF5500]" />;
       case 'back-glass': return <Smartphone className="w-5 h-5 text-[#FF5500]" />;
