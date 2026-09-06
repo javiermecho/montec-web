@@ -12,6 +12,7 @@ import {
   QrCode,
   Sparkles
 } from 'lucide-react';
+import { trackClickLlamadaOMapa } from '../services/analytics';
 
 export default function LocationContact() {
   const paymentMethods = [
@@ -73,6 +74,7 @@ export default function LocationContact() {
                     href={googleMapsDirectionsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackClickLlamadaOMapa({ type: 'mapa_como_llegar', label: 'Cómo llegar con Google Maps', url: googleMapsDirectionsUrl })}
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FF5500] hover:text-[#FF6600] mt-3 group"
                   >
                     <span>¿Cómo llegar con Google Maps?</span>
@@ -131,6 +133,7 @@ export default function LocationContact() {
               href={instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackClickLlamadaOMapa({ type: 'instagram_contacto', label: 'Instagram @montec.arg', url: instagramUrl })}
               className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-pink-950/30 to-orange-950/40 border border-pink-500/30 hover:border-pink-500/60 flex items-center justify-between group transition-all"
             >
               <div className="flex items-center gap-3">
@@ -159,6 +162,7 @@ export default function LocationContact() {
                 href={googleMapsDirectionsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackClickLlamadaOMapa({ type: 'mapa_completo', label: 'Abrir Mapa Completo', url: googleMapsDirectionsUrl })}
                 className="text-xs text-[#FF5500] hover:underline flex items-center gap-1 font-semibold"
               >
                 Abrir Mapa Completo

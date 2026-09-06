@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { ACCESSORIES_CATEGORIES } from '../data/accessoriesData';
 import { useData } from '../context/DataContext';
+import { trackConsultaAccesorio } from '../services/analytics';
 
 export default function Accessories() {
   const { accessories } = useData();
@@ -129,6 +130,11 @@ export default function Accessories() {
                     href={itemWhatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackConsultaAccesorio({
+                      accessoryName: item.name,
+                      category: item.category,
+                      price: item.price
+                    })}
                     className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-[#FF5500] text-zinc-200 hover:text-white text-xs font-bold transition-all duration-200 border border-zinc-800 hover:border-[#FF5500] shadow-sm"
                   >
                     <MessageCircle className="w-3.5 h-3.5 fill-current" />

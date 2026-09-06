@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { DEVICE_TYPES } from '../data/repairData';
 import { useData } from '../context/DataContext';
+import { trackCotizacionIniciada, trackClickWhatsappCotizacion } from '../services/analytics';
 
 export default function QuotationTool() {
   const { models, issues, calculateCurrentEstimate, isQuoteModalOpen, setIsQuoteModalOpen } = useData();
@@ -133,7 +134,7 @@ export default function QuotationTool() {
     setSelectedModel(preferred || null);
   };
 
-  // Manejar selección de falla con preselección inteligente para iPhone
+  // Manejar selección de falla con preselección inteligente para iPhone y tracking
   const handleIssueChange = (issueId) => {
     setSelectedIssue(issueId);
     if (selectedDevice === 'iphone') {
@@ -141,6 +142,13 @@ export default function QuotationTool() {
       else if (issueId === 'battery') setIphoneOptionKey('bms_transplant');
       else setIphoneOptionKey(null);
     }
+    const targetIssue = issues.find(i => i.id === issueId);
+    trackCotizacionIniciada({
+      deviceType: selectedDevice,
+      modelName: currentModelName,
+      issueName: targetIssue ? targetIssue.name : issueId,
+      estimatedPrice: estimate?.minPrice || 0
+    });
   };
 
   // Manejar selección o deselección de marca en la barra desplazable
@@ -497,6 +505,12 @@ export default function QuotationTool() {
                           onClick={() => {
                             setSelectedModel(item);
                             setCustomModel('');
+                            trackCotizacionIniciada({
+                              deviceType: selectedDevice,
+                              modelName: item.model,
+                              issueName: issueName,
+                              estimatedPrice: estimate?.minPrice || 0
+                            });
                           }}
                           className={`w-full text-left px-3 py-2 rounded-lg text-xs sm:text-sm flex items-center justify-between transition-colors ${
                             isCurrent 
@@ -792,11 +806,20 @@ export default function QuotationTool() {
                 </p>
               </div>
 
-              {/* Botón CTA Derivación a WhatsApp */}
+              {/* Botón CTA Derivación a WhatsApp con Tracking de Conversión para Google Ads */}
               <a
                 href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => {
+                  trackClickWhatsappCotizacion({
+                    deviceType: selectedDevice,
+                    modelName: currentModelName,
+                    issueName: issueName,
+                    estimatedPrice: estimate?.minPrice || 0,
+                    whatsappUrl: whatsappLink
+                  });
+                }}
                 className="w-full flex items-center justify-center gap-2.5 py-4 px-5 rounded-xl font-heading font-bold text-base text-white bg-[#FF5500] hover:bg-[#FF6600] shadow-[0_0_25px_rgba(255,85,0,0.4)] hover:shadow-[0_0_35px_rgba(255,85,0,0.65)] transition-all duration-300 transform active:scale-98 text-center"
               >
                 <MessageCircle className="w-5 h-5 fill-white text-transparent" />

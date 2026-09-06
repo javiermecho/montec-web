@@ -2,6 +2,7 @@ import React from 'react';
 import { MessageCircle, Instagram, MapPin, ShieldCheck, ArrowUp, Sliders } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
+import { trackClickLlamadaOMapa } from '../services/analytics';
 
 export default function Footer() {
   const { setIsAdminOpen } = useData();
@@ -29,6 +30,7 @@ export default function Footer() {
                 href="https://wa.me/5492235000000"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackClickLlamadaOMapa({ type: 'whatsapp_footer', label: 'WhatsApp Footer', url: 'https://wa.me/5492235000000' })}
                 className="p-2.5 rounded-xl bg-zinc-900 hover:bg-[#FF5500] text-zinc-300 hover:text-white transition-colors border border-zinc-800"
                 aria-label="WhatsApp"
               >
@@ -38,6 +40,7 @@ export default function Footer() {
                 href="https://instagram.com/montec.arg"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackClickLlamadaOMapa({ type: 'instagram_footer', label: 'Instagram Footer', url: 'https://instagram.com/montec.arg' })}
                 className="p-2.5 rounded-xl bg-zinc-900 hover:bg-pink-600 text-zinc-300 hover:text-white transition-colors border border-zinc-800"
                 aria-label="Instagram"
               >
@@ -103,8 +106,19 @@ export default function Footer() {
 
         </div>
 
+        {/* Bloque Obligatorio de Compliance para Google Ads & Descargo de Responsabilidad Legal */}
+        <div className="my-8 p-4 sm:p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 text-[11px] sm:text-xs text-zinc-400 leading-relaxed space-y-1.5">
+          <p className="font-bold text-zinc-300 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#FF5500]"></span>
+            <span>Aviso Legal y Descargo de Responsabilidad:</span>
+          </p>
+          <p>
+            <strong className="text-zinc-300">montec</strong> es un servicio técnico y laboratorio de microelectrónica multimarca independiente. No somos un servicio técnico oficial autorizado por Apple Inc., Samsung Electronics, Motorola Mobility LLC, Xiaomi Inc., ni ninguna otra marca mencionada. Todos los nombres de productos, logotipos, marcas comerciales y marcas registradas son propiedad de sus respectivos dueños y se utilizan en este sitio web únicamente con fines descriptivos y de compatibilidad para informar sobre nuestros servicios de reparación fuera de garantía y venta de accesorios.
+          </p>
+        </div>
+
         {/* Barra Inferior */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+        <div className="pt-6 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
           <div>
             © {new Date().getFullYear()} <strong className="text-zinc-300">montec</strong>. Todos los derechos reservados. Mar del Plata, Argentina.
           </div>
