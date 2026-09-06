@@ -6,7 +6,7 @@ import { GRUPOARMAR_PARTS } from '../data/grupoarmarParts.js';
 import { SMARTSUPPLY_PARTS } from '../data/smartsupplyParts.js';
 import { SOULFIX_PARTS } from '../data/soulfixParts.js';
 import { DEFAULT_FALLBACK_RATE } from './dolarService.js';
-import { MINIMUM_REPAIR_PRICES } from '../data/repairData.js';
+import { getMinimumRepairPrice } from '../data/repairData.js';
 
 function formatToModule(p, provider) {
   const usd = p.price_usd || (p.price_cash_ars ? p.price_cash_ars / DEFAULT_FALLBACK_RATE : 0);
@@ -79,7 +79,7 @@ export const PRICING_RULES = {
  * - precio_final = round(costo_ars + ganancia)
  * - Piso mínimo garantizado para módulo de pantalla: $55.000
  */
-export function calculatePartPrice(part, dolarRate = DEFAULT_FALLBACK_RATE, customRules = null) {
+export function calculatePartPrice(part, dolarRate = DEFAULT_FALLBACK_RATE, customRules = null, deviceType = 'android') {
   const minLabor = customRules?.minLaborArs !== undefined ? Number(customRules.minLaborArs) : PRICING_RULES.MIN_LABOR_ARS;
   const maxMargin = customRules?.maxMarginArs !== undefined ? Number(customRules.maxMarginArs) : PRICING_RULES.MAX_MARGIN_ARS;
   const multiplier = customRules?.markupMultiplier !== undefined ? Number(customRules.markupMultiplier) : 2.0;
@@ -93,8 +93,8 @@ export function calculatePartPrice(part, dolarRate = DEFAULT_FALLBACK_RATE, cust
   const rawFinal = costoArs + ganancia;
   let finalPrice = Math.round(rawFinal / PRICING_RULES.ROUND_STEP) * PRICING_RULES.ROUND_STEP;
 
-  // Piso mínimo garantizado para cambio de módulo de pantalla: $55.000
-  const screenFloor = MINIMUM_REPAIR_PRICES.screen || 55000;
+  // Piso mínimo según tipo de equipo (Android: $55.000, iPhone: $65.000)
+  const screenFloor = getMinimumRepairPrice(deviceType, 'screen');
   if (finalPrice < screenFloor) {
     finalPrice = screenFloor;
   }
@@ -191,13 +191,16 @@ export function calculateModuleEstimate(modelName, brand, dolarRate = DEFAULT_FA
     return null; // Indica que debe usar fallback genérico
   }
 
+  const isApple = (brand || '').toLowerCase() === 'apple' || (modelName || '').toLowerCase().includes('iphone');
+  const deviceType = isApple ? 'iphone' : 'android';
+  const screenFloor = getMinimumRepairPrice(deviceType, 'screen');
+
   // Calcular precios para todas las variantes válidas (sin Incell) con reglas dinámicas
-  const pricedOptions = matches.map(part => calculatePartPrice(part, dolarRate, customRules));
+  const pricedOptions = matches.map(part => calculatePartPrice(part, dolarRate, customRules, deviceType));
 
   // Ordenar por precio ascendente
   pricedOptions.sort((a, b) => a.final_price - b.final_price);
 
-  const screenFloor = MINIMUM_REPAIR_PRICES.screen || 55000;
   const minOption = pricedOptions[0];
   const maxOption = pricedOptions[pricedOptions.length - 1];
 
@@ -247,7 +250,7 @@ export function calculateAndroidPartEstimate(issueId, modelName, brand = '', dol
   const labor = ANDROID_PARTS_LABOR_ARS; // $35.000 fijados para Android
   const tokens = extractCoreTokens(modelName);
   const normBrand = (brand || '').toLowerCase();
-  const floorMin = MINIMUM_REPAIR_PRICES[issueId] || 0;
+  const floorMin = getMinimumRepairPrice('android', issueId);
 
   const matches = partsList.filter(part => {
     const partBrand = (part.brand || '').toLowerCase();

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { MODELS_DATABASE, ISSUE_TYPES, MINIMUM_REPAIR_PRICES } from '../data/repairData';
+import { MODELS_DATABASE, ISSUE_TYPES, MINIMUM_REPAIR_PRICES, getMinimumRepairPrice } from '../data/repairData';
 import { ACCESSORIES_DATABASE } from '../data/accessoriesData';
 import { fetchDolarBlueRate, DEFAULT_FALLBACK_RATE } from '../services/dolarService';
 import { calculateModuleEstimate, calculateAndroidPartEstimate, PRICING_RULES } from '../services/partsPricingEngine';
@@ -17,7 +17,7 @@ const DataContext = createContext(null);
 
 const STORAGE_KEYS = {
   MODELS: 'montec_models_v7', // v7: catálogo limpio y canónico de teléfonos reales (sin conectores FPC, sin cadenas compuestas)
-  ISSUES: 'montec_issues_v4', // v4: valores mínimos actualizados (pantalla $55k, batería $45k, carga $30k, software $25k, sonido $38k)
+  ISSUES: 'montec_issues_v5', // v5: pisos separados Android e iPhone ($55k en placa, $35k en tapa Android, térmico y SSD en PC)
   ACCESSORIES: 'montec_accessories_v2', // v2 para actualizar datos de fotos
   PRICING_RULES: 'montec_pricing_rules_v1', // Reglas de márgenes y mano de obra Android
   IPHONE_CONFIGS: 'montec_iphone_configs_v2', // v2: Precios oficiales del gremio (iLab) y márgenes $30 a $100 USD
@@ -58,6 +58,7 @@ export function DataProvider({ children }) {
   // 2. Fallas y precios de reparación
   const [issues, setIssues] = useState(() => {
     try {
+      localStorage.removeItem('montec_issues_v4');
       localStorage.removeItem('montec_issues_v3');
       localStorage.removeItem('montec_issues_v2');
       localStorage.removeItem('montec_issues_v1');
@@ -308,7 +309,7 @@ export function DataProvider({ children }) {
           ? moduleEstimate.bestOption.cost_ars 
           : Math.round(35 * dolarRate);
 
-        const screenFloor = MINIMUM_REPAIR_PRICES.screen || 55000;
+        const screenFloor = getMinimumRepairPrice('iphone', 'screen');
         const modalities = IPHONE_SCREEN_MODALITIES.map(mod => {
           const labor = modelCfg.screenLabor?.[mod.key] || mod.defaultLabor;
           const partMultiplier = mod.key === 'original_used' ? 1.35 : 1.0;
@@ -350,7 +351,7 @@ export function DataProvider({ children }) {
         const guildBatteryUsd = modelCfg.guildBateriaUsd || getGuildBateriaCost(targetModelName);
         const marginUsd = modelCfg.montecMarginUsd || getMontecIphoneMarginUsd(targetModelName);
         const baseBatteryCostArs = Math.round(guildBatteryUsd * dolarRate);
-        const batteryFloor = MINIMUM_REPAIR_PRICES.battery || 45000;
+        const batteryFloor = getMinimumRepairPrice('iphone', 'battery');
 
         const modalities = IPHONE_BATTERY_MODALITIES.map(mod => {
           let labor = modelCfg.batteryLabor?.[mod.key];
@@ -399,7 +400,8 @@ export function DataProvider({ children }) {
         const guildPlacaUsd = modelCfg.guildPlacaUsd || getGuildPlacaCost(targetModelName);
         const marginUsd = modelCfg.montecMarginUsd || getMontecIphoneMarginUsd(targetModelName);
         const totalUsd = guildPlacaUsd + marginUsd;
-        const finalPrice = Math.round((totalUsd * dolarRate) / 1000) * 1000;
+        const placaFloor = getMinimumRepairPrice('iphone', 'motherboard');
+        const finalPrice = Math.max(placaFloor, Math.round((totalUsd * dolarRate) / 1000) * 1000);
 
         return {
           minPrice: finalPrice,
@@ -423,7 +425,8 @@ export function DataProvider({ children }) {
         const guildTapaUsd = modelCfg.guildTapaUsd || getGuildTapaCost(targetModelName);
         const marginUsd = modelCfg.montecMarginUsd || getMontecIphoneMarginUsd(targetModelName);
         const totalUsd = guildTapaUsd + marginUsd;
-        const finalPrice = Math.round((totalUsd * dolarRate) / 1000) * 1000;
+        const tapaFloor = getMinimumRepairPrice('iphone', 'back-glass');
+        const finalPrice = Math.max(tapaFloor, Math.round((totalUsd * dolarRate) / 1000) * 1000);
 
         return {
           minPrice: finalPrice,
@@ -507,7 +510,7 @@ export function DataProvider({ children }) {
       else if (isRecent) multiplier = 1.1;
     }
 
-    const floorMin = MINIMUM_REPAIR_PRICES[issueId] || 0;
+    const floorMin = getMinimumRepairPrice(deviceType, issueId);
     const min = Math.max(floorMin, Math.round((baseRange.min * multiplier) / 500) * 500);
     const max = Math.max(min, Math.round((baseRange.max * multiplier) / 500) * 500);
 

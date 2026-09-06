@@ -167,6 +167,28 @@ export default function QuotationTool() {
     }
   }, [models, selectedDevice, selectedModel]);
 
+  // Filtrar fallas aplicables al dispositivo:
+  // Para celulares (iPhone y Android) se eliminan "Mantenimiento Térmico" y "Upgrade SSD" (reparaciones exclusivas de computadoras)
+  const availableIssues = useMemo(() => {
+    return issues.filter(issue => {
+      if (issue.applicableDevices && !issue.applicableDevices.includes(selectedDevice)) {
+        return false;
+      }
+      if ((selectedDevice === 'iphone' || selectedDevice === 'android') && 
+          (issue.id === 'thermal-maintenance' || issue.id === 'upgrade-storage')) {
+        return false;
+      }
+      return true;
+    });
+  }, [issues, selectedDevice]);
+
+  // Si la falla actualmente seleccionada no aplica al dispositivo, volver a la primera válida
+  useEffect(() => {
+    if (availableIssues.length > 0 && !availableIssues.some(i => i.id === selectedIssue)) {
+      setSelectedIssue(availableIssues[0].id);
+    }
+  }, [selectedDevice, availableIssues, selectedIssue]);
+
   // Calcular el presupuesto actual con los datos reactivos del panel admin y repuestos reales
   const estimate = useMemo(() => {
     const activeModelId = selectedModel ? selectedModel.id : null;
@@ -175,7 +197,7 @@ export default function QuotationTool() {
     });
   }, [selectedDevice, selectedModel, selectedIssue, customModel, iphoneOptionKey, calculateCurrentEstimate]);
 
-  const activeIssueObj = issues.find(i => i.id === selectedIssue) || issues[0];
+  const activeIssueObj = availableIssues.find(i => i.id === selectedIssue) || availableIssues[0] || issues[0];
 
   // Icono para la falla seleccionada
   const renderIssueIcon = (id) => {
@@ -529,7 +551,7 @@ export default function QuotationTool() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {issues.map((issue) => {
+                {availableIssues.map((issue) => {
                   const isSelected = selectedIssue === issue.id;
                   return (
                     <button
