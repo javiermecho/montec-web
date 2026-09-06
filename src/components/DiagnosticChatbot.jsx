@@ -20,13 +20,26 @@ import {
   BatteryCharging,
   Maximize2,
   Bot,
-  Zap
+  Zap,
+  Calculator
 } from 'lucide-react';
 import { trackEvent } from '../services/analytics';
+import { useData } from '../context/DataContext';
+import { getMinimumRepairPrice } from '../data/repairData';
 
 const WHATSAPP_PHONE = '5492235000000';
 
+// Sugerencias de modelos populares para agilizar la interacción
+const POPULAR_MODELS = {
+  'iPhone / iPad': ['iPhone 11', 'iPhone 12', 'iPhone 13', 'iPhone 14', 'iPhone 15', 'iPhone XR', 'iPhone SE'],
+  'Samsung': ['Galaxy A54', 'Galaxy A34', 'Galaxy A14', 'Galaxy S23', 'Galaxy A04s', 'Galaxy A23'],
+  'Motorola': ['Moto G22', 'Moto G23', 'Moto G54', 'Moto G42', 'Moto Edge 30', 'Moto E22'],
+  'Xiaomi': ['Redmi Note 11', 'Redmi Note 12', 'Redmi Note 13', 'Poco X5 Pro', 'Redmi 10C'],
+  'Notebook / PC': ['Lenovo ThinkPad', 'Dell Inspiron', 'HP Pavilion', 'MacBook Air', 'PC de Escritorio']
+};
+
 export default function DiagnosticChatbot() {
+  const { models, issues, calculateCurrentEstimate } = useData();
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnreadNotification, setHasUnreadNotification] = useState(true);
   
@@ -50,7 +63,7 @@ export default function DiagnosticChatbot() {
     {
       id: 'msg-2',
       sender: 'bot',
-      text: 'Estoy programado para ayudarte a diagnosticar la falla de tu equipo o responder dudas sobre nuestro laboratorio en Mar del Plata. ¿Qué te gustaría consultar?',
+      text: 'Estoy programado para ayudarte a diagnosticar la falla de tu equipo y cotizar la reparación al instante con nuestro presupuestador de laboratorio. ¿Qué te gustaría consultar?',
       time: 'Ahora'
     }
   ]);
@@ -114,6 +127,65 @@ export default function DiagnosticChatbot() {
     ]);
   };
 
+  // Mapear marca a tipo de dispositivo del cotizador
+  const getDeviceType = (brand) => {
+    if (brand === 'iPhone / iPad') return 'iphone';
+    if (brand === 'Notebook / PC') return 'notebook';
+    return 'android';
+  };
+
+  // Mapear síntoma del bot a ID de falla del presupuestador
+  const mapCategoryToIssueId = (category, symptomId, isScreenBlackVibrate) => {
+    if (category?.id === 'screen') {
+      if (symptomId === 'screen_black' && isScreenBlackVibrate === false) {
+        return 'motherboard'; // Daño en circuito de encendido o placa
+      }
+      return 'screen';
+    }
+    if (category?.id === 'charging') {
+      if (symptomId === 'charge_fake') return 'battery';
+      return 'charging-port';
+    }
+    if (category?.id === 'power' || category?.id === 'wet') {
+      return 'motherboard';
+    }
+    if (category?.id === 'pc') {
+      if (symptomId === 'pc_thermal') return 'thermal-maintenance';
+      return 'upgrade-storage';
+    }
+    return 'screen';
+  };
+
+  // Buscar coincidencia inteligente con el catálogo de modelos
+  const findMatchingModel = (brand, input) => {
+    if (!models || !Array.isArray(models) || !input || !input.trim()) return null;
+    const cleanInput = input.toLowerCase().trim();
+
+    const pool = models.filter(m => {
+      if (brand === 'iPhone / iPad') return m.brand === 'Apple' || m.type === 'iphone';
+      if (brand === 'Samsung') return m.brand?.toLowerCase() === 'samsung';
+      if (brand === 'Motorola') return m.brand?.toLowerCase() === 'motorola';
+      if (brand === 'Xiaomi') return m.brand?.toLowerCase() === 'xiaomi';
+      if (brand === 'Notebook / PC') return m.type === 'notebook';
+      return true;
+    });
+
+    let found = pool.find(m => m.model.toLowerCase() === cleanInput);
+    if (found) return found;
+
+    found = pool.find(m => cleanInput.includes(m.model.toLowerCase()) || m.model.toLowerCase().includes(cleanInput));
+    if (found) return found;
+
+    const normInput = cleanInput.replace(/[^a-z0-9]/g, '');
+    found = pool.find(m => {
+      const norm = m.model.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return norm === normInput || normInput.includes(norm) || norm.includes(normInput);
+    });
+    if (found) return found;
+
+    return models.find(m => cleanInput.includes(m.model.toLowerCase()));
+  };
+
   // Atajos rápidos
   const handleQuickChip = (action) => {
     trackEvent('chatbot_quick_chip', { action });
@@ -137,7 +209,7 @@ export default function DiagnosticChatbot() {
     } else if (action === 'start_diagnostic') {
       addUserMessage('⚡ Cotizar Reparación');
       setStep('brand');
-      addBotMessage('¡Excelente! Vamos a realizar el diagnóstico paso a paso de tu equipo.\n\n¿De qué tipo y marca es tu dispositivo?');
+      addBotMessage('¡Excelente! Vamos a realizar el diagnóstico y cotización paso a paso de tu equipo.\n\n¿De qué tipo y marca es tu dispositivo?');
     }
   };
 
@@ -146,17 +218,16 @@ export default function DiagnosticChatbot() {
     setSelectedBrand(brand);
     addUserMessage(`Marca: ${brand}`);
     setStep('model_input');
-    addBotMessage(`Excelente, ${brand}. ¿Qué modelo específico es? (Por ejemplo: *iPhone 13, Galaxy A54, Moto G22, ThinkPad E14*, etc.)`);
+    addBotMessage(`Excelente, ${brand}. ¿Qué modelo específico es? Podés escribirlo o elegir uno de los modelos frecuentes:`);
   };
 
   // Confirmar Modelo
-  const handleConfirmModel = (e) => {
-    e?.preventDefault();
-    const finalModel = modelInput.trim() || `${selectedBrand} (Modelo estándar)`;
+  const handleConfirmModel = (chosenModel) => {
+    const finalModel = (typeof chosenModel === 'string' ? chosenModel : modelInput).trim() || `${selectedBrand} (Modelo estándar)`;
     setModelInput(finalModel);
     addUserMessage(`Modelo: ${finalModel}`);
     setStep('issue_category');
-    addBotMessage('¡Anotado! Ahora seleccioná el síntoma principal o categoría de falla que presenta:');
+    addBotMessage('¡Anotado! Ahora seleccioná la falla o síntoma principal que presenta el equipo:');
   };
 
   // Selección de Categoría de Falla
@@ -186,12 +257,12 @@ export default function DiagnosticChatbot() {
     // Caso especial: pantalla negra total requiere sub-pregunta
     if (symptom.id === 'screen_black') {
       setStep('sub_triage');
-      addBotMessage('Pregunta clave de diagnóstico: Al enchufar el cargador o presionar el botón de encendido, ¿el equipo vibra, emite sonido o prende alguna luz testigo?');
+      addBotMessage('Pregunta clave de diagnóstico: Al enchufar el cargador o presionar el botón de encendido, ¿el celular vibra, emite sonido o prende alguna luz testigo?');
       return;
     }
 
-    // Resolver diagnóstico directamente
-    generateFinalDiagnostic(symptom.diagnostic, symptom.timeEstimate, symptom.possibleCauses);
+    // Resolver diagnóstico y presupuesto con el cotizador
+    generateFinalDiagnostic(symptom.diagnostic, symptom.timeEstimate, symptom.possibleCauses, symptom.id);
   };
 
   // Sub-pregunta para pantalla negra
@@ -203,30 +274,88 @@ export default function DiagnosticChatbot() {
       generateFinalDiagnostic(
         'Excelente: placa madre viva. 95% probabilidades de cambio de Módulo/Display.',
         selectedBrand === 'iPhone / iPad' ? '24 horas hábiles (o en el día antes de las 12 hs)' : 'De 2 a 3 horas',
-        ['Panel OLED/LCD interno quebrado o fundido sin imagen', 'Flex de pantalla averiado tras golpe']
+        ['Panel OLED/LCD interno quebrado o fundido sin imagen', 'Flex de pantalla averiado tras golpe'],
+        'screen_black',
+        true
       );
     } else {
       generateFinalDiagnostic(
         'Puede haber daño en circuito de encendido o placa. Requiere revisión de microelectrónica sin cargo.',
         '24 a 48 horas hábiles',
-        ['Módulo en corto', 'Circuito de carga o PMIC dañado', 'Batería en descarga profunda irreversible']
+        ['Módulo en corto', 'Circuito de carga o PMIC dañado', 'Batería en descarga profunda irreversible'],
+        'screen_black',
+        false
       );
     }
   };
 
-  // Generar Tarjeta Final de Diagnóstico
-  const generateFinalDiagnostic = (diagnosticText, timeEstimate, possibleCauses = []) => {
-    const isPrecision = selectedBrand === 'iPhone / iPad' && (selectedCategory?.id === 'screen' || selectedCategory?.id === 'charging');
-    const time = timeEstimate || (isPrecision ? '24 horas hábiles' : 'De 2 a 3 horas');
+  // Generar Tarjeta Final de Diagnóstico y Presupuesto
+  const generateFinalDiagnostic = (diagnosticText, timeEstimate, possibleCauses = [], symptomId = null, vibrates = null) => {
+    const devType = getDeviceType(selectedBrand);
+    const symId = symptomId || selectedSymptom?.id;
+    const issueId = mapCategoryToIssueId(selectedCategory, symId, vibrates);
+    const matchedModel = findMatchingModel(selectedBrand, modelInput);
+
+    const activeModelId = matchedModel ? matchedModel.id : null;
+    const targetModelName = matchedModel ? matchedModel.model : modelInput;
+
+    // Calcular el precio real con el presupuestador
+    let calculatedEstimate = null;
+    if (typeof calculateCurrentEstimate === 'function') {
+      try {
+        calculatedEstimate = calculateCurrentEstimate(
+          devType,
+          activeModelId,
+          issueId,
+          targetModelName,
+          { iphoneOptionKey: 'compatible_unknown' }
+        );
+      } catch (err) {
+        console.error('Error calculando presupuesto en chatbot:', err);
+      }
+    }
+
+    let priceFormatted = '';
+    let qualityLabel = '';
+    let finalTimeEstimate = timeEstimate;
+    let finalWarranty = '30 días de garantía escrita';
+
+    if (calculatedEstimate) {
+      if (calculatedEstimate.minPrice && calculatedEstimate.maxPrice) {
+        priceFormatted = calculatedEstimate.minPrice === calculatedEstimate.maxPrice
+          ? `$${calculatedEstimate.minPrice.toLocaleString('es-AR')}`
+          : `$${calculatedEstimate.minPrice.toLocaleString('es-AR')} a $${calculatedEstimate.maxPrice.toLocaleString('es-AR')}`;
+      } else if (calculatedEstimate.minPrice) {
+        priceFormatted = `$${calculatedEstimate.minPrice.toLocaleString('es-AR')}`;
+      }
+
+      if (calculatedEstimate.qualityLabel) {
+        qualityLabel = calculatedEstimate.qualityLabel;
+      }
+      if (calculatedEstimate.duration) {
+        finalTimeEstimate = calculatedEstimate.duration;
+      }
+      if (calculatedEstimate.warranty) {
+        finalWarranty = calculatedEstimate.warranty;
+      }
+    }
+
+    if (!priceFormatted) {
+      const minFloor = getMinimumRepairPrice(devType, issueId) || 35000;
+      priceFormatted = `Desde $${minFloor.toLocaleString('es-AR')}`;
+    }
 
     const resultObj = {
-      device: `${selectedBrand} ${modelInput}`,
+      device: `${selectedBrand} ${targetModelName || modelInput}`,
       category: selectedCategory?.label,
       symptom: selectedSymptom?.text,
       diagnostic: diagnosticText,
       causes: possibleCauses,
-      timeEstimate: time,
-      warranty: '30 días de garantía escrita',
+      timeEstimate: finalTimeEstimate || (selectedBrand === 'iPhone / iPad' ? '24 horas hábiles' : 'De 2 a 3 horas'),
+      warranty: finalWarranty,
+      priceFormatted: priceFormatted,
+      qualityLabel: qualityLabel,
+      issueName: calculatedEstimate?.issueName || selectedCategory?.label,
       address: 'Montes Carballo 943, Mar del Plata'
     };
 
@@ -236,10 +365,16 @@ export default function DiagnosticChatbot() {
     trackEvent('chatbot_diagnostic_completed', {
       device: resultObj.device,
       category: resultObj.category,
-      diagnostic: diagnosticText
+      diagnostic: diagnosticText,
+      price: priceFormatted
     });
 
-    addBotMessage('✅ ¡Diagnóstico preliminar completado! Aquí tenés el resumen técnico listo para coordinar tu reparación:');
+    addBotMessage(
+      `✅ **¡Diagnóstico técnico completado!**\n\n` +
+      `💰 **Presupuesto Estimado:** **${priceFormatted}**\n` +
+      `*(Incluye repuesto + mano de obra e instalación con ${finalWarranty})*.\n\n` +
+      `A continuación tenés el ticket de reparación para enviarlo al taller por WhatsApp y coordinar tu turno:`
+    );
   };
 
   // Link de WhatsApp con el ticket pre-redactado
@@ -247,13 +382,14 @@ export default function DiagnosticChatbot() {
     if (!diagnosticResult) return `https://wa.me/${WHATSAPP_PHONE}`;
 
     const text = 
-      `¡Hola Montec! Estuve utilizando el Asistente Técnico Virtual de la web y obtuve el siguiente diagnóstico:%0A%0A` +
+      `¡Hola Montec! Estuve utilizando el Asistente Técnico Virtual de la web y obtuve el siguiente diagnóstico y presupuesto:%0A%0A` +
       `📱 *Equipo:* ${diagnosticResult.device}%0A` +
       `🛠️ *Falla reportada:* ${diagnosticResult.category} - ${diagnosticResult.symptom || 'Falla técnica'}%0A` +
       `🔍 *Diagnóstico preliminar:* ${diagnosticResult.diagnostic}%0A` +
+      `💰 *Presupuesto estimado web:* ${diagnosticResult.priceFormatted}%0A` +
       `⏱️ *Tiempo estimado:* ${diagnosticResult.timeEstimate}%0A` +
       `🛡️ *Garantía:* ${diagnosticResult.warranty}%0A%0A` +
-      `¿Podría consultar disponibilidad o coordinar para acercarlo al local de Montes Carballo 943?`;
+      `¿Podría consultar disponibilidad de repuesto o coordinar para acercarlo al local de Montes Carballo 943?`;
 
     return `https://wa.me/${WHATSAPP_PHONE}?text=${text}`;
   };
@@ -445,27 +581,56 @@ export default function DiagnosticChatbot() {
 
             {/* PASO A.2: INGRESO DE MODELO */}
             {step === 'model_input' && (
-              <form onSubmit={handleConfirmModel} className="pt-2 space-y-2">
-                <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-500 px-1">
-                  Escribí tu modelo:
-                </div>
-                <div className="flex gap-1.5">
-                  <input
-                    type="text"
-                    value={modelInput}
-                    onChange={(e) => setModelInput(e.target.value)}
-                    placeholder="ej: iPhone 13, Moto G22, S23..."
-                    className="flex-1 bg-zinc-900 border border-zinc-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 outline-none focus:border-[#FF5500]"
-                    autoFocus
-                  />
-                  <button
-                    type="submit"
-                    className="px-3.5 py-2 bg-[#FF5500] hover:bg-[#FF6600] text-white rounded-xl text-xs font-bold transition-colors shrink-0 flex items-center justify-center"
-                  >
-                    <span>OK</span>
-                  </button>
-                </div>
-              </form>
+              <div className="pt-2 space-y-2.5">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleConfirmModel();
+                  }} 
+                  className="space-y-2"
+                >
+                  <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-500 px-1">
+                    Escribí tu modelo o elegí uno sugerido:
+                  </div>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      value={modelInput}
+                      onChange={(e) => setModelInput(e.target.value)}
+                      placeholder="ej: iPhone 13, Moto G22, S23..."
+                      className="flex-1 bg-zinc-900 border border-zinc-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 outline-none focus:border-[#FF5500]"
+                      autoFocus
+                    />
+                    <button
+                      type="submit"
+                      className="px-3.5 py-2 bg-[#FF5500] hover:bg-[#FF6600] text-white rounded-xl text-xs font-bold transition-colors shrink-0 flex items-center justify-center cursor-pointer"
+                    >
+                      <span>OK</span>
+                    </button>
+                  </div>
+                </form>
+
+                {/* Modelos sugeridos rápidos para la marca seleccionada */}
+                {selectedBrand && POPULAR_MODELS[selectedBrand] && (
+                  <div className="space-y-1.5 pt-1">
+                    <div className="text-[9px] uppercase font-bold tracking-wider text-zinc-500 px-1">
+                      Modelos frecuentes de {selectedBrand}:
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {POPULAR_MODELS[selectedBrand].map((popMod) => (
+                        <button
+                          key={popMod}
+                          type="button"
+                          onClick={() => handleConfirmModel(popMod)}
+                          className="px-2.5 py-1 rounded-lg bg-zinc-900/90 border border-zinc-800 hover:border-[#FF5500]/60 hover:bg-[#FF5500]/15 text-[11px] text-zinc-300 hover:text-white transition-all cursor-pointer text-left"
+                        >
+                          {popMod}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* PASO B: CATEGORÍA DE LA FALLA */}
@@ -712,6 +877,30 @@ export default function DiagnosticChatbot() {
                     </div>
                   </div>
 
+                  {/* Tarjeta de Presupuesto Estimado Web */}
+                  <div className="bg-gradient-to-r from-zinc-950 via-[#1C120C] to-zinc-950 border border-[#FF5500]/50 rounded-xl p-3 shadow-[0_0_20px_rgba(255,85,0,0.15)] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-orange-400 flex items-center gap-1.5">
+                        <Calculator className="w-3.5 h-3.5 text-[#FF5500]" />
+                        Presupuesto Estimado Web:
+                      </span>
+                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#FF5500]/20 text-[#FF5500] font-bold border border-[#FF5500]/30">
+                        Repuesto + Mano de Obra
+                      </span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-black text-white font-heading tracking-tight">
+                      <span className="text-[#FF5500]">{diagnosticResult.priceFormatted}</span>
+                    </div>
+                    {diagnosticResult.qualityLabel && (
+                      <div className="text-[10px] text-zinc-400 leading-tight flex items-center gap-1">
+                        <span>💎 <strong className="text-zinc-300">Calidad:</strong> {diagnosticResult.qualityLabel}</span>
+                      </div>
+                    )}
+                    <div className="text-[9px] text-zinc-500 pt-0.5">
+                      * Calculado en tiempo real según catálogo de Montec. Sin sorpresas ni costos ocultos.
+                    </div>
+                  </div>
+
                   {/* Diagnóstico */}
                   <div className="bg-zinc-950/80 p-3 rounded-xl border border-zinc-800 space-y-1">
                     <div className="text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1">
@@ -754,13 +943,14 @@ export default function DiagnosticChatbot() {
                     onClick={() => {
                       trackEvent('chatbot_whatsapp_click', {
                         device: diagnosticResult.device,
-                        diagnostic: diagnosticResult.diagnostic
+                        diagnostic: diagnosticResult.diagnostic,
+                        price: diagnosticResult.priceFormatted
                       });
                     }}
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-heading font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-[#FF5500] to-[#E64D00] hover:from-[#FF6600] hover:to-[#FF5500] shadow-[0_0_20px_rgba(255,85,0,0.5)] transition-all transform hover:scale-[1.02] active:scale-98 text-center"
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-heading font-bold text-xs sm:text-sm text-white bg-gradient-to-r from-[#FF5500] to-[#E64D00] hover:from-[#FF6600] hover:to-[#FF5500] shadow-[0_0_20px_rgba(255,85,0,0.5)] transition-all transform hover:scale-[1.02] active:scale-98 text-center cursor-pointer"
                   >
                     <MessageSquare className="w-4 h-4 fill-white" />
-                    <span>Enviar diagnóstico por WhatsApp 📲</span>
+                    <span>Enviar diagnóstico y presupuesto por WhatsApp 📲</span>
                   </a>
 
                   <div className="text-center text-[10px] text-zinc-500">
