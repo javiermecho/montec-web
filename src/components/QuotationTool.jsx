@@ -265,7 +265,7 @@ export default function QuotationTool() {
   const repairTimeLabel = estimate?.repairTime?.label || estimate?.duration || 'De 2 a 3 horas';
   const repairTimeCondition = estimate?.repairTime?.condition || estimate?.timeCondition || 'Express en 45 min con cita previa y seña';
 
-  const whatsappMessage = `¡Hola Montec! Estuve cotizando en la web la reparación de mi ${currentModelName} (${issueName}):%0A%0A📱 *Equipo:* ${currentModelName}%0A🛠️ *Falla:* ${issueName}${iphoneModalityText}${qualityText}%0A💰 *Presupuesto estimativo web:* ${priceRangeStr}%0A⏱️ *Tiempo estimado de trabajo:* ${repairTimeLabel} (${repairTimeCondition})%0A🛡️ *Garantía:* ${estimate?.warranty || '90 días escrita'}%0A%0AQuisiera consultar disponibilidad o coordinar un turno para llevarlo al local de Montes Carballo 943.`;
+  const whatsappMessage = `¡Hola Montec! Estuve cotizando en la web la reparación de mi ${currentModelName} (${issueName}):%0A%0A📱 *Equipo:* ${currentModelName}%0A🛠️ *Falla:* ${issueName}${iphoneModalityText}${qualityText}%0A💰 *Presupuesto estimativo web:* ${priceRangeStr}%0A⏱️ *Tiempo estimado de trabajo:* ${repairTimeLabel} (${repairTimeCondition})%0A🛡️ *Garantía:* ${estimate?.warranty || '30 días escrita'}%0A%0AQuisiera consultar disponibilidad o coordinar un turno para llevarlo al local de Montes Carballo 943.`;
 
   const whatsappLink = `https://wa.me/5492235000000?text=${whatsappMessage}`;
 

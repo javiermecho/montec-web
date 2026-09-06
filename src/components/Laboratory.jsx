@@ -24,7 +24,7 @@ export default function Laboratory() {
     {
       icon: ShieldCheck,
       title: 'Repuestos Seleccionados',
-      subtitle: 'Garantía Escrita de 90 Días',
+      subtitle: 'Garantía Escrita de 30 Días',
       desc: 'Trabajamos con repuestos OEM y módulos testeados individualmente. Todas nuestras reparaciones incluyen comprobante de garantía formal.'
     }
   ];

@@ -16,7 +16,7 @@ export default function Hero() {
 
   const highlights = [
     { text: 'Reparaciones en el día (2 a 3 hs)' },
-    { text: '90 días de Garantía Escrita' },
+    { text: '30 días de Garantía Escrita' },
     { text: 'Diagnóstico Honesto Sin Cargo' },
     { text: 'Laboratorio Propio en Mar del Plata' }
   ];

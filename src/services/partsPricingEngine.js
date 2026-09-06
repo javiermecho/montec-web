@@ -218,7 +218,7 @@ export function calculateModuleEstimate(modelName, brand, dolarRate = DEFAULT_FA
     options: pricedOptions,
     bestOption: minOption,
     duration: 'De 2 a 3 horas (Express en 45 min con cita previa y seña)',
-    warranty: '90 días de garantía escrita',
+    warranty: '30 días de garantía escrita',
     qualityLabel: (minOption.qualityType && /original|oled|service pack/i.test(minOption.qualityType))
       ? 'Calidad Original (Conserva todas las funciones de fábrica)'
       : 'Calidad Premium (Excelente brillo, color y respuesta táctil)',

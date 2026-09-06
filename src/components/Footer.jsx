@@ -90,7 +90,7 @@ export default function Footer() {
               </div>
               <div className="flex items-start gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>90 días de garantía formal escrita en todas las reparaciones</span>
+                <span>30 días de garantía formal escrita en todas las reparaciones</span>
               </div>
             </div>
 
