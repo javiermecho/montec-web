@@ -23,6 +23,7 @@ import {
   Terminal
 } from 'lucide-react';
 import { DEVICE_TYPES } from '../data/repairData';
+import { getIphoneGenerationInfo } from '../data/iphonePricingData';
 import { useData } from '../context/DataContext';
 import { trackCotizacionIniciada, trackClickWhatsappCotizacion } from '../services/analytics';
 
@@ -175,9 +176,17 @@ export default function QuotationTool() {
     }
   }, [models, selectedDevice, selectedModel]);
 
+  // Nombre del modelo actualmente seleccionado o personalizado
+  const currentModelName = customModel.trim() !== '' ? customModel : (selectedModel ? selectedModel.model : 'Mi equipo');
+
   // Filtrar fallas aplicables al dispositivo:
-  // Para celulares (iPhone y Android) se eliminan "Mantenimiento Térmico" y "Upgrade SSD" (reparaciones exclusivas de computadoras)
+  // 1. Para celulares (iPhone y Android) se eliminan "Mantenimiento Térmico" y "Upgrade SSD" (exclusivos de computadoras)
+  // 2. Para iPhone: iPhone 6 al 7 Plus son chasis de aluminio, se OCULTA la opción de tapa trasera (back-glass).
+  //    iPhone 8 hasta iPhone 16/17 tienen vidrio trasero y se habilita.
   const availableIssues = useMemo(() => {
+    const isIphone = selectedDevice === 'iphone';
+    const genInfo = isIphone ? getIphoneGenerationInfo(currentModelName) : null;
+
     return issues.filter(issue => {
       if (issue.applicableDevices && !issue.applicableDevices.includes(selectedDevice)) {
         return false;
@@ -186,11 +195,16 @@ export default function QuotationTool() {
           (issue.id === 'thermal-maintenance' || issue.id === 'upgrade-storage')) {
         return false;
       }
+      if (isIphone && issue.id === 'back-glass') {
+        if (genInfo && !genInfo.hasBackGlass) {
+          return false;
+        }
+      }
       return true;
     });
-  }, [issues, selectedDevice]);
+  }, [issues, selectedDevice, currentModelName]);
 
-  // Si la falla actualmente seleccionada no aplica al dispositivo, volver a la primera válida
+  // Si la falla actualmente seleccionada no aplica al dispositivo/modelo, volver a la primera válida
   useEffect(() => {
     if (availableIssues.length > 0 && !availableIssues.some(i => i.id === selectedIssue)) {
       setSelectedIssue(availableIssues[0].id);
@@ -204,6 +218,18 @@ export default function QuotationTool() {
       iphoneOptionKey
     });
   }, [selectedDevice, selectedModel, selectedIssue, customModel, iphoneOptionKey, calculateCurrentEstimate]);
+
+  // Sincronizar automáticamente la opción de iPhone si la clave actual no existe en el modelo activo
+  useEffect(() => {
+    if (estimate?.isIphoneSpecialized && estimate?.modalities && estimate.modalities.length > 0) {
+      const validKeys = estimate.modalities.map(m => m.key);
+      if (!validKeys.includes(iphoneOptionKey)) {
+        // En modelos XS+ para batería preferir bms_transplant; si no, la primera disponible
+        const nextKey = validKeys.includes('bms_transplant') ? 'bms_transplant' : estimate.modalities[0].key;
+        setIphoneOptionKey(nextKey);
+      }
+    }
+  }, [estimate?.isIphoneSpecialized, estimate?.modalities, iphoneOptionKey]);
 
   const activeIssueObj = availableIssues.find(i => i.id === selectedIssue) || availableIssues[0] || issues[0];
 
@@ -224,7 +250,6 @@ export default function QuotationTool() {
   };
 
   // Mensaje de WhatsApp precargado
-  const currentModelName = customModel.trim() !== '' ? customModel : (selectedModel ? selectedModel.model : 'Mi equipo');
   const issueName = activeIssueObj ? activeIssueObj.name : 'Reparación técnica';
   const priceRangeStr = estimate ? (
     estimate.minPrice === estimate.maxPrice 
@@ -604,14 +629,28 @@ export default function QuotationTool() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                   <span className="text-xs font-bold uppercase tracking-wider text-[#FF5500] flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-[#FF5500] text-black font-bold flex items-center justify-center text-xs">4</span>
-                    Modalidad y Calidad ({selectedIssue === 'screen' ? 'Pantalla' : 'Batería'} iPhone)
+                    {estimate.modalities.length > 1 
+                      ? `Modalidad y Calidad (${selectedIssue === 'screen' ? 'Pantalla' : 'Batería'} iPhone)`
+                      : `Calidad Garantizada (${selectedIssue === 'screen' ? 'Pantalla' : 'Batería'} iPhone)`
+                    }
                   </span>
                   <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-medium">
-                    {selectedIssue === 'screen' ? 'Opciones de Módulo' : 'Salud de Batería'}
+                    {estimate.modalities.length > 1 
+                      ? (selectedIssue === 'screen' ? '2 Opciones Disponibles' : 'Elegir Tipo de Cambio') 
+                      : (selectedIssue === 'screen' ? 'True Tone Incluido' : '100% Automático')
+                    }
                   </span>
                 </div>
                 <p className="text-xs text-zinc-400">
-                  En iPhone podés elegir entre la opción estándar (con aviso en Ajustes de iOS) o trabajo de laboratorio (trasplante de chip/flex para mantener 100% condición y sin alertas).
+                  {estimate.modalities.length > 1 ? (
+                    selectedIssue === 'screen'
+                      ? 'En iPhone 11 en adelante podés elegir entre la opción Premium (mantiene True Tone con aviso informativo en iOS) o servicio de laboratorio con trasplante de IC (100% sin aviso de pieza).'
+                      : 'A partir de iPhone XS/XR podés optar por la opción rápida/económica (sin % en Ajustes) o trabajo de laboratorio con traspaso de flex original BMS para mostrar 100% de salud.'
+                  ) : (
+                    selectedIssue === 'screen'
+                      ? 'Para tu modelo de iPhone la pantalla incluye reprogramación completa de True Tone por programadora especializada sin bloqueos de software.'
+                      : 'Para tu modelo de iPhone la batería indica condición 100% de salud automáticamente en Ajustes sin requerir reprogramación de flex ni generar avisos.'
+                  )}
                 </p>
 
                 <div className="grid grid-cols-1 gap-2.5">

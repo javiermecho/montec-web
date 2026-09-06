@@ -1,6 +1,6 @@
 // Base de datos limpia y canónica de modelos de telefonía y notebooks
 // Filtrada estrictamente: solo modelos de teléfonos reales (sin conectores FPC, sin cadenas compuestas, sin palabras técnicas)
-import modelsData from './allModels.json';
+import modelsData from './allModels.json' with { type: 'json' };
 
 export const ALL_MODELS = modelsData;
 

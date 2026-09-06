@@ -26,6 +26,7 @@ import {
   Zap
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { getIphoneGenerationInfo } from '../data/iphonePricingData';
 import MontecLogo from './MontecLogo';
 import PartsSearchTab from './admin/PartsSearchTab';
 
@@ -570,9 +571,10 @@ export default function AdminPanel() {
                   m.model.toLowerCase().includes(iphoneSearch.toLowerCase())
                 ))
                 .map((m) => {
+                  const genInfo = getIphoneGenerationInfo(m.model);
                   const cfg = iphoneConfigs[m.id] || {
-                    screenLabor: { compatible_unknown: 30000, ic_transplant: 55000, original_used: 42000 },
-                    batteryLabor: { standard_unknown: 25000, bms_transplant: 48000, original_used: 32000 }
+                    screenLabor: { compatible_unknown: 32000, ic_transplant: 55000, screen_incell_oled_premium: 30000 },
+                    batteryLabor: { standard_unknown: 28000, bms_transplant: 48000, battery_standard_100: 25000 }
                   };
 
                   return (
@@ -591,7 +593,7 @@ export default function AdminPanel() {
                             </h3>
                           </div>
                           <span className="text-[11px] text-zinc-500 mt-0.5 block">
-                            Año {m.year || '2020+'} • Microelectrónica Serializada
+                            Año {m.year || '2020+'} • {genInfo.hasBackGlass ? 'Vidrio Trasero Láser' : 'Chasis Aluminio Monobloque'}
                           </span>
                         </div>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
@@ -604,84 +606,86 @@ export default function AdminPanel() {
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
                             <Maximize2 className="w-3.5 h-3.5" />
-                            <span>Mano de Obra Pantalla / Módulo</span>
+                            <span>Mano de Obra Pantalla ({genInfo.isScreenBefore11 ? 'Pre-11: True Tone' : '11+: Opciones 1 y 2'})</span>
                           </span>
                           <span className="text-[10px] text-zinc-500">Mano de Obra neta en ARS</span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                          <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/60">
-                            <label className="block text-[10px] text-zinc-300 mb-1 font-semibold truncate" title="Compatible Premium (Aviso Desconocido)">
-                              1. Compatible (Aviso)
+                        {genInfo.isScreenBefore11 ? (
+                          <div className="bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/60">
+                            <label className="block text-[10px] text-zinc-300 mb-1 font-semibold truncate" title="Módulo Incell / OLED Premium">
+                              Módulo Incell / OLED Premium (True Tone Incluido)
                             </label>
                             <div className="relative">
                               <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">$</span>
                               <input
                                 type="number"
                                 step="1000"
-                                value={cfg.screenLabor?.compatible_unknown || 30000}
+                                value={cfg.screenLabor?.screen_incell_oled_premium || cfg.screenLabor?.compatible_unknown || 30000}
                                 onChange={(e) => {
                                   updateIphoneConfig(m.id, {
                                     screenLabor: {
                                       ...(cfg.screenLabor || {}),
-                                      compatible_unknown: Number(e.target.value)
+                                      screen_incell_oled_premium: Number(e.target.value)
                                     }
                                   });
                                 }}
                                 className="w-full bg-zinc-950 border border-zinc-700/80 focus:border-[#FF5500] rounded-lg pl-6 pr-2 py-1 text-white font-mono text-xs outline-none"
                               />
                             </div>
-                            <span className="text-[9px] text-zinc-500 block mt-1">Con alerta en iOS</span>
+                            <span className="text-[9px] text-zinc-500 block mt-1">Reprogramación True Tone con JCID sin bloqueos</span>
                           </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/60">
+                              <label className="block text-[10px] text-zinc-300 mb-1 font-semibold truncate" title="Opción 1: Módulo Premium (Aviso iOS)">
+                                Opción 1: Premium (Aviso iOS)
+                              </label>
+                              <div className="relative">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">$</span>
+                                <input
+                                  type="number"
+                                  step="1000"
+                                  value={cfg.screenLabor?.compatible_unknown || 32000}
+                                  onChange={(e) => {
+                                    updateIphoneConfig(m.id, {
+                                      screenLabor: {
+                                        ...(cfg.screenLabor || {}),
+                                        compatible_unknown: Number(e.target.value)
+                                      }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-950 border border-zinc-700/80 focus:border-[#FF5500] rounded-lg pl-6 pr-2 py-1 text-white font-mono text-xs outline-none"
+                                />
+                              </div>
+                              <span className="text-[9px] text-zinc-500 block mt-1">Mantiene True Tone (con alerta)</span>
+                            </div>
 
-                          <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/60">
-                            <label className="block text-[10px] text-amber-300 mb-1 font-semibold truncate" title="Sin Aviso / Trasplante IC">
-                              2. Trasplante IC
-                            </label>
-                            <div className="relative">
-                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">$</span>
-                              <input
-                                type="number"
-                                step="1000"
-                                value={cfg.screenLabor?.ic_transplant || 55000}
-                                onChange={(e) => {
-                                  updateIphoneConfig(m.id, {
-                                    screenLabor: {
-                                      ...(cfg.screenLabor || {}),
-                                      ic_transplant: Number(e.target.value)
-                                    }
-                                  });
-                                }}
-                                className="w-full bg-zinc-950 border border-zinc-700/80 focus:border-[#FF5500] rounded-lg pl-6 pr-2 py-1 text-white font-mono text-xs outline-none"
-                              />
+                            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/60">
+                              <label className="block text-[10px] text-amber-300 mb-1 font-semibold truncate" title="Opción 2: Calidad Original con Trasplante IC">
+                                Opción 2: Trasplante IC (Sin Aviso)
+                              </label>
+                              <div className="relative">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">$</span>
+                                <input
+                                  type="number"
+                                  step="1000"
+                                  value={cfg.screenLabor?.ic_transplant || 55000}
+                                  onChange={(e) => {
+                                    updateIphoneConfig(m.id, {
+                                      screenLabor: {
+                                        ...(cfg.screenLabor || {}),
+                                        ic_transplant: Number(e.target.value)
+                                      }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-950 border border-zinc-700/80 focus:border-[#FF5500] rounded-lg pl-6 pr-2 py-1 text-white font-mono text-xs outline-none"
+                                />
+                              </div>
+                              <span className="text-[9px] text-amber-400/80 block mt-1">Laboratorio microelectrónica</span>
                             </div>
-                            <span className="text-[9px] text-amber-400/80 block mt-1">Sin aviso / TrueTone</span>
                           </div>
-
-                          <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/60">
-                            <label className="block text-[10px] text-emerald-400 mb-1 font-semibold truncate" title="Original Segunda Mano">
-                              3. Original 2da Mano
-                            </label>
-                            <div className="relative">
-                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">$</span>
-                              <input
-                                type="number"
-                                step="1000"
-                                value={cfg.screenLabor?.original_used || 42000}
-                                onChange={(e) => {
-                                  updateIphoneConfig(m.id, {
-                                    screenLabor: {
-                                      ...(cfg.screenLabor || {}),
-                                      original_used: Number(e.target.value)
-                                    }
-                                  });
-                                }}
-                                className="w-full bg-zinc-950 border border-zinc-700/80 focus:border-[#FF5500] rounded-lg pl-6 pr-2 py-1 text-white font-mono text-xs outline-none"
-                              />
-                            </div>
-                            <span className="text-[9px] text-emerald-400/80 block mt-1">Pieza desarme Apple</span>
-                          </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* Configuración Batería */}
@@ -689,84 +693,86 @@ export default function AdminPanel() {
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                             <Zap className="w-3.5 h-3.5" />
-                            <span>Mano de Obra Batería</span>
+                            <span>Mano de Obra Batería ({genInfo.isBatteryWithoutBmsLock ? 'Pre-XS: 100% Automático' : 'XS+: Opciones 1 y 2'})</span>
                           </span>
                           <span className="text-[10px] text-zinc-500">Mano de Obra neta en ARS</span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                          <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/60">
-                            <label className="block text-[10px] text-zinc-300 mb-1 font-semibold truncate" title="Cambio Estándar (Aviso Desconocido)">
-                              1. Estándar (Aviso)
+                        {genInfo.isBatteryWithoutBmsLock ? (
+                          <div className="bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/60">
+                            <label className="block text-[10px] text-zinc-300 mb-1 font-semibold truncate" title="Batería Calidad Original (Condición 100% Automática)">
+                              Cambio de Batería (Calidad Original - 100% Automático)
                             </label>
                             <div className="relative">
                               <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">$</span>
                               <input
                                 type="number"
                                 step="1000"
-                                value={cfg.batteryLabor?.standard_unknown || 25000}
+                                value={cfg.batteryLabor?.battery_standard_100 || cfg.batteryLabor?.standard_unknown || 25000}
                                 onChange={(e) => {
                                   updateIphoneConfig(m.id, {
                                     batteryLabor: {
                                       ...(cfg.batteryLabor || {}),
-                                      standard_unknown: Number(e.target.value)
+                                      battery_standard_100: Number(e.target.value)
                                     }
                                   });
                                 }}
                                 className="w-full bg-zinc-950 border border-zinc-700/80 focus:border-[#FF5500] rounded-lg pl-6 pr-2 py-1 text-white font-mono text-xs outline-none"
                               />
                             </div>
-                            <span className="text-[9px] text-zinc-500 block mt-1">Sin % de condición</span>
+                            <span className="text-[9px] text-emerald-400/80 block mt-1">Indica 100% sin requerir reprogramación</span>
                           </div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/60">
+                              <label className="block text-[10px] text-zinc-300 mb-1 font-semibold truncate" title="Opción 1: Batería Premium (Rápido / Económico)">
+                                Opción 1: Premium (Sin %)
+                              </label>
+                              <div className="relative">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">$</span>
+                                <input
+                                  type="number"
+                                  step="1000"
+                                  value={cfg.batteryLabor?.standard_unknown || 28000}
+                                  onChange={(e) => {
+                                    updateIphoneConfig(m.id, {
+                                      batteryLabor: {
+                                        ...(cfg.batteryLabor || {}),
+                                        standard_unknown: Number(e.target.value)
+                                      }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-950 border border-zinc-700/80 focus:border-[#FF5500] rounded-lg pl-6 pr-2 py-1 text-white font-mono text-xs outline-none"
+                                />
+                              </div>
+                              <span className="text-[9px] text-zinc-500 block mt-1">Rápido / Económico (Aviso en iOS)</span>
+                            </div>
 
-                          <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/60">
-                            <label className="block text-[10px] text-amber-300 mb-1 font-semibold truncate" title="Mantener Condición 100% (Trasplante BMS)">
-                              2. Trasplante BMS
-                            </label>
-                            <div className="relative">
-                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">$</span>
-                              <input
-                                type="number"
-                                step="1000"
-                                value={cfg.batteryLabor?.bms_transplant || 48000}
-                                onChange={(e) => {
-                                  updateIphoneConfig(m.id, {
-                                    batteryLabor: {
-                                      ...(cfg.batteryLabor || {}),
-                                      bms_transplant: Number(e.target.value)
-                                    }
-                                  });
-                                }}
-                                className="w-full bg-zinc-950 border border-zinc-700/80 focus:border-[#FF5500] rounded-lg pl-6 pr-2 py-1 text-white font-mono text-xs outline-none"
-                              />
+                            <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/60">
+                              <label className="block text-[10px] text-amber-300 mb-1 font-semibold truncate" title="Opción 2: Traspaso de Flex & Reprogramación 100%">
+                                Opción 2: Traspaso Flex & Reprog. 100%
+                              </label>
+                              <div className="relative">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">$</span>
+                                <input
+                                  type="number"
+                                  step="1000"
+                                  value={cfg.batteryLabor?.bms_transplant || 48000}
+                                  onChange={(e) => {
+                                    updateIphoneConfig(m.id, {
+                                      batteryLabor: {
+                                        ...(cfg.batteryLabor || {}),
+                                        bms_transplant: Number(e.target.value)
+                                      }
+                                    });
+                                  }}
+                                  className="w-full bg-zinc-950 border border-zinc-700/80 focus:border-[#FF5500] rounded-lg pl-6 pr-2 py-1 text-white font-mono text-xs outline-none"
+                                />
+                              </div>
+                              <span className="text-[9px] text-amber-400/80 block mt-1">Conserva flex original Apple al 100%</span>
                             </div>
-                            <span className="text-[9px] text-amber-400/80 block mt-1">100% Salud / Sin alerta</span>
                           </div>
-
-                          <div className="bg-zinc-900/60 p-2 rounded-lg border border-zinc-800/60">
-                            <label className="block text-[10px] text-emerald-400 mb-1 font-semibold truncate" title="Original Segunda Mano">
-                              3. Original 2da Mano
-                            </label>
-                            <div className="relative">
-                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">$</span>
-                              <input
-                                type="number"
-                                step="1000"
-                                value={cfg.batteryLabor?.original_used || 32000}
-                                onChange={(e) => {
-                                  updateIphoneConfig(m.id, {
-                                    batteryLabor: {
-                                      ...(cfg.batteryLabor || {}),
-                                      original_used: Number(e.target.value)
-                                    }
-                                  });
-                                }}
-                                className="w-full bg-zinc-950 border border-zinc-700/80 focus:border-[#FF5500] rounded-lg pl-6 pr-2 py-1 text-white font-mono text-xs outline-none"
-                              />
-                            </div>
-                            <span className="text-[9px] text-emerald-400/80 block mt-1">Batería original &gt;85%</span>
-                          </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* Configuración Reparación en Placa */}

@@ -116,61 +116,144 @@ export function getGuildTapaCost(modelName) {
   return findGuildCost(GUILD_IPHONE_DATA.tapa, modelName, 40);
 }
 
-// Modalidades para Pantalla de iPhone
-export const IPHONE_SCREEN_MODALITIES = [
+// --- CLASIFICACIÓN DE GENERACIONES DE IPHONE PARA REGLAS TÉCNICAS Y LEGALES ---
+export function getIphoneGenerationInfo(modelName) {
+  const m = (modelName || '').toLowerCase().trim();
+
+  // 1. TAPA TRASERA:
+  // iPhone 6 al 7 Plus (y iPhone 5, etc.): Chasis de aluminio unibody (SIN vidrio trasero).
+  // iPhone 8 hasta iPhone 16/17: Vidrio trasero templado procesable con láser / proceso térmico.
+  const isAluminumBack = (
+    m.includes('iphone 6') || 
+    m.includes('iphone 7') || 
+    m.includes('iphone 5') || 
+    (m.includes('iphone se') && !m.includes('2020') && !m.includes('2022') && !m.includes('2da') && !m.includes('3ra'))
+  );
+
+  const hasBackGlass = !isAluminumBack && (
+    m.includes('iphone 8') ||
+    m.includes('iphone x') ||
+    m.includes('iphone 1') || // iPhone 11, 12, 13, 14, 15, 16, 17
+    m.includes('se (2da') ||
+    m.includes('se (3ra') ||
+    m.includes('se 2020') ||
+    m.includes('se 2022')
+  );
+
+  // 2. BATERÍAS:
+  // - iPhone 6 al 8 Plus / X: Opción estándar (muestra condición 100% de salud automáticamente sin bloqueo de serial en iOS).
+  // - iPhone XS, XR, SE 2020 en adelante: Serialización de batería (opción económica con aviso vs traspaso de flex BMS al 100%).
+  const isBatteryWithoutBmsLock = (
+    m.includes('iphone 6') ||
+    m.includes('iphone 7') ||
+    m.includes('iphone 8') ||
+    m.includes('iphone 5') ||
+    (m.includes('iphone x') && !m.includes('xr') && !m.includes('xs')) ||
+    (m.includes('iphone se') && !m.includes('2020') && !m.includes('2022') && !m.includes('2da') && !m.includes('3ra'))
+  );
+
+  // 3. PANTALLAS / MÓDULOS:
+  // - iPhone 6 al 8 Plus / X / XS / XR / SE: Módulo Incell/OLED Premium con reprogramación True Tone sin aviso bloqueante de display IC.
+  // - iPhone 11 en adelante: Serialización de pantalla en iOS (Módulo Premium con aviso vs Trasplante de microchip IC sin aviso).
+  const isScreenBefore11 = (
+    m.includes('iphone 6') ||
+    m.includes('iphone 7') ||
+    m.includes('iphone 8') ||
+    m.includes('iphone 5') ||
+    m.includes('iphone x') || // X, XS, XS Max, XR
+    m.includes('iphone se')   // SE 2020 y 2022
+  );
+
+  return {
+    hasBackGlass,
+    isAluminumBack,
+    isBatteryWithoutBmsLock,
+    isScreenBefore11
+  };
+}
+
+// --- MODALIDADES DE PANTALLAS SEGÚN MODELO ---
+
+// iPhone 6 al 8 Plus / X / XS / XR:
+export const IPHONE_SCREEN_MODALITIES_PRE_11 = [
   {
-    key: 'compatible_unknown',
-    name: 'Compatible Premium (OLED/Incell GX)',
-    badge: 'Más Económica',
-    iosNotice: 'Con aviso informativo en Ajustes de iOS',
-    description: 'Módulo OLED/Premium compatible. Muestra aviso de pieza desconocida en iOS pero funciona con total fluidez táctil.',
+    key: 'screen_incell_oled_premium',
+    name: 'Módulo Incell / OLED Premium',
+    badge: 'True Tone Incluido',
+    iosNotice: 'Con reprogramación de True Tone incluida',
+    description: 'Display de alta resolución, excelente brillo y respuesta táctil inmediata. Incluye traspaso y reprogramación de datos de True Tone mediante programadora especializada.',
     defaultLabor: 30000
-  },
-  {
-    key: 'ic_transplant',
-    name: 'Sin Aviso / Trasplante IC (TrueTone)',
-    badge: 'Especialidad Laboratorio',
-    iosNotice: '100% Libre de aviso en Ajustes (TrueTone activo)',
-    description: 'Microelectrónica de laboratorio: se trasplanta el chip IC original o módulo JCID pre-programado para no emitir alertas.',
-    defaultLabor: 55000
-  },
-  {
-    key: 'original_used',
-    name: 'Original Segunda Mano (Desarme)',
-    badge: '100% Apple Fábrica',
-    iosNotice: 'Pieza extraída de desarme original Apple',
-    description: 'Módulo original Apple recuperado de otro equipo. Máxima calidad de colorimetría, brillo nits y respuesta táctil original.',
-    defaultLabor: 42000
   }
 ];
 
-// Modalidades para Batería de iPhone
-export const IPHONE_BATTERY_MODALITIES = [
+// iPhone 11 en adelante (11, 11 Pro, 12, 13, 14, 15, 16):
+export const IPHONE_SCREEN_MODALITIES_POST_11 = [
+  {
+    key: 'compatible_unknown',
+    name: 'Módulo Premium (OLED / Incell)',
+    badge: 'Excelente Rendimiento',
+    iosNotice: 'Mantiene True Tone. Con aviso informativo de pieza en iOS',
+    description: 'Display de alta gama con colores vibrantes y máxima fluidez. Mantiene True Tone activo. Muestra aviso informativo de pieza en Ajustes por política de serialización de Apple.',
+    defaultLabor: 32000
+  },
+  {
+    key: 'ic_transplant',
+    name: 'Módulo Calidad Original con Trasplante de IC',
+    badge: 'Laboratorio Microelectrónica',
+    iosNotice: '100% Libre de aviso en Ajustes (Microelectrónica)',
+    description: 'Servicio de laboratorio de microelectrónica: se trasplanta el microchip integrado (Touch/Display IC) de tu pantalla original para evitar cualquier mensaje o alerta en iOS.',
+    defaultLabor: 55000
+  }
+];
+
+// --- MODALIDADES DE BATERÍAS SEGÚN MODELO ---
+
+// iPhone 6 al 8 Plus / X:
+export const IPHONE_BATTERY_MODALITIES_PRE_XS = [
+  {
+    key: 'battery_standard_100',
+    name: 'Cambio de Batería (Calidad Original)',
+    badge: 'Condición 100% Automática',
+    iosNotice: 'Indica condición 100% en Ajustes automáticamente',
+    description: 'Batería nueva de celdas calidad original. En este modelo el sistema iOS reconoce el 100% de salud inmediatamente sin requerir traspaso de flex ni alertas.',
+    defaultLabor: 25000
+  }
+];
+
+// iPhone XS, XR, SE 2020 en adelante (hasta serie 16/17):
+export const IPHONE_BATTERY_MODALITIES_POST_XS = [
   {
     key: 'standard_unknown',
-    name: 'Cambio Estándar',
-    badge: 'Económica',
-    iosNotice: 'Con aviso de Pieza Desconocida (sin % de salud)',
-    description: 'Batería nueva de alta capacidad. En Ajustes figura pieza desconocida y no marca porcentaje.',
-    defaultLabor: 25000
+    name: 'Cambio de Batería Premium',
+    badge: 'Rápido / Económico',
+    iosNotice: 'No mostrará % de salud en Ajustes por política de software de Apple',
+    description: 'Reemplazo directo de celda premium de alta densidad. Rápido y económico. No mostrará porcentaje de salud en Ajustes por política de Apple, pero la autonomía y rendimiento son al 100%.',
+    defaultLabor: 28000
   },
   {
     key: 'bms_transplant',
-    name: 'Mantener Condición 100%',
-    badge: 'Recomendada Laboratorio',
-    iosNotice: 'Condición al 100% y Sin aviso en Ajustes',
-    description: 'Microelectrónica: se desuelda la placa BMS original, se suelda celda nueva, flex tag-on y se resetean ciclos a 0 y salud al 100%.',
+    name: 'Cambio de Batería con Traspaso de Flex & Reprogramación 100%',
+    badge: 'Servicio de Laboratorio',
+    iosNotice: 'Conserva flex original Apple y muestra 100% de salud en Ajustes',
+    description: 'Servicio de laboratorio de microelectrónica: conserva el flex original, se desuelda la placa BMS, se suelda celda nueva y se reprograma la condición al 100% sin aviso de pieza.',
     defaultLabor: 48000
-  },
-  {
-    key: 'original_used',
-    name: 'Original Segunda Mano',
-    badge: 'Original Apple',
-    iosNotice: 'Batería original comprobada (>85% salud)',
-    description: 'Batería original de despiece Apple en óptimo estado de salud.',
-    defaultLabor: 32000
   }
 ];
+
+// Retorna las modalidades válidas para un modelo y falla determinados
+export function getIphoneModalities(modelName, issueId) {
+  const genInfo = getIphoneGenerationInfo(modelName);
+
+  if (issueId === 'screen') {
+    return genInfo.isScreenBefore11 ? IPHONE_SCREEN_MODALITIES_PRE_11 : IPHONE_SCREEN_MODALITIES_POST_11;
+  }
+
+  if (issueId === 'battery') {
+    return genInfo.isBatteryWithoutBmsLock ? IPHONE_BATTERY_MODALITIES_PRE_XS : IPHONE_BATTERY_MODALITIES_POST_XS;
+  }
+
+  return null;
+}
 
 // Generador de configuración predeterminada para todos los iPhone con datos de gremio
 export function buildDefaultIphoneConfigs() {
@@ -183,10 +266,8 @@ export function buildDefaultIphoneConfigs() {
     const guildBateriaUsd = getGuildBateriaCost(item.model);
     const guildTapaUsd = getGuildTapaCost(item.model);
 
-    // Mano de obra sugerida en base a la ganancia en USD (asumiendo tipo de cambio base o calibración)
-    // Pantalla
+    // Mano de obra sugerida en base a la ganancia en USD
     const screenBaseLabor = Math.round((marginUsd * 800) / 1000) * 1000;
-    // Batería
     const batteryBaseLabor = Math.round((marginUsd * 650) / 1000) * 1000;
 
     configs[item.id] = {
@@ -203,14 +284,14 @@ export function buildDefaultIphoneConfigs() {
       screenLabor: {
         compatible_unknown: Math.max(30000, screenBaseLabor),
         ic_transplant: Math.max(50000, Math.round(screenBaseLabor * 1.55 / 1000) * 1000),
-        original_used: Math.max(38000, Math.round(screenBaseLabor * 1.25 / 1000) * 1000)
+        screen_incell_oled_premium: Math.max(30000, screenBaseLabor)
       },
 
       // Mano de obra de batería en ARS
       batteryLabor: {
         standard_unknown: Math.max(25000, batteryBaseLabor),
         bms_transplant: Math.max(45000, Math.round(batteryBaseLabor * 1.6 / 1000) * 1000),
-        original_used: Math.max(30000, Math.round(batteryBaseLabor * 1.2 / 1000) * 1000)
+        battery_standard_100: Math.max(25000, batteryBaseLabor)
       },
 
       notes: `Gremio Placa: $${guildPlacaUsd} USD | Tapa: $${guildTapaUsd} USD | Ganancia Montec: $${marginUsd} USD`

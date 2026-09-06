@@ -140,11 +140,11 @@ export const ISSUE_TYPES = [
   },
   {
     id: 'back-glass',
-    name: 'Cambio de Tapa o Carcasa (Glass Trasero)',
-    description: 'Tapa trasera trizada, rayada o rota. En iPhone mediante láser preservando MagSafe; en Android cambio de tapa original o carcasa.',
+    name: 'Cambio de Tapa Trasera de Vidrio (Láser / Proceso Térmico)',
+    description: 'Tapa trasera trizada o rota. En iPhone remoción con láser preservando chasis y MagSafe; en Android cambio de tapa original o carcasa.',
     duration: 'En el día (2 a 4 hs)',
     warranty: '30 días escrita',
-    badge: 'Estética Original',
+    badge: 'Láser & Precisión',
     icon: 'Smartphone',
     applicableDevices: ['iphone', 'android'],
     basePrices: {

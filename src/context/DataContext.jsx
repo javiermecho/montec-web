@@ -4,8 +4,12 @@ import { ACCESSORIES_DATABASE } from '../data/accessoriesData';
 import { fetchDolarBlueRate, DEFAULT_FALLBACK_RATE } from '../services/dolarService';
 import { calculateModuleEstimate, calculateAndroidPartEstimate, PRICING_RULES } from '../services/partsPricingEngine';
 import { 
-  IPHONE_SCREEN_MODALITIES, 
-  IPHONE_BATTERY_MODALITIES, 
+  getIphoneGenerationInfo,
+  getIphoneModalities,
+  IPHONE_SCREEN_MODALITIES_PRE_11,
+  IPHONE_SCREEN_MODALITIES_POST_11,
+  IPHONE_BATTERY_MODALITIES_PRE_XS,
+  IPHONE_BATTERY_MODALITIES_POST_XS,
   buildDefaultIphoneConfigs,
   getMontecIphoneMarginUsd,
   getGuildPlacaCost,
@@ -20,7 +24,7 @@ const STORAGE_KEYS = {
   ISSUES: 'montec_issues_v5', // v5: pisos separados Android e iPhone ($55k en placa, $35k en tapa Android, térmico y SSD en PC)
   ACCESSORIES: 'montec_accessories_v2', // v2 para actualizar datos de fotos
   PRICING_RULES: 'montec_pricing_rules_v1', // Reglas de márgenes y mano de obra Android
-  IPHONE_CONFIGS: 'montec_iphone_configs_v2', // v2: Precios oficiales del gremio (iLab) y márgenes $30 a $100 USD
+  IPHONE_CONFIGS: 'montec_iphone_configs_v3', // v3: Modalidades condicionales por modelo iPhone (Baterías pre-XS vs post-XS, Pantallas pre-11 vs post-11)
   AUTH: 'montec_admin_auth'
 };
 
@@ -297,12 +301,15 @@ export function DataProvider({ children }) {
 
     // A. LÓGICA ESPECIALIZADA PARA IPHONE (PANTALLAS & BATERÍAS CON MICROELECTRÓNICA)
     if (deviceType === 'iphone' && model) {
+      const genInfo = getIphoneGenerationInfo(targetModelName);
       const modelCfg = iphoneConfigs[model.id] || (buildDefaultIphoneConfigs()[model.id]) || {
-        screenLabor: { compatible_unknown: 30000, ic_transplant: 55000, original_used: 42000 },
-        batteryLabor: { standard_unknown: 25000, bms_transplant: 48000, original_used: 32000 }
+        screenLabor: { compatible_unknown: 32000, ic_transplant: 55000, screen_incell_oled_premium: 30000 },
+        batteryLabor: { standard_unknown: 28000, bms_transplant: 48000, battery_standard_100: 25000 }
       };
 
-      // 1. Módulo / Pantalla iPhone (Compatible con aviso vs Trasplante IC vs Original)
+      // 1. MÓDULO / PANTALLA IPHONE:
+      // - iPhone 6 al 8 Plus / X / XS / XR: Módulo Incell / OLED Premium (con reprogramación True Tone incluida).
+      // - iPhone 11 en adelante: Opción 1 Premium con aviso vs Opción 2 Calidad Original con trasplante de IC sin avisos.
       if (issueId === 'screen') {
         const moduleEstimate = calculateModuleEstimate(targetModelName, 'Apple', dolarRate, pricingRules);
         const basePartCostArs = moduleEstimate && moduleEstimate.bestOption 
@@ -310,28 +317,32 @@ export function DataProvider({ children }) {
           : Math.round(35 * dolarRate);
 
         const screenFloor = getMinimumRepairPrice('iphone', 'screen');
-        const modalities = IPHONE_SCREEN_MODALITIES.map(mod => {
+        const availableModalities = genInfo.isScreenBefore11 
+          ? IPHONE_SCREEN_MODALITIES_PRE_11 
+          : IPHONE_SCREEN_MODALITIES_POST_11;
+
+        const modalities = availableModalities.map(mod => {
           const labor = modelCfg.screenLabor?.[mod.key] || mod.defaultLabor;
-          const partMultiplier = mod.key === 'original_used' ? 1.35 : 1.0;
-          const totalRaw = (basePartCostArs * partMultiplier) + labor;
+          const totalRaw = basePartCostArs + labor;
           const finalPrice = Math.max(screenFloor, Math.round(totalRaw / 500) * 500);
           return {
             ...mod,
             labor,
-            partCostArs: Math.round(basePartCostArs * partMultiplier),
+            partCostArs: Math.round(basePartCostArs),
             finalPrice
           };
         });
 
-        const selectedKey = extraOptions.iphoneOptionKey || 'compatible_unknown';
+        // Selección activa: si la clave enviada existe en las modalidades del modelo, usarla; si no, la primera válida
+        const selectedKey = extraOptions.iphoneOptionKey;
         const activeMod = modalities.find(m => m.key === selectedKey) || modalities[0];
 
         return {
           minPrice: activeMod.finalPrice,
           maxPrice: activeMod.finalPrice,
           duration: activeMod.key === 'ic_transplant' ? '90 a 120 min (Microelectrónica)' : '45 a 60 min (Express)',
-          warranty: '30 días escrita',
-          issueName: issue.name,
+          warranty: '90 días de garantía escrita',
+          issueName: 'Módulo / Pantalla Completa',
           issueBadge: activeMod.badge,
           qualityLabel: activeMod.name,
           iosNotice: activeMod.iosNotice,
@@ -346,41 +357,49 @@ export function DataProvider({ children }) {
         };
       }
 
-      // 2. Batería iPhone (Costos del gremio + Ganancia gradual Montec $30 a $100 USD)
+      // 2. BATERÍA IPHONE:
+      // - iPhone 6 al 8 Plus / X: Opción estándar de Cambio de Batería (Calidad Original) con 100% automático.
+      // - iPhone XS, XR, SE 2020 en adelante: Opción 1 Premium (económica) vs Opción 2 Traspaso de Flex & Reprogramación 100%.
       if (issueId === 'battery') {
         const guildBatteryUsd = modelCfg.guildBateriaUsd || getGuildBateriaCost(targetModelName);
         const marginUsd = modelCfg.montecMarginUsd || getMontecIphoneMarginUsd(targetModelName);
         const baseBatteryCostArs = Math.round(guildBatteryUsd * dolarRate);
         const batteryFloor = getMinimumRepairPrice('iphone', 'battery');
 
-        const modalities = IPHONE_BATTERY_MODALITIES.map(mod => {
+        const availableModalities = genInfo.isBatteryWithoutBmsLock
+          ? IPHONE_BATTERY_MODALITIES_PRE_XS
+          : IPHONE_BATTERY_MODALITIES_POST_XS;
+
+        const modalities = availableModalities.map(mod => {
           let labor = modelCfg.batteryLabor?.[mod.key];
           if (!labor) {
             if (mod.key === 'standard_unknown') labor = Math.round((marginUsd * 0.85 * dolarRate) / 500) * 500;
-            else if (mod.key === 'bms_transplant') labor = Math.round((marginUsd * 1.1 * dolarRate) / 500) * 500;
-            else labor = Math.round((marginUsd * 0.95 * dolarRate) / 500) * 500;
+            else if (mod.key === 'bms_transplant') labor = Math.round((marginUsd * 1.15 * dolarRate) / 500) * 500;
+            else labor = Math.round((marginUsd * 0.9 * dolarRate) / 500) * 500;
           }
           const tagOnBonus = mod.key === 'bms_transplant' ? 8000 : 0; // Insumo flex tag-on reprogramable
-          const partMultiplier = mod.key === 'original_used' ? 1.2 : 1.0;
-          const totalRaw = (baseBatteryCostArs * partMultiplier) + labor + tagOnBonus;
+          const totalRaw = baseBatteryCostArs + labor + tagOnBonus;
           const finalPrice = Math.max(batteryFloor, Math.round(totalRaw / 500) * 500);
           return {
             ...mod,
             labor,
-            partCostArs: Math.round(baseBatteryCostArs * partMultiplier),
+            partCostArs: Math.round(baseBatteryCostArs),
             finalPrice
           };
         });
 
-        const selectedKey = extraOptions.iphoneOptionKey || 'bms_transplant';
-        const activeMod = modalities.find(m => m.key === selectedKey) || modalities[1] || modalities[0];
+        // Selección activa: para XS en adelante preseleccionar bms_transplant; para pre-XS la única modalidad
+        const selectedKey = extraOptions.iphoneOptionKey;
+        const activeMod = modalities.find(m => m.key === selectedKey) 
+          || modalities.find(m => m.key === 'bms_transplant') 
+          || modalities[0];
 
         return {
           minPrice: activeMod.finalPrice,
           maxPrice: activeMod.finalPrice,
-          duration: activeMod.key === 'bms_transplant' ? '60 a 90 min (Trasplante BMS + Programación)' : '30 a 45 min (Express)',
-          warranty: '30 días escrita',
-          issueName: issue.name,
+          duration: activeMod.key === 'bms_transplant' ? '60 a 90 min (Trasplante BMS + Programación)' : '35 a 50 min (Express)',
+          warranty: '90 días de garantía escrita',
+          issueName: 'Cambio de Batería Original / Premium',
           issueBadge: activeMod.badge,
           qualityLabel: activeMod.name,
           iosNotice: activeMod.iosNotice,
@@ -395,7 +414,7 @@ export function DataProvider({ children }) {
         };
       }
 
-      // 3. Reparación en Placa (Sonido, Señal, Mojado, En Corto, Face ID, etc.)
+      // 3. REPARACIÓN EN PLACA (Sonido, Señal, Mojado, En Corto, Face ID, etc.)
       if (issueId === 'motherboard') {
         const guildPlacaUsd = modelCfg.guildPlacaUsd || getGuildPlacaCost(targetModelName);
         const marginUsd = modelCfg.montecMarginUsd || getMontecIphoneMarginUsd(targetModelName);
@@ -420,8 +439,13 @@ export function DataProvider({ children }) {
         };
       }
 
-      // 4. Cambio de Tapa Trasera (Glass Trasero con Láser)
+      // 4. CAMBIO DE TAPA TRASERA DE VIDRIO (Láser / Proceso Térmico)
+      // iPhone 6 al 7 Plus son chasis de aluminio, no tienen vidrio trasero
       if (issueId === 'back-glass') {
+        if (!genInfo.hasBackGlass) {
+          return null;
+        }
+
         const guildTapaUsd = modelCfg.guildTapaUsd || getGuildTapaCost(targetModelName);
         const marginUsd = modelCfg.montecMarginUsd || getMontecIphoneMarginUsd(targetModelName);
         const totalUsd = guildTapaUsd + marginUsd;
@@ -431,9 +455,9 @@ export function DataProvider({ children }) {
         return {
           minPrice: finalPrice,
           maxPrice: finalPrice,
-          duration: 'En el día (3 a 5 hs)',
+          duration: 'En el día (2 a 4 hs)',
           warranty: '30 días escrita',
-          issueName: issue.name,
+          issueName: 'Cambio de Tapa Trasera de Vidrio (Láser / Proceso Térmico)',
           issueBadge: 'Láser & Precisión',
           qualityLabel: 'Vidrio Trasero de Alta Resistencia (MagSafe Compatible)',
           modelName: targetModelName,
