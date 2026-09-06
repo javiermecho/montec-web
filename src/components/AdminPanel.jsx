@@ -613,27 +613,29 @@ export default function AdminPanel() {
 
                         {genInfo.isScreenBefore11 ? (
                           <div className="bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/60">
-                            <label className="block text-[10px] text-zinc-300 mb-1 font-semibold truncate" title="Módulo Incell / OLED Premium">
-                              Módulo Incell / OLED Premium (True Tone Incluido)
+                            <label className="block text-[10px] text-zinc-300 mb-1 font-semibold truncate" title="Módulo Calidad Premium">
+                              Módulo Calidad Premium (True Tone Incluido)
                             </label>
                             <div className="relative">
                               <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs font-mono">$</span>
                               <input
                                 type="number"
                                 step="1000"
-                                value={cfg.screenLabor?.screen_incell_oled_premium || cfg.screenLabor?.compatible_unknown || 30000}
+                                value={cfg.screenLabor?.screen_premium || cfg.screenLabor?.screen_incell_oled_premium || cfg.screenLabor?.compatible_unknown || 30000}
                                 onChange={(e) => {
+                                  const val = Number(e.target.value);
                                   updateIphoneConfig(m.id, {
                                     screenLabor: {
                                       ...(cfg.screenLabor || {}),
-                                      screen_incell_oled_premium: Number(e.target.value)
+                                      screen_premium: val,
+                                      screen_incell_oled_premium: val
                                     }
                                   });
                                 }}
                                 className="w-full bg-zinc-950 border border-zinc-700/80 focus:border-[#FF5500] rounded-lg pl-6 pr-2 py-1 text-white font-mono text-xs outline-none"
                               />
                             </div>
-                            <span className="text-[9px] text-zinc-500 block mt-1">Reprogramación True Tone con JCID sin bloqueos</span>
+                            <span className="text-[9px] text-zinc-500 block mt-1">Reprogramación True Tone de fábrica sin bloqueos</span>
                           </div>
                         ) : (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">

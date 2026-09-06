@@ -260,7 +260,7 @@ export default function QuotationTool() {
   const iphoneModalityText = estimate?.selectedModality ? (
     `%0A🔬 *Modalidad / Repuesto:* ${estimate.selectedModality.name} (${estimate.selectedModality.iosNotice})`
   ) : '';
-  const qualityText = (!estimate?.isIphoneSpecialized && estimate?.qualityLabel) ? `%0A💎 *Calidad:* ${estimate.qualityLabel} (100% Sin Incell/TFT)` : '';
+  const qualityText = (!estimate?.isIphoneSpecialized && estimate?.qualityLabel) ? `%0A💎 *Calidad / Servicio:* ${estimate.qualityLabel}` : '';
 
   const whatsappMessage = `¡Hola montec! Vengo de la web y coticé una reparación:%0A%0A📱 *Equipo:* ${currentModelName}%0A🛠️ *Falla:* ${issueName}${iphoneModalityText}${qualityText}%0A💰 *Presupuesto estimativo web:* ${priceRangeStr}%0A⏱️ *Tiempo estimado:* 2 a 3 horas (con cita previa: 45 minutos)%0A🛡️ *Garantía:* ${estimate?.warranty || '30 días escrita'}%0A%0A¿Me confirmás la disponibilidad y el precio final para que me acerque al local de Montes Carballo 943?`;
 
@@ -307,8 +307,8 @@ export default function QuotationTool() {
                     <span>+600 Modelos</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-zinc-300 bg-zinc-900/80 px-2.5 py-1.5 rounded-lg border border-zinc-800/80">
-                    <Cpu className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Sin Incell / TFT</span>
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Repuestos Premium</span>
                   </div>
                 </div>
               </div>
@@ -644,12 +644,12 @@ export default function QuotationTool() {
                 <p className="text-xs text-zinc-400">
                   {estimate.modalities.length > 1 ? (
                     selectedIssue === 'screen'
-                      ? 'En iPhone 11 en adelante podés elegir entre la opción Premium (mantiene True Tone con aviso informativo en iOS) o servicio de laboratorio con trasplante de IC (100% sin aviso de pieza).'
-                      : 'A partir de iPhone XS/XR podés optar por la opción rápida/económica (sin % en Ajustes) o trabajo de laboratorio con traspaso de flex original BMS para mostrar 100% de salud.'
+                      ? 'Podés elegir entre Calidad Premium (excelente brillo, color y respuesta táctil) o Calidad Original con reprogramación para conservar todas las funciones de fábrica.'
+                      : 'Podés elegir entre Batería Nueva de alto rendimiento (rápida y económica) o servicio con reprogramación y flex original para indicar 100% de salud en Ajustes.'
                   ) : (
                     selectedIssue === 'screen'
-                      ? 'Para tu modelo de iPhone la pantalla incluye reprogramación completa de True Tone por programadora especializada sin bloqueos de software.'
-                      : 'Para tu modelo de iPhone la batería indica condición 100% de salud automáticamente en Ajustes sin requerir reprogramación de flex ni generar avisos.'
+                      ? 'La pantalla incluye calibración y reprogramación de fábrica para conservar True Tone y brillo automático.'
+                      : 'La batería indica condición 100% de salud y óptimo rendimiento automáticamente en los Ajustes del equipo.'
                   )}
                 </p>
 
@@ -738,28 +738,28 @@ export default function QuotationTool() {
                   <div className="text-xs uppercase tracking-wider text-zinc-400 font-semibold">
                     Costo Estimado Repuesto + Mano de Obra
                   </div>
-                  {estimate?.isDirectMatch && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">
-                      {estimate.isIphoneSpecialized ? 'Apple Serializado' : 'Sin Incell'}
-                    </span>
-                  )}
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">
+                    {estimate?.badge || 'Instalación Incluida'}
+                  </span>
                 </div>
 
-                {/* Badge Calidad / Modalidad Especializada */}
+                {/* Cuadro Informativo de Calidad / Modalidad Especializada */}
                 {estimate?.isIphoneSpecialized && estimate?.selectedModality ? (
                   <div className="mb-3 px-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-zinc-400 font-semibold">Modalidad:</span>
-                      <span className="font-bold text-white">{estimate.selectedModality.name}</span>
+                      <span className="text-zinc-400 font-semibold">Opción:</span>
+                      <span className="font-bold text-white text-right line-clamp-1">{estimate.selectedModality.name}</span>
                     </div>
-                    <div className="text-[11px] text-amber-400/90 font-medium">
-                      📱 {estimate.selectedModality.iosNotice}
-                    </div>
+                    {estimate.selectedModality.iosNotice && (
+                      <div className="text-[11px] text-amber-400/90 font-medium leading-tight">
+                        ℹ️ {estimate.selectedModality.iosNotice}
+                      </div>
+                    )}
                   </div>
-                ) : estimate?.isDirectMatch ? (
-                  <div className="mb-3 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-medium flex items-center gap-1.5">
+                ) : estimate?.qualityLabel ? (
+                  <div className="mb-3 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-medium flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                    <span>Calidad: <strong>{estimate.qualityLabel}</strong> (100% Libre de TFT/Incell)</span>
+                    <span>{estimate.qualityLabel}</span>
                   </div>
                 ) : null}
 

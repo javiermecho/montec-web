@@ -303,13 +303,13 @@ export function DataProvider({ children }) {
     if (deviceType === 'iphone' && model) {
       const genInfo = getIphoneGenerationInfo(targetModelName);
       const modelCfg = iphoneConfigs[model.id] || (buildDefaultIphoneConfigs()[model.id]) || {
-        screenLabor: { compatible_unknown: 32000, ic_transplant: 55000, screen_incell_oled_premium: 30000 },
+        screenLabor: { compatible_unknown: 32000, ic_transplant: 55000, screen_premium: 30000, screen_incell_oled_premium: 30000 },
         batteryLabor: { standard_unknown: 28000, bms_transplant: 48000, battery_standard_100: 25000 }
       };
 
       // 1. MÓDULO / PANTALLA IPHONE:
-      // - iPhone 6 al 8 Plus / X / XS / XR: Módulo Incell / OLED Premium (con reprogramación True Tone incluida).
-      // - iPhone 11 en adelante: Opción 1 Premium con aviso vs Opción 2 Calidad Original con trasplante de IC sin avisos.
+      // - iPhone 6 al 8 Plus / X / XS / XR: Calidad Premium con reprogramación True Tone incluida.
+      // - iPhone 11 en adelante: Opción 1 Calidad Premium vs Opción 2 Calidad Original sin avisos.
       if (issueId === 'screen') {
         const moduleEstimate = calculateModuleEstimate(targetModelName, 'Apple', dolarRate, pricingRules);
         const basePartCostArs = moduleEstimate && moduleEstimate.bestOption 
@@ -428,8 +428,8 @@ export function DataProvider({ children }) {
           duration: '24 a 48 hs (Laboratorio Especializado)',
           warranty: '30 días escrita',
           issueName: issue.name,
-          issueBadge: 'Microelectrónica Gremio',
-          qualityLabel: 'Diagnóstico y reparación de microcomponentes (Audio IC, Baseband, Cortos, Face ID)',
+          issueBadge: 'Garantía Escrita',
+          qualityLabel: 'Diagnóstico y Reparación de Placa Madre (Solución a fallas complejas, encendido o reinicios)',
           modelName: targetModelName,
           brand: 'Apple',
           isDirectMatch: true,
@@ -459,7 +459,7 @@ export function DataProvider({ children }) {
           warranty: '30 días escrita',
           issueName: 'Cambio de Tapa Trasera de Vidrio (Láser / Proceso Térmico)',
           issueBadge: 'Láser & Precisión',
-          qualityLabel: 'Vidrio Trasero de Alta Resistencia (MagSafe Compatible)',
+          qualityLabel: 'Vidrio Trasero de Alta Resistencia y Acabado Original (Compatible con Carga Inalámbrica / MagSafe)',
           modelName: targetModelName,
           brand: 'Apple',
           isDirectMatch: true,
@@ -478,7 +478,7 @@ export function DataProvider({ children }) {
           minPrice: moduleEstimate.minPrice,
           maxPrice: moduleEstimate.maxPrice,
           duration: moduleEstimate.duration,
-          warranty: '30 días escrita',
+          warranty: '90 días escrita',
           issueName: issue.name,
           issueBadge: moduleEstimate.badge,
           qualityLabel: moduleEstimate.qualityLabel,
@@ -534,6 +534,17 @@ export function DataProvider({ children }) {
       else if (isRecent) multiplier = 1.1;
     }
 
+    const fallbackQualityMap = {
+      'screen': 'Calidad Premium (Excelente brillo, color y respuesta táctil)',
+      'battery': 'Batería Nueva de Alta Capacidad y Rendimiento',
+      'back-glass': 'Vidrio Trasero de Alta Resistencia y Acabado Original (Compatible con Carga Inalámbrica / MagSafe)',
+      'charging-port': 'Repuesto Nuevo y Limpieza Profunda (Carga rápida y conexión estable)',
+      'speaker': 'Reemplazo de Altavoz / Parlante (Audio limpio y volumen potente sin distorsión)',
+      'motherboard': 'Diagnóstico y Reparación de Placa Madre (Solución a fallas complejas, encendido o reinicios)',
+      'software': 'Restauración y Optimización de Sistema (Solución a lentitud y bloqueos)'
+    };
+    const resolvedQualityLabel = fallbackQualityMap[issueId] || 'Repuesto Seleccionado Calidad Premium';
+
     const floorMin = getMinimumRepairPrice(deviceType, issueId);
     const min = Math.max(floorMin, Math.round((baseRange.min * multiplier) / 500) * 500);
     const max = Math.max(min, Math.round((baseRange.max * multiplier) / 500) * 500);
@@ -542,9 +553,10 @@ export function DataProvider({ children }) {
       minPrice: min,
       maxPrice: max,
       duration: issue.duration,
-      warranty: '30 días escrita',
+      warranty: '90 días escrita',
       issueName: issue.name,
-      issueBadge: issue.badge,
+      issueBadge: 'Instalación Incluida',
+      qualityLabel: resolvedQualityLabel,
       modelName: targetModelName || (model ? model.model : 'Modelo Personalizado'),
       brand: targetBrand || (model ? model.brand : 'Genérico'),
       isDirectMatch: false,

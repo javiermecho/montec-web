@@ -177,11 +177,11 @@ export function getIphoneGenerationInfo(modelName) {
 // iPhone 6 al 8 Plus / X / XS / XR:
 export const IPHONE_SCREEN_MODALITIES_PRE_11 = [
   {
-    key: 'screen_incell_oled_premium',
-    name: 'Módulo Incell / OLED Premium',
+    key: 'screen_premium',
+    name: 'Calidad Premium (Excelente brillo, color y respuesta táctil)',
     badge: 'True Tone Incluido',
-    iosNotice: 'Con reprogramación de True Tone incluida',
-    description: 'Display de alta resolución, excelente brillo y respuesta táctil inmediata. Incluye traspaso y reprogramación de datos de True Tone mediante programadora especializada.',
+    iosNotice: 'Con reprogramación de True Tone de fábrica incluida',
+    description: 'Pantalla de alta calidad con colores nítidos, excelente brillo y respuesta táctil inmediata. Incluye reprogramación de True Tone.',
     defaultLabor: 30000
   }
 ];
@@ -190,18 +190,18 @@ export const IPHONE_SCREEN_MODALITIES_PRE_11 = [
 export const IPHONE_SCREEN_MODALITIES_POST_11 = [
   {
     key: 'compatible_unknown',
-    name: 'Módulo Premium (OLED / Incell)',
-    badge: 'Excelente Rendimiento',
-    iosNotice: 'Mantiene True Tone. Con aviso informativo de pieza en iOS',
-    description: 'Display de alta gama con colores vibrantes y máxima fluidez. Mantiene True Tone activo. Muestra aviso informativo de pieza en Ajustes por política de serialización de Apple.',
+    name: 'Calidad Premium (Excelente brillo, color y respuesta táctil)',
+    badge: 'Opción Recomendada',
+    iosNotice: 'Mantiene True Tone. Muestra aviso de pieza cambiada en Ajustes sin afectar el uso',
+    description: 'Pantalla de máxima calidad visual y táctil manteniendo True Tone activo. Muestra aviso informativo en Ajustes según la política de Apple.',
     defaultLabor: 32000
   },
   {
     key: 'ic_transplant',
-    name: 'Módulo Calidad Original con Trasplante de IC',
-    badge: 'Laboratorio Microelectrónica',
-    iosNotice: '100% Libre de aviso en Ajustes (Microelectrónica)',
-    description: 'Servicio de laboratorio de microelectrónica: se trasplanta el microchip integrado (Touch/Display IC) de tu pantalla original para evitar cualquier mensaje o alerta en iOS.',
+    name: 'Calidad Original (Conserva todas las funciones de fábrica)',
+    badge: 'Laboratorio Sin Avisos',
+    iosNotice: 'Sin avisos en Ajustes (Conserva funciones originales al 100%)',
+    description: 'Servicio de laboratorio de microelectrónica: se trasplanta el microchip integrado de tu pantalla original para evitar avisos en iOS.',
     defaultLabor: 55000
   }
 ];
@@ -212,10 +212,10 @@ export const IPHONE_SCREEN_MODALITIES_POST_11 = [
 export const IPHONE_BATTERY_MODALITIES_PRE_XS = [
   {
     key: 'battery_standard_100',
-    name: 'Cambio de Batería (Calidad Original)',
+    name: 'Batería Nueva de Alta Capacidad y Rendimiento',
     badge: 'Condición 100% Automática',
     iosNotice: 'Indica condición 100% en Ajustes automáticamente',
-    description: 'Batería nueva de celdas calidad original. En este modelo el sistema iOS reconoce el 100% de salud inmediatamente sin requerir traspaso de flex ni alertas.',
+    description: 'Batería nueva con celdas de máxima durabilidad y rendimiento garantizado.',
     defaultLabor: 25000
   }
 ];
@@ -224,18 +224,18 @@ export const IPHONE_BATTERY_MODALITIES_PRE_XS = [
 export const IPHONE_BATTERY_MODALITIES_POST_XS = [
   {
     key: 'standard_unknown',
-    name: 'Cambio de Batería Premium',
-    badge: 'Rápido / Económico',
-    iosNotice: 'No mostrará % de salud en Ajustes por política de software de Apple',
-    description: 'Reemplazo directo de celda premium de alta densidad. Rápido y económico. No mostrará porcentaje de salud en Ajustes por política de Apple, pero la autonomía y rendimiento son al 100%.',
+    name: 'Batería Nueva de Alta Capacidad y Rendimiento',
+    badge: 'Rápido y Económico',
+    iosNotice: 'Aclaración: Los iPhones de esta generación muestran aviso de pieza cambiada en Ajustes sin afectar el rendimiento',
+    description: 'Reemplazo directo de celda nueva de alta capacidad. Rápido y accesible. El equipo rinde con total autonomía.',
     defaultLabor: 28000
   },
   {
     key: 'bms_transplant',
-    name: 'Cambio de Batería con Traspaso de Flex & Reprogramación 100%',
+    name: 'Batería con Traspaso de Flex Original & Reprogramación 100%',
     badge: 'Servicio de Laboratorio',
     iosNotice: 'Conserva flex original Apple y muestra 100% de salud en Ajustes',
-    description: 'Servicio de laboratorio de microelectrónica: conserva el flex original, se desuelda la placa BMS, se suelda celda nueva y se reprograma la condición al 100% sin aviso de pieza.',
+    description: 'Servicio de laboratorio: conserva el flex original, se coloca celda nueva y se reprograma la condición al 100% sin aviso de pieza.',
     defaultLabor: 48000
   }
 ];
@@ -284,6 +284,7 @@ export function buildDefaultIphoneConfigs() {
       screenLabor: {
         compatible_unknown: Math.max(30000, screenBaseLabor),
         ic_transplant: Math.max(50000, Math.round(screenBaseLabor * 1.55 / 1000) * 1000),
+        screen_premium: Math.max(30000, screenBaseLabor),
         screen_incell_oled_premium: Math.max(30000, screenBaseLabor)
       },
 

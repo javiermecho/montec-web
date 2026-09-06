@@ -219,10 +219,10 @@ export function calculateModuleEstimate(modelName, brand, dolarRate = DEFAULT_FA
     bestOption: minOption,
     duration: '45 a 60 minutos en el acto (Express)',
     warranty: '90 días de garantía escrita',
-    qualityLabel: minOption.qualityType === maxOption.qualityType 
-      ? minOption.qualityType 
-      : `${minOption.qualityType} a ${maxOption.qualityType}`,
-    badge: 'Repuesto de Proveedor MDP (Sin Incell)'
+    qualityLabel: (minOption.qualityType && /original|oled|service pack/i.test(minOption.qualityType))
+      ? 'Calidad Original (Conserva todas las funciones de fábrica)'
+      : 'Calidad Premium (Excelente brillo, color y respuesta táctil)',
+    badge: 'Repuesto Seleccionado'
   };
 }
 
@@ -281,6 +281,13 @@ export function calculateAndroidPartEstimate(issueId, modelName, brand = '', dol
 
     const bestOption = targetMatches.find(m => (m.cost_ars || Math.round((m.cost_usd || 0) * dolarRate)) === minPartCost) || targetMatches[0];
 
+    const issueQualityMap = {
+      'battery': 'Batería Nueva de Alta Capacidad y Rendimiento',
+      'charging-port': 'Repuesto Nuevo y Limpieza Profunda (Carga rápida y conexión estable)',
+      'speaker': 'Reemplazo de Altavoz / Parlante (Audio limpio y volumen potente sin distorsión)'
+    };
+    const qualityLabel = issueQualityMap[issueId] || 'Repuesto Seleccionado Calidad Premium';
+
     return {
       success: true,
       isDirectMatch: true,
@@ -290,11 +297,18 @@ export function calculateAndroidPartEstimate(issueId, modelName, brand = '', dol
       laborArs: labor,
       optionsCount: matches.length,
       bestOption,
-      qualityLabel: 'Repuesto Original / Premium',
-      badge: `Mano de Obra $${labor.toLocaleString('es-AR')}`,
-      notes: `Repuesto ($${minPartCost.toLocaleString('es-AR')}) + Mano de obra de laboratorio ($${labor.toLocaleString('es-AR')})`
+      qualityLabel,
+      badge: 'Instalación Incluida',
+      notes: `Repuesto + Instalación especializada montec`
     };
   }
+
+  const issueQualityMap = {
+    'battery': 'Batería Nueva de Alta Capacidad y Rendimiento',
+    'charging-port': 'Repuesto Nuevo y Limpieza Profunda (Carga rápida y conexión estable)',
+    'speaker': 'Reemplazo de Altavoz / Parlante (Audio limpio y volumen potente sin distorsión)'
+  };
+  const qualityLabel = issueQualityMap[issueId] || 'Repuesto Seleccionado Calidad Premium';
 
   // Fallback con costo promedio estimado de repuesto + $35.000 de mano de obra y piso mínimo
   const minPrice = Math.max(floorMin, Math.round((fallbackCost.min + labor) / 500) * 500);
@@ -308,9 +322,9 @@ export function calculateAndroidPartEstimate(issueId, modelName, brand = '', dol
     partCostArs: fallbackCost.min,
     laborArs: labor,
     optionsCount: 1,
-    qualityLabel: 'Repuesto Original / Premium',
-    badge: `Mano de Obra $${labor.toLocaleString('es-AR')}`,
-    notes: `Repuesto estimado + Mano de obra de laboratorio ($${labor.toLocaleString('es-AR')})`
+    qualityLabel,
+    badge: 'Instalación Incluida',
+    notes: `Repuesto estimado + Instalación especializada montec`
   };
 }
 
