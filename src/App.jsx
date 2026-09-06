@@ -7,6 +7,7 @@ import Accessories from './components/Accessories';
 import LocationContact from './components/LocationContact';
 import Footer from './components/Footer';
 import AdminPanel from './components/AdminPanel';
+import DiagnosticChatbot from './components/DiagnosticChatbot';
 import { DataProvider } from './context/DataContext';
 
 export default function App() {
@@ -27,6 +28,9 @@ export default function App() {
 
         {/* Footer */}
         <Footer />
+
+        {/* Asistente Virtual Interactivo de Diagnóstico Técnico */}
+        <DiagnosticChatbot />
 
         {/* Panel Administrador (Modal overlay cuando se activa) */}
         <AdminPanel />
