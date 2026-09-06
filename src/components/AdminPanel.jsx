@@ -23,12 +23,14 @@ import {
   Clock,
   ShieldCheck,
   Maximize2,
-  Zap
+  Zap,
+  BarChart3
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { getIphoneGenerationInfo } from '../data/iphonePricingData';
 import MontecLogo from './MontecLogo';
 import PartsSearchTab from './admin/PartsSearchTab';
+import AnalyticsTab from './admin/AnalyticsTab';
 
 export default function AdminPanel() {
   const {
@@ -354,6 +356,18 @@ export default function AdminPanel() {
         >
           <ShoppingBag className="w-4 h-4" />
           <span>Accesorios & Stock ({accessories.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
+            activeTab === 'analytics' 
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4 text-emerald-400" />
+          <span>Google Analytics & Leads</span>
         </button>
 
         <button
@@ -1320,6 +1334,13 @@ export default function AdminPanel() {
         {/* ============================================================== */}
         {activeTab === 'parts_search' && (
           <PartsSearchTab dolarRate={dolarRate} pricingRules={pricingRules} />
+        )}
+
+        {/* ============================================================== */}
+        {/* PESTAÑA: GOOGLE ANALYTICS & MEDICIÓN DE LEADS */}
+        {/* ============================================================== */}
+        {activeTab === 'analytics' && (
+          <AnalyticsTab />
         )}
 
       </div>

@@ -80,19 +80,25 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      // Identificadores configurables vía entorno o placeholders
-      const GA_ID = 'G-XXXXXXXXXX' !== '%VITE_GA_TRACKING_ID' ? 'G-XXXXXXXXXX' : 'G-XXXXXXXXXX';
-      const GTM_ID = 'GTM-XXXXXXX' !== '%VITE_GTM_ID' ? 'GTM-XXXXXXX' : 'GTM-XXXXXXX';
-      const ADS_ID = 'AW-XXXXXXXXXX' !== '%VITE_GOOGLE_ADS_ID' ? 'AW-XXXXXXXXXX' : 'AW-XXXXXXXXXX';
+      // Identificadores configurables vía panel de admin o variables de entorno
+      try {
+        var storedGA = localStorage.getItem('montec_ga_id');
+        var storedADS = localStorage.getItem('montec_ads_id');
+        var GA_ID = storedGA || ('G-XXXXXXXXXX' !== 'G-XXXXXXXXXX' ? 'G-XXXXXXXXXX' : '');
+        var ADS_ID = storedADS || ('AW-XXXXXXXXXX' !== 'AW-XXXXXXXXXX' ? 'AW-XXXXXXXXXX' : '');
 
-      if (GA_ID && !GA_ID.includes('XXXXX')) {
-        gtag('config', GA_ID);
-      }
-      if (ADS_ID && !ADS_ID.includes('XXXXX')) {
-        gtag('config', ADS_ID);
-      }
+        if (GA_ID && !GA_ID.includes('XXXXX')) {
+          gtag('config', GA_ID);
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+          document.head.appendChild(s);
+        }
+        if (ADS_ID && !ADS_ID.includes('XXXXX')) {
+          gtag('config', ADS_ID);
+        }
+      } catch (e) {}
     </script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
     
     <!-- Google Tag Manager (Script) -->
     <script>
@@ -108,8 +114,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="./assets/index-DyCrxIOr.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DDzm6JM7.css">
+    <script type="module" crossorigin src="./assets/index-Mf8MbdPt.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-GGTOl2Jf.css">
   </head>
   <body class="bg-[#0A0A0A] text-[#FFFFFF] font-sans antialiased selection:bg-[#FF5500] selection:text-white min-h-screen">
     <!-- Google Tag Manager (noscript) -->

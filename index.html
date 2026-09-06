@@ -80,19 +80,25 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      // Identificadores configurables vía entorno o placeholders
-      const GA_ID = '%VITE_GA_TRACKING_ID%' !== '%VITE_GA_TRACKING_ID' ? '%VITE_GA_TRACKING_ID%' : 'G-XXXXXXXXXX';
-      const GTM_ID = '%VITE_GTM_ID%' !== '%VITE_GTM_ID' ? '%VITE_GTM_ID%' : 'GTM-XXXXXXX';
-      const ADS_ID = '%VITE_GOOGLE_ADS_ID%' !== '%VITE_GOOGLE_ADS_ID' ? '%VITE_GOOGLE_ADS_ID%' : 'AW-XXXXXXXXXX';
+      // Identificadores configurables vía panel de admin o variables de entorno
+      try {
+        var storedGA = localStorage.getItem('montec_ga_id');
+        var storedADS = localStorage.getItem('montec_ads_id');
+        var GA_ID = storedGA || ('%VITE_GA_TRACKING_ID%' !== '%VITE_GA_TRACKING_ID%' ? '%VITE_GA_TRACKING_ID%' : '');
+        var ADS_ID = storedADS || ('%VITE_GOOGLE_ADS_ID%' !== '%VITE_GOOGLE_ADS_ID%' ? '%VITE_GOOGLE_ADS_ID%' : '');
 
-      if (GA_ID && !GA_ID.includes('XXXXX')) {
-        gtag('config', GA_ID);
-      }
-      if (ADS_ID && !ADS_ID.includes('XXXXX')) {
-        gtag('config', ADS_ID);
-      }
+        if (GA_ID && !GA_ID.includes('XXXXX')) {
+          gtag('config', GA_ID);
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+          document.head.appendChild(s);
+        }
+        if (ADS_ID && !ADS_ID.includes('XXXXX')) {
+          gtag('config', ADS_ID);
+        }
+      } catch (e) {}
     </script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
     
     <!-- Google Tag Manager (Script) -->
     <script>
