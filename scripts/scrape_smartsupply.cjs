@@ -118,6 +118,7 @@ async function scrapeCategory(cat) {
       // OutOfStock en schema.org o indica "sin stock" / "agotado".
       const isOutOfStock = /agotado|sin[\s-_]*stock|out[\s-_]*of[\s-_]*stock/i.test(cleanCard) ||
                            cleanCard.includes('schema.org/OutOfStock');
+      const hasViewButton = cleanCard.includes('Ver el producto');
 
       if (nameMatch && priceMatch) {
         let strPrice = priceMatch[1].trim();
@@ -136,6 +137,7 @@ async function scrapeCategory(cat) {
             price_lista_ars: rawPrice,
             price_cash_ars: Math.round(rawPrice / 1.18),
             in_stock: !isOutOfStock,
+            hasViewButton,
             url: urlMatch ? (urlMatch[1].startsWith('http') ? urlMatch[1] : `https://smartsupply.com.ar/${urlMatch[1].replace(/^\//, '')}`) : ''
           });
         }
@@ -168,8 +170,8 @@ async function runScraper() {
     await new Promise(r => setTimeout(r, 400));
   }
 
-  // Verificar y ajustar con precisión los productos con variantes / tapas en sus páginas reales
-  const variantParts = allParts.filter(p => p.part_type === 'tapa' || p.name.toUpperCase().includes('ELEGIR COLOR'));
+  // Verificar y ajustar con precisión los productos con variantes / tapas / Ver el producto en sus páginas reales
+  const variantParts = allParts.filter(p => p.part_type === 'tapa' || p.hasViewButton || p.name.toUpperCase().includes('ELEGIR COLOR'));
   console.log(`\nVerificando ${variantParts.length} productos con opciones/variantes en sus páginas reales...`);
   
   for (let i = 0; i < variantParts.length; i += 5) {
@@ -180,7 +182,7 @@ async function runScraper() {
         const res = await fetch(t.url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         const html = await res.text();
 
-        const isAgotado = html.includes('btn-outline-danger') || html.includes('>AGOTADO<') || html.includes('id="cartel-sin-stock"');
+        const isAgotado = html.includes('btn-outline-danger') || html.includes('>AGOTADO<') || html.includes('x18">AGOTADO</span>') || html.includes('id="cartel-sin-stock"');
         const efvoMatch = html.match(/\$([\d\.\,]+)\s+En efectivo\/transferencia/i);
         const listaMatch = html.match(/class="[^"]*precio-lista[^"]*">\$?([\d\.\,]+)/i);
 

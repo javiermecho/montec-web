@@ -18,7 +18,7 @@ export const SMARTSUPPLY_PARTS = [
     "part_type": "modulo",
     "price_lista_ars": 31774.12,
     "price_cash_ars": 26927,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-11-hd-apto-trasplante"
   },
   {

@@ -107,6 +107,9 @@ export function calculatePartPrice(part, dolarRate = DEFAULT_FALLBACK_RATE, cust
     cost_ars: Math.round(costoArs),
     ganancia: Math.round(ganancia),
     final_price: finalPrice,
+    in_stock: part.in_stock !== false,
+    provider: part.provider,
+    url: part.url,
     tags: part.tags || [],
     hasFrame: (part.tags || []).includes('CON MARCO'),
     qualityType: detectQualityType(part.raw_name)
@@ -198,8 +201,12 @@ export function calculateModuleEstimate(modelName, brand, dolarRate = DEFAULT_FA
   // Calcular precios para todas las variantes válidas (sin Incell) con reglas dinámicas
   const pricedOptions = matches.map(part => calculatePartPrice(part, dolarRate, customRules, deviceType));
 
-  // Ordenar por precio ascendente
-  pricedOptions.sort((a, b) => a.final_price - b.final_price);
+  // Ordenar priorizando repuestos con stock disponible y luego por precio ascendente
+  pricedOptions.sort((a, b) => {
+    if (a.in_stock && !b.in_stock) return -1;
+    if (!a.in_stock && b.in_stock) return 1;
+    return a.final_price - b.final_price;
+  });
 
   const minOption = pricedOptions[0];
   const maxOption = pricedOptions[pricedOptions.length - 1];
@@ -272,14 +279,17 @@ export function calculateAndroidPartEstimate(issueId, modelName, brand = '', dol
   }
 
   if (targetMatches.length > 0) {
-    const costs = targetMatches.map(m => m.cost_ars ? m.cost_ars : Math.round((m.cost_usd || 0) * dolarRate)).filter(c => c > 0);
+    const inStockMatches = targetMatches.filter(m => m.in_stock !== false);
+    const pool = inStockMatches.length > 0 ? inStockMatches : targetMatches;
+
+    const costs = pool.map(m => m.cost_ars ? m.cost_ars : Math.round((m.cost_usd || 0) * dolarRate)).filter(c => c > 0);
     const minPartCost = Math.min(...costs);
     const maxPartCost = Math.max(...costs);
 
     const minPrice = Math.max(floorMin, Math.round((minPartCost + labor) / 500) * 500);
     const maxPrice = Math.max(minPrice, Math.round((maxPartCost + labor) / 500) * 500);
 
-    const bestOption = targetMatches.find(m => (m.cost_ars || Math.round((m.cost_usd || 0) * dolarRate)) === minPartCost) || targetMatches[0];
+    const bestOption = pool.find(m => (m.cost_ars || Math.round((m.cost_usd || 0) * dolarRate)) === minPartCost) || pool[0];
 
     const issueQualityMap = {
       'battery': 'Batería Nueva de Alta Capacidad y Rendimiento',
