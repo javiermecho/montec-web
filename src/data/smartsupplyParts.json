@@ -56,7 +56,7 @@
     "part_type": "modulo",
     "price_lista_ars": 119755.15,
     "price_cash_ars": 101487,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-12---12-pro-oled-hard-ic-removible"
   },
   {
@@ -146,7 +146,7 @@
     "part_type": "modulo",
     "price_lista_ars": 60749.36,
     "price_cash_ars": 51483,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-incell-fhd-jk"
   },
   {
@@ -176,7 +176,7 @@
     "part_type": "modulo",
     "price_lista_ars": 161235.48,
     "price_cash_ars": 136640,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-mini-hard-ms-apto-trasplante"
   },
   {
@@ -186,7 +186,7 @@
     "part_type": "modulo",
     "price_lista_ars": 123805.11,
     "price_cash_ars": 104920,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-mini-soft-jk-apto-trasplante"
   },
   {
@@ -226,7 +226,7 @@
     "part_type": "modulo",
     "price_lista_ars": 88987.6,
     "price_cash_ars": 75413,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-pro-programado-ms-incell-fhd-ltps"
   },
   {
@@ -236,7 +236,7 @@
     "part_type": "modulo",
     "price_lista_ars": 156402.45,
     "price_cash_ars": 132544,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-13-pro-programado-ms-soft-oled"
   },
   {
@@ -326,7 +326,7 @@
     "part_type": "modulo",
     "price_lista_ars": 406066.32,
     "price_cash_ars": 344124,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-pro-soft-jc-pantalla-programada"
   },
   {
@@ -346,7 +346,7 @@
     "part_type": "modulo",
     "price_lista_ars": 130828.3,
     "price_cash_ars": 110871,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-pro-max-programado-ms-incell-fhd"
   },
   {
@@ -356,7 +356,7 @@
     "part_type": "modulo",
     "price_lista_ars": 161766,
     "price_cash_ars": 137090,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-pro-max-programado-ms-soft-oled"
   },
   {
@@ -396,7 +396,7 @@
     "part_type": "modulo",
     "price_lista_ars": 133644.38,
     "price_cash_ars": 113258,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-14-gx-soft-ic-removible"
   },
   {
@@ -456,7 +456,7 @@
     "part_type": "modulo",
     "price_lista_ars": 161308.13,
     "price_cash_ars": 136702,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-pro-hard-ic-removible"
   },
   {
@@ -476,7 +476,7 @@
     "part_type": "modulo",
     "price_lista_ars": 180671.79,
     "price_cash_ars": 153112,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-pro-max-programado-ms-incell-fhd"
   },
   {
@@ -516,7 +516,7 @@
     "part_type": "modulo",
     "price_lista_ars": 150898.37,
     "price_cash_ars": 127880,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-15-soft-ic-removible"
   },
   {
@@ -546,7 +546,7 @@
     "part_type": "modulo",
     "price_lista_ars": 253114.67,
     "price_cash_ars": 214504,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-plus-soft-ic-removible"
   },
   {
@@ -556,7 +556,7 @@
     "part_type": "modulo",
     "price_lista_ars": 245360.41,
     "price_cash_ars": 207933,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-pro-programado-ms-hard-oled"
   },
   {
@@ -576,7 +576,7 @@
     "part_type": "modulo",
     "price_lista_ars": 350497.94,
     "price_cash_ars": 297032,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-pro-programado-ms-soft-oled"
   },
   {
@@ -586,7 +586,7 @@
     "part_type": "modulo",
     "price_lista_ars": 196529.22,
     "price_cash_ars": 166550,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-pro-hard"
   },
   {
@@ -606,7 +606,7 @@
     "part_type": "modulo",
     "price_lista_ars": 113256.94,
     "price_cash_ars": 95980,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-pro-max-programado-ms-incell-fhd"
   },
   {
@@ -616,7 +616,7 @@
     "part_type": "modulo",
     "price_lista_ars": 463725.25,
     "price_cash_ars": 392988,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-16-pro-max-programado-ms-soft-oled"
   },
   {
@@ -746,7 +746,7 @@
     "part_type": "modulo",
     "price_lista_ars": 38350.71,
     "price_cash_ars": 32501,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-11-gx-apto-trasplante"
   },
   {
@@ -756,7 +756,7 @@
     "part_type": "modulo",
     "price_lista_ars": 52923.97,
     "price_cash_ars": 44851,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-12---12-pro-incell-jx-apto-trasplante"
   },
   {
@@ -766,7 +766,7 @@
     "part_type": "modulo",
     "price_lista_ars": 174173.12,
     "price_cash_ars": 147604,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-12--12-pro-oled-hard-jc-pantalla-programada"
   },
   {
@@ -786,7 +786,7 @@
     "part_type": "modulo",
     "price_lista_ars": 153319.37,
     "price_cash_ars": 129932,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-13-pro-incell-jc-pantalla-programada"
   },
   {
@@ -806,7 +806,7 @@
     "part_type": "modulo",
     "price_lista_ars": 194124.51,
     "price_cash_ars": 164512,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-13-pro-max-jc-incell-pantalla-programada"
   },
   {
@@ -856,7 +856,7 @@
     "part_type": "modulo",
     "price_lista_ars": 485567.34,
     "price_cash_ars": 411498,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-14-pro-max-oled-soft-jc-pantalla-programada"
   },
   {
@@ -946,7 +946,7 @@
     "part_type": "modulo",
     "price_lista_ars": 95221.98,
     "price_cash_ars": 80697,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-para-iphone-xs-max-oled-hard"
   },
   {
@@ -1046,7 +1046,7 @@
     "part_type": "modulo",
     "price_lista_ars": 129373.18,
     "price_cash_ars": 109638,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/modulo-iphone-x-oled-original-100"
   },
   {
@@ -5066,7 +5066,7 @@
     "part_type": "modulo",
     "price_lista_ars": 147.72,
     "price_cash_ars": 125,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/lcd-ipad-3"
   },
   {
@@ -5136,7 +5136,7 @@
     "part_type": "modulo",
     "price_lista_ars": 6763.45,
     "price_cash_ars": 5732,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/touch-ipad-5-blanco"
   },
   {
@@ -5146,7 +5146,7 @@
     "part_type": "modulo",
     "price_lista_ars": 6763.45,
     "price_cash_ars": 5732,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/touch-ipad-5-negro"
   },
   {
@@ -5156,7 +5156,7 @@
     "part_type": "modulo",
     "price_lista_ars": 19799.27,
     "price_cash_ars": 16779,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/touch-ipad-6-blanco"
   },
   {
@@ -5166,7 +5166,7 @@
     "part_type": "modulo",
     "price_lista_ars": 130.57,
     "price_cash_ars": 111,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/touch-ipad-6-negro"
   },
   {
@@ -5176,7 +5176,7 @@
     "part_type": "modulo",
     "price_lista_ars": 65.2,
     "price_cash_ars": 55,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/touch-ipad-air-2-blanco"
   },
   {
@@ -5186,7 +5186,7 @@
     "part_type": "modulo",
     "price_lista_ars": 11757.84,
     "price_cash_ars": 9964,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/touch-ipad-air-2-negro"
   },
   {
@@ -5196,7 +5196,7 @@
     "part_type": "modulo",
     "price_lista_ars": 8450.39,
     "price_cash_ars": 7161,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/touch-ipad-mini-3-blanco"
   },
   {
@@ -5206,7 +5206,7 @@
     "part_type": "modulo",
     "price_lista_ars": 2128.94,
     "price_cash_ars": 1804,
-    "in_stock": true,
+    "in_stock": false,
     "url": "https://smartsupply.com.ar/producto/touch-ipad-mini-blanco"
   },
   {
