@@ -25,12 +25,24 @@ import {
   Laptop,
   Cpu,
   Sparkles,
-  Info
+  Info,
+  ExternalLink,
+  Calculator,
+  Wrench,
+  Package,
+  ShoppingCart,
+  Zap,
+  Maximize2,
+  BatteryCharging,
+  Volume2,
+  Lightbulb
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import { searchPartsForRepair, generateQuickSupplierLinks, detectPartCategory } from '../../services/partsSearchService';
 import PatternLockInput from './PatternLockInput';
 import OrderTicketModal from './OrderTicketModal';
 import OrdersListModal from './OrdersListModal';
+import CostBreakdownModal from './CostBreakdownModal';
 
 export default function RepairOrderReceiver() {
   const { 
@@ -40,8 +52,12 @@ export default function RepairOrderReceiver() {
     loginEmployee, 
     logoutEmployee, 
     models, 
+    issues,
     createRepairOrder, 
-    searchClients 
+    searchClients,
+    calculateCurrentEstimate,
+    setIsQuoteModalOpen,
+    dolarRate
   } = useData();
 
   // Estados de control de pantallas
@@ -110,6 +126,7 @@ export default function RepairOrderReceiver() {
       deposit: '',
       balanceDue: 0,
       estimatedDeliveryDate: '',
+      warranty: '90 días de garantía escrita',
       status: 'received',
       technician: 'Taller Montec'
     }
@@ -213,18 +230,161 @@ export default function RepairOrderReceiver() {
     }).slice(0, 15);
   }, [models, formData.device.brand, modelSearchQuery]);
 
+  // --- COTIZADOR EN VIVO & BÚSQUEDA DE REPUESTOS DE TALLER ---
+  const [selectedIssueId, setSelectedIssueId] = useState('screen');
+  const [selectedModalityKey, setSelectedModalityKey] = useState('compatible_unknown');
+  const [showAllParts, setShowAllParts] = useState(false);
+  const [isCostModalOpen, setIsCostModalOpen] = useState(false);
+
+  const COMMON_REPAIR_ISSUES = [
+    { id: 'screen', name: 'Módulo / Pantalla Completa', icon: Maximize2, badge: 'Pantalla' },
+    { id: 'battery', name: 'Cambio de Batería', icon: BatteryCharging, badge: 'Batería' },
+    { id: 'charging-port', name: 'Pin de Carga / Subplaca', icon: Zap, badge: 'Carga' },
+    { id: 'back-glass', name: 'Cambio de Tapa Trasera de Vidrio', icon: Smartphone, badge: 'Tapa' },
+    { id: 'motherboard', name: 'Microelectrónica / Placa', icon: Cpu, badge: 'Placa' },
+    { id: 'thermal-maintenance', name: 'Limpieza y Mantenimiento Térmico', icon: Wrench, badge: 'Térmico' },
+    { id: 'custom', name: 'Otro (Personalizado)', icon: Sparkles, badge: 'Otro' }
+  ];
+
+  // Dispositivo activo normalizado para el cotizador
+  const currentDeviceType = useMemo(() => {
+    const rawType = (formData.device.type || '').toLowerCase();
+    const brand = (formData.device.brand || '').toLowerCase();
+    if (rawType.includes('iphone') || brand === 'apple') return 'iphone';
+    if (rawType.includes('notebook') || rawType.includes('laptop') || rawType.includes('mac')) return 'notebook';
+    return 'android';
+  }, [formData.device.type, formData.device.brand]);
+
+  // Modelo coincidente en el catálogo de modelos
+  const matchedModel = useMemo(() => {
+    if (!formData.device.model) return null;
+    const cleanInput = formData.device.model.trim().toLowerCase();
+    return models.find(m => m.model.toLowerCase() === cleanInput) ||
+           models.find(m => m.model.toLowerCase().includes(cleanInput)) || null;
+  }, [formData.device.model, models]);
+
+  // Cotización calculada en vivo con el motor oficial de Montec
+  const liveEstimate = useMemo(() => {
+    if (selectedIssueId === 'custom') return null;
+    if (!formData.device.model || formData.device.model.trim().length < 2) return null;
+    if (typeof calculateCurrentEstimate !== 'function') return null;
+
+    try {
+      const activeModelId = matchedModel ? matchedModel.id : null;
+      return calculateCurrentEstimate(
+        currentDeviceType,
+        activeModelId,
+        selectedIssueId,
+        formData.device.model,
+        { iphoneOptionKey: selectedModalityKey }
+      );
+    } catch (err) {
+      console.error('Error calculando cotización en taller:', err);
+      return null;
+    }
+  }, [currentDeviceType, matchedModel, selectedIssueId, selectedModalityKey, formData.device.model, calculateCurrentEstimate]);
+
+  // Cálculo de fecha/hora de entrega estimada según matriz de tiempos
+  const getSuggestedDeliveryISO = (issueId, modalityKey, devType) => {
+    let hours = 3; // Estándar de 2 a 3 horas
+    if (issueId === 'motherboard') {
+      hours = 48; // Microelectrónica y diagnóstico complejo 24 a 48 hs
+    } else if (devType === 'iphone' && (issueId === 'back-glass' || issueId === 'battery' || modalityKey === 'ic_transplant')) {
+      hours = 24; // Reparaciones de precisión o láser 24 hs
+    } else if (issueId === 'custom') {
+      hours = 24;
+    }
+    const date = new Date(Date.now() + hours * 3600 * 1000);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const m = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${h}:${m}`;
+  };
+
+  // Generación automática de descripción técnica solicitada
+  const getSuggestedDescription = (issueId, devType, estimate, modelName) => {
+    if (issueId === 'screen') {
+      if (devType === 'iphone') {
+        const quality = estimate?.qualityLabel || 'Calidad Original / Premium';
+        return `Cambio de Módulo Pantalla (${quality}) + Reprogramación True Tone`;
+      }
+      const opt = estimate?.qualityLabel ? `(${estimate.qualityLabel})` : '';
+      return `Cambio de Módulo / Pantalla Completa ${opt}`.trim();
+    }
+    if (issueId === 'battery') {
+      if (devType === 'iphone') {
+        if (estimate?.selectedModality?.key === 'bms_transplant') {
+          return 'Cambio de Batería con Traspaso Flex BMS & Reprogramación 100% (Sin Aviso Apple)';
+        }
+        return 'Cambio de Batería Calidad Original / Premium';
+      }
+      return 'Cambio de Batería Original / Premium (Celdas Nuevas 100%)';
+    }
+    if (issueId === 'charging-port') {
+      return 'Reparación de Puerto de Carga / Subplaca de Alimentación';
+    }
+    if (issueId === 'back-glass') {
+      return devType === 'iphone' 
+        ? 'Cambio de Tapa Trasera de Vidrio con Remoción Láser (Conserva MagSafe)'
+        : 'Cambio de Tapa Trasera / Carcasa Original';
+    }
+    if (issueId === 'motherboard') {
+      return 'Diagnóstico y Reparación en Placa Madre (Microelectrónica)';
+    }
+    if (issueId === 'thermal-maintenance') {
+      return 'Limpieza Integral y Mantenimiento Térmico (Cambio de Pasta Térmica)';
+    }
+    if (issueId === 'custom') {
+      return '';
+    }
+    return estimate?.issueName || 'Reparación técnica';
+  };
+
+  // Manejar selección de modelo y autocompletar cotización en vivo en 1 clic
   const handleSelectModel = (modelObj) => {
+    const devType = modelObj.type === 'iphone' ? 'iphone' : (modelObj.type === 'notebook' ? 'notebook' : 'android');
+    const modelName = modelObj.model;
+    const brandName = modelObj.brand || formData.device.brand;
+
+    setModelSearchQuery(modelName);
+    setShowModelSuggestions(false);
+
+    let estimate = null;
+    if (selectedIssueId !== 'custom' && typeof calculateCurrentEstimate === 'function') {
+      estimate = calculateCurrentEstimate(
+        devType,
+        modelObj.id,
+        selectedIssueId,
+        modelName,
+        { iphoneOptionKey: selectedModalityKey }
+      );
+    }
+
+    const suggestedPrice = estimate?.minPrice ? estimate.minPrice.toString() : '';
+    const suggestedDesc = selectedIssueId !== 'custom' 
+      ? getSuggestedDescription(selectedIssueId, devType, estimate, modelName)
+      : formData.service.requestedRepair;
+    const suggestedTime = getSuggestedDeliveryISO(selectedIssueId, selectedModalityKey, devType);
+    const suggestedWarranty = estimate?.warranty || '90 días de garantía escrita';
+
     setFormData(prev => ({
       ...prev,
       device: {
         ...prev.device,
-        model: modelObj.model,
-        brand: modelObj.brand || prev.device.brand,
+        model: modelName,
+        brand: brandName,
         type: modelObj.type === 'iphone' ? 'iPhone' : (modelObj.type === 'notebook' ? 'Notebook' : 'Smartphone')
+      },
+      service: {
+        ...prev.service,
+        requestedRepair: suggestedDesc,
+        budgetTotal: suggestedPrice !== '' ? suggestedPrice : prev.service.budgetTotal,
+        estimatedDeliveryDate: suggestedTime,
+        warranty: prev.service.warranty || suggestedWarranty
       }
     }));
-    setModelSearchQuery(modelObj.model);
-    setShowModelSuggestions(false);
   };
 
   // Generar Tag ID interno si no tiene IMEI
@@ -242,7 +402,6 @@ export default function RepairOrderReceiver() {
   // Atajos rápidos de fecha estimada de entrega
   const setQuickDeliveryTime = (hoursFromNow) => {
     const date = new Date(Date.now() + hoursFromNow * 3600 * 1000);
-    // Formatear para input datetime-local: YYYY-MM-DDTHH:mm
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -257,6 +416,94 @@ export default function RepairOrderReceiver() {
         estimatedDeliveryDate: formatted
       }
     }));
+  };
+
+  // Repuestos compatibles encontrados en catálogos de proveedores
+  const matchingParts = useMemo(() => {
+    if (!formData.device.model || formData.device.model.trim().length < 2) return [];
+    return searchPartsForRepair(
+      formData.device.model,
+      formData.device.brand,
+      selectedIssueId,
+      formData.service.requestedRepair
+    );
+  }, [formData.device.model, formData.device.brand, selectedIssueId, formData.service.requestedRepair]);
+
+  // Categoría detectada y enlaces de búsqueda rápida directa
+  const detectedCategory = useMemo(() => {
+    return detectPartCategory(selectedIssueId, formData.service.requestedRepair);
+  }, [selectedIssueId, formData.service.requestedRepair]);
+
+  const quickSupplierLinks = useMemo(() => {
+    return generateQuickSupplierLinks(formData.device.model, detectedCategory.label);
+  }, [formData.device.model, detectedCategory.label]);
+
+  // Aplicar precio del cotizador directamente al presupuesto total
+  const handleApplyEstimatePrice = (price) => {
+    if (!price) return;
+    setFormData(prev => ({
+      ...prev,
+      service: {
+        ...prev.service,
+        budgetTotal: price.toString()
+      }
+    }));
+  };
+
+  // Manejar selección de falla con autocompletado total en 1 clic
+  const handleSelectIssueType = (issue, forcedModalityKey = null) => {
+    const issueId = issue.id;
+    setSelectedIssueId(issueId);
+
+    if (issueId === 'custom') {
+      setFormData(prev => ({
+        ...prev,
+        service: {
+          ...prev.service,
+          requestedRepair: '',
+          budgetTotal: '',
+          warranty: prev.service.warranty || '90 días de garantía escrita',
+          estimatedDeliveryDate: getSuggestedDeliveryISO('custom', null, currentDeviceType)
+        }
+      }));
+      return;
+    }
+
+    const activeModelId = matchedModel ? matchedModel.id : null;
+    const modalityToUse = forcedModalityKey || selectedModalityKey;
+    let estimate = null;
+
+    if (typeof calculateCurrentEstimate === 'function') {
+      estimate = calculateCurrentEstimate(
+        currentDeviceType,
+        activeModelId,
+        issueId,
+        formData.device.model,
+        { iphoneOptionKey: modalityToUse }
+      );
+    }
+
+    const suggestedPrice = estimate?.minPrice ? estimate.minPrice.toString() : '';
+    const suggestedDesc = getSuggestedDescription(issueId, currentDeviceType, estimate, formData.device.model);
+    const suggestedTime = getSuggestedDeliveryISO(issueId, modalityToUse, currentDeviceType);
+    const suggestedWarranty = estimate?.warranty || '90 días de garantía escrita';
+
+    setFormData(prev => ({
+      ...prev,
+      service: {
+        ...prev.service,
+        requestedRepair: suggestedDesc,
+        budgetTotal: suggestedPrice || prev.service.budgetTotal,
+        estimatedDeliveryDate: suggestedTime,
+        warranty: prev.service.warranty || suggestedWarranty
+      }
+    }));
+  };
+
+  // Cambiar modalidad de calidad (ej: iPhone Original vs Premium, o con/sin BMS)
+  const handleSelectModality = (mod) => {
+    setSelectedModalityKey(mod.key);
+    handleSelectIssueType({ id: selectedIssueId }, mod.key);
   };
 
   // Validar y Crear Orden
@@ -285,14 +532,19 @@ export default function RepairOrderReceiver() {
       return;
     }
 
+    const totalNum = parseFloat(formData.service.budgetTotal) || 0;
+    const depositNum = parseFloat(formData.service.deposit) || 0;
+
     // Guardar orden
     const savedOrder = createRepairOrder({
       customer: formData.customer,
       device: formData.device,
       service: {
         ...formData.service,
-        budgetTotal: parseFloat(formData.service.budgetTotal) || 0,
-        deposit: parseFloat(formData.service.deposit) || 0
+        budgetTotal: totalNum,
+        deposit: depositNum,
+        balanceDue: Math.max(0, totalNum - depositNum),
+        warranty: formData.service.warranty || '90 días de garantía escrita'
       }
     });
 
@@ -977,6 +1229,83 @@ export default function RepairOrderReceiver() {
               </div>
             </div>
 
+            {/* Selector Rápido de Tipo de Reparación / Falla */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
+                  <Wrench className="w-3.5 h-3.5 text-[#FF5500]" />
+                  <span>Tipo de Reparación Frecuente:</span>
+                </label>
+                <span className="text-[10px] text-zinc-500 font-mono">1-Clic</span>
+              </div>
+
+              <div className="grid grid-cols-4 gap-1.5 mb-2.5">
+                {COMMON_REPAIR_ISSUES.map((issue) => {
+                  const IconComponent = issue.icon;
+                  const isSelected = selectedIssueId === issue.id;
+                  return (
+                    <button
+                      key={issue.id}
+                      type="button"
+                      onClick={() => handleSelectIssueType(issue)}
+                      className={`p-1.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#FF5500]/20 border-[#FF5500] text-white shadow-[0_0_12px_rgba(255,85,0,0.3)]'
+                          : 'bg-zinc-950/90 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1">
+                        <IconComponent className={`w-3.5 h-3.5 ${isSelected ? 'text-[#FF5500]' : 'text-zinc-400'}`} />
+                        {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#FF5500]" />}
+                      </div>
+                      <span className="text-[10px] font-bold leading-tight truncate">{issue.badge}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Sub-selector de Calidades / Modalidades (iPhone True Tone / BMS o Calidades alternativas) */}
+              {liveEstimate?.modalities && liveEstimate.modalities.length > 1 && (
+                <div className="mb-2.5 p-2 rounded-xl bg-zinc-950 border border-[#FF5500]/30 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF5500] flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      <span>Calidad / Opciones de Repuesto:</span>
+                    </span>
+                    <span className="text-[9px] text-zinc-500 font-mono">1-Clic</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {liveEstimate.modalities.map((mod) => {
+                      const isModActive = (liveEstimate.selectedModality?.key === mod.key) || (selectedModalityKey === mod.key);
+                      return (
+                        <button
+                          key={mod.key}
+                          type="button"
+                          onClick={() => handleSelectModality(mod)}
+                          className={`p-2 rounded-lg border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                            isModActive
+                              ? 'bg-[#FF5500]/25 border-[#FF5500] text-white shadow-[0_0_10px_rgba(255,85,0,0.25)]'
+                              : 'bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between w-full mb-0.5">
+                            <span className="text-[10px] font-bold truncate">{mod.name}</span>
+                            {isModActive && <Check className="w-3 h-3 text-[#FF5500]" />}
+                          </div>
+                          <div className="text-[11px] font-mono font-bold text-zinc-200">
+                            ${mod.finalPrice?.toLocaleString('es-AR')} ARS
+                          </div>
+                          {mod.badge && (
+                            <span className="text-[9px] text-zinc-400 mt-0.5 truncate">{mod.badge}</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Falla Solicitada por el Cliente */}
             <div>
               <label className="block text-[11px] font-bold text-zinc-300 mb-1">
@@ -993,6 +1322,179 @@ export default function RepairOrderReceiver() {
                 placeholder="ej: Cambio de Módulo OLED por pantalla rota, sin imagen..."
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500]"
               />
+            </div>
+
+            {/* TARJETA DE COTIZACIÓN EN VIVO DEL PRESUPUESTADOR */}
+            <div className="rounded-xl border border-[#FF5500]/40 bg-gradient-to-br from-[#1C120B] via-zinc-950 to-zinc-950 p-3 shadow-md space-y-2">
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Calculator className="w-4 h-4 text-[#FF5500]" />
+                  <span className="text-xs font-bold text-white font-heading">Presupuestador Montec</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
+                    Dólar ${dolarRate || 1545}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsQuoteModalOpen(true)}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-[#FF5500] hover:text-[#FF6600] hover:underline cursor-pointer"
+                  title="Abrir cotizador interactivo para el cliente"
+                >
+                  <span>Abrir Cotizador</span>
+                  <ExternalLink className="w-3 h-3" />
+                </button>
+              </div>
+
+              {liveEstimate ? (
+                <div className="space-y-2">
+                  <div className="flex items-baseline justify-between">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-zinc-400">
+                        Precio Sugerido ({liveEstimate.qualityLabel ? (liveEstimate.qualityLabel.length > 30 ? liveEstimate.qualityLabel.substring(0, 30) + '...' : liveEstimate.qualityLabel) : 'Calidad Premium'}):
+                      </div>
+                      <div className="text-xl font-black font-mono text-[#FF5500] flex items-center gap-1.5">
+                        <span>
+                          {liveEstimate.minPrice === liveEstimate.maxPrice 
+                            ? `$${liveEstimate.minPrice.toLocaleString('es-AR')}`
+                            : `$${liveEstimate.minPrice.toLocaleString('es-AR')} - $${liveEstimate.maxPrice.toLocaleString('es-AR')}`}
+                        </span>
+                        <span className="text-[10px] text-zinc-400 font-normal">ARS</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleApplyEstimatePrice(liveEstimate.minPrice)}
+                      className="px-2.5 py-1.5 rounded-lg bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold shadow-[0_0_10px_rgba(255,85,0,0.4)] transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+                    >
+                      <Zap className="w-3 h-3 fill-white" />
+                      <span>Aplicar Precio</span>
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-400 border-t border-zinc-850 pt-1.5">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-zinc-500" />
+                      <span>{liveEstimate.duration || 'De 2 a 3 horas'}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                      <span>{liveEstimate.warranty || '30 días de garantía escrita'}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 py-1">
+                  <Info className="w-3.5 h-3.5 text-[#FF5500] shrink-0" />
+                  <span>
+                    {formData.device.model && formData.device.model.trim().length >= 2 
+                      ? 'Falla estándar sin precio de lista automático. Usa el cotizador completo o ingresa el presupuesto manual.' 
+                      : 'Seleccioná o escribí el Modelo en la Columna 2 para cotizar automáticamente en vivo con repuestos reales.'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* BLOQUE DE REPUESTOS DISPONIBLES & ENLACES DIRECTOS A PROVEEDORES */}
+            <div className="rounded-xl border border-zinc-800/90 bg-zinc-950/90 p-3 space-y-2.5 shadow-md">
+              <div className="flex items-center justify-between border-b border-zinc-850 pb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Package className="w-4 h-4 text-emerald-400" />
+                  <span className="text-xs font-bold text-zinc-200">
+                    Repuestos Disponibles ({matchingParts.length})
+                  </span>
+                </div>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  {detectedCategory.label}
+                </span>
+              </div>
+
+              {/* Repuestos encontrados en catálogo local con link de compra */}
+              {matchingParts.length > 0 ? (
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {(showAllParts ? matchingParts : matchingParts.slice(0, 4)).map((part, idx) => (
+                    <div
+                      key={idx}
+                      className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-between gap-2 text-xs transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold font-mono ${
+                            part.provider_key === 'cellstore' ? 'bg-blue-950 text-blue-300 border border-blue-800/60' :
+                            part.provider_key === 'smartsupply' ? 'bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/40' :
+                            part.provider_key === 'soulfix' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/60' :
+                            'bg-purple-950 text-purple-300 border border-purple-800/60'
+                          }`}>
+                            {part.provider}
+                          </span>
+                          <span className={`text-[9px] font-semibold ${part.in_stock ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                            {part.in_stock ? '🟢 En Stock' : '⚪ Consultar'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] font-medium text-zinc-200 truncate" title={part.name}>
+                          {part.name}
+                        </div>
+                        <div className="text-[11px] font-bold font-mono text-zinc-300">
+                          Costo: ${(part.price_cash_ars || 0).toLocaleString('es-AR')} ARS
+                        </div>
+                      </div>
+
+                      {part.url ? (
+                        <a
+                          href={part.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 px-2 py-1.5 rounded-lg bg-zinc-800 hover:bg-[#FF5500] text-zinc-200 hover:text-white border border-zinc-700 transition-all text-[11px] flex items-center gap-1 font-semibold cursor-pointer"
+                          title="Abrir ficha del producto en proveedor"
+                        >
+                          <span>Ver</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        <span className="text-[10px] text-zinc-500 italic">Sin link</span>
+                      )}
+                    </div>
+                  ))}
+
+                  {matchingParts.length > 4 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllParts(!showAllParts)}
+                      className="w-full text-center text-[11px] text-zinc-400 hover:text-[#FF5500] py-1 cursor-pointer"
+                    >
+                      {showAllParts ? '▲ Mostrar menos repuestos' : `▼ Ver ${matchingParts.length - 4} repuestos más...`}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="text-[11px] text-zinc-500 italic py-1">
+                  {formData.device.model && formData.device.model.trim().length >= 2
+                    ? 'No se encontraron repuestos catalogados exactos con este nombre. Podés buscarlo con los accesos directos abajo:'
+                    : 'Escribe el modelo en la Columna 2 para ver repuestos disponibles y links directos.'}
+                </div>
+              )}
+
+              {/* Enlaces de Búsqueda Rápida en Proveedores */}
+              <div className="pt-2 border-t border-zinc-850">
+                <div className="text-[10px] uppercase font-bold text-zinc-400 mb-1.5">
+                  Buscar repuesto en tiendas de repuestos:
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {quickSupplierLinks.map((link, i) => (
+                    <a
+                      key={i}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2 py-1 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white flex items-center justify-between text-[10px] font-medium transition-colors group cursor-pointer"
+                    >
+                      <span className="truncate">{link.name}</span>
+                      <ExternalLink className="w-3 h-3 text-zinc-500 group-hover:text-[#FF5500] shrink-0 ml-1" />
+                    </a>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Diagnóstico Previo de Entrada */}
@@ -1053,9 +1555,20 @@ export default function RepairOrderReceiver() {
             <div className="bg-gradient-to-r from-zinc-950 via-[#1C120C] to-zinc-950 p-3 rounded-xl border border-[#FF5500]/40 space-y-2 shadow-inner">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[11px] font-bold text-zinc-300 mb-1">
-                    Presupuesto Total ($)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-zinc-300">
+                      Presupuesto Total ($)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCostModalOpen(true)}
+                      className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 hover:text-amber-300 bg-amber-400/10 hover:bg-amber-400/20 px-2 py-0.5 rounded-lg border border-amber-400/30 transition-colors cursor-pointer"
+                      title="Ver desglose de costo de repuesto proveedor vs mano de obra"
+                    >
+                      <Lightbulb className="w-3 h-3 text-amber-400" />
+                      <span>💡 Ver Cotización / Costos</span>
+                    </button>
+                  </div>
                   <input
                     type="number"
                     value={formData.service.budgetTotal}
@@ -1096,6 +1609,46 @@ export default function RepairOrderReceiver() {
               </div>
             </div>
 
+            {/* Garantía Escrita Acordada */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Garantía Escrita Acordada:</span>
+                </label>
+                <div className="flex items-center gap-1 text-[10px]">
+                  {['30 días', '60 días', '90 días', '180 días'].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        service: { ...prev.service, warranty: `${d} de garantía escrita` }
+                      }))}
+                      className={`px-1.5 py-0.5 rounded border transition-colors cursor-pointer ${
+                        formData.service.warranty?.startsWith(d)
+                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-bold'
+                          : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border-zinc-800'
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <input
+                type="text"
+                value={formData.service.warranty || ''}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  service: { ...prev.service, warranty: e.target.value }
+                }))}
+                placeholder="ej: 90 días de garantía escrita..."
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-[#FF5500]"
+              />
+            </div>
+
             {/* Fecha y Hora de Entrega Pactada */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -1116,6 +1669,13 @@ export default function RepairOrderReceiver() {
                     className="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 cursor-pointer"
                   >
                     +24hs
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuickDeliveryTime(48)}
+                    className="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 cursor-pointer"
+                  >
+                    +48hs
                   </button>
                 </div>
               </div>
@@ -1166,6 +1726,19 @@ export default function RepairOrderReceiver() {
           onClose={() => setActiveSubModal(null)}
         />
       )}
+
+      {/* SUB-MODAL 3: DESGLOSE DE COSTOS Y COTIZADOR POPUP */}
+      <CostBreakdownModal
+        isOpen={isCostModalOpen}
+        onClose={() => setIsCostModalOpen(false)}
+        device={formData.device}
+        issue={COMMON_REPAIR_ISSUES.find(i => i.id === selectedIssueId)}
+        liveEstimate={liveEstimate}
+        matchingParts={matchingParts}
+        dolarRate={dolarRate}
+        onApplyPrice={(price) => handleApplyEstimatePrice(price)}
+        onOpenFullQuoter={() => setIsQuoteModalOpen(true)}
+      />
 
     </div>
   );

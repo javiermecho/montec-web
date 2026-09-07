@@ -21,7 +21,7 @@ export default function OrderTicketModal({ order, onClose }) {
 
     const depositStr = service.deposit > 0 
       ? `$${service.deposit.toLocaleString('es-AR')}` 
-      : '$0';
+      : '$0 (Sin seña previa)';
 
     const deliveryDateStr = service.estimatedDeliveryDate 
       ? new Date(service.estimatedDeliveryDate).toLocaleDateString('es-AR', {
@@ -33,17 +33,19 @@ export default function OrderTicketModal({ order, onClose }) {
         }) 
       : 'A coordinar';
 
+    const warrantyStr = service.warranty || '90 días de garantía escrita';
+
     const text = 
       `¡Hola ${customer.name || 'Cliente'}! 👋 En *montec* hemos recibido tu equipo para servicio técnico.%0A%0A` +
       `📋 *ORDEN DE REPARACIÓN:* ${order.orderNumber}%0A` +
       `📱 *Equipo:* ${device.brand} ${device.model}%0A` +
       `🛠️ *Trabajo a realizar:* ${service.requestedRepair || 'Diagnóstico y reparación general'}%0A` +
-      `💰 *Presupuesto Total:* $${(service.budgetTotal || 0).toLocaleString('es-AR')}%0A` +
-      `💵 *Seña abonada:* ${depositStr}%0A` +
-      `⚖️ *Saldo pendiente al retirar:* ${balanceStr}%0A` +
-      `⏱️ *Fecha estimada de entrega:* ${deliveryDateStr}%0A` +
+      `💰 *Total Acordado:* $${(service.budgetTotal || 0).toLocaleString('es-AR')}%0A` +
+      `💵 *Seña Recibida:* ${depositStr}%0A` +
+      `⚖️ *Saldo al Retirar:* ${balanceStr}%0A` +
+      `⏱️ *Plazo estimado:* ${deliveryDateStr}%0A` +
       `📍 *Taller:* ${TALLER_ADDRESS}%0A` +
-      `🛡️ *Garantía escrita:* 30 días%0A%0A` +
+      `🛡️ *Garantía:* ${warrantyStr}%0A%0A` +
       `Te avisaremos por este medio cuando tu equipo esté en mesa de trabajo o listo para retirar. ¡Gracias por confiar en montec!`;
 
     const cleanPhone = (customer.phone || '').replace(/[^0-9]/g, '');
@@ -312,12 +314,18 @@ export default function OrderTicketModal({ order, onClose }) {
             </div>
             {service.estimatedDeliveryDate && (
               <div className="text-[10px] text-zinc-400 print:text-gray-600 pt-1 flex items-center justify-between">
-                <span>Fecha pactada de entrega:</span>
+                <span>Plazo estimado de entrega:</span>
                 <span className="font-bold text-zinc-200 print:text-black">
                   {formatDate(service.estimatedDeliveryDate)}
                 </span>
               </div>
             )}
+            <div className="text-[10px] text-zinc-400 print:text-gray-600 pt-0.5 flex items-center justify-between">
+              <span>Garantía pactada:</span>
+              <span className="font-bold text-emerald-400 print:text-black">
+                {service.warranty || '90 días de garantía escrita'}
+              </span>
+            </div>
           </div>
 
           {/* Términos y Condiciones Legales & Firmas */}
@@ -326,7 +334,7 @@ export default function OrderTicketModal({ order, onClose }) {
               TÉRMINOS Y CONDICIONES DEL SERVICIO TÉCNICO:
             </p>
             <ul className="list-disc pl-3 space-y-0.5">
-              <li>Todas las reparaciones cuentan con <strong>30 días de garantía formal escrita</strong> exclusivamente sobre la pieza reemplazada o trabajo realizado. No cubre roturas físicas, humedad o manipulación de terceros.</li>
+              <li>Todas las reparaciones cuentan con <strong>{service.warranty || '90 días de garantía formal escrita'}</strong> exclusivamente sobre la pieza reemplazada o trabajo realizado. No cubre roturas físicas, humedad o manipulación de terceros.</li>
               <li>El cliente declara que el equipo no es de procedencia ilícita y autoriza las pruebas de banco de trabajo pertinentes.</li>
               <li>Pasados los 60 días corridos de la fecha de entrega pactada sin retiro del equipo, se devengarán cargos por depósito y guarda según legislación civil vigente.</li>
             </ul>
