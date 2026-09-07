@@ -25,7 +25,9 @@ const STORAGE_KEYS = {
   ACCESSORIES: 'montec_accessories_v2', // v2 para actualizar datos de fotos
   PRICING_RULES: 'montec_pricing_rules_v1', // Reglas de márgenes y mano de obra Android
   IPHONE_CONFIGS: 'montec_iphone_configs_v3', // v3: Modalidades condicionales por modelo iPhone (Baterías pre-XS vs post-XS, Pantallas pre-11 vs post-11)
-  AUTH: 'montec_admin_auth'
+  AUTH: 'montec_admin_auth',
+  EMPLOYEE_AUTH: 'montec_employee_auth_v1',
+  ORDERS: 'montec_repair_orders_v1'
 };
 
 const DEFAULT_PRICING_RULES = {
@@ -100,11 +102,110 @@ export function DataProvider({ children }) {
     return localStorage.getItem(STORAGE_KEYS.AUTH) === 'true';
   });
 
+  // 4.1 Estado de autenticación de empleados / taller
+  const [isEmployeeAuthenticated, setIsEmployeeAuthenticated] = useState(() => {
+    return localStorage.getItem(STORAGE_KEYS.EMPLOYEE_AUTH) === 'true';
+  });
+
+  // 4.2 Órdenes de reparación de taller
+  const [orders, setOrders] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.ORDERS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+      return [
+        {
+          id: 'order-sample-1',
+          orderNumber: '#MON-1041',
+          createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+          updatedAt: new Date(Date.now() - 1 * 3600 * 1000).toISOString(),
+          customer: {
+            docType: 'DNI',
+            docNumber: '38492019',
+            name: 'Martín Benítez',
+            taxCondition: 'Consumidor Final',
+            phone: '+54 9 223 512-3456',
+            email: 'martin.b@gmail.com',
+            sendWhatsApp: true,
+            sendEmail: false,
+            internalNotes: 'Cliente habitual recomendado por local vecino.'
+          },
+          device: {
+            type: 'iPhone',
+            brand: 'Apple',
+            model: 'iPhone 13',
+            imei: '358920104829102',
+            color: 'Midnight Black',
+            aestheticCondition: 'Bisel con marcas leves de uso, templado roto.',
+            security: {
+              type: 'pin',
+              pin: '147258',
+              patternSequence: [],
+              accountInfo: ''
+            }
+          },
+          service: {
+            location: 'En Taller (Montes Carballo)',
+            requestedRepair: 'Cambio de Módulo de Pantalla Completa Original',
+            preliminaryDiagnosis: 'Display OLED quebrado con líneas verdes verticales tras caída.',
+            checklist: {
+              turnsOn: true,
+              touchOk: false,
+              camerasOk: true,
+              audioOk: true,
+              chargingOk: true,
+              biometricsOk: true,
+              simTrayPresent: true
+            },
+            budgetTotal: 125000,
+            deposit: 50000,
+            balanceDue: 75000,
+            estimatedDeliveryDate: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
+            status: 'in_progress',
+            technician: 'Taller Montec'
+          },
+          logs: [
+            {
+              timestamp: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+              action: 'Recepción en mostrador y pago de seña $50.000',
+              status: 'received'
+            },
+            {
+              timestamp: new Date(Date.now() - 1 * 3600 * 1000).toISOString(),
+              action: 'Ingresado a mesa de trabajo para reemplazo de display',
+              status: 'in_progress'
+            }
+          ]
+        }
+      ];
+    } catch {
+      return [];
+    }
+  });
+
   // 5. Estado de apertura del modal de admin
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   // 5.1 Estado de apertura del modal de cotizador interactivo
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+
+  // 5.2 Estado de apertura del sistema de taller / mostrador
+  const [isTallerOpen, setIsTallerOpen] = useState(() => {
+    return typeof window !== 'undefined' && (window.location.hash === '#taller' || window.location.hash === '#empleados');
+  });
+
+  // Escuchar cambios de hash para abrir módulo taller directamente
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#taller' || window.location.hash === '#empleados') {
+        setIsTallerOpen(true);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // 6. Cotización del Dólar Blue Venta (Bluelytics API)
   const [dolarRate, setDolarRate] = useState(DEFAULT_FALLBACK_RATE);
@@ -194,10 +295,12 @@ export function DataProvider({ children }) {
     localStorage.setItem(STORAGE_KEYS.IPHONE_CONFIGS, JSON.stringify(defaults));
   };
 
-  // Autenticación por PIN
+  // Autenticación por PIN Administrador
   const loginAdmin = (pin) => {
-    if (pin === 'montec2026' || pin === '2026' || pin === 'admin') {
+    const cleanPin = (pin || '').trim().toLowerCase();
+    if (cleanPin === 'montec2026' || cleanPin === '2026' || cleanPin === 'admin') {
       setIsAdminAuthenticated(true);
+      localStorage.setItem(STORAGE_KEYS.AUTH, 'true');
       return true;
     }
     return false;
@@ -205,6 +308,131 @@ export function DataProvider({ children }) {
 
   const logoutAdmin = () => {
     setIsAdminAuthenticated(false);
+    localStorage.removeItem(STORAGE_KEYS.AUTH);
+  };
+
+  // Autenticación por PIN Empleados / Taller
+  const loginEmployee = (pin) => {
+    const cleanPin = (pin || '').trim().toLowerCase();
+    if (
+      cleanPin === 'montec2026' || 
+      cleanPin === '2026' || 
+      cleanPin === 'taller' || 
+      cleanPin === 'admin' || 
+      cleanPin === 'empleados'
+    ) {
+      setIsEmployeeAuthenticated(true);
+      localStorage.setItem(STORAGE_KEYS.EMPLOYEE_AUTH, 'true');
+      return true;
+    }
+    return false;
+  };
+
+  const logoutEmployee = () => {
+    setIsEmployeeAuthenticated(false);
+    localStorage.removeItem(STORAGE_KEYS.EMPLOYEE_AUTH);
+  };
+
+  // --- Operaciones de Órdenes de Reparación ---
+  const createRepairOrder = (orderData) => {
+    // Generar correlativo automático #MON-XXXX
+    const nextNumber = orders.reduce((max, o) => {
+      const num = parseInt((o.orderNumber || '').replace(/[^0-9]/g, ''), 10);
+      return !isNaN(num) && num > max ? num : max;
+    }, 1041) + 1;
+
+    const orderNumber = `#MON-${nextNumber}`;
+    const newOrder = {
+      ...orderData,
+      id: `order-${Date.now()}`,
+      orderNumber,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status: orderData.status || 'received',
+      logs: [
+        {
+          timestamp: new Date().toISOString(),
+          action: 'Recepción e ingreso de orden a taller',
+          status: orderData.status || 'received'
+        }
+      ]
+    };
+
+    setOrders(prev => {
+      const updated = [newOrder, ...prev];
+      try {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error guardando orden en localStorage:', e);
+      }
+      return updated;
+    });
+
+    return newOrder;
+  };
+
+  const updateRepairOrderStatus = (orderId, newStatus, note = '') => {
+    setOrders(prev => {
+      const updated = prev.map(o => {
+        if (o.id !== orderId && o.orderNumber !== orderId) return o;
+        const newLogs = [
+          ...(o.logs || []),
+          {
+            timestamp: new Date().toISOString(),
+            action: note || `Estado cambiado a: ${newStatus}`,
+            status: newStatus
+          }
+        ];
+        return {
+          ...o,
+          status: newStatus,
+          updatedAt: new Date().toISOString(),
+          logs: newLogs
+        };
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error actualizando orden:', e);
+      }
+      return updated;
+    });
+  };
+
+  const deleteRepairOrder = (orderId) => {
+    setOrders(prev => {
+      const updated = prev.filter(o => o.id !== orderId && o.orderNumber !== orderId);
+      try {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error eliminando orden:', e);
+      }
+      return updated;
+    });
+  };
+
+  // Búsqueda rápida de clientes históricos
+  const searchClients = (query) => {
+    if (!query || query.trim().length < 2) return [];
+    const q = query.toLowerCase().trim();
+    const clientMap = new Map();
+
+    orders.forEach(o => {
+      const c = o.customer;
+      if (!c) return;
+      const key = `${c.docNumber || ''}_${c.name || ''}_${c.phone || ''}`;
+      if (
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.docNumber && c.docNumber.includes(q)) ||
+        (c.phone && c.phone.includes(q))
+      ) {
+        if (!clientMap.has(key)) {
+          clientMap.set(key, c);
+        }
+      }
+    });
+
+    return Array.from(clientMap.values());
   };
 
   // --- Operaciones de Modelos ---
@@ -624,7 +852,17 @@ export function DataProvider({ children }) {
       updateAccessory,
       deleteAccessory,
       resetToDefaults,
-      calculateCurrentEstimate
+      calculateCurrentEstimate,
+      orders,
+      isEmployeeAuthenticated,
+      isTallerOpen,
+      setIsTallerOpen,
+      loginEmployee,
+      logoutEmployee,
+      createRepairOrder,
+      updateRepairOrderStatus,
+      deleteRepairOrder,
+      searchClients
     }}>
       {children}
     </DataContext.Provider>

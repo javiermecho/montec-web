@@ -1,11 +1,11 @@
 import React from 'react';
-import { MessageCircle, Instagram, MapPin, ShieldCheck, ArrowUp, Sliders } from 'lucide-react';
+import { MessageCircle, Instagram, MapPin, ShieldCheck, ArrowUp, Sliders, Lock, ClipboardList } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
 import { trackClickLlamadaOMapa } from '../services/analytics';
 
 export default function Footer() {
-  const { setIsAdminOpen } = useData();
+  const { setIsAdminOpen, setIsTallerOpen } = useData();
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -94,14 +94,24 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* Botón de acceso técnico */}
-            <button
-              onClick={() => setIsAdminOpen(true)}
-              className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-[#FF5500] transition-colors pt-2 border-t border-zinc-850"
-            >
-              <Sliders className="w-3.5 h-3.5 text-[#FF5500]" />
-              <span>Panel Técnico / Admin</span>
-            </button>
+            {/* Botones de acceso técnico y mostrador */}
+            <div className="pt-2 border-t border-zinc-800/80 flex flex-col gap-2">
+              <button
+                onClick={() => setIsTallerOpen(true)}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-300 hover:text-[#FF5500] transition-colors group text-left cursor-pointer"
+              >
+                <Lock className="w-3.5 h-3.5 text-[#FF5500] group-hover:scale-110 transition-transform" />
+                <span>🔒 Acceso Empleados / Taller</span>
+              </button>
+
+              <button
+                onClick={() => setIsAdminOpen(true)}
+                className="inline-flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors text-left"
+              >
+                <Sliders className="w-3 h-3 text-zinc-500" />
+                <span>Panel Técnico / Admin</span>
+              </button>
+            </div>
           </div>
 
         </div>

@@ -8,13 +8,14 @@ import LocationContact from './components/LocationContact';
 import Footer from './components/Footer';
 import AdminPanel from './components/AdminPanel';
 import DiagnosticChatbot from './components/DiagnosticChatbot';
+import RepairOrderReceiver from './components/taller/RepairOrderReceiver';
 import { DataProvider } from './context/DataContext';
 
 export default function App() {
   return (
     <DataProvider>
       <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col selection:bg-[#FF5500] selection:text-white">
-        {/* Navbar flotante superior con acceso admin */}
+        {/* Navbar flotante superior con acceso admin y taller */}
         <Navbar />
 
         {/* Contenido Principal */}
@@ -34,6 +35,9 @@ export default function App() {
 
         {/* Panel Administrador (Modal overlay cuando se activa) */}
         <AdminPanel />
+
+        {/* Módulo Privado de Taller / Receptor de Órdenes */}
+        <RepairOrderReceiver />
       </div>
     </DataProvider>
   );

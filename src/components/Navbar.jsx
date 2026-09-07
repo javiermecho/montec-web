@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Menu, X, Shield, Lock, Sliders } from 'lucide-react';
+import { MessageCircle, Menu, X, Shield, Lock, Sliders, ClipboardList } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
 import { trackClickLlamadaOMapa } from '../services/analytics';
 
 export default function Navbar() {
-  const { setIsAdminOpen, isAdminAuthenticated, setIsQuoteModalOpen } = useData();
+  const { setIsAdminOpen, isAdminAuthenticated, setIsQuoteModalOpen, setIsTallerOpen, isEmployeeAuthenticated } = useData();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isOpenNow, setIsOpenNow] = useState(true);
@@ -118,6 +118,19 @@ export default function Navbar() {
               <span>WhatsApp</span>
             </a>
 
+            {/* Acceso a Órdenes de Taller / Recepción */}
+            <button
+              onClick={() => setIsTallerOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-xl transition-all relative group shadow-sm cursor-pointer"
+              title="Recepción de Órdenes & Taller"
+            >
+              <ClipboardList className="w-3.5 h-3.5 text-[#FF5500]" />
+              <span className="font-mono">Taller</span>
+              {isEmployeeAuthenticated && (
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              )}
+            </button>
+
             {/* Acceso directo al Panel Administrador */}
             <button
               onClick={() => setIsAdminOpen(true)}
@@ -133,6 +146,18 @@ export default function Navbar() {
 
           {/* Botón menú móvil */}
           <div className="flex md:hidden items-center space-x-2">
+            <button
+              onClick={() => setIsTallerOpen(true)}
+              className="p-2 text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-lg relative"
+              aria-label="Taller y Órdenes"
+              title="Taller"
+            >
+              <ClipboardList className="w-4 h-4 text-[#FF5500]" />
+              {isEmployeeAuthenticated && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full" />
+              )}
+            </button>
+
             <button
               onClick={() => setIsAdminOpen(true)}
               className="p-2 text-[#FF5500] bg-zinc-900 border border-zinc-800 rounded-lg"
@@ -206,12 +231,28 @@ export default function Navbar() {
             <button
               onClick={() => {
                 setMobileMenuOpen(false);
-                setIsAdminOpen(true);
+                setIsTallerOpen(true);
               }}
-              className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-[#FF5500] bg-zinc-900/60 rounded-lg mt-2"
+              className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-white bg-zinc-900 border border-zinc-800 rounded-lg mt-2"
             >
               <span className="flex items-center gap-2">
-                <Sliders className="w-4 h-4" />
+                <ClipboardList className="w-4 h-4 text-[#FF5500]" />
+                <span>Recepción de Taller & Órdenes</span>
+              </span>
+              <span className="text-[11px] px-1.5 py-0.5 rounded bg-[#FF5500]/20 text-[#FF5500] font-mono">
+                {isEmployeeAuthenticated ? 'Activo' : '🔒 Acceso'}
+              </span>
+            </button>
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setIsAdminOpen(true);
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-zinc-300 bg-zinc-900/60 rounded-lg mt-1"
+            >
+              <span className="flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-zinc-400" />
                 <span>Panel Técnico / Admin</span>
               </span>
               <span className="text-xs text-zinc-500 font-mono">PIN</span>
