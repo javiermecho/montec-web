@@ -11,14 +11,16 @@ import { getMinimumRepairPrice } from '../data/repairData.js';
 function formatToModule(p, provider) {
   const usd = p.price_usd || (p.price_cash_ars ? p.price_cash_ars / DEFAULT_FALLBACK_RATE : 0);
   return {
-    id: `${provider}-${p.sku || p.name}`,
+    id: `${provider}-${p.sku ? p.sku + '-' : ''}${p.name || ''}`,
+    sku: p.sku || '',
     raw_name: p.name || '',
     brand: p.brand || '',
     part_type: p.part_type || (p.name && p.name.toUpperCase().startsWith('MODULO') ? 'modulo' : ''),
     cost_usd: usd,
     cost_ars: p.price_cash_ars || Math.round(usd * DEFAULT_FALLBACK_RATE),
     in_stock: p.in_stock !== false,
-    provider
+    provider,
+    url: p.url || ''
   };
 }
 

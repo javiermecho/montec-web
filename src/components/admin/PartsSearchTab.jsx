@@ -1082,7 +1082,7 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
 
                   return (
                     <tr 
-                      key={`${part.providerId}-${part.sku || idx}`}
+                      key={`${part.providerId}-${part.sku || 'nosku'}-${part.name}-${idx}`}
                       className="hover:bg-[#202024]/80 transition-colors group"
                     >
                       {/* 1. Modelo */}
@@ -1235,7 +1235,7 @@ export default function PartsSearchTab({ dolarRate = 1545, pricingRules }) {
 
             return (
               <div 
-                key={`${part.providerId}-${part.sku || idx}`}
+                key={`${part.providerId}-${part.sku || 'nosku'}-${part.name}-${idx}`}
                 className="bg-[#18181b]/90 hover:bg-[#1f1f23] border border-zinc-800/90 hover:border-zinc-700/80 rounded-2xl p-4 flex flex-col justify-between transition-all duration-200 shadow-md group relative"
               >
                 {/* Cabecera de la tarjeta: Proveedor + Stock */}
