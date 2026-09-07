@@ -170,19 +170,32 @@ async function runScraper() {
     await new Promise(r => setTimeout(r, 400));
   }
 
-  // Verificar y ajustar con precisión los productos con variantes / tapas / Ver el producto en sus páginas reales
-  const variantParts = allParts.filter(p => p.part_type === 'tapa' || p.hasViewButton || p.name.toUpperCase().includes('ELEGIR COLOR'));
-  console.log(`\nVerificando ${variantParts.length} productos con opciones/variantes en sus páginas reales...`);
+  // Verificar y ajustar con precisión los productos clave (módulos, baterías, tapas y variantes) en sus páginas reales
+  const partsToVerify = allParts.filter(p => 
+    p.part_type === 'modulo' || 
+    p.part_type === 'bateria' || 
+    p.part_type === 'tapa' || 
+    p.hasViewButton || 
+    p.name.toUpperCase().includes('ELEGIR COLOR')
+  );
+  console.log(`\nVerificando ${partsToVerify.length} productos clave en sus páginas reales para confirmar stock exacto...`);
   
-  for (let i = 0; i < variantParts.length; i += 5) {
-    const batch = variantParts.slice(i, i + 5);
+  for (let i = 0; i < partsToVerify.length; i += 6) {
+    const batch = partsToVerify.slice(i, i + 6);
     await Promise.all(batch.map(async (t) => {
       if (!t.url) return;
       try {
-        const res = await fetch(t.url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const res = await fetch(t.url, { 
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          signal: AbortSignal.timeout(8000)
+        });
         const html = await res.text();
 
-        const isAgotado = html.includes('btn-outline-danger') || html.includes('>AGOTADO<') || html.includes('x18">AGOTADO</span>') || html.includes('id="cartel-sin-stock"');
+        const isAgotado = html.includes('btn-outline-danger') || 
+                          html.includes('>AGOTADO<') || 
+                          html.includes('x18">AGOTADO</span>') || 
+                          html.includes('id="cartel-sin-stock"') ||
+                          html.includes('filtros-disponibilidad-productos" value=\'{"0__0__0__0":0}\'');
         const efvoMatch = html.match(/\$([\d\.\,]+)\s+En efectivo\/transferencia/i);
         const listaMatch = html.match(/class="[^"]*precio-lista[^"]*">\$?([\d\.\,]+)/i);
 
