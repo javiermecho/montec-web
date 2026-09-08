@@ -64,7 +64,8 @@ export default function AdminPanel() {
     dolarRate,
     orders,
     panelTheme,
-    togglePanelTheme
+    togglePanelTheme,
+    setIsTallerOpen
   } = useData();
 
   const isLight = panelTheme === 'light';
@@ -313,7 +314,7 @@ export default function AdminPanel() {
 
           <button
             onClick={logoutAdmin}
-            className="px-3 py-1.5 text-xs text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 border border-zinc-800 transition-colors"
+            className="px-3.5 py-1.5 text-xs text-zinc-200 hover:text-white rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 transition-colors font-semibold"
           >
             Cerrar Sesión
           </button>
@@ -435,6 +436,7 @@ export default function AdminPanel() {
         {activeTab === 'orders' && (
           <RepairOrdersManager
             isEmbedded={true}
+            onNewOrder={() => setIsTallerOpen(true)}
             onClose={() => setActiveTab('models')}
           />
         )}
@@ -617,9 +619,13 @@ export default function AdminPanel() {
                       showToast('Valores sugeridos de iPhone restaurados.');
                     }
                   }}
-                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white text-xs font-semibold transition-colors"
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors ${
+                    isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                      : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 hover:text-white'
+                  }`}
                 >
-                  <RotateCcw className="w-3.5 h-3.5 text-zinc-400" />
+                  <RotateCcw className="w-3.5 h-3.5 text-[#FF5500]" />
                   <span>Restaurar Sugeridos</span>
                 </button>
               </div>
@@ -1014,7 +1020,11 @@ export default function AdminPanel() {
                     resetPricingRules();
                     showToast('Reglas restablecidas a los valores de Montec ($30k / $80k / x2)');
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white text-xs font-semibold transition-colors"
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
+                    isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                      : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 hover:text-white'
+                  }`}
                 >
                   Restaurar Predeterminados
                 </button>
@@ -1088,7 +1098,7 @@ export default function AdminPanel() {
                     updatePricingRules(rulesForm);
                     showToast('Reglas de márgenes comerciales actualizadas con éxito');
                   }}
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-black font-bold text-xs transition-all shadow-[0_0_15px_rgba(255,85,0,0.35)]"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white font-bold text-xs transition-all shadow-[0_0_15px_rgba(255,85,0,0.35)]"
                 >
                   <Save className="w-4 h-4" />
                   <span>Guardar Reglas de Márgenes</span>
@@ -1373,7 +1383,11 @@ export default function AdminPanel() {
                 </p>
                 <button
                   onClick={handleExportData}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold transition-colors"
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                    isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+                      : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                  }`}
                 >
                   <Download className="w-4 h-4 text-[#FF5500]" />
                   <span>Descargar Respaldo JSON</span>

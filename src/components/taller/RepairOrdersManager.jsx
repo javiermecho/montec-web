@@ -53,8 +53,8 @@ export const STATUS_CONFIG = {
     label: 'Recibido (En Cola)',
     shortLabel: 'Recibido',
     color: 'zinc',
-    badgeClass: 'bg-zinc-800/90 text-zinc-200 border-zinc-700',
-    lightBadgeClass: 'bg-slate-100 text-slate-700 border-slate-300',
+    badgeClass: 'bg-zinc-800 text-zinc-100 border-zinc-600',
+    lightBadgeClass: 'bg-slate-100 text-slate-800 border-slate-300',
     dotClass: 'bg-zinc-400',
     icon: Clock
   },
@@ -62,8 +62,8 @@ export const STATUS_CONFIG = {
     label: 'Espera Autorización',
     shortLabel: 'Presupuesto Pendiente',
     color: 'purple',
-    badgeClass: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
-    lightBadgeClass: 'bg-purple-50 text-purple-700 border-purple-200',
+    badgeClass: 'bg-purple-950/60 text-purple-200 border-purple-500/40',
+    lightBadgeClass: 'bg-purple-50 text-purple-800 border-purple-200',
     dotClass: 'bg-purple-400',
     icon: HelpCircle
   },
@@ -71,8 +71,8 @@ export const STATUS_CONFIG = {
     label: 'Espera de Repuesto',
     shortLabel: 'Faltante de Stock',
     color: 'amber',
-    badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-    lightBadgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+    badgeClass: 'bg-amber-950/60 text-amber-200 border-amber-500/40',
+    lightBadgeClass: 'bg-amber-50 text-amber-900 border-amber-200',
     dotClass: 'bg-amber-400',
     icon: Package
   },
@@ -80,8 +80,8 @@ export const STATUS_CONFIG = {
     label: 'En Mesa de Trabajo',
     shortLabel: 'En Reparación',
     color: 'sky',
-    badgeClass: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
-    lightBadgeClass: 'bg-sky-50 text-sky-700 border-sky-200',
+    badgeClass: 'bg-sky-950/60 text-sky-200 border-sky-500/40',
+    lightBadgeClass: 'bg-sky-50 text-sky-800 border-sky-200',
     dotClass: 'bg-sky-400',
     icon: Wrench
   },
@@ -89,8 +89,8 @@ export const STATUS_CONFIG = {
     label: 'Listo para Retirar',
     shortLabel: 'Reparado OK',
     color: 'emerald',
-    badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-    lightBadgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    badgeClass: 'bg-emerald-950/60 text-emerald-200 border-emerald-500/40',
+    lightBadgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
     dotClass: 'bg-emerald-400',
     icon: CheckCircle2
   },
@@ -98,8 +98,8 @@ export const STATUS_CONFIG = {
     label: 'Sin Reparación',
     shortLabel: 'Devolución',
     color: 'rose',
-    badgeClass: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
-    lightBadgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+    badgeClass: 'bg-rose-950/60 text-rose-200 border-rose-500/40',
+    lightBadgeClass: 'bg-rose-50 text-rose-800 border-rose-200',
     dotClass: 'bg-rose-400',
     icon: AlertTriangle
   },
@@ -107,9 +107,9 @@ export const STATUS_CONFIG = {
     label: 'Entregado (Cerrado)',
     shortLabel: 'Entregado',
     color: 'slate',
-    badgeClass: 'bg-zinc-900/90 text-zinc-500 border-zinc-800 line-through',
-    lightBadgeClass: 'bg-slate-100 text-slate-500 border-slate-300 line-through',
-    dotClass: 'bg-zinc-600',
+    badgeClass: 'bg-zinc-800/80 text-zinc-300 border-zinc-700 line-through',
+    lightBadgeClass: 'bg-slate-100 text-slate-600 border-slate-300 line-through',
+    dotClass: 'bg-zinc-500',
     icon: Shield
   }
 };
@@ -502,15 +502,17 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
             onClick={() => setStatusFilter('all')}
             className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 border ${
               statusFilter === 'all'
-                ? (isLight ? 'bg-[#FF5500] text-white border-[#FF5500] shadow-sm' : 'bg-zinc-200 text-zinc-900 border-zinc-200 shadow')
-                : (isLight ? 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50' : 'bg-zinc-800/60 text-zinc-400 border-zinc-800/80 hover:text-zinc-200 hover:bg-zinc-800')
+                ? 'bg-[#FF5500] text-white border-[#FF5500] shadow-[0_0_12px_rgba(255,85,0,0.35)]'
+                : (isLight 
+                    ? 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900' 
+                    : 'bg-zinc-900/80 text-zinc-300 border-zinc-700/80 hover:text-white hover:bg-zinc-800')
             }`}
           >
             <span>Todos</span>
             <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
               statusFilter === 'all'
-                ? (isLight ? 'bg-black/20 text-white font-bold' : 'bg-zinc-300 text-zinc-900')
-                : (isLight ? 'bg-slate-100 text-slate-700 font-semibold' : 'bg-zinc-700 text-zinc-300')
+                ? 'bg-black/25 text-white font-bold'
+                : (isLight ? 'bg-slate-100 text-slate-700 font-semibold' : 'bg-zinc-800 text-zinc-200 font-semibold')
             }`}>
               {statusCounts.all}
             </span>
@@ -526,11 +528,11 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                 className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 border ${
                   isSelected 
                     ? (isLight 
-                        ? `${config.lightBadgeClass || config.badgeClass} ring-2 ring-[#FF5500]/40 font-bold shadow-xs` 
-                        : `${config.badgeClass} ring-1 ring-[#FF5500]/50 font-bold shadow`)
+                        ? `${config.lightBadgeClass || config.badgeClass} ring-2 ring-[#FF5500]/50 font-bold shadow-xs` 
+                        : `${config.badgeClass} ring-2 ring-[#FF5500]/60 font-bold shadow`)
                     : (isLight 
-                        ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' 
-                        : 'bg-zinc-900/60 text-zinc-400 border-zinc-800/80 hover:text-zinc-200 hover:bg-zinc-800')
+                        ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900' 
+                        : 'bg-zinc-900/80 text-zinc-300 border-zinc-800 hover:text-white hover:bg-zinc-800')
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
@@ -1856,7 +1858,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
               <button
                 type="button"
                 onClick={onClose}
-                className="p-2 rounded-xl border transition-colors cursor-pointer text-zinc-400 hover:text-white hover:bg-zinc-800 border-zinc-800"
+                className="p-2 rounded-xl border transition-colors cursor-pointer text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border-zinc-700 shadow-xs"
                 title="Cerrar panel de órdenes"
               >
                 <X className="w-5 h-5" />
