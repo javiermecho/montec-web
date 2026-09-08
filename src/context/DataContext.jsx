@@ -784,6 +784,141 @@ export function DataProvider({ children }) {
     setSales(prev => prev.filter(s => s.id !== saleId));
   };
 
+  // --- Operación de Entrega Unificada (Reparación + Venta de Accesorios) ---
+  const recordUnifiedDelivery = (deliveryData) => {
+    const {
+      orderId,
+      orderNumber,
+      clientName,
+      clientPhone,
+      deviceModel,
+      repairName,
+      balancePaid = 0,
+      accessories = [],
+      accessoriesTotal = 0,
+      discount = 0,
+      totalAmount = 0,
+      paymentMethod = 'cash',
+      cashGiven,
+      changeDue,
+      notes = '',
+      deliveredAt = new Date().toISOString()
+    } = deliveryData;
+
+    const paymentLabel = {
+      cash: 'Efectivo',
+      transfer: 'Transferencia / Alias',
+      card: 'Tarjeta Débito/Crédito',
+      qr: 'Mercado Pago QR'
+    }[paymentMethod] || paymentMethod;
+
+    // 1. Actualizar orden de taller (Marcar entregado, saldar deuda, registrar pago y log)
+    setOrders(prev => {
+      const updated = prev.map(o => {
+        if (o.id !== orderId && o.orderNumber !== orderId && o.orderNumber !== orderNumber) return o;
+        const currentDeposit = Number(o.service?.deposit) || 0;
+        const newDeposit = currentDeposit + balancePaid;
+        const newPayments = [
+          ...(o.payments || []),
+          {
+            id: `pay-delivery-${Date.now()}`,
+            timestamp: deliveredAt,
+            amount: balancePaid,
+            method: paymentLabel,
+            note: `Cobro final de saldo en entrega (${paymentLabel})${accessories.length > 0 ? ` + ${accessories.length} accesorios` : ''}`
+          }
+        ];
+
+        const accSummary = accessories.map(a => `${a.quantity}x ${a.name}`).join(', ');
+        const logAction = `Entrega finalizada en mostrador. Saldo cobrado: $${balancePaid.toLocaleString('es-AR')}${
+          accessories.length > 0 ? ` + Accesorios: ${accSummary} ($${accessoriesTotal.toLocaleString('es-AR')})` : ''
+        }. Total abonado: $${totalAmount.toLocaleString('es-AR')} vía ${paymentLabel}.${notes ? ` Nota: ${notes}` : ''}`;
+
+        const newLogs = [
+          ...(o.logs || []),
+          {
+            timestamp: deliveredAt,
+            action: logAction,
+            status: 'delivered'
+          }
+        ];
+
+        return {
+          ...o,
+          status: 'delivered',
+          payments: newPayments,
+          service: {
+            ...o.service,
+            status: 'delivered',
+            deposit: newDeposit,
+            balanceDue: 0,
+            deliveredAt: deliveredAt
+          },
+          updatedAt: deliveredAt,
+          logs: newLogs
+        };
+      });
+
+      try {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error guardando orden entregada:', e);
+      }
+      return updated;
+    });
+
+    // 2. Si se vendieron accesorios, descontar su stock de inventory
+    if (Array.isArray(accessories) && accessories.length > 0) {
+      setInventory(prev => {
+        return prev.map(prod => {
+          const sold = accessories.find(a => a.id === prod.id || a.sku === prod.sku);
+          if (sold) {
+            const qty = Number(sold.quantity) || 1;
+            return {
+              ...prod,
+              stock: Math.max(0, (prod.stock || 0) - qty)
+            };
+          }
+          return prod;
+        });
+      });
+
+      // 3. Registrar venta de los accesorios en sales
+      const saleId = `sale-delivery-${Date.now()}`;
+      const newSale = {
+        id: saleId,
+        ticketNumber: `#TCK-ACC-${1000 + sales.length + 1}`,
+        createdAt: deliveredAt,
+        formattedDate: new Date(deliveredAt).toLocaleString('es-AR'),
+        items: accessories.map(a => ({
+          id: a.id,
+          name: a.name,
+          price: a.price,
+          quantity: a.quantity,
+          sku: a.sku
+        })),
+        subtotal: accessoriesTotal,
+        discountType: discount > 0 ? 'fixed' : 'none',
+        discountValue: discount,
+        discountAmount: discount,
+        total: Math.max(0, accessoriesTotal - discount),
+        paymentMethod: paymentLabel,
+        cashGiven: cashGiven || 0,
+        changeDue: changeDue || 0,
+        customer: {
+          name: clientName,
+          phone: clientPhone
+        },
+        orderRef: orderNumber,
+        seller: 'Mostrador Montec (Entrega Taller)'
+      };
+
+      setSales(prev => [newSale, ...prev]);
+    }
+
+    return true;
+  };
+
   // --- Restaurar valores de fábrica ---
   const resetToDefaults = () => {
     setModels(MODELS_DATABASE);
@@ -1110,6 +1245,7 @@ export function DataProvider({ children }) {
       deleteProduct,
       sales,
       recordSale,
+      recordUnifiedDelivery,
       deleteSale,
       dolarRate,
       dolarInfo,

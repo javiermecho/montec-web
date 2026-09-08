@@ -46,7 +46,7 @@ import OrderTicketModal from './OrderTicketModal';
 import RepairOrdersManager from './RepairOrdersManager';
 import CostBreakdownModal from './CostBreakdownModal';
 
-export default function RepairOrderReceiver() {
+export default function RepairOrderReceiver({ forceOpen = false, onClose = null }) {
   const { 
     isTallerOpen, 
     setIsTallerOpen, 
@@ -653,7 +653,15 @@ export default function RepairOrderReceiver() {
     }
   };
 
-  if (!isTallerOpen) return null;
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      setIsTallerOpen(false);
+    }
+  };
+
+  if (!isTallerOpen && !forceOpen) return null;
 
   // 1. PANTALLA DE LOGIN SI NO ESTÁ AUTENTICADO COMO EMPLEADO
   if (!isEmployeeAuthenticated) {
@@ -662,7 +670,7 @@ export default function RepairOrderReceiver() {
         <div className="bg-[#141416] border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-[0_0_50px_rgba(255,85,0,0.3)] relative">
           
           <button
-            onClick={() => setIsTallerOpen(false)}
+            onClick={handleClose}
             className="absolute top-4 right-4 text-zinc-500 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -791,7 +799,7 @@ export default function RepairOrderReceiver() {
 
           <button
             type="button"
-            onClick={() => setIsTallerOpen(false)}
+            onClick={handleClose}
             className="p-2 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
             title="Cerrar ventana de mostrador"
           >

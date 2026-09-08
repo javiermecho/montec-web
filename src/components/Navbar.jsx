@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { MessageCircle, Menu, X, Shield, Lock, Sliders, ClipboardList } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import { trackClickLlamadaOMapa } from '../services/analytics';
 
 export default function Navbar() {
-  const { setIsAdminOpen, isAdminAuthenticated, setIsQuoteModalOpen, setIsTallerOpen, isEmployeeAuthenticated } = useData();
+  const { setIsAdminOpen, setIsQuoteModalOpen, setIsTallerOpen } = useData();
+  const { isAuthenticated, isOperator, isAdmin } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isOpenNow, setIsOpenNow] = useState(true);
@@ -126,7 +128,7 @@ export default function Navbar() {
             >
               <ClipboardList className="w-3.5 h-3.5 text-[#FF5500]" />
               <span className="font-mono">Taller</span>
-              {isEmployeeAuthenticated && (
+              {isOperator && (
                 <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
               )}
             </button>
@@ -138,8 +140,8 @@ export default function Navbar() {
               title="Panel Técnico / Administrador"
             >
               <Sliders className="w-4 h-4 text-[#FF5500]" />
-              {isAdminAuthenticated && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-[#121212]" />
+              {isAdmin && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-purple-500 rounded-full border-2 border-[#121212]" />
               )}
             </button>
           </div>
@@ -153,7 +155,7 @@ export default function Navbar() {
               title="Taller"
             >
               <ClipboardList className="w-4 h-4 text-[#FF5500]" />
-              {isEmployeeAuthenticated && (
+              {isOperator && (
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full" />
               )}
             </button>

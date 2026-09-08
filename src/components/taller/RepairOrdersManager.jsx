@@ -115,7 +115,7 @@ export const STATUS_CONFIG = {
   }
 };
 
-export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose, isEmbedded = false }) {
+export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose, isEmbedded = false, onDeliverOrder = null }) {
   const { 
     orders, 
     updateRepairOrder,
@@ -822,6 +822,18 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
               <Printer className="w-4 h-4 text-[#FF5500]" />
               <span>Imprimir Ticket</span>
             </button>
+
+            {onDeliverOrder && selectedOrder.status !== 'delivered' && (
+              <button
+                type="button"
+                onClick={() => onDeliverOrder(selectedOrder)}
+                className="px-3.5 py-1.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-[0_0_15px_rgba(255,85,0,0.35)]"
+                title="Entregar equipo y cobrar saldo con venta cruzada de accesorios"
+              >
+                <Package className="w-4 h-4" />
+                <span>Entregar & Cobrar</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -1646,6 +1658,18 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
               <Printer className="w-3.5 h-3.5 text-[#FF5500]" />
               <span>Reimprimir Ticket</span>
             </button>
+
+            {onDeliverOrder && selectedOrder.status !== 'delivered' && (
+              <button
+                type="button"
+                onClick={() => onDeliverOrder(selectedOrder)}
+                className="px-3.5 py-1.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-[0_0_15px_rgba(255,85,0,0.35)]"
+                title="Entregar equipo y cobrar saldo con venta cruzada de accesorios"
+              >
+                <Package className="w-3.5 h-3.5" />
+                <span>Entregar & Cobrar</span>
+              </button>
+            )}
 
             <button
               type="button"
