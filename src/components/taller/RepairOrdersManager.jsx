@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Filter, 
   ArrowUpDown,
+  ArrowLeft,
   Plus,
   Trash2,
   Calendar,
@@ -774,149 +775,215 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     </div>
   );
 
-  const renderSelectedOrderDrawer = () => {
+  const renderOrderDetailView = () => {
     if (!selectedOrder) return null;
 
-    return createPortal(
-      <div 
-        className="fixed inset-0 z-[100] flex items-center justify-end bg-black/75 backdrop-blur-sm animate-fade-in font-sans"
-        onClick={() => setSelectedOrder(null)}
-      >
-        <div 
-          onClick={(e) => e.stopPropagation()}
-          className={`border-l w-full max-w-2xl h-full shadow-2xl flex flex-col overflow-hidden animate-slide-left transition-colors ${
-            isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#141417] border-zinc-800 text-zinc-200'
-          }`}
-        >
+    return (
+      <div className="w-full space-y-5 animate-fade-in font-sans">
+        {/* BARRA SUPERIOR DE NAVEGACIÓN Y ACCIONES */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+          <button
+            type="button"
+            onClick={() => setSelectedOrder(null)}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer border shadow-xs ${
+              isLight 
+                ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300' 
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border-zinc-700'
+            }`}
+          >
+            <ArrowLeft className="w-4 h-4 text-[#FF5500]" />
+            <span>Volver al listado de órdenes</span>
+          </button>
 
-          {/* Cabecera del Drawer */}
-          <header className="panel-top-header bg-[#09090b] border-b border-zinc-800 px-5 py-4 flex items-start justify-between shrink-0 gap-3 text-white">
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-xl font-heading font-black text-white">
-                  {selectedOrder.orderNumber}
-                </h3>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-                  STATUS_CONFIG[selectedOrder.status]?.badgeClass || 'bg-zinc-800 text-zinc-300 border-zinc-700'
-                }`}>
-                  {STATUS_CONFIG[selectedOrder.status]?.label || selectedOrder.status}
-                </span>
-                <span className="text-xs px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 font-medium">
-                  {selectedOrder.device?.type || 'Equipo'}
-                </span>
-              </div>
-              
-              {/* Tiempo en taller & Fecha pactada */}
-              <div className="flex items-center gap-3 mt-1.5 text-xs text-zinc-400 flex-wrap">
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-[#FF5500]" />
-                  <span>Ingresó: {new Date(selectedOrder.createdAt).toLocaleString('es-AR')} ({formatRelativeTime(selectedOrder.createdAt)})</span>
-                </span>
-              </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsRescheduling(!isRescheduling)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border ${
+                isLight
+                  ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300 shadow-xs'
+                  : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border-zinc-700'
+              }`}
+              title="Reprogramar fecha de entrega"
+            >
+              <Calendar className="w-4 h-4 text-amber-500" />
+              <span>Reprogramar</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTicketModalOrder(selectedOrder)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border ${
+                isLight
+                  ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300 shadow-xs'
+                  : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border-zinc-700'
+              }`}
+            >
+              <Printer className="w-4 h-4 text-[#FF5500]" />
+              <span>Imprimir Ticket</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsPaymentModalOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+            >
+              <DollarSign className="w-4 h-4" />
+              <span>Registrar Pago</span>
+            </button>
+
+            {selectedOrder.customer?.phone && (
+              <a
+                href={generateStatusWhatsAppUrl(selectedOrder, selectedOrder.status, '')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-emerald-600/20"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>WhatsApp</span>
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* TARJETA PRINCIPAL DEL ENCABEZADO DE LA ORDEN */}
+        <div className={`p-5 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs transition-colors ${
+          isLight ? 'bg-white border-slate-200' : 'bg-[#18181c] border-zinc-800'
+        }`}>
+          <div>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h3 className={`text-2xl sm:text-3xl font-heading font-black tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                {selectedOrder.orderNumber}
+              </h3>
+              <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                STATUS_CONFIG[selectedOrder.status]?.badgeClass || 'bg-zinc-800 text-zinc-300 border-zinc-700'
+              }`}>
+                {STATUS_CONFIG[selectedOrder.status]?.label || selectedOrder.status}
+              </span>
+              <span className={`text-xs px-2.5 py-1 rounded-lg font-semibold border ${
+                isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-zinc-800 text-zinc-300 border-zinc-700'
+              }`}>
+                {selectedOrder.device?.type || 'Equipo'}
+              </span>
             </div>
 
+            <div className={`flex items-center gap-4 mt-2 text-xs flex-wrap ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+              <span className="flex items-center gap-1.5 font-medium">
+                <Clock className="w-4 h-4 text-[#FF5500]" />
+                <span>Ingresó: <strong>{new Date(selectedOrder.createdAt).toLocaleString('es-AR')}</strong> ({formatRelativeTime(selectedOrder.createdAt)})</span>
+              </span>
+              {selectedOrder.service?.estimatedDeliveryDate && (
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-amber-500" />
+                  <span>Entrega pactada: <strong>{formatPactada(selectedOrder.service.estimatedDeliveryDate)}</strong></span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className={`text-right px-4 py-2 rounded-xl border ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-zinc-900 border-zinc-800'
+            }`}>
+              <span className={`block text-[10px] uppercase font-bold tracking-wider ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Saldo Pendiente</span>
+              <span className={`text-lg sm:text-xl font-mono font-black ${
+                (selectedOrder.service?.balanceDue ?? 0) > 0 
+                  ? (isLight ? 'text-amber-600' : 'text-amber-400')
+                  : (isLight ? 'text-emerald-600' : 'text-emerald-400')
+              }`}>
+                ${Number(selectedOrder.service?.balanceDue || 0).toLocaleString('es-AR')}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* SELECTOR DE REPROGRAMACIÓN DESPLEGABLE */}
+        {isRescheduling && (
+          <div className={`p-4 border rounded-2xl flex items-center justify-between gap-3 flex-wrap ${
+            isLight ? 'bg-amber-50 border-amber-200' : 'bg-amber-500/10 border-amber-500/30'
+          }`}>
+            <div className="flex items-center gap-3 flex-1 flex-wrap">
+              <Calendar className="w-5 h-5 text-amber-500 shrink-0" />
+              <span className={`text-xs sm:text-sm font-bold ${isLight ? 'text-amber-900' : 'text-amber-300'}`}>
+                Reprogramar Nueva Fecha de Entrega:
+              </span>
+              <input
+                type="datetime-local"
+                value={rescheduleDate}
+                onChange={(e) => setRescheduleDate(e.target.value)}
+                className={`border rounded-xl px-3 py-1.5 text-xs sm:text-sm outline-none focus:border-amber-400 ${
+                  isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                }`}
+              />
+            </div>
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setIsRescheduling(!isRescheduling)}
-                className="px-2.5 py-1 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 flex items-center gap-1 transition-colors cursor-pointer border border-zinc-700"
-                title="Reprogramar fecha de entrega"
+                onClick={() => setIsRescheduling(false)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-xl cursor-pointer ${
+                  isLight ? 'text-slate-600 hover:text-slate-900 bg-white border border-slate-200' : 'text-zinc-400 hover:text-white bg-zinc-900'
+                }`}
               >
-                <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden sm:inline">Reprogramar</span>
+                Cancelar
               </button>
-
               <button
                 type="button"
-                onClick={() => setSelectedOrder(null)}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                onClick={handleSaveReschedule}
+                disabled={!rescheduleDate}
+                className="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs sm:text-sm rounded-xl transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
               >
-                <X className="w-5 h-5" />
+                Guardar Nueva Fecha
               </button>
             </div>
-          </header>
-
-          {/* Selector de Reprogramación desplegable */}
-          {isRescheduling && (
-            <div className={`p-3 border-b flex items-center justify-between gap-2 flex-wrap ${
-              isLight ? 'bg-amber-50 border-amber-200' : 'bg-amber-500/10 border-amber-500/30'
-            }`}>
-              <div className="flex items-center gap-2 flex-1">
-                <Calendar className="w-4 h-4 text-amber-500 shrink-0" />
-                <span className={`text-xs font-bold ${isLight ? 'text-amber-800' : 'text-amber-300'}`}>Nueva Entrega:</span>
-                <input
-                  type="datetime-local"
-                  value={rescheduleDate}
-                  onChange={(e) => setRescheduleDate(e.target.value)}
-                  className={`border rounded-lg px-2.5 py-1 text-xs outline-none focus:border-amber-400 ${
-                    isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
-                  }`}
-                />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setIsRescheduling(false)}
-                  className={`px-2 py-1 text-xs cursor-pointer ${isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-400 hover:text-white'}`}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveReschedule}
-                  disabled={!rescheduleDate}
-                  className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  Guardar Fecha
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* TABS DE SECCIONES INTERNAS */}
-          <div className={`flex items-center gap-2 px-5 py-2 border-b text-xs shrink-0 overflow-x-auto ${
-            isLight ? 'border-slate-200 bg-slate-100' : 'border-zinc-800/80 bg-zinc-900/60'
-          }`}>
-            {[
-              { id: 'summary', icon: FileText, label: 'Resumen & Datos' },
-              { id: 'technician', icon: Wrench, label: 'Procesar Estado' },
-              { id: 'notes', icon: MessageSquare, label: `Notas Internas (${selectedOrder.internalNotesList?.length || 0})` },
-              { id: 'history', icon: History, label: `Auditoría & Logs (${selectedOrder.logs?.length || 0})` }
-            ].map(tab => {
-              const Icon = tab.icon;
-              const active = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    active
-                      ? 'bg-[#FF5500] text-white shadow-sm'
-                      : isLight
-                        ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/80'
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                  }`}
-                >
-                  <Icon className="w-3.5 h-3.5" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
           </div>
+        )}
 
-          {/* CUERPO DEL DRAWER CON SCROLL */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+        {/* TABS DE SECCIONES INTERNAS */}
+        <div className={`flex items-center gap-2 p-1.5 border rounded-2xl text-xs sm:text-sm shrink-0 overflow-x-auto ${
+          isLight ? 'border-slate-200 bg-slate-100' : 'border-zinc-800/80 bg-zinc-900/60'
+        }`}>
+          {[
+            { id: 'summary', icon: FileText, label: 'Resumen & Datos' },
+            { id: 'technician', icon: Wrench, label: 'Procesar Estado' },
+            { id: 'notes', icon: MessageSquare, label: `Notas Internas (${selectedOrder.internalNotesList?.length || 0})` },
+            { id: 'history', icon: History, label: `Auditoría & Logs (${selectedOrder.logs?.length || 0})` }
+          ].map(tab => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2.5 rounded-xl font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                  active
+                    ? 'bg-[#FF5500] text-white shadow-md shadow-[#FF5500]/25'
+                    : isLight
+                      ? 'text-slate-600 hover:text-slate-900 hover:bg-white'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-            {/* TAB 1: RESUMEN Y BLOQUES DE DATOS */}
-            {activeTab === 'summary' && (
-              <div className="space-y-4">
-
+        {/* CONTENIDO EXPANDIDO DE CADA TAB */}
+        <div className="space-y-5">
+          {/* TAB 1: RESUMEN Y BLOQUES DE DATOS */}
+          {activeTab === 'summary' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* COLUMNA IZQUIERDA: CLIENTE Y EQUIPO */}
+              <div className="space-y-5">
                 {/* BLOQUE 1: DATOS DEL CLIENTE */}
-                <div className={`border rounded-2xl p-4 ${isLight ? 'bg-slate-50 border-slate-200 shadow-xs' : 'bg-[#18181c] border-zinc-800'}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-zinc-400'}`}>
-                      <User className="w-3.5 h-3.5 text-[#FF5500]" />
+                <div className={`border rounded-2xl p-5 shadow-xs transition-colors ${
+                  isLight ? 'bg-white border-slate-200' : 'bg-[#18181c] border-zinc-800'
+                }`}>
+                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-zinc-700/30">
+                    <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
+                      <User className="w-4 h-4 text-[#FF5500]" />
                       Datos del Cliente
                     </span>
                     {selectedOrder.customer?.docNumber && (
@@ -926,87 +993,101 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                           setClientHistoryFilter(selectedOrder.customer.docNumber);
                           setSelectedOrder(null);
                         }}
-                        className="text-[11px] text-[#FF5500] hover:underline flex items-center gap-1 cursor-pointer font-bold"
+                        className="text-xs text-[#FF5500] hover:underline flex items-center gap-1 cursor-pointer font-bold"
                       >
-                        <History className="w-3 h-3" />
+                        <History className="w-3.5 h-3.5" />
                         <span>Ver historial del cliente</span>
                       </button>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
                     <div>
-                      <span className={`block text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Nombre Completo</span>
-                      <span className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{selectedOrder.customer?.name || 'Consumidor Final'}</span>
+                      <span className={`block text-[11px] mb-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Nombre Completo</span>
+                      <span className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                        {selectedOrder.customer?.name || 'Consumidor Final'}
+                      </span>
                     </div>
 
                     <div>
-                      <span className={`block text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Documento / DNI</span>
-                      <span className={`font-mono font-medium ${isLight ? 'text-slate-800' : 'text-zinc-200'}`}>{selectedOrder.customer?.docNumber || 'No especificado'}</span>
+                      <span className={`block text-[11px] mb-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Documento / DNI</span>
+                      <span className={`font-mono font-bold text-sm sm:text-base ${isLight ? 'text-slate-800' : 'text-zinc-200'}`}>
+                        {selectedOrder.customer?.docNumber || 'No especificado'}
+                      </span>
                     </div>
 
                     <div>
-                      <span className={`block text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Teléfono WhatsApp</span>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{selectedOrder.customer?.phone || 'Sin teléfono'}</span>
+                      <span className={`block text-[11px] mb-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Teléfono WhatsApp</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm sm:text-base">
+                          {selectedOrder.customer?.phone || 'Sin teléfono'}
+                        </span>
                         {selectedOrder.customer?.phone && (
                           <a
                             href={`https://wa.me/549${selectedOrder.customer.phone.replace(/[^0-9]/g, '')}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/30 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
                           >
-                            <MessageSquare className="w-2.5 h-2.5" />
-                            Chat
+                            <MessageSquare className="w-3 h-3" />
+                            <span>Chat</span>
                           </a>
                         )}
                       </div>
                     </div>
 
                     <div>
-                      <span className={`block text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Email</span>
-                      <span className={isLight ? 'text-slate-800' : 'text-zinc-300'}>{selectedOrder.customer?.email || 'No registrado'}</span>
+                      <span className={`block text-[11px] mb-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Email</span>
+                      <span className={`font-medium ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
+                        {selectedOrder.customer?.email || 'No registrado'}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 {/* BLOQUE 2: EQUIPO Y SEGURIDAD */}
-                <div className={`border rounded-2xl p-4 ${isLight ? 'bg-slate-50 border-slate-200 shadow-xs' : 'bg-[#18181c] border-zinc-800'}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-zinc-400'}`}>
-                      <Smartphone className="w-3.5 h-3.5 text-[#FF5500]" />
+                <div className={`border rounded-2xl p-5 shadow-xs transition-colors ${
+                  isLight ? 'bg-white border-slate-200' : 'bg-[#18181c] border-zinc-800'
+                }`}>
+                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-zinc-700/30">
+                    <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
+                      <Smartphone className="w-4 h-4 text-[#FF5500]" />
                       Equipo & Desbloqueo
                     </span>
-                    <span className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                    <span className={`text-xs font-mono font-semibold px-2 py-0.5 rounded ${
+                      isLight ? 'bg-slate-100 text-slate-600' : 'bg-zinc-800 text-zinc-400'
+                    }`}>
                       {selectedOrder.device?.brand} • {selectedOrder.device?.type}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
                     <div>
-                      <span className={`block text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Modelo Exacto</span>
-                      <span className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{selectedOrder.device?.brand} {selectedOrder.device?.model}</span>
+                      <span className={`block text-[11px] mb-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Modelo Exacto</span>
+                      <span className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                        {selectedOrder.device?.brand} {selectedOrder.device?.model}
+                      </span>
                     </div>
 
                     <div>
-                      <span className={`block text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>IMEI / Serial</span>
-                      <div className={`flex items-center gap-1 font-mono ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
-                        <span>{selectedOrder.device?.imei || 'No registrado'}</span>
+                      <span className={`block text-[11px] mb-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>IMEI / Serial</span>
+                      <div className={`flex items-center gap-2 font-mono font-medium mt-0.5 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
+                        <span className="text-sm">{selectedOrder.device?.imei || 'No registrado'}</span>
                         {selectedOrder.device?.imei && (
                           <button
                             type="button"
                             onClick={() => handleCopy(selectedOrder.device.imei, 'imei')}
-                            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white p-0.5 cursor-pointer"
+                            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white p-1 rounded hover:bg-zinc-700/30 cursor-pointer"
                             title="Copiar IMEI"
                           >
-                            {copiedField === 'imei' ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                            {copiedField === 'imei' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
                         )}
                       </div>
                     </div>
 
                     <div>
-                      <span className={`block text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Color y Estética</span>
+                      <span className={`block text-[11px] mb-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Color y Estética</span>
                       <span className={isLight ? 'text-slate-800' : 'text-zinc-300'}>
                         {selectedOrder.device?.color ? `Color: ${selectedOrder.device.color}` : 'Color estándar'}
                         {selectedOrder.device?.aestheticCondition && ` (${selectedOrder.device.aestheticCondition})`}
@@ -1015,29 +1096,29 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
 
                     {/* CLAVE / SEGURIDAD */}
                     <div>
-                      <span className={`block text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Seguridad de Pantalla</span>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`block text-[11px] mb-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Seguridad de Pantalla</span>
+                      <div className="flex items-center gap-2 mt-1">
                         {selectedOrder.device?.security?.type === 'pattern' ? (
                           <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-[10px] font-bold">
+                            <span className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-xs font-bold">
                               Patrón 3x3
                             </span>
                             <button
                               type="button"
                               onClick={() => setShowPatternModal(true)}
-                              className={`px-2 py-0.5 rounded text-[11px] font-bold flex items-center gap-1 cursor-pointer border ${
+                              className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer border ${
                                 isLight ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300' : 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700'
                               }`}
                             >
-                              <Eye className="w-3 h-3 text-[#FF5500]" />
-                              Ver Dibujo
+                              <Eye className="w-3.5 h-3.5 text-[#FF5500]" />
+                              <span>Ver Dibujo</span>
                             </button>
                           </div>
                         ) : selectedOrder.device?.security?.type === 'none' ? (
                           <span className="text-zinc-500 italic text-xs">Sin clave</span>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <span className={`font-mono font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                            <span className={`font-mono font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>
                               {showPin 
                                 ? (selectedOrder.device?.security?.pin || 'Sin PIN') 
                                 : '••••••••'}
@@ -1045,19 +1126,19 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                             <button
                               type="button"
                               onClick={() => setShowPin(!showPin)}
-                              className={`p-1 cursor-pointer ${isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-400 hover:text-white'}`}
+                              className={`p-1.5 rounded hover:bg-zinc-700/30 cursor-pointer ${isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-400 hover:text-white'}`}
                               title={showPin ? "Ocultar PIN" : "Mostrar PIN"}
                             >
-                              {showPin ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                              {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                             {selectedOrder.device?.security?.pin && (
                               <button
                                 type="button"
                                 onClick={() => handleCopy(selectedOrder.device.security.pin, 'pin')}
-                                className={`p-1 cursor-pointer ${isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-400 hover:text-white'}`}
+                                className={`p-1.5 rounded hover:bg-zinc-700/30 cursor-pointer ${isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-400 hover:text-white'}`}
                                 title="Copiar PIN"
                               >
-                                {copiedField === 'pin' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                                {copiedField === 'pin' ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                               </button>
                             )}
                           </div>
@@ -1066,43 +1147,50 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                     </div>
                   </div>
                 </div>
+              </div>
 
-                {/* BLOQUE 3: PRESUPUESTO, SEÑA Y SALDO RESTANTE */}
-                <div className={`border rounded-2xl p-4 ${isLight ? 'bg-slate-50 border-slate-200 shadow-xs' : 'bg-[#18181c] border-zinc-800'}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-zinc-400'}`}>
-                      <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+              {/* COLUMNA DERECHA: COBRO Y CHECKLIST */}
+              <div className="space-y-5">
+                {/* BLOQUE 3: PRESUPUESTO, SEÑA Y SALDO */}
+                <div className={`border rounded-2xl p-5 shadow-xs transition-colors ${
+                  isLight ? 'bg-white border-slate-200' : 'bg-[#18181c] border-zinc-800'
+                }`}>
+                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-zinc-700/30">
+                    <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
+                      <DollarSign className="w-4 h-4 text-emerald-500" />
                       Presupuesto y Cobro
                     </span>
 
                     <button
                       type="button"
                       onClick={() => setIsPaymentModalOpen(true)}
-                      className="px-2.5 py-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      className="px-3 py-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
                     >
-                      <DollarSign className="w-3 h-3" />
-                      Registrar Pago
+                      <DollarSign className="w-3.5 h-3.5" />
+                      <span>Registrar Pago</span>
                     </button>
                   </div>
 
-                  <div className={`grid grid-cols-3 gap-2 p-3 rounded-xl mb-3 text-center border ${isLight ? 'bg-white border-slate-200 shadow-xs' : 'bg-zinc-950 border-zinc-800/80'}`}>
+                  <div className={`grid grid-cols-3 gap-3 p-4 rounded-xl mb-4 text-center border ${
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-zinc-950 border-zinc-800/80'
+                  }`}>
                     <div>
-                      <span className={`text-[10px] block uppercase ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Total Acordado</span>
-                      <span className={`text-sm sm:text-base font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      <span className={`text-[10px] sm:text-xs block uppercase font-bold ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Total Acordado</span>
+                      <span className={`text-base sm:text-xl font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                         ${Number(selectedOrder.service?.budgetTotal || 0).toLocaleString('es-AR')}
                       </span>
                     </div>
 
                     <div className={`border-x ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
-                      <span className={`text-[10px] block uppercase ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Seña / Abonado</span>
-                      <span className={`text-sm sm:text-base font-bold font-mono ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                      <span className={`text-[10px] sm:text-xs block uppercase font-bold ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Seña / Abonado</span>
+                      <span className={`text-base sm:text-xl font-bold font-mono ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
                         ${Number(selectedOrder.service?.deposit || 0).toLocaleString('es-AR')}
                       </span>
                     </div>
 
                     <div>
-                      <span className={`text-[10px] block uppercase ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Saldo al Retirar</span>
-                      <span className={`text-sm sm:text-base font-black font-mono ${
+                      <span className={`text-[10px] sm:text-xs block uppercase font-bold ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Saldo al Retirar</span>
+                      <span className={`text-base sm:text-xl font-black font-mono ${
                         (selectedOrder.service?.balanceDue ?? 0) > 0 
                           ? (isLight ? 'text-amber-600' : 'text-amber-400')
                           : (isLight ? 'text-emerald-600' : 'text-emerald-400')
@@ -1112,7 +1200,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                     </div>
                   </div>
 
-                  <div className="space-y-1 text-xs">
+                  <div className="space-y-2 text-xs sm:text-sm">
                     <div className={isLight ? 'text-slate-600' : 'text-zinc-400'}>
                       <strong className={isLight ? 'text-slate-900' : 'text-zinc-300'}>Trabajo solicitado:</strong> {selectedOrder.service?.requestedRepair || 'Diagnóstico general'}
                     </div>
@@ -1128,12 +1216,12 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
 
                   {/* Pagos registrados */}
                   {selectedOrder.payments && selectedOrder.payments.length > 0 && (
-                    <div className={`mt-3 pt-3 border-t ${isLight ? 'border-slate-200' : 'border-zinc-800/80'}`}>
-                      <span className={`text-[11px] font-bold block mb-1.5 ${isLight ? 'text-slate-700' : 'text-zinc-400'}`}>Historial de Cobros:</span>
-                      <div className="space-y-1">
+                    <div className={`mt-4 pt-3 border-t ${isLight ? 'border-slate-200' : 'border-zinc-800/80'}`}>
+                      <span className={`text-xs font-bold block mb-2 ${isLight ? 'text-slate-700' : 'text-zinc-400'}`}>Historial de Cobros:</span>
+                      <div className="space-y-1.5">
                         {selectedOrder.payments.map((p, pi) => (
-                          <div key={p.id || pi} className={`flex items-center justify-between text-[11px] py-1 px-2 rounded border font-mono ${
-                            isLight ? 'bg-white border-slate-200' : 'bg-zinc-900 border-zinc-800'
+                          <div key={p.id || pi} className={`flex items-center justify-between text-xs py-1.5 px-3 rounded-lg border font-mono ${
+                            isLight ? 'bg-slate-50 border-slate-200' : 'bg-zinc-900 border-zinc-800'
                           }`}>
                             <span className={isLight ? 'text-slate-600' : 'text-zinc-400'}>{new Date(p.timestamp).toLocaleDateString('es-AR')} - {p.method}:</span>
                             <span className="font-bold text-emerald-600 dark:text-emerald-400">+${Number(p.amount).toLocaleString('es-AR')}</span>
@@ -1146,11 +1234,13 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
 
                 {/* BLOQUE 4: CHECKLIST INICIAL DE INGRESO */}
                 {selectedOrder.service?.checklist && (
-                  <div className={`border rounded-2xl p-4 ${isLight ? 'bg-slate-50 border-slate-200 shadow-xs' : 'bg-[#18181c] border-zinc-800'}`}>
-                    <span className={`text-xs font-bold uppercase tracking-wider block mb-2.5 ${isLight ? 'text-slate-700' : 'text-zinc-400'}`}>
+                  <div className={`border rounded-2xl p-5 shadow-xs transition-colors ${
+                    isLight ? 'bg-white border-slate-200' : 'bg-[#18181c] border-zinc-800'
+                  }`}>
+                    <span className={`text-xs font-bold uppercase tracking-wider block mb-3 pb-2 border-b border-zinc-700/30 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
                       Checklist al Ingresar
                     </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs sm:text-sm">
                       {Object.entries(selectedOrder.service.checklist).map(([key, ok]) => {
                         const labels = {
                           turnsOn: 'Enciende',
@@ -1162,420 +1252,424 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                           simTrayPresent: 'Bandeja SIM'
                         };
                         return (
-                          <div key={key} className={`flex items-center gap-1.5 ${isLight ? 'text-slate-800 font-medium' : 'text-zinc-300'}`}>
+                          <div key={key} className={`flex items-center gap-2 p-2 rounded-xl border ${
+                            isLight ? 'bg-slate-50 border-slate-200 text-slate-800 font-medium' : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+                          }`}>
                             {ok ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                             ) : (
-                              <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
                             )}
-                            <span>{labels[key] || key}</span>
+                            <span className="truncate">{labels[key] || key}</span>
                           </div>
                         );
                       })}
                     </div>
                   </div>
                 )}
-
               </div>
-            )}
+            </div>
+          )}
 
-            {/* TAB 2: PROCESADOR DE ESTADO TÉCNICO (TRANSICIONES SISTROFIX) */}
-            {activeTab === 'technician' && (
-              <div className="space-y-5">
-                <div className={`border rounded-2xl p-4 ${isLight ? 'bg-slate-50 border-slate-200 shadow-xs' : 'bg-[#18181c] border-zinc-800'}`}>
-                  <h4 className={`text-xs font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
-                    <Wrench className="w-4 h-4 text-[#FF5500]" />
-                    Transición Técnica de Estado
-                  </h4>
-                  <p className={`text-xs mb-3 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-                    Elegí la acción técnica a declarar para esta orden:
-                  </p>
+          {/* TAB 2: PROCESADOR DE ESTADO TÉCNICO */}
+          {activeTab === 'technician' && (
+            <div className="space-y-5">
+              <div className={`border rounded-2xl p-6 shadow-xs transition-colors ${
+                isLight ? 'bg-white border-slate-200' : 'bg-[#18181c] border-zinc-800'
+              }`}>
+                <h4 className={`text-sm font-bold uppercase tracking-wider mb-1 flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
+                  <Wrench className="w-5 h-5 text-[#FF5500]" />
+                  Transición Técnica de Estado
+                </h4>
+                <p className={`text-xs sm:text-sm mb-4 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                  Seleccioná la acción técnica para cambiar el estado de la orden y notificar al cliente:
+                </p>
 
-                  {/* BOTONES DE ESTADOS TÉCNICOS */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {/* 1. Declarar Reparado */}
-                    <button
-                      type="button"
-                      onClick={() => setTargetStatus('ready')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
-                        targetStatus === 'ready'
-                          ? 'bg-emerald-500/20 border-emerald-500 ring-2 ring-emerald-500/40 text-emerald-950 dark:text-white font-bold'
-                          : isLight 
-                            ? 'bg-white border-slate-200 hover:bg-emerald-50/60 text-slate-800 shadow-xs' 
-                            : 'bg-zinc-900/80 border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-300'
-                      }`}
-                    >
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                      <div>
-                        <div className={`font-bold text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>Declarar Reparado</div>
-                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Listo para retirar en el local</div>
-                      </div>
-                    </button>
+                {/* BOTONES DE ESTADOS TÉCNICOS EN GRID AMPLIO */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {/* 1. Declarar Reparado */}
+                  <button
+                    type="button"
+                    onClick={() => setTargetStatus('ready')}
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      targetStatus === 'ready'
+                        ? 'bg-emerald-500/20 border-emerald-500 ring-2 ring-emerald-500/40 text-emerald-950 dark:text-white font-bold shadow-md'
+                        : isLight 
+                          ? 'bg-slate-50 border-slate-200 hover:bg-emerald-50/60 text-slate-800 shadow-xs' 
+                          : 'bg-zinc-900/80 border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-300'
+                    }`}
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                    <div>
+                      <div className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>Declarar Reparado</div>
+                      <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Listo para retirar en el local</div>
+                    </div>
+                  </button>
 
-                    {/* 2. Espera de Autorización */}
-                    <button
-                      type="button"
-                      onClick={() => setTargetStatus('waiting_auth')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
-                        targetStatus === 'waiting_auth'
-                          ? 'bg-purple-500/20 border-purple-500 ring-2 ring-purple-500/40 text-purple-950 dark:text-white font-bold'
-                          : isLight 
-                            ? 'bg-white border-slate-200 hover:bg-purple-50/60 text-slate-800 shadow-xs' 
-                            : 'bg-zinc-900/80 border-purple-500/30 hover:bg-purple-500/10 text-purple-300'
-                      }`}
-                    >
-                      <HelpCircle className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
-                      <div>
-                        <div className={`font-bold text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>Espera de Autorización</div>
-                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Presupuesto pendiente de aprobación</div>
-                      </div>
-                    </button>
+                  {/* 2. Espera de Autorización */}
+                  <button
+                    type="button"
+                    onClick={() => setTargetStatus('waiting_auth')}
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      targetStatus === 'waiting_auth'
+                        ? 'bg-purple-500/20 border-purple-500 ring-2 ring-purple-500/40 text-purple-950 dark:text-white font-bold shadow-md'
+                        : isLight 
+                          ? 'bg-slate-50 border-slate-200 hover:bg-purple-50/60 text-slate-800 shadow-xs' 
+                          : 'bg-zinc-900/80 border-purple-500/30 hover:bg-purple-500/10 text-purple-300'
+                    }`}
+                  >
+                    <HelpCircle className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
+                    <div>
+                      <div className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>Espera de Autorización</div>
+                      <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Presupuesto pendiente de aprobación</div>
+                    </div>
+                  </button>
 
-                    {/* 3. Espera de Repuesto */}
-                    <button
-                      type="button"
-                      onClick={() => setTargetStatus('waiting_part')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
-                        targetStatus === 'waiting_part'
-                          ? 'bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/40 text-amber-950 dark:text-white font-bold'
-                          : isLight 
-                            ? 'bg-white border-slate-200 hover:bg-amber-50/60 text-slate-800 shadow-xs' 
-                            : 'bg-zinc-900/80 border-amber-500/30 hover:bg-amber-500/10 text-amber-300'
-                      }`}
-                    >
-                      <Package className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                      <div>
-                        <div className={`font-bold text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>Espera de Repuesto</div>
-                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Faltante de stock / pedido a proveedor</div>
-                      </div>
-                    </button>
+                  {/* 3. Espera de Repuesto */}
+                  <button
+                    type="button"
+                    onClick={() => setTargetStatus('waiting_part')}
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      targetStatus === 'waiting_part'
+                        ? 'bg-amber-500/20 border-amber-500 ring-2 ring-amber-500/40 text-amber-950 dark:text-white font-bold shadow-md'
+                        : isLight 
+                          ? 'bg-slate-50 border-slate-200 hover:bg-amber-50/60 text-slate-800 shadow-xs' 
+                          : 'bg-zinc-900/80 border-amber-500/30 hover:bg-amber-500/10 text-amber-300'
+                    }`}
+                  >
+                    <Package className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <div className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>Espera de Repuesto</div>
+                      <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Faltante de stock / pedido a proveedor</div>
+                    </div>
+                  </button>
 
-                    {/* 4. En Mesa de Trabajo */}
-                    <button
-                      type="button"
-                      onClick={() => setTargetStatus('in_progress')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
-                        targetStatus === 'in_progress'
-                          ? 'bg-sky-500/20 border-sky-500 ring-2 ring-sky-500/40 text-sky-950 dark:text-white font-bold'
-                          : isLight 
-                            ? 'bg-white border-slate-200 hover:bg-sky-50/60 text-slate-800 shadow-xs' 
-                            : 'bg-zinc-900/80 border-sky-500/30 hover:bg-sky-500/10 text-sky-300'
-                      }`}
-                    >
-                      <Wrench className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
-                      <div>
-                        <div className={`font-bold text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>En Mesa de Trabajo</div>
-                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Técnico trabajando / en pruebas</div>
-                      </div>
-                    </button>
+                  {/* 4. En Mesa de Trabajo */}
+                  <button
+                    type="button"
+                    onClick={() => setTargetStatus('in_progress')}
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      targetStatus === 'in_progress'
+                        ? 'bg-sky-500/20 border-sky-500 ring-2 ring-sky-500/40 text-sky-950 dark:text-white font-bold shadow-md'
+                        : isLight 
+                          ? 'bg-slate-50 border-slate-200 hover:bg-sky-50/60 text-slate-800 shadow-xs' 
+                          : 'bg-zinc-900/80 border-sky-500/30 hover:bg-sky-500/10 text-sky-300'
+                    }`}
+                  >
+                    <Wrench className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
+                    <div>
+                      <div className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>En Mesa de Trabajo</div>
+                      <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Técnico trabajando / en pruebas</div>
+                    </div>
+                  </button>
 
-                    {/* 5. Sin Reparación */}
-                    <button
-                      type="button"
-                      onClick={() => setTargetStatus('no_repair')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
-                        targetStatus === 'no_repair'
-                          ? 'bg-rose-500/20 border-rose-500 ring-2 ring-rose-500/40 text-rose-950 dark:text-white font-bold'
-                          : isLight 
-                            ? 'bg-white border-slate-200 hover:bg-rose-50/60 text-slate-800 shadow-xs' 
-                            : 'bg-zinc-900/80 border-rose-500/30 hover:bg-rose-500/10 text-rose-300'
-                      }`}
-                    >
-                      <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-                      <div>
-                        <div className={`font-bold text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>Sin Reparación</div>
-                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Devolución sin costo / no viable</div>
-                      </div>
-                    </button>
+                  {/* 5. Sin Reparación */}
+                  <button
+                    type="button"
+                    onClick={() => setTargetStatus('no_repair')}
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      targetStatus === 'no_repair'
+                        ? 'bg-rose-500/20 border-rose-500 ring-2 ring-rose-500/40 text-rose-950 dark:text-white font-bold shadow-md'
+                        : isLight 
+                          ? 'bg-slate-50 border-slate-200 hover:bg-rose-50/60 text-slate-800 shadow-xs' 
+                          : 'bg-zinc-900/80 border-rose-500/30 hover:bg-rose-500/10 text-rose-300'
+                    }`}
+                  >
+                    <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                    <div>
+                      <div className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>Sin Reparación</div>
+                      <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Devolución sin costo / no viable</div>
+                    </div>
+                  </button>
 
-                    {/* 6. Declarar Entregado */}
-                    <button
-                      type="button"
-                      onClick={() => setTargetStatus('delivered')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
-                        targetStatus === 'delivered'
-                          ? 'bg-slate-300 dark:bg-zinc-700 border-slate-500 dark:border-zinc-400 ring-2 ring-slate-400 text-slate-900 dark:text-white font-bold'
-                          : isLight 
-                            ? 'bg-white border-slate-200 hover:bg-slate-100 text-slate-800 shadow-xs' 
-                            : 'bg-zinc-900/80 border-zinc-700 hover:bg-zinc-800 text-zinc-400'
-                      }`}
-                    >
-                      <Shield className="w-5 h-5 text-slate-600 dark:text-zinc-300 shrink-0 mt-0.5" />
-                      <div>
-                        <div className={`font-bold text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>Declarar Entregado</div>
-                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Cierre de orden / retiro en local</div>
-                      </div>
-                    </button>
-                  </div>
+                  {/* 6. Declarar Entregado */}
+                  <button
+                    type="button"
+                    onClick={() => setTargetStatus('delivered')}
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                      targetStatus === 'delivered'
+                        ? 'bg-slate-300 dark:bg-zinc-700 border-slate-500 dark:border-zinc-400 ring-2 ring-slate-400 text-slate-900 dark:text-white font-bold shadow-md'
+                        : isLight 
+                          ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-800 shadow-xs' 
+                          : 'bg-zinc-900/80 border-zinc-700 hover:bg-zinc-800 text-zinc-400'
+                    }`}
+                  >
+                    <Shield className="w-5 h-5 text-slate-600 dark:text-zinc-300 shrink-0 mt-0.5" />
+                    <div>
+                      <div className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>Declarar Entregado</div>
+                      <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Cierre de orden / retiro en local</div>
+                    </div>
+                  </button>
                 </div>
+              </div>
 
-                {/* FORMULARIO DE CONFIRMACIÓN DE TRANSICIÓN */}
-                {targetStatus && (
-                  <div className={`border rounded-2xl p-4 space-y-4 animate-fade-in shadow-xl ${
-                    isLight ? 'bg-white border-slate-300' : 'bg-[#18181c] border-zinc-700'
-                  }`}>
-                    <div className={`flex items-center justify-between pb-2 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
-                      <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 ${isLight ? 'text-slate-800' : 'text-white'}`}>
-                        <span>Confirmar paso a:</span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
-                          isLight ? (STATUS_CONFIG[targetStatus]?.lightBadgeClass || 'bg-slate-100 text-slate-700') : STATUS_CONFIG[targetStatus]?.badgeClass
-                        }`}>
-                          {STATUS_CONFIG[targetStatus]?.label}
-                        </span>
+              {/* FORMULARIO DE CONFIRMACIÓN DE TRANSICIÓN */}
+              {targetStatus && (
+                <div className={`border rounded-2xl p-6 space-y-4 animate-fade-in shadow-xl ${
+                  isLight ? 'bg-white border-slate-300' : 'bg-[#18181c] border-zinc-700'
+                }`}>
+                  <div className={`flex items-center justify-between pb-3 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
+                    <span className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-white'}`}>
+                      <span>Confirmar cambio de estado a:</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                        isLight ? (STATUS_CONFIG[targetStatus]?.lightBadgeClass || 'bg-slate-100 text-slate-700') : STATUS_CONFIG[targetStatus]?.badgeClass
+                      }`}>
+                        {STATUS_CONFIG[targetStatus]?.label}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => setTargetStatus(null)}
-                        className={`text-xs cursor-pointer ${isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-500 hover:text-white'}`}
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-
-                    {/* Informe Técnico */}
-                    <div>
-                      <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
-                        Informe Técnico (Qué se le hizo o qué se detectó):
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={techReport}
-                        onChange={(e) => setTechReport(e.target.value)}
-                        placeholder="Ej: Se reemplazó módulo original, se calibró TrueTone, pruebas de carga y táctil superadas 100%..."
-                        className={`w-full border rounded-xl p-3 text-xs outline-none focus:border-[#FF5500] font-sans ${
-                          isLight ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400' : 'bg-zinc-900 border-zinc-700 text-zinc-200 placeholder-zinc-500'
-                        }`}
-                      />
-                    </div>
-
-                    {/* Checklist de salida si es Reparado o Entregado */}
-                    {(targetStatus === 'ready' || targetStatus === 'delivered') && (
-                      <div className={`p-3 border rounded-xl ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-zinc-900/90 border-zinc-800'}`}>
-                        <span className={`text-xs font-bold block mb-2 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
-                          Checklist de Control de Calidad de Salida:
-                        </span>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                          {[
-                            ['turnsOn', 'Enciende OK'],
-                            ['touchOk', 'Táctil / Pantalla OK'],
-                            ['camerasOk', 'Cámaras OK'],
-                            ['chargingOk', 'Carga OK'],
-                            ['audioOk', 'Audio OK']
-                          ].map(([key, label]) => (
-                            <label key={key} className={`flex items-center gap-2 cursor-pointer ${isLight ? 'text-slate-800 font-medium' : 'text-zinc-300'}`}>
-                              <input
-                                type="checkbox"
-                                checked={exitChecklist[key]}
-                                onChange={(e) => setExitChecklist({ ...exitChecklist, [key]: e.target.checked })}
-                                className="w-4 h-4 rounded text-[#FF5500] border-slate-300 dark:border-zinc-700"
-                              />
-                              <span>{label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Nota interna opcional */}
-                    <div>
-                      <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
-                        Nota interna adicional (Solo para empleados, opcional):
-                      </label>
-                      <input
-                        type="text"
-                        value={techInternalNote}
-                        onChange={(e) => setTechInternalNote(e.target.value)}
-                        placeholder="Ej: Repuesto SmartSupply JK colocado en orden..."
-                        className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] ${
-                          isLight ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400' : 'bg-zinc-900 border-zinc-700 text-zinc-200 placeholder-zinc-500'
-                        }`}
-                      />
-                    </div>
-
-                    {/* Notificación al Cliente */}
-                    <div className={`pt-2 border-t flex flex-col gap-2 ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
-                      <span className={`text-xs font-bold ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
-                        Notificación Automática al Cliente:
-                      </span>
-                      
-                      <div className="flex items-center gap-4 text-xs">
-                        <label className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 cursor-pointer font-bold">
-                          <input
-                            type="checkbox"
-                            checked={sendWhatsAppOnProcess}
-                            onChange={(e) => setSendWhatsAppOnProcess(e.target.checked)}
-                            className="w-4 h-4 rounded text-emerald-500 border-slate-300 dark:border-zinc-700"
-                          />
-                          <span>Enviar Notificación por WhatsApp</span>
-                        </label>
-
-                        <label className={`flex items-center gap-2 cursor-pointer ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
-                          <input
-                            type="checkbox"
-                            checked={sendEmailOnProcess}
-                            onChange={(e) => setSendEmailOnProcess(e.target.checked)}
-                            className="w-4 h-4 rounded text-[#FF5500] border-slate-300 dark:border-zinc-700"
-                          />
-                          <span>Enviar Email</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* Botón de Procesar */}
+                    </span>
                     <button
                       type="button"
-                      onClick={handleProcessOrder}
-                      className="w-full py-3 bg-[#FF5500] hover:bg-[#FF6600] text-white font-bold rounded-xl text-xs shadow-lg shadow-[#FF5500]/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                      onClick={() => setTargetStatus(null)}
+                      className={`text-xs font-semibold cursor-pointer ${isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-500 hover:text-white'}`}
                     >
-                      <Check className="w-4 h-4" />
-                      <span>PROCESAR ORDEN Y APLICAR ESTADO</span>
+                      ✕ Cancelar
                     </button>
                   </div>
-                )}
-              </div>
-            )}
 
-            {/* TAB 3: MURO DE NOTAS INTERNAS */}
-            {activeTab === 'notes' && (
-              <div className="space-y-4">
-                {/* Formulario de agregar nota */}
-                <form onSubmit={handleAddNote} className={`border rounded-2xl p-4 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#18181c] border-zinc-800'}`}>
-                  <label className={`block text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
-                    <MessageSquare className="w-3.5 h-3.5 text-[#FF5500]" />
-                    Agregar Nota Interna de Taller
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newNoteText}
-                      onChange={(e) => setNewNoteText(e.target.value)}
-                      placeholder="Escribí una observación para el equipo (ej: Cliente llamó para consultar estado)..."
-                      className={`flex-1 border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] ${
-                        isLight ? 'bg-white border-slate-300 text-slate-900 placeholder-slate-400' : 'bg-zinc-900 border-zinc-700 text-white placeholder-zinc-500'
+                  {/* Informe Técnico */}
+                  <div>
+                    <label className={`block text-xs sm:text-sm font-semibold mb-1.5 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                      Informe Técnico (Qué se le hizo o qué se detectó):
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={techReport}
+                      onChange={(e) => setTechReport(e.target.value)}
+                      placeholder="Ej: Se reemplazó módulo original, se calibró TrueTone, pruebas de carga y táctil superadas 100%..."
+                      className={`w-full border rounded-xl p-3 text-xs sm:text-sm outline-none focus:border-[#FF5500] font-sans ${
+                        isLight ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400' : 'bg-zinc-900 border-zinc-700 text-zinc-200 placeholder-zinc-500'
                       }`}
                     />
-                    <button
-                      type="submit"
-                      disabled={!newNoteText.trim()}
-                      className="px-4 py-2 bg-[#FF5500] hover:bg-[#FF6600] text-white rounded-xl text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      Publicar
-                    </button>
                   </div>
-                </form>
 
-                {/* Listado de Notas */}
-                <div className="space-y-2.5">
-                  {(!selectedOrder.internalNotesList || selectedOrder.internalNotesList.length === 0) ? (
-                    <div className={`text-center p-6 text-xs italic rounded-xl border ${
-                      isLight ? 'bg-slate-50 text-slate-500 border-slate-200' : 'bg-zinc-900/40 text-zinc-500 border-zinc-800/60'
-                    }`}>
-                      No hay notas internas registradas aún.
+                  {/* Checklist de salida si es Reparado o Entregado */}
+                  {(targetStatus === 'ready' || targetStatus === 'delivered') && (
+                    <div className={`p-4 border rounded-xl ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-zinc-900/90 border-zinc-800'}`}>
+                      <span className={`text-xs sm:text-sm font-bold block mb-2.5 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
+                        Checklist de Control de Calidad de Salida:
+                      </span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs sm:text-sm">
+                        {[
+                          ['turnsOn', 'Enciende OK'],
+                          ['touchOk', 'Táctil / Pantalla OK'],
+                          ['camerasOk', 'Cámaras OK'],
+                          ['chargingOk', 'Carga OK'],
+                          ['audioOk', 'Audio OK']
+                        ].map(([key, label]) => (
+                          <label key={key} className={`flex items-center gap-2 cursor-pointer ${isLight ? 'text-slate-800 font-medium' : 'text-zinc-300'}`}>
+                            <input
+                              type="checkbox"
+                              checked={exitChecklist[key]}
+                              onChange={(e) => setExitChecklist({ ...exitChecklist, [key]: e.target.checked })}
+                              className="w-4 h-4 rounded text-[#FF5500] border-slate-300 dark:border-zinc-700"
+                            />
+                            <span>{label}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  ) : (
-                    selectedOrder.internalNotesList.map((note) => (
-                      <div key={note.id} className={`p-3 border rounded-xl space-y-1 ${
-                        isLight ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#18181c] border-zinc-800'
-                      }`}>
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className={`font-bold ${isLight ? 'text-slate-700' : 'text-zinc-400'}`}>{note.author || 'Técnico Montec'}</span>
-                          <span className={isLight ? 'text-slate-500' : 'text-zinc-500'}>{new Date(note.timestamp).toLocaleString('es-AR')}</span>
-                        </div>
-                        <p className={`text-xs ${isLight ? 'text-slate-800' : 'text-zinc-200'}`}>{note.text}</p>
-                      </div>
-                    ))
                   )}
-                </div>
-              </div>
-            )}
 
-            {/* TAB 4: AUDITORÍA Y REGISTRO DE EVENTOS (LOGS) */}
-            {activeTab === 'history' && (
-              <div className="space-y-3">
-                <div className={`border rounded-2xl p-4 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#18181c] border-zinc-800'}`}>
-                  <span className={`text-xs font-bold uppercase tracking-wider block mb-3 flex items-center gap-1.5 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
-                    <History className="w-3.5 h-3.5 text-[#FF5500]" />
-                    Línea de Tiempo de Auditoría Técnica
-                  </span>
-
-                  <div className="space-y-2">
-                    {selectedOrder.logs?.map((log, li) => (
-                      <div key={li} className={`flex items-start gap-2.5 text-xs py-1.5 border-b last:border-none ${
-                        isLight ? 'border-slate-200' : 'border-zinc-800/60'
-                      }`}>
-                        <span className="w-2 h-2 rounded-full bg-[#FF5500] mt-1.5 shrink-0" />
-                        <div className="flex-1">
-                          <p className={isLight ? 'text-slate-800 font-medium' : 'text-zinc-200'}>{log.action}</p>
-                          <span className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
-                            {new Date(log.timestamp).toLocaleString('es-AR')}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                  {/* Nota interna opcional */}
+                  <div>
+                    <label className={`block text-xs sm:text-sm font-semibold mb-1 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
+                      Nota interna adicional (Solo visible para el equipo, opcional):
+                    </label>
+                    <input
+                      type="text"
+                      value={techInternalNote}
+                      onChange={(e) => setTechInternalNote(e.target.value)}
+                      placeholder="Ej: Repuesto SmartSupply JK colocado en orden..."
+                      className={`w-full border rounded-xl px-3.5 py-2.5 text-xs sm:text-sm outline-none focus:border-[#FF5500] ${
+                        isLight ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400' : 'bg-zinc-900 border-zinc-700 text-zinc-200 placeholder-zinc-500'
+                      }`}
+                    />
                   </div>
+
+                  {/* Notificación al Cliente */}
+                  <div className={`pt-3 border-t flex flex-col gap-2.5 ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
+                    <span className={`text-xs sm:text-sm font-bold ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
+                      Notificación Automática al Cliente:
+                    </span>
+                    
+                    <div className="flex items-center gap-6 text-xs sm:text-sm">
+                      <label className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 cursor-pointer font-bold">
+                        <input
+                          type="checkbox"
+                          checked={sendWhatsAppOnProcess}
+                          onChange={(e) => setSendWhatsAppOnProcess(e.target.checked)}
+                          className="w-4 h-4 rounded text-emerald-500 border-slate-300 dark:border-zinc-700"
+                        />
+                        <span>Enviar Notificación por WhatsApp</span>
+                      </label>
+
+                      <label className={`flex items-center gap-2 cursor-pointer ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
+                        <input
+                          type="checkbox"
+                          checked={sendEmailOnProcess}
+                          onChange={(e) => setSendEmailOnProcess(e.target.checked)}
+                          className="w-4 h-4 rounded text-[#FF5500] border-slate-300 dark:border-zinc-700"
+                        />
+                        <span>Enviar Email</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Botón de Procesar */}
+                  <button
+                    type="button"
+                    onClick={handleProcessOrder}
+                    className="w-full py-3.5 bg-[#FF5500] hover:bg-[#FF6600] text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-[#FF5500]/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                  >
+                    <Check className="w-5 h-5" />
+                    <span>PROCESAR ORDEN Y APLICAR ESTADO</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: MURO DE NOTAS INTERNAS */}
+          {activeTab === 'notes' && (
+            <div className="space-y-5">
+              {/* Formulario de agregar nota */}
+              <form onSubmit={handleAddNote} className={`border rounded-2xl p-5 shadow-xs transition-colors ${
+                isLight ? 'bg-white border-slate-200' : 'bg-[#18181c] border-zinc-800'
+              }`}>
+                <label className={`block text-xs sm:text-sm font-bold uppercase tracking-wider mb-2.5 flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
+                  <MessageSquare className="w-4 h-4 text-[#FF5500]" />
+                  Agregar Nota Interna de Taller
+                </label>
+                <div className="flex gap-2 sm:gap-3">
+                  <input
+                    type="text"
+                    value={newNoteText}
+                    onChange={(e) => setNewNoteText(e.target.value)}
+                    placeholder="Escribí una observación para el equipo (ej: Cliente llamó para consultar estado)..."
+                    className={`flex-1 border rounded-xl px-3.5 py-2.5 text-xs sm:text-sm outline-none focus:border-[#FF5500] ${
+                      isLight ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400' : 'bg-zinc-900 border-zinc-700 text-white placeholder-zinc-500'
+                    }`}
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newNoteText.trim()}
+                    className="px-5 py-2.5 bg-[#FF5500] hover:bg-[#FF6600] text-white rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer disabled:opacity-50 shadow-xs active:scale-95"
+                  >
+                    Publicar
+                  </button>
+                </div>
+              </form>
+
+              {/* Listado de Notas */}
+              <div className="space-y-3">
+                {(!selectedOrder.internalNotesList || selectedOrder.internalNotesList.length === 0) ? (
+                  <div className={`text-center p-8 text-xs sm:text-sm italic rounded-2xl border ${
+                    isLight ? 'bg-white text-slate-500 border-slate-200' : 'bg-zinc-900/40 text-zinc-500 border-zinc-800/60'
+                  }`}>
+                    No hay notas internas registradas aún para esta orden.
+                  </div>
+                ) : (
+                  selectedOrder.internalNotesList.map((note) => (
+                    <div key={note.id} className={`p-4 border rounded-2xl space-y-1.5 shadow-xs transition-colors ${
+                      isLight ? 'bg-white border-slate-200' : 'bg-[#18181c] border-zinc-800'
+                    }`}>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className={`font-bold ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>{note.author || 'Técnico Montec'}</span>
+                        <span className={isLight ? 'text-slate-500' : 'text-zinc-500'}>{new Date(note.timestamp).toLocaleString('es-AR')}</span>
+                      </div>
+                      <p className={`text-xs sm:text-sm ${isLight ? 'text-slate-800' : 'text-zinc-200'}`}>{note.text}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: AUDITORÍA Y REGISTRO DE EVENTOS */}
+          {activeTab === 'history' && (
+            <div className="space-y-4">
+              <div className={`border rounded-2xl p-6 shadow-xs transition-colors ${
+                isLight ? 'bg-white border-slate-200' : 'bg-[#18181c] border-zinc-800'
+              }`}>
+                <span className={`text-xs sm:text-sm font-bold uppercase tracking-wider block mb-4 flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
+                  <History className="w-4 h-4 text-[#FF5500]" />
+                  Línea de Tiempo de Auditoría Técnica
+                </span>
+
+                <div className="space-y-3">
+                  {selectedOrder.logs?.map((log, li) => (
+                    <div key={li} className={`flex items-start gap-3 text-xs sm:text-sm py-2.5 border-b last:border-none ${
+                      isLight ? 'border-slate-100' : 'border-zinc-800/60'
+                    }`}>
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#FF5500] mt-1.5 shrink-0" />
+                      <div className="flex-1">
+                        <p className={`font-medium ${isLight ? 'text-slate-900' : 'text-zinc-200'}`}>{log.action}</p>
+                        <span className={`text-[11px] font-mono ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                          {new Date(log.timestamp).toLocaleString('es-AR')}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            )}
-
-          </div>
-
-          {/* PIE DE ACCIONES DE LA ORDEN SELECCIONADA */}
-          <div className={`border-t px-5 py-3 flex items-center justify-between gap-2 shrink-0 flex-wrap ${
-            isLight ? 'bg-slate-100 border-slate-200' : 'bg-zinc-950 border-zinc-800'
-          }`}>
-            <div className="flex items-center gap-2">
-              {/* Reimprimir Comprobante */}
-              <button
-                type="button"
-                onClick={() => setTicketModalOrder(selectedOrder)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border ${
-                  isLight ? 'bg-white hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700'
-                }`}
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Reimprimir Ticket</span>
-              </button>
-
-              {/* Cobrar Saldo */}
-              <button
-                type="button"
-                onClick={() => setIsPaymentModalOpen(true)}
-                className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border border-emerald-500/30"
-              >
-                <DollarSign className="w-3.5 h-3.5" />
-                <span>Cobrar Saldo</span>
-              </button>
             </div>
-
-            <div className="flex items-center gap-2">
-              {/* Abrir WhatsApp */}
-              {selectedOrder.customer?.phone && (
-                <a
-                  href={generateStatusWhatsAppUrl(selectedOrder, selectedOrder.status, '')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-emerald-600/20"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>WhatsApp</span>
-                </a>
-              )}
-
-              <button
-                type="button"
-                onClick={() => setSelectedOrder(null)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
-                  isLight ? 'bg-slate-200 hover:bg-slate-300 text-slate-700' : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400'
-                }`}
-              >
-                Volver a lista
-              </button>
-            </div>
-          </div>
-
+          )}
         </div>
-      </div>,
-      document.body
+
+        {/* PIE DE PÁGINA CON BOTÓN DE REGRESO Y ACCIONES */}
+        <div className={`p-4 border rounded-2xl flex items-center justify-between gap-3 flex-wrap shadow-xs transition-colors ${
+          isLight ? 'bg-white border-slate-200' : 'bg-[#18181c] border-zinc-800'
+        }`}>
+          <button
+            type="button"
+            onClick={() => setSelectedOrder(null)}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors cursor-pointer border ${
+              isLight 
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300' 
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border-zinc-700'
+            }`}
+          >
+            <ArrowLeft className="w-4 h-4 text-[#FF5500]" />
+            <span>Volver a la lista de órdenes</span>
+          </button>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setTicketModalOrder(selectedOrder)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border ${
+                isLight
+                  ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300'
+                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700'
+              }`}
+            >
+              <Printer className="w-3.5 h-3.5 text-[#FF5500]" />
+              <span>Reimprimir Ticket</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsPaymentModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border border-emerald-500/30"
+            >
+              <DollarSign className="w-3.5 h-3.5" />
+              <span>Cobrar Saldo</span>
+            </button>
+
+            {selectedOrder.customer?.phone && (
+              <a
+                href={generateStatusWhatsAppUrl(selectedOrder, selectedOrder.status, '')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>WhatsApp</span>
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -1735,48 +1829,53 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   if (isEmbedded) {
     return (
       <div className="space-y-6 font-sans">
-        {/* 1. ENCABEZADO DE SECCIÓN NATIVO DE ADMIN */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h2 className={`text-xl sm:text-2xl font-heading font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                Gestión Integral de Órdenes de Taller
-              </h2>
-              <span className={`text-xs px-2.5 py-0.5 rounded-full font-mono font-bold border ${
-                isLight ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-zinc-800 text-zinc-300 border-zinc-700'
-              }`}>
-                {filteredOrders.length} {filteredOrders.length === 1 ? 'orden' : 'órdenes'}
-              </span>
-              {clientHistoryFilter && (
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FF5500]/20 text-[#FF5500] font-bold border border-[#FF5500]/40 flex items-center gap-1.5">
-                  <span>Cliente: {clientHistoryFilter}</span>
-                  <button onClick={() => setClientHistoryFilter(null)} className="hover:text-white cursor-pointer">✕</button>
-                </span>
-              )}
+        {selectedOrder ? (
+          renderOrderDetailView()
+        ) : (
+          <>
+            {/* 1. ENCABEZADO DE SECCIÓN NATIVO DE ADMIN */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h2 className={`text-xl sm:text-2xl font-heading font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    Gestión Integral de Órdenes de Taller
+                  </h2>
+                  <span className={`text-xs px-2.5 py-0.5 rounded-full font-mono font-bold border ${
+                    isLight ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-zinc-800 text-zinc-300 border-zinc-700'
+                  }`}>
+                    {filteredOrders.length} {filteredOrders.length === 1 ? 'orden' : 'órdenes'}
+                  </span>
+                  {clientHistoryFilter && (
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#FF5500]/20 text-[#FF5500] font-bold border border-[#FF5500]/40 flex items-center gap-1.5">
+                      <span>Cliente: {clientHistoryFilter}</span>
+                      <button onClick={() => setClientHistoryFilter(null)} className="hover:text-white cursor-pointer">✕</button>
+                    </span>
+                  )}
+                </div>
+                <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                  Flujo operativo, transiciones técnicas y avisos automáticos por WhatsApp
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {onNewOrder && (
+                  <button
+                    type="button"
+                    onClick={onNewOrder}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs sm:text-sm font-bold shadow-[0_0_20px_rgba(255,85,0,0.35)] transition-all cursor-pointer active:scale-95"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Nueva Orden</span>
+                  </button>
+                )}
+              </div>
             </div>
-            <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-              Flujo operativo, transiciones técnicas y avisos automáticos por WhatsApp
-            </p>
-          </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            {onNewOrder && (
-              <button
-                type="button"
-                onClick={onNewOrder}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs sm:text-sm font-bold shadow-[0_0_20px_rgba(255,85,0,0.35)] transition-all cursor-pointer active:scale-95"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Nueva Orden</span>
-              </button>
-            )}
-          </div>
-        </div>
+            {mainToolbarAndTable}
+          </>
+        )}
 
-        {mainToolbarAndTable}
-
-        {/* MODALES Y DRAWER DE ORDEN */}
-        {renderSelectedOrderDrawer()}
+        {/* MODALES AUXILIARES */}
         {renderPatternModal()}
         {renderPaymentModal()}
         {ticketModalOrder && (
@@ -1869,12 +1968,11 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
 
         {/* CONTENIDO INTERNO CUANDO ES MODAL */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-          {mainToolbarAndTable}
+          {selectedOrder ? renderOrderDetailView() : mainToolbarAndTable}
         </div>
       </div>
 
-      {/* MODALES Y DRAWER DE ORDEN EN MODO STANDALONE */}
-      {renderSelectedOrderDrawer()}
+      {/* MODALES AUXILIARES */}
       {renderPatternModal()}
       {renderPaymentModal()}
       {ticketModalOrder && (
