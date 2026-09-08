@@ -74,3 +74,168 @@
     box-shadow: 0 0 20px rgba(255, 85, 0, 0.35);
   }
 }
+
+/* ==========================================================================
+   TEMA CLARO PROFESIONAL PARA PANELES DE TALLER Y ADMINISTRACIÓN MONTEC
+   ========================================================================== */
+.montec-panel-light {
+  color-scheme: light !important;
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Contenedores y Tarjetas Principales */
+.montec-panel-light header {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.montec-panel-light section,
+.montec-panel-light .bg-\[\#121214\],
+.montec-panel-light .bg-\[\#141416\],
+.montec-panel-light .bg-\[\#161619\],
+.montec-panel-light .bg-\[\#0E0E10\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Sub-tarjetas internas, cajas de notas y estados */
+.montec-panel-light .bg-zinc-950,
+.montec-panel-light .bg-zinc-900,
+.montec-panel-light .bg-zinc-850,
+.montec-panel-light .bg-zinc-900\/60,
+.montec-panel-light .bg-zinc-900\/40,
+.montec-panel-light .bg-zinc-950\/60 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+/* Inputs, Selects y Textareas */
+.montec-panel-light input:not([type="checkbox"]):not([type="radio"]),
+.montec-panel-light select,
+.montec-panel-light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.montec-panel-light input::placeholder,
+.montec-panel-light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+.montec-panel-light input:focus,
+.montec-panel-light select:focus,
+.montec-panel-light textarea:focus {
+  background-color: #ffffff !important;
+  border-color: #FF5500 !important;
+  box-shadow: 0 0 0 3px rgba(255, 85, 0, 0.15) !important;
+}
+
+/* Select options */
+.montec-panel-light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Tipografía de etiquetas y textos secundarios */
+.montec-panel-light label,
+.montec-panel-light .text-zinc-300,
+.montec-panel-light .text-zinc-200 {
+  color: #334155 !important;
+}
+
+.montec-panel-light .text-zinc-400,
+.montec-panel-light .text-zinc-500,
+.montec-panel-light .text-zinc-600 {
+  color: #64748b !important;
+}
+
+.montec-panel-light .text-white {
+  color: #0f172a !important;
+}
+
+/* Bordes en general */
+.montec-panel-light .border-zinc-800,
+.montec-panel-light .border-zinc-700,
+.montec-panel-light .border-zinc-850,
+.montec-panel-light .border-zinc-800\/80,
+.montec-panel-light .border-zinc-800\/90,
+.montec-panel-light .border-zinc-800\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Botones secundarios (como selector de fallas Pantalla, Batería, Carga...) */
+.montec-panel-light button.bg-zinc-800\/60,
+.montec-panel-light button.bg-zinc-800\/80,
+.montec-panel-light button.bg-zinc-900,
+.montec-panel-light button.bg-zinc-800,
+.montec-panel-light div.bg-zinc-950,
+.montec-panel-light div.bg-zinc-900 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+.montec-panel-light button.bg-zinc-800\/60:hover,
+.montec-panel-light button.bg-zinc-900:hover,
+.montec-panel-light button.bg-zinc-800:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Preservar estilo de botones activos de fallas o botones seleccionados */
+.montec-panel-light button.border-\[\#FF5500\],
+.montec-panel-light button.border-\[\#FF5500\]\/50,
+.montec-panel-light div.border-\[\#FF5500\] {
+  border-color: #FF5500 !important;
+  background-color: #fff7ed !important;
+  color: #c2410c !important;
+}
+
+/* Botones con fondo Naranja Montec (Mantener texto blanco y fondo vibrante) */
+.montec-panel-light button.bg-\[\#FF5500\],
+.montec-panel-light button.bg-gradient-to-r,
+.montec-panel-light .bg-\[\#FF5500\] {
+  background-color: #FF5500 !important;
+  color: #ffffff !important;
+}
+
+.montec-panel-light button.bg-\[\#FF5500\] *,
+.montec-panel-light button.bg-gradient-to-r * {
+  color: #ffffff !important;
+}
+
+/* Selector de PIN / Patrón / Clave */
+.montec-panel-light .bg-zinc-950 button {
+  color: #475569 !important;
+}
+.montec-panel-light .bg-zinc-950 button.bg-\[\#FF5500\] {
+  background-color: #FF5500 !important;
+  color: #ffffff !important;
+}
+
+/* Dropdown predictivo de modelos y clientes */
+.montec-panel-light .shadow-2xl.bg-zinc-900 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+.montec-panel-light .shadow-2xl.bg-zinc-900 > div:hover {
+  background-color: #fff7ed !important;
+}
+
+/* Scrollbar en modo claro */
+.montec-panel-light ::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+}
+.montec-panel-light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+}
+.montec-panel-light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}

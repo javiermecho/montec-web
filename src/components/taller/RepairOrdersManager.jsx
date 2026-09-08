@@ -447,7 +447,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
       
       {/* CONTENEDOR PRINCIPAL */}
       <div className={`border rounded-2xl sm:rounded-3xl max-w-7xl w-full h-[92vh] shadow-2xl flex flex-col overflow-hidden relative transition-colors ${
-        isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-[#121214] border-zinc-800 text-zinc-200'
+        isLight ? 'montec-panel-light' : 'bg-[#121214] border-zinc-800 text-zinc-200'
       }`}>
 
         {/* 1. BARRA SUPERIOR DE GESTIÓN */}

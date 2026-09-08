@@ -709,7 +709,7 @@ export default function RepairOrderReceiver() {
   // 2. INTERFAZ PRINCIPAL POS DE RECEPCIÓN (LAYOUT EN 3 COLUMNAS MONTEC DARK)
   return (
     <div className={`fixed inset-0 z-50 flex flex-col overflow-hidden animate-fade-in ${
-      isLight ? 'bg-slate-100 text-slate-800' : 'bg-[#0E0E10] text-zinc-200'
+      isLight ? 'montec-panel-light' : 'bg-[#0E0E10] text-zinc-200'
     }`}>
       
       {/* BARRA SUPERIOR DE TERMINAL */}

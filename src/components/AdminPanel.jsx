@@ -269,7 +269,9 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#0A0A0A] overflow-hidden animate-fadeIn text-zinc-200">
+    <div className={`fixed inset-0 z-50 flex flex-col overflow-hidden animate-fadeIn transition-colors ${
+      isLight ? 'montec-panel-light' : 'bg-[#0A0A0A] text-zinc-200'
+    }`}>
       
       {/* Toast Notification */}
       {toastMessage && (
