@@ -38,7 +38,9 @@ import {
   Mail,
   CreditCard,
   Banknote,
-  RotateCcw
+  RotateCcw,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { PatternThumbnail } from './PatternLockInput';
@@ -111,8 +113,12 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     updateRepairOrderStatus, 
     addOrderInternalNote,
     recordOrderPayment,
-    deleteRepairOrder 
+    deleteRepairOrder,
+    panelTheme,
+    togglePanelTheme
   } = useData();
+
+  const isLight = panelTheme === 'light';
 
   // Estados de vista y filtrado
   const [searchTerm, setSearchTerm] = useState('');
@@ -440,18 +446,26 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md overflow-hidden animate-fade-in font-sans">
       
       {/* CONTENEDOR PRINCIPAL */}
-      <div className="bg-[#121214] border border-zinc-800 rounded-2xl sm:rounded-3xl max-w-7xl w-full h-[92vh] shadow-2xl flex flex-col overflow-hidden relative">
+      <div className={`border rounded-2xl sm:rounded-3xl max-w-7xl w-full h-[92vh] shadow-2xl flex flex-col overflow-hidden relative transition-colors ${
+        isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-[#121214] border-zinc-800 text-zinc-200'
+      }`}>
 
         {/* 1. BARRA SUPERIOR DE GESTIÓN */}
-        <header className="bg-zinc-950 border-b border-zinc-800/80 px-4 sm:px-6 py-3 flex items-center justify-between shrink-0 gap-3">
+        <header className={`border-b px-4 sm:px-6 py-3 flex items-center justify-between shrink-0 gap-3 transition-colors ${
+          isLight ? 'bg-white border-slate-200 shadow-xs' : 'bg-zinc-950 border-zinc-800/80'
+        }`}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#FF5500]/15 text-[#FF5500] border border-[#FF5500]/30 flex items-center justify-center font-bold shadow-md">
               <Layers className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-heading font-black text-white flex items-center gap-2 leading-tight">
+              <h2 className={`text-base sm:text-lg font-heading font-black flex items-center gap-2 leading-tight ${
+                isLight ? 'text-slate-900' : 'text-white'
+              }`}>
                 <span>Gestión Integral de Taller</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-mono font-bold border border-zinc-700">
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold border ${
+                  isLight ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-zinc-800 text-zinc-300 border-zinc-700'
+                }`}>
                   {filteredOrders.length} {filteredOrders.length === 1 ? 'orden' : 'órdenes'}
                 </span>
                 {clientHistoryFilter && (
@@ -461,13 +475,37 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                   </span>
                 )}
               </h2>
-              <p className="text-xs text-zinc-400 hidden sm:block">
+              <p className={`text-xs hidden sm:block ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                 Flujo operativo, transiciones técnicas y avisos automáticos por WhatsApp
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Botón Minimalista de Tema Claro / Oscuro */}
+            <button
+              type="button"
+              onClick={togglePanelTheme}
+              className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                isLight
+                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 shadow-xs'
+                  : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
+              }`}
+              title={isLight ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
+            >
+              {isLight ? (
+                <>
+                  <Moon className="w-4 h-4 text-indigo-600" />
+                  <span className="hidden sm:inline">Oscuro</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-4 h-4 text-amber-400" />
+                  <span className="hidden sm:inline">Claro</span>
+                </>
+              )}
+            </button>
+
             {onNewOrder && (
               <button
                 type="button"
@@ -482,7 +520,11 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
             <button
               type="button"
               onClick={onClose}
-              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer border border-zinc-800"
+              className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                isLight
+                  ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border-slate-200'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800 border-zinc-800'
+              }`}
               title="Cerrar panel de órdenes"
             >
               <X className="w-5 h-5" />

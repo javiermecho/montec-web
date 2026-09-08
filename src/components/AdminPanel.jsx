@@ -25,7 +25,9 @@ import {
   Maximize2,
   Zap,
   BarChart3,
-  ClipboardList
+  ClipboardList,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { getIphoneGenerationInfo } from '../data/iphonePricingData';
@@ -60,8 +62,12 @@ export default function AdminPanel() {
     updateIphoneConfig,
     resetIphoneConfigs,
     dolarRate,
-    orders
+    orders,
+    panelTheme,
+    togglePanelTheme
   } = useData();
+
+  const isLight = panelTheme === 'light';
 
   // Estados de interfaz
   const [pinInput, setPinInput] = useState('');
@@ -283,6 +289,30 @@ export default function AdminPanel() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Botón Minimalista de Tema Claro / Oscuro */}
+          <button
+            type="button"
+            onClick={togglePanelTheme}
+            className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              isLight
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 shadow-xs'
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
+            }`}
+            title={isLight ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
+          >
+            {isLight ? (
+              <>
+                <Moon className="w-4 h-4 text-indigo-600" />
+                <span className="hidden sm:inline text-xs">Oscuro</span>
+              </>
+            ) : (
+              <>
+                <Sun className="w-4 h-4 text-amber-400" />
+                <span className="hidden sm:inline text-xs">Claro</span>
+              </>
+            )}
+          </button>
+
           <button
             onClick={logoutAdmin}
             className="px-3 py-1.5 text-xs text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 border border-zinc-800 transition-colors"

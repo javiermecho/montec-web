@@ -544,6 +544,19 @@ export function DataProvider({ children }) {
     return Array.from(clientMap.values());
   };
 
+  // 9. Tema visual de paneles (Claro / Oscuro)
+  const [panelTheme, setPanelTheme] = useState(() => {
+    return localStorage.getItem('montec_panel_theme') || 'dark';
+  });
+
+  const togglePanelTheme = () => {
+    setPanelTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('montec_panel_theme', next);
+      return next;
+    });
+  };
+
   // --- Operaciones de Modelos ---
   const addModel = (newModel) => {
     const modelWithId = {
@@ -551,16 +564,36 @@ export function DataProvider({ children }) {
       id: newModel.id || `custom-${Date.now()}`,
       year: parseInt(newModel.year, 10) || new Date().getFullYear()
     };
-    setModels(prev => [modelWithId, ...prev]);
+    setModels(prev => {
+      const updated = [modelWithId, ...prev];
+      try {
+        localStorage.setItem(STORAGE_KEYS.MODELS, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error guardando modelo:', e);
+      }
+      return updated;
+    });
     return modelWithId;
   };
 
   const updateModel = (id, updatedFields) => {
-    setModels(prev => prev.map(m => m.id === id ? { ...m, ...updatedFields } : m));
+    setModels(prev => {
+      const updated = prev.map(m => m.id === id ? { ...m, ...updatedFields } : m);
+      try {
+        localStorage.setItem(STORAGE_KEYS.MODELS, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
   };
 
   const deleteModel = (id) => {
-    setModels(prev => prev.filter(m => m.id !== id));
+    setModels(prev => {
+      const updated = prev.filter(m => m.id !== id);
+      try {
+        localStorage.setItem(STORAGE_KEYS.MODELS, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
   };
 
   // --- Operaciones de Fallas y Precios ---
@@ -974,7 +1007,10 @@ export function DataProvider({ children }) {
       addOrderInternalNote,
       recordOrderPayment,
       deleteRepairOrder,
-      searchClients
+      searchClients,
+      panelTheme,
+      togglePanelTheme,
+      setPanelTheme
     }}>
       {children}
     </DataContext.Provider>

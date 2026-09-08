@@ -35,7 +35,9 @@ import {
   Maximize2,
   BatteryCharging,
   Volume2,
-  Lightbulb
+  Lightbulb,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { searchPartsForRepair, generateQuickSupplierLinks, detectPartCategory } from '../../services/partsSearchService';
@@ -57,8 +59,13 @@ export default function RepairOrderReceiver() {
     searchClients,
     calculateCurrentEstimate,
     setIsQuoteModalOpen,
-    dolarRate
+    dolarRate,
+    panelTheme,
+    togglePanelTheme,
+    addModel
   } = useData();
+
+  const isLight = panelTheme === 'light';
 
   // Estados de control de pantallas
   const [pinInput, setPinInput] = useState('');
@@ -75,9 +82,22 @@ export default function RepairOrderReceiver() {
   const [modelSearchQuery, setModelSearchQuery] = useState('');
   const [showModelSuggestions, setShowModelSuggestions] = useState(false);
 
+  // Estados para agregar nuevos modelos de teléfonos directamente desde el mostrador
+  const [isNewModelModalOpen, setIsNewModelModalOpen] = useState(false);
+  const [newModelData, setNewModelData] = useState({
+    brand: 'Apple',
+    customBrand: '',
+    model: '',
+    type: 'Smartphone',
+    year: new Date().getFullYear().toString()
+  });
+  const [modelSuccessNotice, setModelSuccessNotice] = useState(null);
+  const [customBrandInput, setCustomBrandInput] = useState('');
+
   // Refs para atajos de teclado F9, F10, F12
   const clientInputRef = useRef(null);
   const modelInputRef = useRef(null);
+  const modelSuggestionsRef = useRef(null);
 
   // FORMULARIO PRINCIPAL DE ORDEN
   const initialFormState = {
@@ -387,6 +407,58 @@ export default function RepairOrderReceiver() {
     }));
   };
 
+  // Notificación flotante de modelo guardado
+  const showModelNotice = (text) => {
+    setModelSuccessNotice(text);
+    setTimeout(() => setModelSuccessNotice(null), 3500);
+  };
+
+  // Guardar rápidamente el modelo tipeado en el mostrador
+  const handleQuickSaveModel = (modelName) => {
+    if (!modelName || !modelName.trim()) return;
+    const cleanName = modelName.trim();
+    let brandToUse = formData.device.brand;
+    if (brandToUse === 'Otra' && customBrandInput.trim()) {
+      brandToUse = customBrandInput.trim();
+    }
+    const devType = brandToUse.toLowerCase() === 'apple' ? 'iphone' : (formData.device.type === 'Notebook' ? 'notebook' : 'android');
+    const saved = addModel({
+      brand: brandToUse,
+      model: cleanName,
+      type: devType,
+      year: new Date().getFullYear()
+    });
+    handleSelectModel(saved);
+    showModelNotice(`Modelo "${cleanName}" (${brandToUse}) guardado en el catálogo.`);
+    setShowModelSuggestions(false);
+  };
+
+  // Guardar modelo desde el modal detallado
+  const handleSaveNewModelModal = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!newModelData.model.trim()) return;
+    const brandToUse = newModelData.brand === 'Otra' && newModelData.customBrand.trim()
+      ? newModelData.customBrand.trim()
+      : newModelData.brand;
+    const devType = brandToUse.toLowerCase() === 'apple' ? 'iphone' : (newModelData.type === 'Notebook' ? 'notebook' : 'android');
+    const saved = addModel({
+      brand: brandToUse,
+      model: newModelData.model.trim(),
+      type: devType,
+      year: parseInt(newModelData.year, 10) || new Date().getFullYear()
+    });
+    handleSelectModel(saved);
+    showModelNotice(`Modelo "${newModelData.model.trim()}" (${brandToUse}) guardado y seleccionado.`);
+    setIsNewModelModalOpen(false);
+    setNewModelData({
+      brand: 'Apple',
+      customBrand: '',
+      model: '',
+      type: 'Smartphone',
+      year: new Date().getFullYear().toString()
+    });
+  };
+
   // Generar Tag ID interno si no tiene IMEI
   const handleGenerateImeiTag = () => {
     const randomTag = `MON-${Math.floor(10000 + Math.random() * 90000)}`;
@@ -636,22 +708,28 @@ export default function RepairOrderReceiver() {
 
   // 2. INTERFAZ PRINCIPAL POS DE RECEPCIÓN (LAYOUT EN 3 COLUMNAS MONTEC DARK)
   return (
-    <div className="fixed inset-0 z-50 bg-[#0E0E10] text-zinc-200 flex flex-col overflow-hidden animate-fade-in">
+    <div className={`fixed inset-0 z-50 flex flex-col overflow-hidden animate-fade-in ${
+      isLight ? 'bg-slate-100 text-slate-800' : 'bg-[#0E0E10] text-zinc-200'
+    }`}>
       
       {/* BARRA SUPERIOR DE TERMINAL */}
-      <header className="bg-zinc-950 border-b border-zinc-800/80 px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0">
+      <header className={`border-b px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0 transition-colors ${
+        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-zinc-950 border-zinc-800/80'
+      }`}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-[#FF5500] text-white font-black flex items-center justify-center text-sm shadow-md">
             M
           </div>
           <div>
-            <h1 className="text-sm sm:text-base font-heading font-black text-white leading-tight flex items-center gap-2">
+            <h1 className={`text-sm sm:text-base font-heading font-black leading-tight flex items-center gap-2 ${
+              isLight ? 'text-slate-900' : 'text-white'
+            }`}>
               <span>MONTEC TALLER</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold border border-emerald-500/30">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold border border-emerald-500/30">
                 MOSTRADOR ACTIVO
               </span>
             </h1>
-            <p className="text-[10px] text-zinc-400">
+            <p className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
               Montes Carballo 943 • Recepción de Equipos & Órdenes de Servicio
             </p>
           </div>
@@ -659,10 +737,38 @@ export default function RepairOrderReceiver() {
 
         {/* Acciones de Cabecera */}
         <div className="flex items-center gap-2">
+          {/* Botón Minimalista de Cambio de Tema (Claro / Oscuro) */}
+          <button
+            type="button"
+            onClick={togglePanelTheme}
+            className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+              isLight
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 shadow-xs'
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
+            }`}
+            title={isLight ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
+          >
+            {isLight ? (
+              <>
+                <Moon className="w-3.5 h-3.5 text-indigo-600" />
+                <span className="hidden sm:inline">Oscuro</span>
+              </>
+            ) : (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Claro</span>
+              </>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={() => setActiveSubModal('orders_list')}
-            className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-700/80 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+            className={`px-3 py-1.5 border rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
+              isLight
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border-zinc-700/80'
+            }`}
             title="Ver listado de órdenes registradas"
           >
             <List className="w-3.5 h-3.5 text-[#FF5500]" />
@@ -676,7 +782,11 @@ export default function RepairOrderReceiver() {
                 logoutEmployee();
               }
             }}
-            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl border border-zinc-800 transition-colors cursor-pointer"
+            className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+              isLight
+                ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border-slate-200'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-800 border-zinc-800'
+            }`}
             title="Bloquear Terminal"
           >
             <Lock className="w-4 h-4" />
@@ -685,7 +795,11 @@ export default function RepairOrderReceiver() {
           <button
             type="button"
             onClick={() => setIsTallerOpen(false)}
-            className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl border border-zinc-800 transition-colors cursor-pointer"
+            className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+              isLight
+                ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border-slate-200'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-800 border-zinc-800'
+            }`}
             title="Cerrar ventana de mostrador"
           >
             <X className="w-4 h-4" />
@@ -700,13 +814,15 @@ export default function RepairOrderReceiver() {
           {/* ========================================================================= */}
           {/* COLUMNA 1: DATOS DEL CLIENTE */}
           {/* ========================================================================= */}
-          <section className="bg-[#141416] border border-zinc-800/90 rounded-2xl p-4 flex flex-col gap-3 shadow-lg">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+          <section className={`border rounded-2xl p-4 flex flex-col gap-3 shadow-lg transition-colors ${
+            isLight ? 'bg-white border-slate-200' : 'bg-[#141416] border-zinc-800/90'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-2.5 ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
               <h2 className="text-xs uppercase font-black tracking-wider text-[#FF5500] flex items-center gap-1.5">
                 <User className="w-4 h-4" />
                 <span>Columna 1: Datos del Cliente</span>
               </h2>
-              <span className="text-[10px] text-zinc-500 font-mono">
+              <span className={`text-[10px] font-mono ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
                 [Atajo F9]
               </span>
             </div>
@@ -908,13 +1024,15 @@ export default function RepairOrderReceiver() {
           {/* ========================================================================= */}
           {/* COLUMNA 2: DATOS DEL EQUIPO & SEGURIDAD */}
           {/* ========================================================================= */}
-          <section className="bg-[#141416] border border-zinc-800/90 rounded-2xl p-4 flex flex-col gap-3 shadow-lg">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+          <section className={`border rounded-2xl p-4 flex flex-col gap-3 shadow-lg transition-colors ${
+            isLight ? 'bg-white border-slate-200' : 'bg-[#141416] border-zinc-800/90'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-2.5 ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
               <h2 className="text-xs uppercase font-black tracking-wider text-[#FF5500] flex items-center gap-1.5">
                 <Smartphone className="w-4 h-4" />
                 <span>Columna 2: Equipo & Seguridad</span>
               </h2>
-              <span className="text-[10px] text-zinc-500 font-mono">
+              <span className={`text-[10px] font-mono ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
                 [Atajo F10]
               </span>
             </div>
@@ -922,7 +1040,7 @@ export default function RepairOrderReceiver() {
             {/* Marca y Tipo */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+                <label className={`block text-[11px] font-bold mb-1 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
                   Marca
                 </label>
                 <select
@@ -938,7 +1056,9 @@ export default function RepairOrderReceiver() {
                       }
                     }));
                   }}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-white outline-none focus:border-[#FF5500] font-semibold"
+                  className={`w-full border rounded-xl px-2.5 py-2 text-xs outline-none focus:border-[#FF5500] font-semibold transition-colors ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-zinc-950 border-zinc-800 text-white'
+                  }`}
                 >
                   <option value="Apple">Apple (iPhone / iPad)</option>
                   <option value="Samsung">Samsung</option>
@@ -956,7 +1076,7 @@ export default function RepairOrderReceiver() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+                <label className={`block text-[11px] font-bold mb-1 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
                   Tipo de Dispositivo
                 </label>
                 <select
@@ -965,7 +1085,9 @@ export default function RepairOrderReceiver() {
                     ...prev,
                     device: { ...prev.device, type: e.target.value }
                   }))}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-white outline-none focus:border-[#FF5500]"
+                  className={`w-full border rounded-xl px-2.5 py-2 text-xs outline-none focus:border-[#FF5500] transition-colors ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-zinc-950 border-zinc-800 text-white'
+                  }`}
                 >
                   <option value="Smartphone">Smartphone Android</option>
                   <option value="iPhone">iPhone / Apple</option>
@@ -976,11 +1098,52 @@ export default function RepairOrderReceiver() {
               </div>
             </div>
 
+            {/* Campo adicional si la marca es "Otra" */}
+            {formData.device.brand === 'Otra' && (
+              <div className={`p-2.5 rounded-xl border animate-fade-in ${
+                isLight ? 'bg-slate-50 border-slate-200' : 'bg-zinc-900/60 border-zinc-800'
+              }`}>
+                <label className={`block text-[11px] font-bold mb-1 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  Especificar Nombre de la Marca <span className="text-[#FF5500]">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={customBrandInput}
+                  onChange={(e) => setCustomBrandInput(e.target.value)}
+                  placeholder="ej: Infinix, Huawei, OnePlus, Sony, Honor, Alcatel..."
+                  className={`w-full border rounded-xl px-2.5 py-1.5 text-xs outline-none focus:border-[#FF5500] ${
+                    isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-zinc-950 border-zinc-700 text-white'
+                  }`}
+                />
+              </div>
+            )}
+
             {/* Modelo Exacto (Predictivo vinculado a modelos de Montec) */}
             <div className="relative">
-              <label className="block text-[11px] font-bold text-zinc-300 mb-1">
-                Modelo Exacto <span className="text-[#FF5500]">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className={`text-[11px] font-bold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  Modelo Exacto <span className="text-[#FF5500]">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewModelData(prev => ({
+                      ...prev,
+                      brand: formData.device.brand === 'Otra' ? (customBrandInput.trim() || 'Otra') : formData.device.brand,
+                      customBrand: customBrandInput.trim(),
+                      model: formData.device.model || '',
+                      type: formData.device.type
+                    }));
+                    setIsNewModelModalOpen(true);
+                  }}
+                  className="text-[10px] text-[#FF5500] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                  title="Agregar un nuevo modelo a la base de datos"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>+ Agregar a la lista</span>
+                </button>
+              </div>
+
               <input
                 ref={modelInputRef}
                 type="text"
@@ -997,22 +1160,64 @@ export default function RepairOrderReceiver() {
                   setShowModelSuggestions(true);
                 }}
                 placeholder="ej: iPhone 13, Galaxy A54 5G, Moto G22..."
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500]"
+                className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] transition-colors ${
+                  isLight 
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white' 
+                    : 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600'
+                }`}
               />
 
-              {/* Menú desplegable predictivo */}
-              {showModelSuggestions && filteredModelsList.length > 0 && (
-                <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden max-h-44 overflow-y-auto">
+              {/* Menú desplegable predictivo & Añadir si no está */}
+              {showModelSuggestions && (
+                <div 
+                  ref={modelSuggestionsRef}
+                  className={`absolute top-full left-0 right-0 z-30 mt-1 rounded-xl shadow-2xl overflow-hidden max-h-56 overflow-y-auto border ${
+                    isLight ? 'bg-white border-slate-300' : 'bg-zinc-900 border-zinc-700'
+                  }`}
+                >
                   {filteredModelsList.map((m) => (
                     <div
                       key={m.id}
                       onClick={() => handleSelectModel(m)}
-                      className="px-3 py-2 hover:bg-[#FF5500]/20 hover:text-white border-b border-zinc-800/60 cursor-pointer text-xs flex items-center justify-between"
+                      className={`px-3 py-2 border-b cursor-pointer text-xs flex items-center justify-between transition-colors ${
+                        isLight 
+                          ? 'border-slate-100 hover:bg-orange-50/80 text-slate-800' 
+                          : 'border-zinc-800/60 hover:bg-[#FF5500]/20 hover:text-white text-zinc-200'
+                      }`}
                     >
-                      <span className="font-semibold text-zinc-200">{m.model}</span>
-                      <span className="text-[10px] text-zinc-500 font-mono">{m.brand} • {m.year || ''}</span>
+                      <span className="font-semibold">{m.model}</span>
+                      <span className={`text-[10px] font-mono ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
+                        {m.brand} • {m.year || ''}
+                      </span>
                     </div>
                   ))}
+
+                  {/* Mensaje de no encontrado */}
+                  {filteredModelsList.length === 0 && (
+                    <div className={`p-3 text-xs text-center ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                      No se encontró este modelo en el catálogo de <strong>{formData.device.brand}</strong>.
+                    </div>
+                  )}
+
+                  {/* Opción rápida para guardar el modelo escrito en 1 clic */}
+                  {formData.device.model && formData.device.model.trim().length >= 1 && (
+                    <div
+                      onClick={() => handleQuickSaveModel(formData.device.model.trim())}
+                      className={`px-3 py-2.5 border-t cursor-pointer flex items-center justify-between text-xs font-bold transition-colors ${
+                        isLight 
+                          ? 'bg-orange-50/90 hover:bg-orange-100 text-[#FF5500] border-slate-200' 
+                          : 'bg-[#FF5500]/15 hover:bg-[#FF5500]/25 text-[#FF5500] border-zinc-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Plus className="w-3.5 h-3.5 shrink-0" />
+                        <span>Guardar <strong>"{formData.device.model.trim()}"</strong> en la lista</span>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-[#FF5500] text-white font-semibold shadow-sm">
+                        + Guardar
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1183,13 +1388,15 @@ export default function RepairOrderReceiver() {
           {/* ========================================================================= */}
           {/* COLUMNA 3: REPARACIÓN, REPUESTOS & CONDICIONES */}
           {/* ========================================================================= */}
-          <section className="bg-[#141416] border border-zinc-800/90 rounded-2xl p-4 flex flex-col gap-3 shadow-lg">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+          <section className={`border rounded-2xl p-4 flex flex-col gap-3 shadow-lg transition-colors ${
+            isLight ? 'bg-white border-slate-200' : 'bg-[#141416] border-zinc-800/90'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-2.5 ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
               <h2 className="text-xs uppercase font-black tracking-wider text-[#FF5500] flex items-center gap-1.5">
                 <FileText className="w-4 h-4" />
                 <span>Columna 3: Reparación & Condiciones</span>
               </h2>
-              <span className="text-[10px] text-zinc-500 font-mono">
+              <span className={`text-[10px] font-mono ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
                 [Atajo F12]
               </span>
             </div>
@@ -1739,6 +1946,172 @@ export default function RepairOrderReceiver() {
         onApplyPrice={(price) => handleApplyEstimatePrice(price)}
         onOpenFullQuoter={() => setIsQuoteModalOpen(true)}
       />
+
+      {/* SUB-MODAL 4: AGREGAR NUEVO MODELO DE DISPOSITIVO */}
+      {isNewModelModalOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className={`border rounded-2xl p-5 sm:p-6 max-w-md w-full shadow-2xl relative ${
+            isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#141416] border-zinc-700 text-zinc-100'
+          }`}>
+            <div className={`flex items-center justify-between pb-3 mb-4 border-b ${
+              isLight ? 'border-slate-200' : 'border-zinc-800'
+            }`}>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[#FF5500]/20 text-[#FF5500] flex items-center justify-center">
+                  <Smartphone className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold leading-tight">Agregar Nuevo Modelo</h3>
+                  <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                    Se guardará en el catálogo de Montec
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsNewModelModalOpen(false)}
+                className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                  isLight ? 'hover:bg-slate-100 text-slate-500' : 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
+                }`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNewModelModal} className="space-y-3.5">
+              {/* Marca */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Marca
+                </label>
+                <select
+                  value={newModelData.brand}
+                  onChange={(e) => setNewModelData(prev => ({ ...prev, brand: e.target.value }))}
+                  className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] font-semibold ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                  }`}
+                >
+                  <option value="Apple">Apple (iPhone / iPad)</option>
+                  <option value="Samsung">Samsung</option>
+                  <option value="Motorola">Motorola</option>
+                  <option value="Xiaomi">Xiaomi</option>
+                  <option value="LG">LG</option>
+                  <option value="TCL">TCL</option>
+                  <option value="ZTE">ZTE</option>
+                  <option value="Lenovo">Lenovo</option>
+                  <option value="HP">HP</option>
+                  <option value="Dell">Dell</option>
+                  <option value="Asus">Asus</option>
+                  <option value="Otra">Otra marca...</option>
+                </select>
+              </div>
+
+              {/* Si es Otra marca */}
+              {newModelData.brand === 'Otra' && (
+                <div>
+                  <label className="block text-xs font-semibold mb-1">
+                    Nombre de la Marca
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newModelData.customBrand}
+                    onChange={(e) => setNewModelData(prev => ({ ...prev, customBrand: e.target.value }))}
+                    placeholder="ej: Huawei, Infinix, OnePlus, Sony..."
+                    className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] ${
+                      isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                    }`}
+                  />
+                </div>
+              )}
+
+              {/* Nombre del Modelo */}
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Nombre Exacto del Modelo <span className="text-[#FF5500]">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={newModelData.model}
+                  onChange={(e) => setNewModelData(prev => ({ ...prev, model: e.target.value }))}
+                  placeholder="ej: iPhone 16 Pro, Galaxy S24 FE, Moto G84..."
+                  className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] ${
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                  }`}
+                />
+              </div>
+
+              {/* Tipo y Año */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-semibold mb-1">
+                    Tipo de Dispositivo
+                  </label>
+                  <select
+                    value={newModelData.type}
+                    onChange={(e) => setNewModelData(prev => ({ ...prev, type: e.target.value }))}
+                    className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] ${
+                      isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                    }`}
+                  >
+                    <option value="Smartphone">Smartphone Android</option>
+                    <option value="iPhone">iPhone / Apple</option>
+                    <option value="Tablet">Tablet / iPad</option>
+                    <option value="Notebook">Notebook / Laptop</option>
+                    <option value="Smartwatch">Smartwatch</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold mb-1">
+                    Año (aprox)
+                  </label>
+                  <input
+                    type="number"
+                    value={newModelData.year}
+                    onChange={(e) => setNewModelData(prev => ({ ...prev, year: e.target.value }))}
+                    className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] font-mono ${
+                      isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className={`flex items-center justify-end gap-2 pt-3 border-t ${
+                isLight ? 'border-slate-200' : 'border-zinc-800'
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => setIsNewModelModalOpen(false)}
+                  className={`px-3 py-2 text-xs font-bold rounded-xl border transition-colors cursor-pointer ${
+                    isLight ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700' : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-300'
+                  }`}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white shadow-md shadow-[#FF5500]/20 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Guardar y Usar</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* NOTIFICACIÓN TOAST FLOTANTE */}
+      {modelSuccessNotice && (
+        <div className="fixed bottom-5 right-5 z-[80] bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold animate-bounce border border-emerald-400">
+          <Check className="w-4 h-4" />
+          <span>{modelSuccessNotice}</span>
+        </div>
+      )}
 
     </div>
   );
