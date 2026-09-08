@@ -162,16 +162,24 @@
   background-color: #f8fafc !important;
 }
 
-/* Tipografía de texto general fuera de los encabezados oscuros */
-.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) h1.text-white,
-.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) h2.text-white,
-.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) h3.text-white,
-.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) div.text-white,
-.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) strong.text-white,
-.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) td div.text-white,
-.montec-panel-light td [class*="text-white"]:not(button *),
-.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) span.text-white:not(button[class*="bg-[#FF5500]"] *):not([class*="bg-[#FF5500]"] *) {
+/* Tipografía de encabezados y títulos en Modo Claro */
+.montec-panel-light h1:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"] *),
+.montec-panel-light h2:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"] *),
+.montec-panel-light h3:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"] *),
+.montec-panel-light h4:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"] *),
+.montec-panel-light h5:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"] *),
+.montec-panel-light h6:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"] *) {
   color: #0f172a !important;
+}
+
+/* Tipografía de texto general fuera de los encabezados oscuros permanentes y de botones con relleno */
+.montec-panel-light .text-white:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *):not([class~="bg-[#FF5500]"]):not([class~="bg-[#FF5500]"] *):not(button[class*="bg-emerald-"]):not(button[class*="bg-emerald-"] *):not(button[class*="bg-rose-"]):not(button[class*="bg-rose-"] *):not(button[class*="bg-purple-"]):not(button[class*="bg-purple-"] *) {
+  color: #0f172a !important;
+}
+
+/* Prevenir que hover:text-white se vuelva blanco invisible al pasar el mouse sobre tarjetas claras */
+.montec-panel-light [class*="hover:text-white"]:hover:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"]):not([class~="bg-[#FF5500]"] *) {
+  color: #FF5500 !important;
 }
 
 .montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) [class*="text-zinc-200"],
@@ -181,7 +189,7 @@
 
 .montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) [class*="text-zinc-400"],
 .montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) [class*="text-zinc-500"] {
-  color: #64748b !important;
+  color: #475569 !important;
 }
 
 /* Inputs, Selects y Textareas */
@@ -259,11 +267,14 @@
 
 /* Badges pequeños oscuros (marcas, IDs, tags de accesorios) */
 .montec-panel-light span[class*="bg-zinc-800"]:not(button[class*="bg-[#FF5500]"] *):not(header *):not(.admin-tabs-bar *),
+.montec-panel-light span[class*="bg-zinc-850"]:not(button[class*="bg-[#FF5500]"] *):not(header *):not(.admin-tabs-bar *),
 .montec-panel-light span[class*="bg-zinc-900"]:not(button[class*="bg-[#FF5500]"] *):not(header *):not(.admin-tabs-bar *),
+.montec-panel-light span[class*="bg-zinc-950"]:not(button[class*="bg-[#FF5500]"] *):not(header *):not(.admin-tabs-bar *),
 .montec-panel-light span[class*="bg-black/"]:not(button[class*="bg-[#FF5500]"] *):not(header *):not(.admin-tabs-bar *) {
   background-color: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
-  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  font-weight: 600 !important;
 }
 
 /* Cuadraditos de checkboxes no seleccionados en Buscador de Repuestos */

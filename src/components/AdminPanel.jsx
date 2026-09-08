@@ -1242,10 +1242,10 @@ export default function AdminPanel() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-heading font-bold text-white">
+                <h2 className={`text-xl sm:text-2xl font-heading font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   Productos y Accesorios en Venta
                 </h2>
-                <p className="text-xs sm:text-sm text-zinc-400 mt-0.5">
+                <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                   Cargadores, cables reforzados, hidrogel a medida, fundas y audio disponibles en el local de Montes Carballo 943.
                 </p>
               </div>
@@ -1279,16 +1279,16 @@ export default function AdminPanel() {
                       </span>
                     </div>
 
-                    <h4 className="font-heading font-bold text-base text-white line-clamp-1 mb-1">
+                    <h4 className={`font-heading font-bold text-base line-clamp-1 mb-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                       {acc.name}
                     </h4>
-                    <p className="text-xs text-zinc-400 line-clamp-1 mb-3">
+                    <p className={`text-xs line-clamp-1 mb-3 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                       {acc.compatible}
                     </p>
 
-                    <div className="text-xs text-zinc-500 mb-2">Precio de Venta Local:</div>
+                    <div className={`text-xs mb-2 ${isLight ? 'text-slate-600 font-medium' : 'text-zinc-500'}`}>Precio de Venta Local:</div>
                     <div className="relative mb-3">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">$</span>
+                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 font-bold ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>$</span>
                       <input
                         type="number"
                         value={acc.price}
@@ -1296,12 +1296,16 @@ export default function AdminPanel() {
                           updateAccessory(acc.id, { price: e.target.value });
                           showToast(`Precio de ${acc.name} actualizado`);
                         }}
-                        className="w-full bg-zinc-900 border border-zinc-700 focus:border-[#FF5500] rounded-xl pl-8 pr-3 py-2 text-sm text-white font-mono font-bold outline-none"
+                        className={`w-full border rounded-xl pl-8 pr-3 py-2 text-sm font-mono font-bold outline-none focus:border-[#FF5500] ${
+                          isLight
+                            ? 'bg-white border-slate-300 text-slate-900'
+                            : 'bg-zinc-900 border-zinc-700 text-white'
+                        }`}
                       />
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between">
+                  <div className={`pt-3 border-t flex items-center justify-between ${isLight ? 'border-slate-200' : 'border-zinc-800/80'}`}>
                     <button
                       onClick={() => {
                         setEditingAccessory(acc);
@@ -1315,7 +1319,9 @@ export default function AdminPanel() {
                         });
                         setIsAccessoryModalOpen(true);
                       }}
-                      className="text-xs text-zinc-300 hover:text-white flex items-center gap-1 font-semibold"
+                      className={`text-xs flex items-center gap-1 font-semibold transition-colors ${
+                        isLight ? 'text-slate-700 hover:text-[#FF5500]' : 'text-zinc-300 hover:text-white'
+                      }`}
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                       <span>Editar detalles</span>
@@ -1348,20 +1354,20 @@ export default function AdminPanel() {
         {activeTab === 'settings' && (
           <div className="max-w-2xl space-y-6">
             <div>
-              <h2 className="text-xl sm:text-2xl font-heading font-bold text-white">
+              <h2 className={`text-xl sm:text-2xl font-heading font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 Copia de Seguridad y Configuración
               </h2>
-              <p className="text-xs sm:text-sm text-zinc-400 mt-0.5">
+              <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                 Guardá una copia de todos los precios y modelos modificados o restablecé los valores originales de fábrica.
               </p>
             </div>
 
-            <div className="bg-[#121212] border border-zinc-800 rounded-2xl p-6 space-y-5">
+            <div className={`border rounded-2xl p-6 space-y-5 ${isLight ? 'bg-white border-slate-200' : 'bg-[#121212] border-zinc-800'}`}>
               <div>
-                <h4 className="font-heading font-bold text-base text-white mb-1">
+                <h4 className={`font-heading font-bold text-base mb-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   Exportar Datos a JSON
                 </h4>
-                <p className="text-xs text-zinc-400 mb-3">
+                <p className={`text-xs mb-3 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                   Descargá un archivo .json con todos los modelos ({models.length}), precios y accesorios configurados en este navegador.
                 </p>
                 <button
