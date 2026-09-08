@@ -242,7 +242,9 @@
 .montec-panel-light button[class*="bg-zinc-850"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
 .montec-panel-light button[class*="bg-zinc-900"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
 .montec-panel-light button[class*="bg-zinc-800"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light button[class*="bg-zinc-700"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *) {
+.montec-panel-light button[class*="bg-zinc-700"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
+.montec-panel-light a[class*="bg-zinc-900"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
+.montec-panel-light a[class*="bg-zinc-800"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *) {
   background-color: #f1f5f9 !important;
   border-color: #cbd5e1 !important;
   color: #334155 !important;
@@ -252,7 +254,9 @@
 .montec-panel-light button[class*="bg-zinc-850"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
 .montec-panel-light button[class*="bg-zinc-900"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
 .montec-panel-light button[class*="bg-zinc-800"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light button[class*="bg-zinc-700"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *) {
+.montec-panel-light button[class*="bg-zinc-700"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
+.montec-panel-light a[class*="bg-zinc-900"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
+.montec-panel-light a[class*="bg-zinc-800"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *) {
   background-color: #e2e8f0 !important;
   color: #0f172a !important;
 }
