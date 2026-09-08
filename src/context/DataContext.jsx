@@ -23,6 +23,8 @@ const STORAGE_KEYS = {
   MODELS: 'montec_models_v7', // v7: catálogo limpio y canónico de teléfonos reales (sin conectores FPC, sin cadenas compuestas)
   ISSUES: 'montec_issues_v5', // v5: pisos separados Android e iPhone ($55k en placa, $35k en tapa Android, térmico y SSD en PC)
   ACCESSORIES: 'montec_accessories_v2', // v2 para actualizar datos de fotos
+  INVENTORY: 'montec_inventory_v1', // Inventario general de accesorios y productos
+  SALES: 'montec_sales_v1', // Registro de ventas del Punto de Venta (POS)
   PRICING_RULES: 'montec_pricing_rules_v1', // Reglas de márgenes y mano de obra Android
   IPHONE_CONFIGS: 'montec_iphone_configs_v3', // v3: Modalidades condicionales por modelo iPhone (Baterías pre-XS vs post-XS, Pantallas pre-11 vs post-11)
   AUTH: 'montec_admin_auth',
@@ -75,27 +77,78 @@ export function DataProvider({ children }) {
     }
   });
 
-  // 3. Catálogo de accesorios (con imágenes)
-  const [accessories, setAccessories] = useState(() => {
+  // 3. Catálogo de Inventario & Accesorios
+  const [inventory, setInventory] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.ACCESSORIES);
+      const saved = localStorage.getItem(STORAGE_KEYS.INVENTORY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
-      // Fallback a versión 1 si existía, enriqueciendo con fotos
-      const savedV1 = localStorage.getItem('montec_accessories_v1');
-      if (savedV1) {
-        const parsed = JSON.parse(savedV1);
-        return parsed.map((acc, idx) => ({
-          ...acc,
-          image: acc.image || ACCESSORIES_DATABASE[idx]?.image || ''
-        }));
+      // Fallback: verificar si había accesorios guardados en versiones anteriores
+      const savedAcc = localStorage.getItem(STORAGE_KEYS.ACCESSORIES);
+      if (savedAcc) {
+        const parsed = JSON.parse(savedAcc);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((item, idx) => {
+            const def = ACCESSORIES_DATABASE[idx] || {};
+            return {
+              ...def,
+              ...item,
+              sku: item.sku || def.sku || `SKU-${idx + 101}`,
+              barcode: item.barcode || def.barcode || `779123400${idx + 101}`,
+              costPrice: Number(item.costPrice || def.costPrice || Math.round((item.price || 10000) * 0.45)),
+              price: Number(item.price || def.price || 15000),
+              stock: item.stock !== undefined ? Number(item.stock) : (def.stock ?? 10),
+              minStock: item.minStock !== undefined ? Number(item.minStock) : (def.minStock ?? 3),
+              visibleInWeb: item.visibleInWeb !== undefined ? Boolean(item.visibleInWeb) : true
+            };
+          });
+        }
       }
       return ACCESSORIES_DATABASE;
     } catch {
       return ACCESSORIES_DATABASE;
     }
   });
+
+  // Guardar siempre el inventario en localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(inventory));
+      // Mantener sincronizado STORAGE_KEYS.ACCESSORIES para compatibilidad
+      localStorage.setItem(STORAGE_KEYS.ACCESSORIES, JSON.stringify(inventory));
+    } catch (e) {
+      console.error('Error guardando inventario en localStorage:', e);
+    }
+  }, [inventory]);
+
+  // accessories es un alias reactivo que alimenta el catálogo público filtrando los visibles
+  const accessories = inventory.filter(item => item.visibleInWeb !== false);
+
+  // 3.1 Ventas y movimientos de caja del Punto de Venta (POS)
+  const [sales, setSales] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.SALES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.SALES, JSON.stringify(sales));
+    } catch (e) {
+      console.error('Error guardando ventas en localStorage:', e);
+    }
+  }, [sales]);
 
   // 4. Estado de autenticación del administrador
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
@@ -620,42 +673,122 @@ export function DataProvider({ children }) {
     }));
   };
 
-  // --- Operaciones de Accesorios ---
-  const addAccessory = (item) => {
-    const itemWithId = {
-      ...item,
-      id: item.id || `acc-${Date.now()}`,
-      price: parseInt(item.price, 10) || 0,
-      image: item.image || '',
-      features: Array.isArray(item.features) ? item.features : (item.features ? item.features.split('\n').filter(Boolean) : [])
+  // --- Operaciones de Inventario & Productos ---
+  const addProduct = (item) => {
+    const cost = Number(item.costPrice) || 0;
+    const price = Number(item.price) || 0;
+    const newProduct = {
+      id: item.id || `prod-${Date.now()}`,
+      sku: (item.sku || `SKU-${Date.now().toString().slice(-6)}`).toUpperCase().trim(),
+      barcode: (item.barcode || '').trim(),
+      name: item.name || 'Nuevo Accesorio',
+      category: item.category || 'Cargadores & Fuentes',
+      compatible: item.compatible || '',
+      features: Array.isArray(item.features) ? item.features : (item.features ? item.features.split('\n').filter(Boolean) : []),
+      costPrice: cost,
+      price: price,
+      stock: parseInt(item.stock, 10) >= 0 ? parseInt(item.stock, 10) : 0,
+      minStock: parseInt(item.minStock, 10) >= 0 ? parseInt(item.minStock, 10) : 3,
+      visibleInWeb: item.visibleInWeb !== undefined ? Boolean(item.visibleInWeb) : true,
+      badge: item.badge || 'Disponible',
+      image: item.image || ''
     };
-    setAccessories(prev => [itemWithId, ...prev]);
-    return itemWithId;
+
+    setInventory(prev => [newProduct, ...prev]);
+    return newProduct;
   };
 
-  const updateAccessory = (id, updatedFields) => {
-    setAccessories(prev => prev.map(acc => {
-      if (acc.id !== id) return acc;
+  const updateProduct = (id, updatedFields) => {
+    setInventory(prev => prev.map(p => {
+      if (p.id !== id && p.sku !== id) return p;
       return {
-        ...acc,
+        ...p,
         ...updatedFields,
-        price: updatedFields.price !== undefined ? parseInt(updatedFields.price, 10) : acc.price,
-        image: updatedFields.image !== undefined ? updatedFields.image : acc.image,
-        features: Array.isArray(updatedFields.features) 
-          ? updatedFields.features 
-          : (updatedFields.features ? updatedFields.features.split('\n').filter(Boolean) : acc.features)
+        costPrice: updatedFields.costPrice !== undefined ? Number(updatedFields.costPrice) : p.costPrice,
+        price: updatedFields.price !== undefined ? Number(updatedFields.price) : p.price,
+        stock: updatedFields.stock !== undefined ? parseInt(updatedFields.stock, 10) : p.stock,
+        minStock: updatedFields.minStock !== undefined ? parseInt(updatedFields.minStock, 10) : p.minStock,
+        visibleInWeb: updatedFields.visibleInWeb !== undefined ? Boolean(updatedFields.visibleInWeb) : p.visibleInWeb
       };
     }));
   };
 
-  const deleteAccessory = (id) => {
-    setAccessories(prev => prev.filter(acc => acc.id !== id));
+  const updateProductStock = (id, amount, isDelta = false) => {
+    setInventory(prev => prev.map(p => {
+      if (p.id !== id && p.sku !== id) return p;
+      const newStock = isDelta ? Math.max(0, (p.stock || 0) + Number(amount)) : Math.max(0, Number(amount));
+      return { ...p, stock: newStock };
+    }));
+  };
+
+  const deleteProduct = (id) => {
+    setInventory(prev => prev.filter(p => p.id !== id && p.sku !== id));
+  };
+
+  // Aliases para retrocompatibilidad con componentes existentes
+  const addAccessory = addProduct;
+  const updateAccessory = updateProduct;
+  const deleteAccessory = deleteProduct;
+
+  // --- Operaciones de Ventas (Punto de Venta - POS) ---
+  const recordSale = (saleData) => {
+    const saleId = `sale-${Date.now()}`;
+    const dateNow = new Date();
+    const ticketNumber = `#TCK-${1000 + sales.length + 1}`;
+
+    const newSale = {
+      id: saleId,
+      ticketNumber,
+      createdAt: dateNow.toISOString(),
+      formattedDate: dateNow.toLocaleString('es-AR'),
+      items: saleData.items || [],
+      subtotal: Number(saleData.subtotal) || 0,
+      discountType: saleData.discountType || 'none', // 'percentage', 'fixed', 'none'
+      discountValue: Number(saleData.discountValue) || 0,
+      discountAmount: Number(saleData.discountAmount) || 0,
+      total: Number(saleData.total) || 0,
+      paymentMethod: saleData.paymentMethod || 'Efectivo',
+      cashGiven: Number(saleData.cashGiven) || 0,
+      changeDue: Number(saleData.changeDue) || 0,
+      customer: {
+        name: saleData.customer?.name?.trim() || 'Consumidor Final',
+        phone: saleData.customer?.phone?.trim() || ''
+      },
+      seller: saleData.seller || 'Mostrador Montec'
+    };
+
+    // 1. Descontar stock de cada producto vendido
+    if (Array.isArray(saleData.items) && saleData.items.length > 0) {
+      setInventory(prev => {
+        return prev.map(prod => {
+          const soldItem = saleData.items.find(it => it.id === prod.id || it.sku === prod.sku);
+          if (soldItem) {
+            const qty = Number(soldItem.quantity) || 1;
+            return {
+              ...prod,
+              stock: Math.max(0, (prod.stock || 0) - qty)
+            };
+          }
+          return prod;
+        });
+      });
+    }
+
+    // 2. Registrar venta en el historial
+    setSales(prev => [newSale, ...prev]);
+
+    return newSale;
+  };
+
+  const deleteSale = (saleId) => {
+    setSales(prev => prev.filter(s => s.id !== saleId));
   };
 
   // --- Restaurar valores de fábrica ---
   const resetToDefaults = () => {
     setModels(MODELS_DATABASE);
     setIssues(ISSUE_TYPES);
+    setInventory(ACCESSORIES_DATABASE);
     setAccessories(ACCESSORIES_DATABASE);
   };
 
@@ -969,6 +1102,15 @@ export function DataProvider({ children }) {
       models,
       issues,
       accessories,
+      inventory,
+      products: inventory,
+      addProduct,
+      updateProduct,
+      updateProductStock,
+      deleteProduct,
+      sales,
+      recordSale,
+      deleteSale,
       dolarRate,
       dolarInfo,
       refreshDolarRate: updateDolar,

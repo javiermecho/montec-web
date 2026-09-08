@@ -22,14 +22,14 @@ export default function Accessories() {
     : accessories.filter(item => item.category === selectedCategory);
 
   const getCategoryIcon = (category) => {
-    switch (category) {
-      case 'Cargadores': return <Zap className="w-8 h-8 text-[#FF5500]" />;
-      case 'Cables': return <Cable className="w-8 h-8 text-[#FF5500]" />;
-      case 'Hidrogel': return <Sparkles className="w-8 h-8 text-[#FF5500]" />;
-      case 'Fundas': return <Smartphone className="w-8 h-8 text-[#FF5500]" />;
-      case 'Audio': return <Headphones className="w-8 h-8 text-[#FF5500]" />;
-      default: return <ShoppingBag className="w-8 h-8 text-[#FF5500]" />;
-    }
+    if (!category) return <ShoppingBag className="w-8 h-8 text-[#FF5500]" />;
+    const catLower = category.toLowerCase();
+    if (catLower.includes('cargador') || catLower.includes('fuente')) return <Zap className="w-8 h-8 text-[#FF5500]" />;
+    if (catLower.includes('cable') || catLower.includes('adaptador')) return <Cable className="w-8 h-8 text-[#FF5500]" />;
+    if (catLower.includes('hidrogel') || catLower.includes('templado')) return <Sparkles className="w-8 h-8 text-[#FF5500]" />;
+    if (catLower.includes('funda') || catLower.includes('case')) return <Smartphone className="w-8 h-8 text-[#FF5500]" />;
+    if (catLower.includes('audio') || catLower.includes('auricular')) return <Headphones className="w-8 h-8 text-[#FF5500]" />;
+    return <ShoppingBag className="w-8 h-8 text-[#FF5500]" />;
   };
 
   return (
@@ -74,25 +74,50 @@ export default function Accessories() {
         {/* Grilla de Productos Reactiva */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredItems.map((item) => {
-            const itemWhatsappMsg = `¡Hola montec! Quisiera consultar stock y disponibilidad del accesorio: "${item.name}" ($${Number(item.price).toLocaleString('es-AR')}) para retirar en Montes Carballo 943.`;
+            const isOutOfStock = (item.stock !== undefined && item.stock <= 0);
+
+            const itemWhatsappMsg = isOutOfStock
+              ? `¡Hola montec! Quisiera consultar cuándo vuelve a ingresar stock del accesorio: "${item.name}" para retirar en Montes Carballo 943.`
+              : `¡Hola montec! Quisiera consultar stock y disponibilidad del accesorio: "${item.name}" ($${Number(item.price).toLocaleString('es-AR')}) para retirar en Montes Carballo 943.`;
+
             const itemWhatsappUrl = `https://wa.me/5492235000000?text=${encodeURIComponent(itemWhatsappMsg)}`;
             const featuresList = Array.isArray(item.features) ? item.features : [];
 
             return (
               <div
                 key={item.id}
-                className="bg-[#121212] border border-zinc-850 hover:border-[#FF5500]/50 rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_0_25px_rgba(255,85,0,0.2)] hover:-translate-y-1 group"
+                className={`bg-[#121212] border rounded-2xl p-5 flex flex-col justify-between transition-all duration-300 hover:shadow-[0_0_25px_rgba(255,85,0,0.2)] hover:-translate-y-1 group ${
+                  isOutOfStock 
+                    ? 'border-zinc-800 opacity-80' 
+                    : 'border-zinc-850 hover:border-[#FF5500]/50'
+                }`}
               >
                 <div>
                   {/* Visual del Producto */}
                   <div className="w-full h-36 rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800/80 flex flex-col items-center justify-center relative overflow-hidden mb-4 group-hover:border-[#FF5500]/40 transition-colors">
-                    {/* Badge de estado */}
-                    <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/30 font-mono">
-                      {item.badge}
+                    {/* Badge de estado o Agotado */}
+                    <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-md font-mono z-10 ${
+                      isOutOfStock
+                        ? 'bg-rose-500/90 text-white shadow-xs'
+                        : 'bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/30'
+                    }`}>
+                      {isOutOfStock ? 'Agotado' : (item.badge || 'Disponible')}
                     </span>
-                    <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 group-hover:scale-110 transition-transform duration-300">
-                      {getCategoryIcon(item.category)}
-                    </div>
+
+                    {item.image ? (
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                          isOutOfStock ? 'grayscale opacity-75' : ''
+                        }`}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 group-hover:scale-110 transition-transform duration-300">
+                        {getCategoryIcon(item.category)}
+                      </div>
+                    )}
                   </div>
 
                   {/* Nombre y Compatibilidad */}
@@ -135,10 +160,14 @@ export default function Accessories() {
                       category: item.category,
                       price: item.price
                     })}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-zinc-900 hover:bg-[#FF5500] text-zinc-200 hover:text-white text-xs font-bold transition-all duration-200 border border-zinc-800 hover:border-[#FF5500] shadow-sm"
+                    className={`w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 border shadow-sm ${
+                      isOutOfStock
+                        ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
+                        : 'bg-zinc-900 hover:bg-[#FF5500] text-zinc-200 hover:text-white border-zinc-800 hover:border-[#FF5500]'
+                    }`}
                   >
                     <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                    <span>Pedir por WhatsApp</span>
+                    <span>{isOutOfStock ? 'Consultar ingreso por WhatsApp' : 'Pedir por WhatsApp'}</span>
                   </a>
                 </div>
 

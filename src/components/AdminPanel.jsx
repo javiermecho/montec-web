@@ -16,6 +16,8 @@ import {
   AlertCircle, 
   Download, 
   ShoppingBag, 
+  ShoppingCart,
+  Boxes,
   Wrench, 
   Sliders, 
   Sparkles,
@@ -35,12 +37,15 @@ import MontecLogo from './MontecLogo';
 import PartsSearchTab from './admin/PartsSearchTab';
 import AnalyticsTab from './admin/AnalyticsTab';
 import RepairOrdersManager from './taller/RepairOrdersManager';
+import SalesPOS from './pos/SalesPOS';
+import InventoryManager from './inventory/InventoryManager';
 
 export default function AdminPanel() {
   const {
     models,
     issues,
     accessories,
+    inventory,
     isAdminAuthenticated,
     isAdminOpen,
     setIsAdminOpen,
@@ -391,15 +396,27 @@ export default function AdminPanel() {
         </button>
 
         <button
-          onClick={() => setActiveTab('accessories')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
-            activeTab === 'accessories' 
+          onClick={() => setActiveTab('pos')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+            activeTab === 'pos' 
               ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
               : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
           }`}
         >
-          <ShoppingBag className="w-4 h-4 text-purple-400" />
-          <span>Accesorios & Stock ({accessories.length})</span>
+          <ShoppingCart className="w-4 h-4 text-amber-400" />
+          <span>Punto de Venta (POS)</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('inventory')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+            activeTab === 'inventory' || activeTab === 'accessories'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+          }`}
+        >
+          <Boxes className="w-4 h-4 text-purple-400" />
+          <span>Inventario & Stock ({inventory?.length || accessories?.length || 0})</span>
         </button>
 
         <button
@@ -442,7 +459,14 @@ export default function AdminPanel() {
         )}
 
         {/* ============================================================== */}
-        {/* PESTAÑA 1: MODELOS REPARADOS */}
+        {/* PESTAÑA: PUNTO DE VENTA (POS DE MOSTRADOR)                     */}
+        {/* ============================================================== */}
+        {activeTab === 'pos' && (
+          <SalesPOS />
+        )}
+
+        {/* ============================================================== */}
+        {/* PESTAÑA: MODELOS REPARADOS */}
         {/* ============================================================== */}
         {activeTab === 'models' && (
           <div className="space-y-6">
@@ -1247,116 +1271,10 @@ export default function AdminPanel() {
         )}
 
         {/* ============================================================== */}
-        {/* PESTAÑA 3: ACCESORIOS & PRODUCTOS */}
+        {/* PESTAÑA: GESTIÓN DE INVENTARIO, STOCK & CATÁLOGO               */}
         {/* ============================================================== */}
-        {activeTab === 'accessories' && (
-          <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h2 className={`text-xl sm:text-2xl font-heading font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  Productos y Accesorios en Venta
-                </h2>
-                <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-                  Cargadores, cables reforzados, hidrogel a medida, fundas y audio disponibles en el local de Montes Carballo 943.
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  setEditingAccessory(null);
-                  setAccFormData({ category: 'Cargadores', name: '', compatible: '', price: 15000, badge: 'Disponible', features: '' });
-                  setIsAccessoryModalOpen(true);
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs sm:text-sm font-bold shadow-[0_0_20px_rgba(255,85,0,0.35)] transition-all shrink-0"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Agregar Nuevo Accesorio</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {accessories.map((acc) => (
-                <div
-                  key={acc.id}
-                  className="bg-[#121212] border border-zinc-800 hover:border-zinc-700 rounded-2xl p-4 flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#FF5500]/20 text-[#FF5500] font-mono">
-                        {acc.category}
-                      </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-400">
-                        {acc.badge}
-                      </span>
-                    </div>
-
-                    <h4 className={`font-heading font-bold text-base line-clamp-1 mb-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                      {acc.name}
-                    </h4>
-                    <p className={`text-xs line-clamp-1 mb-3 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-                      {acc.compatible}
-                    </p>
-
-                    <div className={`text-xs mb-2 ${isLight ? 'text-slate-600 font-medium' : 'text-zinc-500'}`}>Precio de Venta Local:</div>
-                    <div className="relative mb-3">
-                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 font-bold ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>$</span>
-                      <input
-                        type="number"
-                        value={acc.price}
-                        onChange={(e) => {
-                          updateAccessory(acc.id, { price: e.target.value });
-                          showToast(`Precio de ${acc.name} actualizado`);
-                        }}
-                        className={`w-full border rounded-xl pl-8 pr-3 py-2 text-sm font-mono font-bold outline-none focus:border-[#FF5500] ${
-                          isLight
-                            ? 'bg-white border-slate-300 text-slate-900'
-                            : 'bg-zinc-900 border-zinc-700 text-white'
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  <div className={`pt-3 border-t flex items-center justify-between ${isLight ? 'border-slate-200' : 'border-zinc-800/80'}`}>
-                    <button
-                      onClick={() => {
-                        setEditingAccessory(acc);
-                        setAccFormData({
-                          category: acc.category,
-                          name: acc.name,
-                          compatible: acc.compatible,
-                          price: acc.price,
-                          badge: acc.badge,
-                          features: Array.isArray(acc.features) ? acc.features.join('\n') : (acc.features || '')
-                        });
-                        setIsAccessoryModalOpen(true);
-                      }}
-                      className={`text-xs flex items-center gap-1 font-semibold transition-colors ${
-                        isLight ? 'text-slate-700 hover:text-[#FF5500]' : 'text-zinc-300 hover:text-white'
-                      }`}
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>Editar detalles</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (confirm(`¿Eliminar producto "${acc.name}"?`)) {
-                          deleteAccessory(acc.id);
-                          showToast(`Producto eliminado`);
-                        }
-                      }}
-                      className="p-1.5 text-zinc-500 hover:text-rose-400 rounded-lg hover:bg-zinc-800 transition-colors"
-                      title="Eliminar producto"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                </div>
-              ))}
-            </div>
-
-          </div>
+        {(activeTab === 'inventory' || activeTab === 'accessories') && (
+          <InventoryManager />
         )}
 
         {/* ============================================================== */}
