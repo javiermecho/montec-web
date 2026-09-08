@@ -281,36 +281,32 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* Header Superior del Panel */}
-      <header className="bg-[#121212] border-b border-zinc-800 px-4 sm:px-6 py-3.5 flex items-center justify-between shrink-0">
+      {/* Header Superior del Panel - Siempre oscuro para preservar el logo Montec */}
+      <header className="panel-top-header bg-[#09090b] border-b border-zinc-800 px-4 sm:px-6 py-3.5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <MontecLogo size="sm" />
-          <span className="hidden sm:inline-block text-xs font-mono px-2 py-0.5 rounded bg-zinc-800 text-[#FF5500] border border-[#FF5500]/30 font-semibold">
+          <span className="hidden sm:inline-block text-xs font-mono px-2 py-0.5 rounded bg-zinc-900 text-[#FF5500] border border-[#FF5500]/30 font-semibold">
             PANEL ADMINISTRADOR
           </span>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Botón Minimalista de Tema Claro / Oscuro */}
+          {/* Botón Minimalista de Tema Claro / Oscuro - Estilizado para armonizar con el header oscuro */}
           <button
             type="button"
             onClick={togglePanelTheme}
-            className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              isLight
-                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 shadow-xs'
-                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
-            }`}
+            className="p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border-zinc-700"
             title={isLight ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
           >
             {isLight ? (
               <>
-                <Moon className="w-4 h-4 text-indigo-600" />
-                <span className="hidden sm:inline text-xs">Oscuro</span>
+                <Moon className="w-4 h-4 text-amber-400" />
+                <span className="hidden sm:inline text-xs">Modo Oscuro</span>
               </>
             ) : (
               <>
                 <Sun className="w-4 h-4 text-amber-400" />
-                <span className="hidden sm:inline text-xs">Claro</span>
+                <span className="hidden sm:inline text-xs">Modo Claro</span>
               </>
             )}
           </button>
@@ -331,8 +327,8 @@ export default function AdminPanel() {
         </div>
       </header>
 
-      {/* Barra de Pestañas de Navegación */}
-      <div className="bg-[#121212]/70 border-b border-zinc-800/80 px-4 sm:px-6 flex items-center gap-2 overflow-x-auto py-2 shrink-0">
+      {/* Barra de Pestañas de Navegación - Siempre oscura y coordinada */}
+      <div className="admin-tabs-bar bg-[#0f0f12] border-b border-zinc-800/80 px-4 sm:px-6 flex items-center gap-2 overflow-x-auto py-2 shrink-0">
         <button
           onClick={() => setActiveTab('models')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
@@ -401,7 +397,7 @@ export default function AdminPanel() {
               : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
           }`}
         >
-          <ShoppingBag className="w-4 h-4" />
+          <ShoppingBag className="w-4 h-4 text-purple-400" />
           <span>Accesorios & Stock ({accessories.length})</span>
         </button>
 
@@ -449,10 +445,10 @@ export default function AdminPanel() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-heading font-bold text-white">
+                <h2 className={`text-xl sm:text-2xl font-heading font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   Modelos de Celulares y Computadoras
                 </h2>
-                <p className="text-xs sm:text-sm text-zinc-400 mt-0.5">
+                <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
                   Los modelos que cargues acá aparecen instantáneamente en el buscador del cotizador de la web.
                 </p>
               </div>
@@ -463,7 +459,7 @@ export default function AdminPanel() {
                   setModelFormData({ type: 'iphone', brand: 'Apple', model: '', year: new Date().getFullYear() });
                   setIsModelModalOpen(true);
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs sm:text-sm font-bold shadow-[0_0_20px_rgba(255,85,0,0.35)] transition-all shrink-0"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs sm:text-sm font-bold shadow-[0_0_20px_rgba(255,85,0,0.35)] transition-all shrink-0 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Agregar Nuevo Modelo</span>
@@ -473,13 +469,17 @@ export default function AdminPanel() {
             {/* Filtros y Buscador */}
             <div className="flex flex-col sm:flex-row items-center gap-3">
               <div className="relative flex-1 w-full">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${isLight ? 'text-slate-400' : 'text-zinc-500'}`} />
                 <input
                   type="text"
                   value={modelSearch}
                   onChange={(e) => setModelSearch(e.target.value)}
                   placeholder="Buscar modelo o marca (ej: iPhone 14, S23, Moto G, IdeaPad)..."
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-white placeholder-zinc-500 outline-none focus:border-[#FF5500]"
+                  className={`w-full border rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm outline-none focus:border-[#FF5500] ${
+                    isLight
+                      ? 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
+                      : 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-500'
+                  }`}
                 />
               </div>
 
@@ -488,10 +488,10 @@ export default function AdminPanel() {
                   <button
                     key={cat}
                     onClick={() => setModelTypeFilter(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-colors ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-colors cursor-pointer ${
                       modelTypeFilter === cat
-                        ? 'bg-zinc-800 border-[#FF5500] text-[#FF5500]'
-                        : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white'
+                        ? (isLight ? 'bg-orange-100 border-[#FF5500] text-[#FF5500]' : 'bg-zinc-800 border-[#FF5500] text-[#FF5500]')
+                        : (isLight ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50' : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white')
                     }`}
                   >
                     {cat === 'all' ? 'Todos' : cat === 'iphone' ? 'iPhone' : cat === 'android' ? 'Android' : 'Notebooks'}
@@ -501,10 +501,14 @@ export default function AdminPanel() {
             </div>
 
             {/* Tabla de Modelos */}
-            <div className="bg-[#121212] border border-zinc-800/80 rounded-2xl overflow-hidden">
+            <div className={`border rounded-2xl overflow-hidden shadow-xs transition-colors ${
+              isLight ? 'bg-white border-slate-200' : 'bg-[#121212] border-zinc-800/80'
+            }`}>
               <div className="overflow-x-auto max-h-[550px]">
                 <table className="w-full text-left text-xs sm:text-sm">
-                  <thead className="bg-zinc-900/90 text-zinc-400 uppercase text-[11px] font-mono tracking-wider sticky top-0 z-10 border-b border-zinc-800">
+                  <thead className={`uppercase text-[11px] font-mono tracking-wider sticky top-0 z-10 border-b ${
+                    isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-zinc-900/90 text-zinc-400 border-zinc-800'
+                  }`}>
                     <tr>
                       <th className="px-4 py-3">Tipo</th>
                       <th className="px-4 py-3">Marca</th>
@@ -513,25 +517,25 @@ export default function AdminPanel() {
                       <th className="px-4 py-3 text-right">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/60">
+                  <tbody className={`divide-y ${isLight ? 'divide-slate-200' : 'divide-zinc-800/60'}`}>
                     {filteredModelsList.map((m) => (
-                      <tr key={m.id} className="hover:bg-zinc-900/40 transition-colors">
+                      <tr key={m.id} className={`transition-colors ${isLight ? 'hover:bg-slate-50' : 'hover:bg-zinc-900/40'}`}>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                            m.type === 'iphone' ? 'bg-orange-500/20 text-orange-400' :
-                            m.type === 'android' ? 'bg-emerald-500/20 text-emerald-400' :
-                            'bg-blue-500/20 text-blue-400'
+                            m.type === 'iphone' ? (isLight ? 'bg-orange-100 text-orange-700' : 'bg-orange-500/20 text-orange-400') :
+                            m.type === 'android' ? (isLight ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500/20 text-emerald-400') :
+                            (isLight ? 'bg-blue-100 text-blue-700' : 'bg-blue-500/20 text-blue-400')
                           }`}>
                             {m.type === 'iphone' ? 'iPhone' : m.type === 'android' ? 'Android' : 'Notebook'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 font-semibold text-white whitespace-nowrap">
+                        <td className={`px-4 py-3 font-semibold whitespace-nowrap ${isLight ? 'text-slate-900' : 'text-white'}`}>
                           {m.brand}
                         </td>
-                        <td className="px-4 py-3 text-zinc-200">
+                        <td className={`px-4 py-3 ${isLight ? 'text-slate-700' : 'text-zinc-200'}`}>
                           {m.model}
                         </td>
-                        <td className="px-4 py-3 text-zinc-400 font-mono">
+                        <td className={`px-4 py-3 font-mono ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                           {m.year || '-'}
                         </td>
                         <td className="px-4 py-3 text-right whitespace-nowrap">
@@ -547,7 +551,11 @@ export default function AdminPanel() {
                                 });
                                 setIsModelModalOpen(true);
                               }}
-                              className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white"
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                isLight
+                                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200'
+                                  : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white'
+                              }`}
                               title="Editar"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
@@ -559,7 +567,11 @@ export default function AdminPanel() {
                                   showToast(`Modelo eliminado.`);
                                 }
                               }}
-                              className="p-1.5 rounded-lg bg-zinc-800 hover:bg-rose-950 text-zinc-400 hover:text-rose-400"
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                isLight
+                                  ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200'
+                                  : 'bg-zinc-800 hover:bg-rose-950 text-zinc-400 hover:text-rose-400'
+                              }`}
                               title="Eliminar"
                             >
                               <Trash2 className="w-3.5 h-3.5" />

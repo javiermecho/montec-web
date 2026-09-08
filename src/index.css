@@ -84,11 +84,31 @@
   color: #0f172a !important;
 }
 
-/* Contenedores y Tarjetas Principales */
-.montec-panel-light header {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
-  color: #0f172a !important;
+/* Encabezados Superiores: SIEMPRE NEGROS para que el logo Montec ('tec' en blanco) nunca se pierda */
+.montec-panel-light header,
+.montec-panel-light .panel-top-header,
+.montec-panel-light .admin-tabs-bar {
+  background-color: #09090b !important;
+  border-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+.montec-panel-light header *,
+.montec-panel-light .panel-top-header *,
+.montec-panel-light .admin-tabs-bar * {
+  /* Mantener colores de texto del encabezado oscuro */
+}
+
+.montec-panel-light header .text-white,
+.montec-panel-light .panel-top-header .text-white,
+.montec-panel-light .admin-tabs-bar .text-white {
+  color: #ffffff !important;
+}
+
+.montec-panel-light header .text-zinc-400,
+.montec-panel-light .panel-top-header .text-zinc-400,
+.montec-panel-light .admin-tabs-bar .text-zinc-400 {
+  color: #a1a1aa !important;
 }
 
 .montec-panel-light section,
@@ -103,8 +123,8 @@
 }
 
 /* Sub-tarjetas internas, cajas de notas y estados */
-.montec-panel-light .bg-zinc-950,
-.montec-panel-light .bg-zinc-900,
+.montec-panel-light .bg-zinc-950:not(header):not(.admin-tabs-bar),
+.montec-panel-light .bg-zinc-900:not(header):not(.admin-tabs-bar),
 .montec-panel-light .bg-zinc-850,
 .montec-panel-light .bg-zinc-900\/60,
 .montec-panel-light .bg-zinc-900\/40,
@@ -142,28 +162,25 @@
   color: #0f172a !important;
 }
 
-/* Tipografía de etiquetas y textos secundarios */
-.montec-panel-light label,
-.montec-panel-light .text-zinc-300,
-.montec-panel-light .text-zinc-200 {
+/* Tipografía de etiquetas y textos secundarios fuera de encabezados */
+.montec-panel-light main label,
+.montec-panel-light .tab-content label,
+.montec-panel-light main .text-zinc-300,
+.montec-panel-light main .text-zinc-200 {
   color: #334155 !important;
 }
 
-.montec-panel-light .text-zinc-400,
-.montec-panel-light .text-zinc-500,
-.montec-panel-light .text-zinc-600 {
+.montec-panel-light main .text-zinc-400,
+.montec-panel-light main .text-zinc-500,
+.montec-panel-light main .text-zinc-600 {
   color: #64748b !important;
 }
 
-.montec-panel-light .text-white {
-  color: #0f172a !important;
-}
-
 /* Bordes en general */
-.montec-panel-light .border-zinc-800,
-.montec-panel-light .border-zinc-700,
+.montec-panel-light .border-zinc-800:not(header):not(.admin-tabs-bar),
+.montec-panel-light .border-zinc-700:not(header):not(.admin-tabs-bar),
 .montec-panel-light .border-zinc-850,
-.montec-panel-light .border-zinc-800\/80,
+.montec-panel-light .border-zinc-800\/80:not(header):not(.admin-tabs-bar),
 .montec-panel-light .border-zinc-800\/90,
 .montec-panel-light .border-zinc-800\/60 {
   border-color: #e2e8f0 !important;

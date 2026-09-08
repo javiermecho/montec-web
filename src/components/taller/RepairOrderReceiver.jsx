@@ -67,6 +67,19 @@ export default function RepairOrderReceiver() {
 
   const isLight = panelTheme === 'light';
 
+  // Helpers de estilos adaptados al tema
+  const inputBaseClass = isLight
+    ? 'bg-white border-slate-300 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#FF5500]'
+    : 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600 focus:border-[#FF5500]';
+
+  const selectBaseClass = isLight
+    ? 'bg-white border-slate-300 text-slate-900 focus:bg-white focus:border-[#FF5500]'
+    : 'bg-zinc-950 border-zinc-800 text-white focus:border-[#FF5500]';
+
+  const labelTextClass = isLight ? 'text-slate-700' : 'text-zinc-300';
+  const labelClass = `block text-[11px] font-bold mb-1 ${labelTextClass}`;
+  const subTextClass = isLight ? 'text-slate-500' : 'text-zinc-400';
+
   // Estados de control de pantallas
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
@@ -712,24 +725,20 @@ export default function RepairOrderReceiver() {
       isLight ? 'montec-panel-light' : 'bg-[#0E0E10] text-zinc-200'
     }`}>
       
-      {/* BARRA SUPERIOR DE TERMINAL */}
-      <header className={`border-b px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0 transition-colors ${
-        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-zinc-950 border-zinc-800/80'
-      }`}>
+      {/* BARRA SUPERIOR DE TERMINAL (SIEMPRE NEGRO PARA PRESERVAR EL LOGO) */}
+      <header className="bg-zinc-950 border-b border-zinc-800 px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-[#FF5500] text-white font-black flex items-center justify-center text-sm shadow-md">
             M
           </div>
           <div>
-            <h1 className={`text-sm sm:text-base font-heading font-black leading-tight flex items-center gap-2 ${
-              isLight ? 'text-slate-900' : 'text-white'
-            }`}>
+            <h1 className="text-sm sm:text-base font-heading font-black text-white leading-tight flex items-center gap-2">
               <span>MONTEC TALLER</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold border border-emerald-500/30">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold border border-emerald-500/30">
                 MOSTRADOR ACTIVO
               </span>
             </h1>
-            <p className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+            <p className="text-[10px] text-zinc-400">
               Montes Carballo 943 • Recepción de Equipos & Órdenes de Servicio
             </p>
           </div>
@@ -741,22 +750,18 @@ export default function RepairOrderReceiver() {
           <button
             type="button"
             onClick={togglePanelTheme}
-            className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
-              isLight
-                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300 shadow-xs'
-                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700'
-            }`}
+            className="px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border-zinc-700 hover:border-zinc-500"
             title={isLight ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
           >
             {isLight ? (
               <>
-                <Moon className="w-3.5 h-3.5 text-indigo-600" />
-                <span className="hidden sm:inline">Oscuro</span>
+                <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="hidden sm:inline">Modo Oscuro</span>
               </>
             ) : (
               <>
                 <Sun className="w-3.5 h-3.5 text-amber-400" />
-                <span className="hidden sm:inline">Claro</span>
+                <span className="hidden sm:inline">Modo Claro</span>
               </>
             )}
           </button>
@@ -764,11 +769,7 @@ export default function RepairOrderReceiver() {
           <button
             type="button"
             onClick={() => setActiveSubModal('orders_list')}
-            className={`px-3 py-1.5 border rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer ${
-              isLight
-                ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
-                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border-zinc-700/80'
-            }`}
+            className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
             title="Ver listado de órdenes registradas"
           >
             <List className="w-3.5 h-3.5 text-[#FF5500]" />
@@ -782,11 +783,7 @@ export default function RepairOrderReceiver() {
                 logoutEmployee();
               }
             }}
-            className={`p-2 rounded-xl border transition-colors cursor-pointer ${
-              isLight
-                ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border-slate-200'
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-800 border-zinc-800'
-            }`}
+            className="p-2 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
             title="Bloquear Terminal"
           >
             <Lock className="w-4 h-4" />
@@ -795,11 +792,7 @@ export default function RepairOrderReceiver() {
           <button
             type="button"
             onClick={() => setIsTallerOpen(false)}
-            className={`p-2 rounded-xl border transition-colors cursor-pointer ${
-              isLight
-                ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 border-slate-200'
-                : 'text-zinc-400 hover:text-white hover:bg-zinc-800 border-zinc-800'
-            }`}
+            className="p-2 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
             title="Cerrar ventana de mostrador"
           >
             <X className="w-4 h-4" />
@@ -836,22 +829,26 @@ export default function RepairOrderReceiver() {
                   value={clientSearchQuery}
                   onChange={(e) => handleClientSearchChange(e.target.value)}
                   placeholder="Buscar cliente previo por DNI, nombre o tel..."
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 outline-none focus:border-[#FF5500]"
+                  className={`w-full border rounded-xl pl-9 pr-3 py-1.5 text-xs outline-none focus:border-[#FF5500] ${inputBaseClass}`}
                 />
               </div>
 
               {/* Sugerencias de clientes históricos */}
               {clientSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 z-30 mt-1 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto">
+                <div className={`absolute top-full left-0 right-0 z-30 mt-1 border rounded-xl shadow-2xl overflow-hidden max-h-48 overflow-y-auto ${
+                  isLight ? 'bg-white border-slate-300' : 'bg-zinc-900 border-zinc-700'
+                }`}>
                   {clientSuggestions.map((c, idx) => (
                     <div
                       key={idx}
                       onClick={() => handleSelectClient(c)}
-                      className="p-2.5 hover:bg-zinc-800 border-b border-zinc-800/60 cursor-pointer flex items-center justify-between text-xs"
+                      className={`p-2.5 border-b cursor-pointer flex items-center justify-between text-xs transition-colors ${
+                        isLight ? 'hover:bg-slate-100 border-slate-200 text-slate-800' : 'hover:bg-zinc-800 border-zinc-800/60 text-white'
+                      }`}
                     >
                       <div>
-                        <div className="font-bold text-white">{c.name}</div>
-                        <div className="text-[11px] text-zinc-400 font-mono">
+                        <div className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{c.name}</div>
+                        <div className={`text-[11px] font-mono ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                           {c.docType}: {c.docNumber} • Tel: {c.phone}
                         </div>
                       </div>
@@ -864,7 +861,7 @@ export default function RepairOrderReceiver() {
 
             {/* Nombre Completo */}
             <div>
-              <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+              <label className={labelClass}>
                 Nombre Completo <span className="text-[#FF5500]">*</span>
               </label>
               <input
@@ -877,14 +874,14 @@ export default function RepairOrderReceiver() {
                   customer: { ...prev.customer, name: e.target.value }
                 }))}
                 placeholder="ej: Juan Carlos Pérez"
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500]"
+                className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] ${inputBaseClass}`}
               />
             </div>
 
             {/* Documento (Tipo & Número) */}
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+                <label className={labelClass}>
                   Tipo
                 </label>
                 <select
@@ -893,7 +890,7 @@ export default function RepairOrderReceiver() {
                     ...prev,
                     customer: { ...prev.customer, docType: e.target.value }
                   }))}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2 py-2 text-xs text-white outline-none focus:border-[#FF5500]"
+                  className={`w-full border rounded-xl px-2 py-2 text-xs outline-none focus:border-[#FF5500] ${selectBaseClass}`}
                 >
                   <option value="DNI">DNI</option>
                   <option value="CUIT">CUIT</option>
@@ -902,7 +899,7 @@ export default function RepairOrderReceiver() {
               </div>
 
               <div className="col-span-2">
-                <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+                <label className={labelClass}>
                   Número de Documento
                 </label>
                 <input
@@ -913,18 +910,18 @@ export default function RepairOrderReceiver() {
                     customer: { ...prev.customer, docNumber: e.target.value }
                   }))}
                   placeholder="ej: 38492019"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500] font-mono"
+                  className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] font-mono ${inputBaseClass}`}
                 />
               </div>
             </div>
 
             {/* Teléfono / WhatsApp */}
             <div>
-              <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+              <label className={labelClass}>
                 Teléfono / WhatsApp <span className="text-[#FF5500]">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-500 select-none">
+                <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono select-none ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
                   +54 9
                 </span>
                 <input
@@ -936,7 +933,7 @@ export default function RepairOrderReceiver() {
                     customer: { ...prev.customer, phone: e.target.value }
                   }))}
                   placeholder="223 512-3456"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-16 pr-3 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500] font-mono"
+                  className={`w-full border rounded-xl pl-16 pr-3 py-2 text-xs outline-none focus:border-[#FF5500] font-mono ${inputBaseClass}`}
                 />
               </div>
             </div>
@@ -944,7 +941,7 @@ export default function RepairOrderReceiver() {
             {/* Condición ante IVA & Email */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+                <label className={labelClass}>
                   Condición IVA
                 </label>
                 <select
@@ -953,7 +950,7 @@ export default function RepairOrderReceiver() {
                     ...prev,
                     customer: { ...prev.customer, taxCondition: e.target.value }
                   }))}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2 py-2 text-xs text-white outline-none focus:border-[#FF5500]"
+                  className={`w-full border rounded-xl px-2 py-2 text-xs outline-none focus:border-[#FF5500] ${selectBaseClass}`}
                 >
                   <option value="Consumidor Final">Consumidor Final</option>
                   <option value="Monotributo">Monotributo</option>
@@ -963,7 +960,7 @@ export default function RepairOrderReceiver() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+                <label className={labelClass}>
                   Email (opcional)
                 </label>
                 <input
@@ -974,13 +971,13 @@ export default function RepairOrderReceiver() {
                     customer: { ...prev.customer, email: e.target.value }
                   }))}
                   placeholder="cliente@email.com"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500]"
+                  className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] ${inputBaseClass}`}
                 />
               </div>
             </div>
 
             {/* Checkboxes de Notificación */}
-            <div className="pt-2 border-t border-zinc-850 flex items-center justify-between text-xs">
+            <div className={`pt-2 border-t flex items-center justify-between text-xs ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -991,7 +988,7 @@ export default function RepairOrderReceiver() {
                   }))}
                   className="accent-[#FF5500] w-3.5 h-3.5 rounded"
                 />
-                <span className="text-zinc-300 text-[11px]">Enviar comprobante por WhatsApp</span>
+                <span className={`text-[11px] ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>Enviar comprobante por WhatsApp</span>
               </label>
 
               <button
@@ -1014,7 +1011,7 @@ export default function RepairOrderReceiver() {
                     customer: { ...prev.customer, internalNotes: e.target.value }
                   }))}
                   placeholder="Notas internas privadas (ej: cliente exigente, retirará su hermano...)"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-zinc-300 placeholder-zinc-600 outline-none focus:border-[#FF5500]"
+                  className={`w-full border rounded-xl p-2.5 text-xs outline-none focus:border-[#FF5500] ${inputBaseClass}`}
                 />
               </div>
             )}
@@ -1244,14 +1241,14 @@ export default function RepairOrderReceiver() {
                   device: { ...prev.device, imei: e.target.value }
                 }))}
                 placeholder="358920... o Tag #MON-XXXX"
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500] font-mono"
+                className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] font-mono ${inputBaseClass}`}
               />
             </div>
 
             {/* Color & Estado Estético Exterior */}
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+                <label className={labelClass}>
                   Color
                 </label>
                 <input
@@ -1262,12 +1259,12 @@ export default function RepairOrderReceiver() {
                     device: { ...prev.device, color: e.target.value }
                   }))}
                   placeholder="ej: Negro"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500]"
+                  className={`w-full border rounded-xl px-2.5 py-2 text-xs outline-none focus:border-[#FF5500] ${inputBaseClass}`}
                 />
               </div>
 
               <div className="col-span-2">
-                <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+                <label className={labelClass}>
                   Estado Estético Externo
                 </label>
                 <input
@@ -1278,20 +1275,22 @@ export default function RepairOrderReceiver() {
                     device: { ...prev.device, aestheticCondition: e.target.value }
                   }))}
                   placeholder="ej: Rayas en bisel, vidrio templado roto..."
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500]"
+                  className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] ${inputBaseClass}`}
                 />
               </div>
             </div>
 
             {/* BLOQUE INTERACTIVO DE SEGURIDAD / DESBLOQUEO */}
-            <div className="pt-2 border-t border-zinc-850 space-y-2.5">
+            <div className={`pt-2 border-t space-y-2.5 ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                <label className={`text-[11px] font-bold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
                   Desbloqueo / Seguridad:
                 </label>
                 
                 {/* Selector de tipo de bloqueo */}
-                <div className="flex items-center gap-1 bg-zinc-950 p-0.5 rounded-lg border border-zinc-800 text-[10px]">
+                <div className={`flex items-center gap-1 p-0.5 rounded-lg border text-[10px] ${
+                  isLight ? 'bg-slate-100 border-slate-300' : 'bg-zinc-950 border-zinc-800'
+                }`}>
                   {['pattern', 'pin', 'password', 'none'].map((t) => (
                     <button
                       key={t}
@@ -1305,11 +1304,11 @@ export default function RepairOrderReceiver() {
                       }))}
                       className={`px-2 py-0.5 rounded capitalize transition-colors cursor-pointer ${
                         formData.device.security.type === t 
-                          ? 'bg-[#FF5500] text-white font-bold' 
-                          : 'text-zinc-400 hover:text-white'
+                          ? 'bg-[#FF5500] text-white font-bold shadow-xs' 
+                          : (isLight ? 'text-slate-600 hover:text-slate-900' : 'text-zinc-400 hover:text-white')
                       }`}
                     >
-                      {t === 'pattern' ? 'Patrón 3x3' : (t === 'pin' ? 'PIN' : (t === 'password' ? 'Clave' : 'Sin clave'))}
+                      {t === 'pattern' ? 'Patrón 3×3' : (t === 'pin' ? 'PIN' : (t === 'password' ? 'Clave' : 'Sin Clave'))}
                     </button>
                   ))}
                 </div>
@@ -1342,7 +1341,7 @@ export default function RepairOrderReceiver() {
                       }
                     }))}
                     placeholder="PIN numérico (ej: 1234, 0000)..."
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500] font-mono text-center tracking-widest text-sm"
+                    className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] font-mono text-center tracking-widest text-sm ${inputBaseClass}`}
                   />
                 </div>
               )}
@@ -1360,7 +1359,7 @@ export default function RepairOrderReceiver() {
                       }
                     }))}
                     placeholder="Contraseña alfanumérica..."
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500]"
+                    className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] ${inputBaseClass}`}
                   />
                 </div>
               )}
@@ -1378,7 +1377,7 @@ export default function RepairOrderReceiver() {
                     }
                   }))}
                   placeholder="Cuenta Apple ID / Google / Clave (solo si requiere restauración)..."
-                  className="w-full bg-zinc-950/60 border border-zinc-850 rounded-xl px-3 py-1.5 text-[11px] text-zinc-300 placeholder-zinc-600 outline-none focus:border-[#FF5500]"
+                  className={`w-full border rounded-xl px-3 py-1.5 text-[11px] outline-none focus:border-[#FF5500] ${inputBaseClass}`}
                 />
               </div>
             </div>
@@ -1439,11 +1438,11 @@ export default function RepairOrderReceiver() {
             {/* Selector Rápido de Tipo de Reparación / Falla */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
+                <label className={`text-[11px] font-bold flex items-center gap-1.5 ${labelTextClass}`}>
                   <Wrench className="w-3.5 h-3.5 text-[#FF5500]" />
                   <span>Tipo de Reparación Frecuente:</span>
                 </label>
-                <span className="text-[10px] text-zinc-500 font-mono">1-Clic</span>
+                <span className={`text-[10px] font-mono ${subTextClass}`}>1-Clic</span>
               </div>
 
               <div className="grid grid-cols-4 gap-1.5 mb-2.5">
@@ -1457,12 +1456,16 @@ export default function RepairOrderReceiver() {
                       onClick={() => handleSelectIssueType(issue)}
                       className={`p-1.5 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-[#FF5500]/20 border-[#FF5500] text-white shadow-[0_0_12px_rgba(255,85,0,0.3)]'
-                          : 'bg-zinc-950/90 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                          ? (isLight
+                              ? 'bg-orange-50 border-[#FF5500] text-[#FF5500] font-bold shadow-xs'
+                              : 'bg-[#FF5500]/20 border-[#FF5500] text-white shadow-[0_0_12px_rgba(255,85,0,0.3)]')
+                          : (isLight
+                              ? 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300'
+                              : 'bg-zinc-950/90 border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700')
                       }`}
                     >
                       <div className="flex items-center justify-between w-full mb-1">
-                        <IconComponent className={`w-3.5 h-3.5 ${isSelected ? 'text-[#FF5500]' : 'text-zinc-400'}`} />
+                        <IconComponent className={`w-3.5 h-3.5 ${isSelected ? 'text-[#FF5500]' : (isLight ? 'text-slate-500' : 'text-zinc-400')}`} />
                         {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#FF5500]" />}
                       </div>
                       <span className="text-[10px] font-bold leading-tight truncate">{issue.badge}</span>
@@ -1473,13 +1476,15 @@ export default function RepairOrderReceiver() {
 
               {/* Sub-selector de Calidades / Modalidades (iPhone True Tone / BMS o Calidades alternativas) */}
               {liveEstimate?.modalities && liveEstimate.modalities.length > 1 && (
-                <div className="mb-2.5 p-2 rounded-xl bg-zinc-950 border border-[#FF5500]/30 space-y-1.5">
+                <div className={`mb-2.5 p-2 rounded-xl border space-y-1.5 ${
+                  isLight ? 'bg-orange-50/50 border-orange-200' : 'bg-zinc-950 border-[#FF5500]/30'
+                }`}>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF5500] flex items-center gap-1">
                       <Sparkles className="w-3 h-3" />
                       <span>Calidad / Opciones de Repuesto:</span>
                     </span>
-                    <span className="text-[9px] text-zinc-500 font-mono">1-Clic</span>
+                    <span className={`text-[9px] font-mono ${subTextClass}`}>1-Clic</span>
                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
                     {liveEstimate.modalities.map((mod) => {
@@ -1491,19 +1496,23 @@ export default function RepairOrderReceiver() {
                           onClick={() => handleSelectModality(mod)}
                           className={`p-2 rounded-lg border text-left flex flex-col justify-between transition-all cursor-pointer ${
                             isModActive
-                              ? 'bg-[#FF5500]/25 border-[#FF5500] text-white shadow-[0_0_10px_rgba(255,85,0,0.25)]'
-                              : 'bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+                              ? (isLight
+                                  ? 'bg-orange-100/70 border-[#FF5500] text-[#FF5500] shadow-xs'
+                                  : 'bg-[#FF5500]/25 border-[#FF5500] text-white shadow-[0_0_10px_rgba(255,85,0,0.25)]')
+                              : (isLight
+                                  ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                                  : 'bg-zinc-900/90 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700')
                           }`}
                         >
                           <div className="flex items-center justify-between w-full mb-0.5">
                             <span className="text-[10px] font-bold truncate">{mod.name}</span>
                             {isModActive && <Check className="w-3 h-3 text-[#FF5500]" />}
                           </div>
-                          <div className="text-[11px] font-mono font-bold text-zinc-200">
+                          <div className={`text-[11px] font-mono font-bold ${isLight ? 'text-slate-900' : 'text-zinc-200'}`}>
                             ${mod.finalPrice?.toLocaleString('es-AR')} ARS
                           </div>
                           {mod.badge && (
-                            <span className="text-[9px] text-zinc-400 mt-0.5 truncate">{mod.badge}</span>
+                            <span className={`text-[9px] mt-0.5 truncate ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>{mod.badge}</span>
                           )}
                         </button>
                       );
@@ -1515,7 +1524,7 @@ export default function RepairOrderReceiver() {
 
             {/* Falla Solicitada por el Cliente */}
             <div>
-              <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+              <label className={labelClass}>
                 Reparación Solicitada por el Cliente <span className="text-[#FF5500]">*</span>
               </label>
               <textarea
@@ -1527,17 +1536,23 @@ export default function RepairOrderReceiver() {
                   service: { ...prev.service, requestedRepair: e.target.value }
                 }))}
                 placeholder="ej: Cambio de Módulo OLED por pantalla rota, sin imagen..."
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500]"
+                className={`w-full border rounded-xl p-2.5 text-xs outline-none focus:border-[#FF5500] ${inputBaseClass}`}
               />
             </div>
 
             {/* TARJETA DE COTIZACIÓN EN VIVO DEL PRESUPUESTADOR */}
-            <div className="rounded-xl border border-[#FF5500]/40 bg-gradient-to-br from-[#1C120B] via-zinc-950 to-zinc-950 p-3 shadow-md space-y-2">
-              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+            <div className={`rounded-xl border p-3 shadow-md space-y-2 transition-colors ${
+              isLight
+                ? 'bg-orange-50/70 border-orange-200 text-slate-800'
+                : 'border-[#FF5500]/40 bg-gradient-to-br from-[#1C120B] via-zinc-950 to-zinc-950 text-zinc-200'
+            }`}>
+              <div className={`flex items-center justify-between border-b pb-1.5 ${isLight ? 'border-orange-200' : 'border-zinc-800/80'}`}>
                 <div className="flex items-center gap-1.5">
                   <Calculator className="w-4 h-4 text-[#FF5500]" />
-                  <span className="text-xs font-bold text-white font-heading">Presupuestador Montec</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 font-mono">
+                  <span className={`text-xs font-bold font-heading ${isLight ? 'text-slate-900' : 'text-white'}`}>Presupuestador Montec</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                    isLight ? 'bg-white border border-slate-300 text-slate-700' : 'bg-zinc-900 border border-zinc-800 text-zinc-400'
+                  }`}>
                     Dólar ${dolarRate || 1545}
                   </span>
                 </div>
@@ -1604,15 +1619,19 @@ export default function RepairOrderReceiver() {
             </div>
 
             {/* BLOQUE DE REPUESTOS DISPONIBLES & ENLACES DIRECTOS A PROVEEDORES */}
-            <div className="rounded-xl border border-zinc-800/90 bg-zinc-950/90 p-3 space-y-2.5 shadow-md">
-              <div className="flex items-center justify-between border-b border-zinc-850 pb-1.5">
+            <div className={`rounded-xl border p-3 space-y-2.5 shadow-sm transition-colors ${
+              isLight
+                ? 'bg-white border-slate-200 text-slate-800'
+                : 'border-zinc-800/90 bg-zinc-950/90 text-zinc-200 shadow-md'
+            }`}>
+              <div className={`flex items-center justify-between border-b pb-1.5 ${isLight ? 'border-slate-200' : 'border-zinc-850'}`}>
                 <div className="flex items-center gap-1.5">
-                  <Package className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-bold text-zinc-200">
+                  <Package className="w-4 h-4 text-emerald-500" />
+                  <span className={`text-xs font-bold ${isLight ? 'text-slate-800' : 'text-zinc-200'}`}>
                     Repuestos Disponibles ({matchingParts.length})
                   </span>
                 </div>
-                <span className="text-[10px] text-zinc-500 font-mono">
+                <span className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
                   {detectedCategory.label}
                 </span>
               </div>
@@ -1623,26 +1642,30 @@ export default function RepairOrderReceiver() {
                   {(showAllParts ? matchingParts : matchingParts.slice(0, 4)).map((part, idx) => (
                     <div
                       key={idx}
-                      className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-between gap-2 text-xs transition-colors"
+                      className={`p-2 rounded-lg border flex items-center justify-between gap-2 text-xs transition-colors ${
+                        isLight
+                          ? 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                          : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                      }`}
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 mb-0.5">
                           <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold font-mono ${
-                            part.provider_key === 'cellstore' ? 'bg-blue-950 text-blue-300 border border-blue-800/60' :
-                            part.provider_key === 'smartsupply' ? 'bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/40' :
-                            part.provider_key === 'soulfix' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/60' :
-                            'bg-purple-950 text-purple-300 border border-purple-800/60'
+                            part.provider_key === 'cellstore' ? (isLight ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-blue-950 text-blue-300 border border-blue-800/60') :
+                            part.provider_key === 'smartsupply' ? (isLight ? 'bg-orange-100 text-[#FF5500] border border-orange-200' : 'bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/40') :
+                            part.provider_key === 'soulfix' ? (isLight ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-emerald-950 text-emerald-300 border border-emerald-800/60') :
+                            (isLight ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-purple-950 text-purple-300 border border-purple-800/60')
                           }`}>
                             {part.provider}
                           </span>
-                          <span className={`text-[9px] font-semibold ${part.in_stock ? 'text-emerald-400' : 'text-zinc-500'}`}>
+                          <span className={`text-[9px] font-semibold ${part.in_stock ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-slate-400' : 'text-zinc-500')}`}>
                             {part.in_stock ? '🟢 En Stock' : '⚪ Consultar'}
                           </span>
                         </div>
-                        <div className="text-[11px] font-medium text-zinc-200 truncate" title={part.name}>
+                        <div className={`text-[11px] font-medium truncate ${isLight ? 'text-slate-900' : 'text-zinc-200'}`} title={part.name}>
                           {part.name}
                         </div>
-                        <div className="text-[11px] font-bold font-mono text-zinc-300">
+                        <div className={`text-[11px] font-bold font-mono ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
                           Costo: ${(part.price_cash_ars || 0).toLocaleString('es-AR')} ARS
                         </div>
                       </div>
@@ -1652,14 +1675,18 @@ export default function RepairOrderReceiver() {
                           href={part.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="shrink-0 px-2 py-1.5 rounded-lg bg-zinc-800 hover:bg-[#FF5500] text-zinc-200 hover:text-white border border-zinc-700 transition-all text-[11px] flex items-center gap-1 font-semibold cursor-pointer"
+                          className={`shrink-0 px-2 py-1.5 rounded-lg border transition-all text-[11px] flex items-center gap-1 font-semibold cursor-pointer ${
+                            isLight
+                              ? 'bg-white hover:bg-[#FF5500] text-slate-700 hover:text-white border-slate-300 shadow-xs'
+                              : 'bg-zinc-800 hover:bg-[#FF5500] text-zinc-200 hover:text-white border-zinc-700'
+                          }`}
                           title="Abrir ficha del producto en proveedor"
                         >
                           <span>Ver</span>
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       ) : (
-                        <span className="text-[10px] text-zinc-500 italic">Sin link</span>
+                        <span className={`text-[10px] italic ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>Sin link</span>
                       )}
                     </div>
                   ))}
@@ -1668,14 +1695,16 @@ export default function RepairOrderReceiver() {
                     <button
                       type="button"
                       onClick={() => setShowAllParts(!showAllParts)}
-                      className="w-full text-center text-[11px] text-zinc-400 hover:text-[#FF5500] py-1 cursor-pointer"
+                      className={`w-full text-center text-[11px] py-1 cursor-pointer transition-colors ${
+                        isLight ? 'text-slate-600 hover:text-[#FF5500]' : 'text-zinc-400 hover:text-[#FF5500]'
+                      }`}
                     >
                       {showAllParts ? '▲ Mostrar menos repuestos' : `▼ Ver ${matchingParts.length - 4} repuestos más...`}
                     </button>
                   )}
                 </div>
               ) : (
-                <div className="text-[11px] text-zinc-500 italic py-1">
+                <div className={`text-[11px] italic py-1 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
                   {formData.device.model && formData.device.model.trim().length >= 2
                     ? 'No se encontraron repuestos catalogados exactos con este nombre. Podés buscarlo con los accesos directos abajo:'
                     : 'Escribe el modelo en la Columna 2 para ver repuestos disponibles y links directos.'}
@@ -1683,8 +1712,8 @@ export default function RepairOrderReceiver() {
               )}
 
               {/* Enlaces de Búsqueda Rápida en Proveedores */}
-              <div className="pt-2 border-t border-zinc-850">
-                <div className="text-[10px] uppercase font-bold text-zinc-400 mb-1.5">
+              <div className={`pt-2 border-t ${isLight ? 'border-slate-200' : 'border-zinc-850'}`}>
+                <div className={`text-[10px] uppercase font-bold mb-1.5 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
                   Buscar repuesto en tiendas de repuestos:
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -1694,10 +1723,16 @@ export default function RepairOrderReceiver() {
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-2 py-1 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white flex items-center justify-between text-[10px] font-medium transition-colors group cursor-pointer"
+                      className={`px-2 py-1 rounded-lg border flex items-center justify-between text-[10px] font-semibold transition-colors group cursor-pointer ${
+                        isLight
+                          ? 'bg-slate-50 hover:bg-orange-50 border-slate-200 hover:border-orange-300 text-slate-700 hover:text-[#FF5500]'
+                          : 'bg-zinc-900/90 hover:bg-zinc-800 border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white'
+                      }`}
                     >
                       <span className="truncate">{link.name}</span>
-                      <ExternalLink className="w-3 h-3 text-zinc-500 group-hover:text-[#FF5500] shrink-0 ml-1" />
+                      <ExternalLink className={`w-3 h-3 shrink-0 ml-1 transition-colors ${
+                        isLight ? 'text-slate-400 group-hover:text-[#FF5500]' : 'text-zinc-500 group-hover:text-[#FF5500]'
+                      }`} />
                     </a>
                   ))}
                 </div>
@@ -1706,7 +1741,7 @@ export default function RepairOrderReceiver() {
 
             {/* Diagnóstico Previo de Entrada */}
             <div>
-              <label className="block text-[11px] font-bold text-zinc-300 mb-1">
+              <label className={labelClass}>
                 Diagnóstico Previo / Observaciones de Entrada
               </label>
               <input
@@ -1717,13 +1752,15 @@ export default function RepairOrderReceiver() {
                   service: { ...prev.service, preliminaryDiagnosis: e.target.value }
                 }))}
                 placeholder="ej: Vibra al enchufar, chasis doblado levemente..."
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 outline-none focus:border-[#FF5500]"
+                className={`w-full border rounded-xl px-3 py-2 text-xs outline-none focus:border-[#FF5500] ${inputBaseClass}`}
               />
             </div>
 
             {/* Checklist Rápido de Entrada */}
-            <div className="bg-zinc-950/80 p-2.5 rounded-xl border border-zinc-800/80 space-y-1.5">
-              <div className="text-[10px] uppercase font-bold text-zinc-400">
+            <div className={`p-2.5 rounded-xl border space-y-1.5 transition-colors ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-zinc-950/80 border-zinc-800/80'
+            }`}>
+              <div className={`text-[10px] uppercase font-bold ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
                 Checklist Rápido de Entrada:
               </div>
               <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-xs">
@@ -1752,27 +1789,35 @@ export default function RepairOrderReceiver() {
                       }))}
                       className="accent-[#FF5500] w-3.5 h-3.5 rounded"
                     />
-                    <span className="text-zinc-300 text-[11px]">{item.label}</span>
+                    <span className={`text-[11px] font-medium ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>{item.label}</span>
                   </label>
                 ))}
               </div>
             </div>
 
             {/* COSTOS, SEÑA Y SALDO RESTANTE */}
-            <div className="bg-gradient-to-r from-zinc-950 via-[#1C120C] to-zinc-950 p-3 rounded-xl border border-[#FF5500]/40 space-y-2 shadow-inner">
+            <div className={`p-3 rounded-xl border space-y-2 transition-colors ${
+              isLight
+                ? 'bg-white border-orange-200/80 shadow-xs'
+                : 'bg-gradient-to-r from-zinc-950 via-[#1C120C] to-zinc-950 border-[#FF5500]/40 shadow-inner'
+            }`}>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-zinc-300">
+                    <label className={`block text-[11px] font-bold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
                       Presupuesto Total ($)
                     </label>
                     <button
                       type="button"
                       onClick={() => setIsCostModalOpen(true)}
-                      className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 hover:text-amber-300 bg-amber-400/10 hover:bg-amber-400/20 px-2 py-0.5 rounded-lg border border-amber-400/30 transition-colors cursor-pointer"
+                      className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-colors cursor-pointer ${
+                        isLight
+                          ? 'text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-300'
+                          : 'text-amber-400 hover:text-amber-300 bg-amber-400/10 hover:bg-amber-400/20 border-amber-400/30'
+                      }`}
                       title="Ver desglose de costo de repuesto proveedor vs mano de obra"
                     >
-                      <Lightbulb className="w-3 h-3 text-amber-400" />
+                      <Lightbulb className={`w-3 h-3 ${isLight ? 'text-amber-600' : 'text-amber-400'}`} />
                       <span>💡 Ver Cotización / Costos</span>
                     </button>
                   </div>
@@ -1784,12 +1829,16 @@ export default function RepairOrderReceiver() {
                       service: { ...prev.service, budgetTotal: e.target.value }
                     }))}
                     placeholder="0"
-                    className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3 py-1.5 text-sm text-white font-mono font-bold outline-none focus:border-[#FF5500]"
+                    className={`w-full border rounded-xl px-3 py-1.5 text-sm font-mono font-bold outline-none focus:border-[#FF5500] ${
+                      isLight
+                        ? 'bg-slate-50 border-slate-300 text-slate-900'
+                        : 'bg-zinc-900 border-zinc-700 text-white'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-emerald-400 mb-1">
+                  <label className={`block text-[11px] font-bold mb-1 ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
                     Seña / Anticipo ($)
                   </label>
                   <input
@@ -1800,14 +1849,18 @@ export default function RepairOrderReceiver() {
                       service: { ...prev.service, deposit: e.target.value }
                     }))}
                     placeholder="0"
-                    className="w-full bg-zinc-900 border border-emerald-500/50 rounded-xl px-3 py-1.5 text-sm text-emerald-400 font-mono font-bold outline-none focus:border-emerald-400"
+                    className={`w-full border rounded-xl px-3 py-1.5 text-sm font-mono font-bold outline-none ${
+                      isLight
+                        ? 'bg-slate-50 border-emerald-400 text-emerald-800 focus:border-emerald-600'
+                        : 'bg-zinc-900 border-emerald-500/50 text-emerald-400 focus:border-emerald-400'
+                    }`}
                   />
                 </div>
               </div>
 
               {/* Saldo Calculado Automáticamente */}
-              <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+              <div className={`pt-2 border-t flex items-center justify-between ${isLight ? 'border-slate-200' : 'border-zinc-800/80'}`}>
+                <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
                   Saldo a Pagar al Retirar:
                 </span>
                 <span className="text-lg font-black font-mono text-[#FF5500]">
@@ -1819,8 +1872,8 @@ export default function RepairOrderReceiver() {
             {/* Garantía Escrita Acordada */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <label className={`text-[11px] font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                   <span>Garantía Escrita Acordada:</span>
                 </label>
                 <div className="flex items-center gap-1 text-[10px]">
@@ -1834,8 +1887,8 @@ export default function RepairOrderReceiver() {
                       }))}
                       className={`px-1.5 py-0.5 rounded border transition-colors cursor-pointer ${
                         formData.service.warranty?.startsWith(d)
-                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-bold'
-                          : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border-zinc-800'
+                          ? (isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300 font-bold' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-bold')
+                          : (isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200' : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border-zinc-800')
                       }`}
                     >
                       {d}
@@ -1852,38 +1905,31 @@ export default function RepairOrderReceiver() {
                   service: { ...prev.service, warranty: e.target.value }
                 }))}
                 placeholder="ej: 90 días de garantía escrita..."
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-[#FF5500]"
+                className={`w-full border rounded-xl px-3 py-1.5 text-xs outline-none focus:border-[#FF5500] ${inputBaseClass}`}
               />
             </div>
 
             {/* Fecha y Hora de Entrega Pactada */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-[11px] font-bold text-zinc-300">
+                <label className={`text-[11px] font-bold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
                   Fecha y Hora de Entrega Estimada:
                 </label>
                 <div className="flex items-center gap-1 text-[10px]">
-                  <button
-                    type="button"
-                    onClick={() => setQuickDeliveryTime(3)}
-                    className="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 cursor-pointer"
-                  >
-                    +3hs
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setQuickDeliveryTime(24)}
-                    className="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 cursor-pointer"
-                  >
-                    +24hs
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setQuickDeliveryTime(48)}
-                    className="px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-zinc-800 cursor-pointer"
-                  >
-                    +48hs
-                  </button>
+                  {['3', '24', '48'].map((hs) => (
+                    <button
+                      key={hs}
+                      type="button"
+                      onClick={() => setQuickDeliveryTime(Number(hs))}
+                      className={`px-1.5 py-0.5 rounded border cursor-pointer transition-colors ${
+                        isLight
+                          ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'
+                          : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white border-zinc-800'
+                      }`}
+                    >
+                      +{hs}hs
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -1894,7 +1940,7 @@ export default function RepairOrderReceiver() {
                   ...prev,
                   service: { ...prev.service, estimatedDeliveryDate: e.target.value }
                 }))}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-white outline-none focus:border-[#FF5500] font-mono"
+                className={`w-full border rounded-xl px-3 py-1.5 text-xs outline-none focus:border-[#FF5500] font-mono ${inputBaseClass}`}
               />
             </div>
 
