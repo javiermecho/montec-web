@@ -617,7 +617,7 @@ export default function RepairOrderReceiver() {
               {pinError && (
                 <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                  Clave incorrecta. Intentá con montec2026 o 2026.
+                  Clave incorrecta. Verificá los caracteres ingresados.
                 </p>
               )}
             </div>

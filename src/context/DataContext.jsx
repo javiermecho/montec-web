@@ -295,10 +295,17 @@ export function DataProvider({ children }) {
     localStorage.setItem(STORAGE_KEYS.IPHONE_CONFIGS, JSON.stringify(defaults));
   };
 
-  // Autenticación por PIN Administrador
+  // ============================================================================
+  // CLAVES DE ACCESO A PANELES (ADMINISTRADOR Y TALLER)
+  // Podés modificar estas contraseñas acá en cualquier momento:
+  // ============================================================================
+  const ADMIN_PASSWORD = 'Milan844@';
+  const TALLER_PASSWORD = 'Milan844@';
+
+  // Autenticación por Clave Administrador
   const loginAdmin = (pin) => {
-    const cleanPin = (pin || '').trim().toLowerCase();
-    if (cleanPin === 'montec2026' || cleanPin === '2026' || cleanPin === 'admin') {
+    const cleanPin = (pin || '').trim();
+    if (cleanPin === ADMIN_PASSWORD || cleanPin === ADMIN_PASSWORD.toLowerCase()) {
       setIsAdminAuthenticated(true);
       localStorage.setItem(STORAGE_KEYS.AUTH, 'true');
       return true;
@@ -311,16 +318,10 @@ export function DataProvider({ children }) {
     localStorage.removeItem(STORAGE_KEYS.AUTH);
   };
 
-  // Autenticación por PIN Empleados / Taller
+  // Autenticación por Clave Empleados / Taller
   const loginEmployee = (pin) => {
-    const cleanPin = (pin || '').trim().toLowerCase();
-    if (
-      cleanPin === 'montec2026' || 
-      cleanPin === '2026' || 
-      cleanPin === 'taller' || 
-      cleanPin === 'admin' || 
-      cleanPin === 'empleados'
-    ) {
+    const cleanPin = (pin || '').trim();
+    if (cleanPin === TALLER_PASSWORD || cleanPin === TALLER_PASSWORD.toLowerCase()) {
       setIsEmployeeAuthenticated(true);
       localStorage.setItem(STORAGE_KEYS.EMPLOYEE_AUTH, 'true');
       return true;

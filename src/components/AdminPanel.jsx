@@ -168,7 +168,7 @@ export default function AdminPanel() {
                     setPinInput(e.target.value);
                     setLoginError(false);
                   }}
-                  placeholder="Escribí el PIN (ej: montec2026)"
+                  placeholder="Ingresá la clave de Administrador..."
                   autoFocus
                   className="w-full bg-zinc-900 border border-zinc-700 focus:border-[#FF5500] focus:ring-1 focus:ring-[#FF5500] rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-zinc-500 outline-none"
                 />
@@ -176,7 +176,7 @@ export default function AdminPanel() {
               {loginError && (
                 <div className="flex items-center gap-1.5 text-xs text-rose-400 mt-2">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  <span>PIN incorrecto. (Prueba con montec2026 o 2026)</span>
+                  <span>Clave incorrecta. Verificá los caracteres ingresados.</span>
                 </div>
               )}
             </div>
