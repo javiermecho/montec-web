@@ -111,27 +111,77 @@
   color: #a1a1aa !important;
 }
 
-.montec-panel-light section,
-.montec-panel-light .bg-\[\#121214\],
-.montec-panel-light .bg-\[\#141416\],
-.montec-panel-light .bg-\[\#161619\],
-.montec-panel-light .bg-\[\#0E0E10\] {
+/* Contenedores y Tarjetas Principales del Panel de Administración y Taller */
+.montec-panel-light div[class*="bg-[#18181b]"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-[#121214]"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-[#141416]"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-[#161616]"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-[#121212]"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-[#1a1a1e]"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-[#0E0E10]"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-zinc-950"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-zinc-900"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-zinc-850"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light section:not(header):not(.admin-tabs-bar),
+.montec-panel-light table,
+.montec-panel-light tbody {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
   color: #0f172a !important;
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.04) !important;
 }
 
-/* Sub-tarjetas internas, cajas de notas y estados */
-.montec-panel-light .bg-zinc-950:not(header):not(.admin-tabs-bar),
-.montec-panel-light .bg-zinc-900:not(header):not(.admin-tabs-bar),
-.montec-panel-light .bg-zinc-850,
-.montec-panel-light .bg-zinc-900\/60,
-.montec-panel-light .bg-zinc-900\/40,
-.montec-panel-light .bg-zinc-950\/60 {
-  background-color: #f1f5f9 !important;
+/* Sub-bloques y cajas internas (métricas de proveedores, cajas de estadísticas, etc.) */
+.montec-panel-light [class*="bg-black/"]:not(header):not(.admin-tabs-bar):not(button[class*="bg-[#FF5500]"]),
+.montec-panel-light [class*="bg-zinc-800/"]:not(header *):not(.admin-tabs-bar *):not(button[class*="bg-[#FF5500]"]),
+.montec-panel-light [class*="bg-zinc-900/"]:not(header *):not(.admin-tabs-bar *):not(button[class*="bg-[#FF5500]"]),
+.montec-panel-light [class*="bg-zinc-950/"]:not(header *):not(.admin-tabs-bar *):not(button[class*="bg-[#FF5500]"]) {
+  background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
   color: #1e293b !important;
+}
+
+/* Filas y Encabezados de Tablas en Modo Claro */
+.montec-panel-light thead,
+.montec-panel-light thead tr {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.montec-panel-light thead th {
+  color: #475569 !important;
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.montec-panel-light tbody tr {
+  border-color: #f1f5f9 !important;
+}
+
+.montec-panel-light tbody tr:hover,
+.montec-panel-light tr[class*="hover:bg-"]:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Tipografía de texto general fuera de los encabezados oscuros */
+.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) h1.text-white,
+.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) h2.text-white,
+.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) h3.text-white,
+.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) div.text-white,
+.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) strong.text-white,
+.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) td div.text-white,
+.montec-panel-light td [class*="text-white"]:not(button *),
+.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) span.text-white:not(button[class*="bg-[#FF5500]"] *):not([class*="bg-[#FF5500]"] *) {
+  color: #0f172a !important;
+}
+
+.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) [class*="text-zinc-200"],
+.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) [class*="text-zinc-300"] {
+  color: #1e293b !important;
+}
+
+.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) [class*="text-zinc-400"],
+.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) [class*="text-zinc-500"] {
+  color: #64748b !important;
 }
 
 /* Inputs, Selects y Textareas */
@@ -156,62 +206,90 @@
   box-shadow: 0 0 0 3px rgba(255, 85, 0, 0.15) !important;
 }
 
-/* Select options */
 .montec-panel-light select option {
   background-color: #ffffff !important;
   color: #0f172a !important;
 }
 
-/* Tipografía de etiquetas y textos secundarios fuera de encabezados */
-.montec-panel-light main label,
-.montec-panel-light .tab-content label,
-.montec-panel-light main .text-zinc-300,
-.montec-panel-light main .text-zinc-200 {
-  color: #334155 !important;
-}
-
-.montec-panel-light main .text-zinc-400,
-.montec-panel-light main .text-zinc-500,
-.montec-panel-light main .text-zinc-600 {
-  color: #64748b !important;
-}
-
-/* Bordes en general */
-.montec-panel-light .border-zinc-800:not(header):not(.admin-tabs-bar),
-.montec-panel-light .border-zinc-700:not(header):not(.admin-tabs-bar),
-.montec-panel-light .border-zinc-850,
-.montec-panel-light .border-zinc-800\/80:not(header):not(.admin-tabs-bar),
-.montec-panel-light .border-zinc-800\/90,
-.montec-panel-light .border-zinc-800\/60 {
+/* Bordes en General */
+.montec-panel-light [class*="border-zinc-800"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light [class*="border-zinc-700"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light [class*="border-zinc-850"] {
   border-color: #e2e8f0 !important;
 }
 
-/* Botones secundarios (como selector de fallas Pantalla, Batería, Carga...) */
-.montec-panel-light button.bg-zinc-800\/60,
-.montec-panel-light button.bg-zinc-800\/80,
-.montec-panel-light button.bg-zinc-900,
-.montec-panel-light button.bg-zinc-800,
-.montec-panel-light div.bg-zinc-950,
-.montec-panel-light div.bg-zinc-900 {
+.montec-panel-light [class*="divide-zinc-"]:not(header):not(.admin-tabs-bar) > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}
+
+/* Botones secundarios oscuros (filtros de proveedor, solo en stock, etc.) */
+.montec-panel-light button[class*="bg-[#121214]"]:not([class*="bg-[#FF5500]"]),
+.montec-panel-light button[class*="bg-zinc-850"]:not([class*="bg-[#FF5500]"]),
+.montec-panel-light button[class*="bg-zinc-900"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *),
+.montec-panel-light button[class*="bg-zinc-800"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *) {
   background-color: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
   color: #334155 !important;
 }
 
-.montec-panel-light button.bg-zinc-800\/60:hover,
-.montec-panel-light button.bg-zinc-900:hover,
-.montec-panel-light button.bg-zinc-800:hover {
+.montec-panel-light button[class*="bg-[#121214]"]:hover:not([class*="bg-[#FF5500]"]),
+.montec-panel-light button[class*="bg-zinc-850"]:hover:not([class*="bg-[#FF5500]"]),
+.montec-panel-light button[class*="bg-zinc-900"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *),
+.montec-panel-light button[class*="bg-zinc-800"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *) {
   background-color: #e2e8f0 !important;
   color: #0f172a !important;
 }
 
-/* Preservar estilo de botones activos de fallas o botones seleccionados */
-.montec-panel-light button.border-\[\#FF5500\],
-.montec-panel-light button.border-\[\#FF5500\]\/50,
-.montec-panel-light div.border-\[\#FF5500\] {
-  border-color: #FF5500 !important;
+/* Selector Lista vs Tarjetas en modo claro */
+.montec-panel-light div[class*="bg-[#121214]"][class*="p-1"] {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+.montec-panel-light div[class*="bg-[#121214]"][class*="p-1"] button:not([class*="bg-[#FF5500]"]) {
+  color: #64748b !important;
+}
+
+/* Anular degradados oscuros en contenedores principales de paneles */
+.montec-panel-light div[class*="bg-gradient-"]:not(button *):not(button[class*="bg-gradient-"]):not(header *):not(.admin-tabs-bar *) {
+  background-image: none !important;
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Badges pequeños oscuros (marcas, IDs, tags de accesorios) */
+.montec-panel-light span[class*="bg-zinc-800"]:not(button[class*="bg-[#FF5500]"] *):not(header *):not(.admin-tabs-bar *),
+.montec-panel-light span[class*="bg-zinc-900"]:not(button[class*="bg-[#FF5500]"] *):not(header *):not(.admin-tabs-bar *),
+.montec-panel-light span[class*="bg-black/"]:not(button[class*="bg-[#FF5500]"] *):not(header *):not(.admin-tabs-bar *) {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+/* Cuadraditos de checkboxes no seleccionados en Buscador de Repuestos */
+.montec-panel-light button span[class*="bg-zinc-800"] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+
+.montec-panel-light button[class*="bg-[#121214]"][class*="rounded-xl"] {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+/* Botones de Tipos de Repuesto seleccionados (Checkboxes) */
+.montec-panel-light button[class*="border-[#FF5500]"][class*="bg-[#FF5500]/15"] {
   background-color: #fff7ed !important;
+  border-color: #FF5500 !important;
   color: #c2410c !important;
+}
+.montec-panel-light button[class*="border-[#FF5500]"][class*="bg-[#FF5500]/15"] span {
+  color: #c2410c !important;
+}
+.montec-panel-light button[class*="border-[#FF5500]"][class*="bg-[#FF5500]/15"] span.bg-\[\#FF5500\] {
+  background-color: #FF5500 !important;
+  color: #ffffff !important;
 }
 
 /* Botones con fondo Naranja Montec (Mantener texto blanco y fondo vibrante) */
@@ -225,6 +303,16 @@
 .montec-panel-light button.bg-\[\#FF5500\] *,
 .montec-panel-light button.bg-gradient-to-r * {
   color: #ffffff !important;
+}
+
+/* Modales dentro de AdminPanel en modo claro */
+.montec-panel-light .fixed.inset-0 .bg-\[\#161616\],
+.montec-panel-light .fixed.inset-0 .bg-\[\#141416\],
+.montec-panel-light .fixed.inset-0 .bg-zinc-900 {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* Selector de PIN / Patrón / Clave */
