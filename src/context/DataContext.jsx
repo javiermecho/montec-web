@@ -372,7 +372,26 @@ export function DataProvider({ children }) {
     return newOrder;
   };
 
-  const updateRepairOrderStatus = (orderId, newStatus, note = '') => {
+  const updateRepairOrder = (orderId, updatedFields) => {
+    setOrders(prev => {
+      const updated = prev.map(o => {
+        if (o.id !== orderId && o.orderNumber !== orderId) return o;
+        return {
+          ...o,
+          ...updatedFields,
+          updatedAt: new Date().toISOString()
+        };
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error actualizando orden:', e);
+      }
+      return updated;
+    });
+  };
+
+  const updateRepairOrderStatus = (orderId, newStatus, note = '', extraData = {}) => {
     setOrders(prev => {
       const updated = prev.map(o => {
         if (o.id !== orderId && o.orderNumber !== orderId) return o;
@@ -386,6 +405,7 @@ export function DataProvider({ children }) {
         ];
         return {
           ...o,
+          ...extraData,
           status: newStatus,
           updatedAt: new Date().toISOString(),
           logs: newLogs
@@ -395,6 +415,94 @@ export function DataProvider({ children }) {
         localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
       } catch (e) {
         console.error('Error actualizando orden:', e);
+      }
+      return updated;
+    });
+  };
+
+  const addOrderInternalNote = (orderId, noteText, author = 'Taller Montec') => {
+    if (!noteText || !noteText.trim()) return;
+    setOrders(prev => {
+      const updated = prev.map(o => {
+        if (o.id !== orderId && o.orderNumber !== orderId) return o;
+        const newNotes = [
+          ...(o.internalNotesList || []),
+          {
+            id: `note-${Date.now()}`,
+            timestamp: new Date().toISOString(),
+            author,
+            text: noteText.trim()
+          }
+        ];
+        const newLogs = [
+          ...(o.logs || []),
+          {
+            timestamp: new Date().toISOString(),
+            action: `Nota interna (${author}): "${noteText.trim().slice(0, 60)}${noteText.trim().length > 60 ? '...' : ''}"`,
+            status: o.status
+          }
+        ];
+        return {
+          ...o,
+          internalNotesList: newNotes,
+          updatedAt: new Date().toISOString(),
+          logs: newLogs
+        };
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error guardando nota interna:', e);
+      }
+      return updated;
+    });
+  };
+
+  const recordOrderPayment = (orderId, paymentAmount, paymentMethod = 'Efectivo', note = '') => {
+    const amount = Number(paymentAmount) || 0;
+    if (amount <= 0) return;
+    setOrders(prev => {
+      const updated = prev.map(o => {
+        if (o.id !== orderId && o.orderNumber !== orderId) return o;
+        const currentDeposit = Number(o.service?.deposit) || 0;
+        const currentBudget = Number(o.service?.budgetTotal) || 0;
+        const newDeposit = currentDeposit + amount;
+        const newBalance = Math.max(0, currentBudget - newDeposit);
+
+        const newPaymentEntry = {
+          id: `pay-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          amount,
+          method: paymentMethod,
+          note: note || 'Cobro registrado en taller'
+        };
+
+        const newPayments = [...(o.payments || []), newPaymentEntry];
+        const newLogs = [
+          ...(o.logs || []),
+          {
+            timestamp: new Date().toISOString(),
+            action: `Cobro registrado: +$${amount.toLocaleString('es-AR')} (${paymentMethod}). Saldo restante: $${newBalance.toLocaleString('es-AR')}`,
+            status: o.status
+          }
+        ];
+
+        return {
+          ...o,
+          payments: newPayments,
+          service: {
+            ...o.service,
+            deposit: newDeposit,
+            balanceDue: newBalance
+          },
+          updatedAt: new Date().toISOString(),
+          logs: newLogs
+        };
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error registrando cobro:', e);
       }
       return updated;
     });
@@ -861,7 +969,10 @@ export function DataProvider({ children }) {
       loginEmployee,
       logoutEmployee,
       createRepairOrder,
+      updateRepairOrder,
       updateRepairOrderStatus,
+      addOrderInternalNote,
+      recordOrderPayment,
       deleteRepairOrder,
       searchClients
     }}>

@@ -41,7 +41,7 @@ import { useData } from '../../context/DataContext';
 import { searchPartsForRepair, generateQuickSupplierLinks, detectPartCategory } from '../../services/partsSearchService';
 import PatternLockInput from './PatternLockInput';
 import OrderTicketModal from './OrderTicketModal';
-import OrdersListModal from './OrdersListModal';
+import RepairOrdersManager from './RepairOrdersManager';
 import CostBreakdownModal from './CostBreakdownModal';
 
 export default function RepairOrderReceiver() {
@@ -1715,9 +1715,9 @@ export default function RepairOrderReceiver() {
         />
       )}
 
-      {/* SUB-MODAL 2: GESTOR Y LISTA DE ÓRDENES REGISTRADAS */}
+      {/* SUB-MODAL 2: GESTOR INTEGRAL DE ÓRDENES Y TALLER (SISTROFIX STYLE) */}
       {activeSubModal === 'orders_list' && (
-        <OrdersListModal
+        <RepairOrdersManager
           onSelectOrder={(order) => {
             setActiveTicketOrder(order);
             setActiveSubModal('ticket_view');

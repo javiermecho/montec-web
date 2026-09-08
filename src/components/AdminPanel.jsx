@@ -24,13 +24,15 @@ import {
   ShieldCheck,
   Maximize2,
   Zap,
-  BarChart3
+  BarChart3,
+  ClipboardList
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { getIphoneGenerationInfo } from '../data/iphonePricingData';
 import MontecLogo from './MontecLogo';
 import PartsSearchTab from './admin/PartsSearchTab';
 import AnalyticsTab from './admin/AnalyticsTab';
+import RepairOrdersManager from './taller/RepairOrdersManager';
 
 export default function AdminPanel() {
   const {
@@ -57,7 +59,8 @@ export default function AdminPanel() {
     iphoneConfigs,
     updateIphoneConfig,
     resetIphoneConfigs,
-    dolarRate
+    dolarRate,
+    orders
   } = useData();
 
   // Estados de interfaz
@@ -311,6 +314,18 @@ export default function AdminPanel() {
         </button>
 
         <button
+          onClick={() => setActiveTab('orders')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
+            activeTab === 'orders' 
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+          }`}
+        >
+          <ClipboardList className="w-4 h-4 text-emerald-400" />
+          <span>Órdenes de Taller ({orders.length})</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('parts_search')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
             activeTab === 'parts_search' 
@@ -386,6 +401,15 @@ export default function AdminPanel() {
       {/* Contenido Principal de las Pestañas */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
         
+        {/* ============================================================== */}
+        {/* PESTAÑA: GESTIÓN INTEGRAL DE ÓRDENES DE TALLER                 */}
+        {/* ============================================================== */}
+        {activeTab === 'orders' && (
+          <RepairOrdersManager
+            onClose={() => setActiveTab('models')}
+          />
+        )}
+
         {/* ============================================================== */}
         {/* PESTAÑA 1: MODELOS REPARADOS */}
         {/* ============================================================== */}
