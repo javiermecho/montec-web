@@ -434,6 +434,7 @@ export default function AdminPanel() {
         {/* ============================================================== */}
         {activeTab === 'orders' && (
           <RepairOrdersManager
+            isEmbedded={true}
             onClose={() => setActiveTab('models')}
           />
         )}

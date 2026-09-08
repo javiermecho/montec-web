@@ -113,9 +113,12 @@
 
 /* Contenedores y Tarjetas Principales del Panel de Administración y Taller */
 .montec-panel-light div[class*="bg-[#18181b]"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-[#18181c]"]:not(header):not(.admin-tabs-bar),
 .montec-panel-light div[class*="bg-[#121214]"]:not(header):not(.admin-tabs-bar),
 .montec-panel-light div[class*="bg-[#141416]"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-[#141417]"]:not(header):not(.admin-tabs-bar),
 .montec-panel-light div[class*="bg-[#161616]"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light div[class*="bg-[#161619]"]:not(header):not(.admin-tabs-bar),
 .montec-panel-light div[class*="bg-[#121212]"]:not(header):not(.admin-tabs-bar),
 .montec-panel-light div[class*="bg-[#1a1a1e]"]:not(header):not(.admin-tabs-bar),
 .montec-panel-light div[class*="bg-[#0E0E10]"]:not(header):not(.admin-tabs-bar),
@@ -173,7 +176,7 @@
 }
 
 /* Tipografía de texto general fuera de los encabezados oscuros permanentes y de botones con relleno */
-.montec-panel-light .text-white:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *):not([class~="bg-[#FF5500]"]):not([class~="bg-[#FF5500]"] *):not(button[class*="bg-emerald-"]):not(button[class*="bg-emerald-"] *):not(button[class*="bg-rose-"]):not(button[class*="bg-rose-"] *):not(button[class*="bg-purple-"]):not(button[class*="bg-purple-"] *) {
+.montec-panel-light .text-white:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *):not([class~="bg-[#FF5500]"]):not([class~="bg-[#FF5500]"] *):not(button[class*="bg-emerald-"]):not(button[class*="bg-emerald-"] *):not(button[class*="bg-rose-"]):not(button[class*="bg-rose-"] *):not(button[class*="bg-purple-"]):not(button[class*="bg-purple-"] *):not(button[class*="bg-slate-"]):not(button[class*="bg-slate-"] *) {
   color: #0f172a !important;
 }
 
@@ -182,13 +185,17 @@
   color: #FF5500 !important;
 }
 
-.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) [class*="text-zinc-200"],
-.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) [class*="text-zinc-300"] {
+.montec-panel-light [class*="text-zinc-100"]:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"] *):not(button[class*="bg-slate-"] *) {
+  color: #0f172a !important;
+}
+
+.montec-panel-light [class*="text-zinc-200"]:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"] *):not(button[class*="bg-slate-"] *),
+.montec-panel-light [class*="text-zinc-300"]:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"] *):not(button[class*="bg-slate-"] *) {
   color: #1e293b !important;
 }
 
-.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) [class*="text-zinc-400"],
-.montec-panel-light div:not(header):not(.admin-tabs-bar):not(.panel-top-header) [class*="text-zinc-500"] {
+.montec-panel-light [class*="text-zinc-400"]:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"] *):not(button[class*="bg-slate-"] *),
+.montec-panel-light [class*="text-zinc-500"]:not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not([class~="bg-[#FF5500]"] *):not(button[class*="bg-slate-"] *) {
   color: #475569 !important;
 }
 
@@ -220,30 +227,30 @@
 }
 
 /* Bordes en General */
-.montec-panel-light [class*="border-zinc-800"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light [class*="border-zinc-700"]:not(header):not(.admin-tabs-bar),
+.montec-panel-light [class*="border-zinc-800"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *),
+.montec-panel-light [class*="border-zinc-700"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *),
 .montec-panel-light [class*="border-zinc-850"] {
   border-color: #e2e8f0 !important;
 }
 
-.montec-panel-light [class*="divide-zinc-"]:not(header):not(.admin-tabs-bar) > :not([hidden]) ~ :not([hidden]) {
+.montec-panel-light [class*="divide-zinc-"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *) > :not([hidden]) ~ :not([hidden]) {
   border-color: #e2e8f0 !important;
 }
 
 /* Botones secundarios oscuros (filtros de proveedor, solo en stock, etc.) */
-.montec-panel-light button[class*="bg-[#121214]"]:not([class*="bg-[#FF5500]"]),
-.montec-panel-light button[class*="bg-zinc-850"]:not([class*="bg-[#FF5500]"]),
-.montec-panel-light button[class*="bg-zinc-900"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *),
-.montec-panel-light button[class*="bg-zinc-800"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *) {
+.montec-panel-light button[class*="bg-[#121214]"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
+.montec-panel-light button[class*="bg-zinc-850"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
+.montec-panel-light button[class*="bg-zinc-900"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
+.montec-panel-light button[class*="bg-zinc-800"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *) {
   background-color: #f1f5f9 !important;
   border-color: #cbd5e1 !important;
   color: #334155 !important;
 }
 
-.montec-panel-light button[class*="bg-[#121214]"]:hover:not([class*="bg-[#FF5500]"]),
-.montec-panel-light button[class*="bg-zinc-850"]:hover:not([class*="bg-[#FF5500]"]),
-.montec-panel-light button[class*="bg-zinc-900"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *),
-.montec-panel-light button[class*="bg-zinc-800"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *) {
+.montec-panel-light button[class*="bg-[#121214]"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
+.montec-panel-light button[class*="bg-zinc-850"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
+.montec-panel-light button[class*="bg-zinc-900"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
+.montec-panel-light button[class*="bg-zinc-800"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *) {
   background-color: #e2e8f0 !important;
   color: #0f172a !important;
 }
