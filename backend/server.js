@@ -369,6 +369,36 @@ app.patch('/api/orders/:id/payments', async (req, res) => {
   }
 });
 
+// Eliminar orden por ID o número correlativo
+app.delete('/api/orders/:id', async (req, res) => {
+  const { id } = req.params;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    const isNum = !isNaN(parseInt(id, 10)) && String(parseInt(id, 10)) === id;
+    const sql = isNum
+      ? 'DELETE FROM repair_orders WHERE id = $1 RETURNING *'
+      : 'DELETE FROM repair_orders WHERE LOWER(order_number) = LOWER($1) RETURNING *';
+
+    const result = await query(sql, [id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Orden no encontrada' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Orden eliminada exitosamente'
+    });
+  } catch (error) {
+    console.error('❌ Error al eliminar orden:', error);
+    res.status(500).json({ error: 'Error al eliminar orden de la base de datos' });
+  }
+});
+
 // ==========================================
 // 3. ENDPOINTS DE INVENTARIO Y PRODUCTOS
 // ==========================================

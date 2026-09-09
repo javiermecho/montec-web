@@ -751,6 +751,10 @@ export function DataProvider({ children }) {
       }
       return updated;
     });
+
+    api.deleteOrden(orderId).catch(e => {
+      console.warn('⚠️ No se pudo eliminar orden en Railway:', e.message);
+    });
   };
 
   // Búsqueda rápida de clientes históricos

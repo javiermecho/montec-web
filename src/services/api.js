@@ -177,6 +177,16 @@ export async function updateOrdenPago(id, pagoData) {
   return res;
 }
 
+/**
+ * Elimina una orden de la base de datos
+ */
+export async function deleteOrden(id) {
+  const res = await request(`/orders/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+  return res;
+}
+
 // ============================================================================
 // 3. MÓDULO DE INVENTARIO Y PRODUCTOS (POSTGRESQL)
 // ============================================================================
@@ -251,6 +261,7 @@ export const api = {
   createOrden,
   updateOrdenEstado,
   updateOrdenPago,
+  deleteOrden,
   getProductos,
   createProducto,
   updateProducto,
