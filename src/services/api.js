@@ -238,6 +238,22 @@ export async function updateProducto(id, productData) {
 // ============================================================================
 
 /**
+ * Obtiene el listado de ventas y comprobantes registrados
+ */
+export async function getVentas(params = {}) {
+  const queryParams = new URLSearchParams();
+  if (params.date) queryParams.set('date', params.date);
+  if (params.limit) queryParams.set('limit', params.limit);
+  const qs = queryParams.toString();
+
+  const res = await request(`/sales${qs ? `?${qs}` : ''}`, { method: 'GET' });
+  if (res.success && Array.isArray(res.data?.sales)) {
+    return res.data.sales;
+  }
+  return [];
+}
+
+/**
  * Registra una venta en el POS y descuenta el stock atómicamente en PostgreSQL
  */
 export async function createVenta(ventaData) {
@@ -254,6 +270,27 @@ export async function createVenta(ventaData) {
     };
   }
   return { success: false, error: res.error };
+}
+
+/**
+ * Actualiza el tipo de comprobante, número o datos fiscales de una venta
+ */
+export async function updateVenta(id, updateData) {
+  const res = await request(`/sales/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updateData)
+  });
+  return res;
+}
+
+/**
+ * Elimina una venta
+ */
+export async function deleteVenta(id) {
+  const res = await request(`/sales/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+  return res;
 }
 
 // ============================================================================
@@ -304,7 +341,10 @@ export const api = {
   getProductos,
   createProducto,
   updateProducto,
+  getVentas,
   createVenta,
+  updateVenta,
+  deleteVenta,
   getSetting,
   saveSetting,
   getFullBackup

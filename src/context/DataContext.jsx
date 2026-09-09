@@ -401,6 +401,28 @@ export function DataProvider({ children }) {
           console.warn('⚠️ No se pudo sincronizar inventario de PostgreSQL:', e);
         }
 
+        // 2.b Sincronizar Ventas y Comprobantes Comerciales desde PostgreSQL
+        try {
+          const remoteSales = await api.getVentas();
+          if (Array.isArray(remoteSales) && remoteSales.length > 0) {
+            setSales(prev => {
+              const map = new Map();
+              prev.forEach(s => map.set(s.id || s.ticketNumber, s));
+              remoteSales.forEach(s => {
+                const key = s.id || s.ticketNumber;
+                map.set(key, { ...(map.get(key) || {}), ...s });
+              });
+              const merged = Array.from(map.values()).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+              try {
+                localStorage.setItem(STORAGE_KEYS.SALES, JSON.stringify(merged));
+              } catch (e) {}
+              return merged;
+            });
+          }
+        } catch (e) {
+          console.warn('⚠️ No se pudo sincronizar ventas de PostgreSQL:', e);
+        }
+
         // 3. Sincronizar y Respaldar Modelos Soportados en PostgreSQL
         try {
           const remoteModels = await api.getSetting('models');
@@ -1102,20 +1124,33 @@ export function DataProvider({ children }) {
   const updateAccessory = updateProduct;
   const deleteAccessory = deleteProduct;
 
-  // --- Operaciones de Ventas (Punto de Venta - POS) ---
+  // --- Operaciones de Ventas & Comprobantes Comerciales (POS / Administración) ---
   const recordSale = (saleData) => {
-    const saleId = `sale-${Date.now()}`;
+    const saleId = saleData.id || `sale-${Date.now()}`;
     const dateNow = new Date();
-    const ticketNumber = `#TCK-${1000 + sales.length + 1}`;
+    const docType = saleData.documentType || 'ticket_x';
+    const defaultPrefix = {
+      factura_b: 'FAC-B',
+      factura_a: 'FAC-A',
+      factura_c: 'FAC-C',
+      remito: 'REM',
+      recibo: 'REC',
+      ticket_x: 'TCK'
+    }[docType] || 'TCK';
+
+    const ticketNumber = saleData.documentNumber || saleData.ticketNumber || `#${defaultPrefix}-${1000 + sales.length + 1}`;
 
     const newSale = {
       id: saleId,
       ticketNumber,
-      createdAt: dateNow.toISOString(),
+      documentType: docType,
+      documentNumber: saleData.documentNumber || ticketNumber,
+      documentStatus: saleData.documentStatus || 'emitido',
+      createdAt: saleData.createdAt || dateNow.toISOString(),
       formattedDate: dateNow.toLocaleString('es-AR'),
       items: saleData.items || [],
-      subtotal: Number(saleData.subtotal) || 0,
-      discountType: saleData.discountType || 'none', // 'percentage', 'fixed', 'none'
+      subtotal: Number(saleData.subtotal || saleData.total) || 0,
+      discountType: saleData.discountType || 'none',
       discountValue: Number(saleData.discountValue) || 0,
       discountAmount: Number(saleData.discountAmount) || 0,
       total: Number(saleData.total) || 0,
@@ -1124,9 +1159,13 @@ export function DataProvider({ children }) {
       changeDue: Number(saleData.changeDue) || 0,
       customer: {
         name: saleData.customer?.name?.trim() || 'Consumidor Final',
-        phone: saleData.customer?.phone?.trim() || ''
+        phone: saleData.customer?.phone?.trim() || '',
+        docType: saleData.customer?.docType || 'DNI',
+        docNumber: saleData.customer?.docNumber || '',
+        taxCondition: saleData.customer?.taxCondition || 'Consumidor Final'
       },
-      seller: saleData.seller || 'Mostrador Montec'
+      seller: saleData.seller || 'Mostrador Montec',
+      notes: saleData.notes || ''
     };
 
     // 1. Descontar stock de cada producto vendido localmente
@@ -1151,6 +1190,8 @@ export function DataProvider({ children }) {
 
     // 3. Sincronizar venta y descuento atómico de stock en PostgreSQL (Railway)
     api.createVenta({
+      documentType: newSale.documentType,
+      documentNumber: newSale.documentNumber,
       items: newSale.items,
       subtotal: newSale.subtotal,
       discount: newSale.discountAmount,
@@ -1165,8 +1206,39 @@ export function DataProvider({ children }) {
     return newSale;
   };
 
+  const updateSale = (saleId, updatedFields) => {
+    setSales(prev => {
+      const updated = prev.map(s => {
+        if (s.id !== saleId && s.ticketNumber !== saleId) return s;
+        return {
+          ...s,
+          ...updatedFields,
+          updatedAt: new Date().toISOString()
+        };
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.SALES, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    api.updateVenta(saleId, updatedFields).catch(e => {
+      console.warn('⚠️ No se pudo actualizar comprobante en PostgreSQL:', e.message);
+    });
+  };
+
   const deleteSale = (saleId) => {
-    setSales(prev => prev.filter(s => s.id !== saleId));
+    setSales(prev => {
+      const updated = prev.filter(s => s.id !== saleId && s.ticketNumber !== saleId);
+      try {
+        localStorage.setItem(STORAGE_KEYS.SALES, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    api.deleteVenta(saleId).catch(e => {
+      console.warn('⚠️ No se pudo eliminar venta en PostgreSQL:', e.message);
+    });
   };
 
   // --- Operación de Entrega Unificada (Reparación + Venta de Accesorios) ---
@@ -1690,6 +1762,7 @@ export function DataProvider({ children }) {
       deleteProduct,
       sales,
       recordSale,
+      updateSale,
       recordUnifiedDelivery,
       deleteSale,
       dolarRate,

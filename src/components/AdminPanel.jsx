@@ -30,7 +30,8 @@ import {
   ClipboardList,
   Sun,
   Moon,
-  Store
+  Store,
+  Receipt
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -41,6 +42,7 @@ import AnalyticsTab from './admin/AnalyticsTab';
 import RepairOrdersManager from './taller/RepairOrdersManager';
 import SalesPOS from './pos/SalesPOS';
 import InventoryManager from './inventory/InventoryManager';
+import DailySalesTab from './admin/DailySalesTab';
 
 export default function AdminPanel() {
   const {
@@ -74,7 +76,8 @@ export default function AdminPanel() {
     togglePanelTheme,
     setIsTallerOpen,
     triggerManualBackup,
-    serverStatus
+    serverStatus,
+    sales
   } = useData();
 
   const { isAdmin, currentUser, logout, isTallerSubdomain } = useAuth();
@@ -436,6 +439,17 @@ export default function AdminPanel() {
         </button>
 
         <button
+          onClick={() => setActiveTab('sales')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'sales'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+            }`}
+        >
+          <Receipt className="w-4 h-4 text-emerald-400" />
+          <span>Ventas Diarias ({sales?.length || 0})</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('analytics')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${activeTab === 'analytics'
               ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
@@ -460,6 +474,13 @@ export default function AdminPanel() {
 
       {/* Contenido Principal de las Pestañas */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+
+        {/* ============================================================== */}
+        {/* PESTAÑA: VENTAS DIARIAS Y COMPROBANTES COMERCIALES            */}
+        {/* ============================================================== */}
+        {activeTab === 'sales' && (
+          <DailySalesTab />
+        )}
 
         {/* ============================================================== */}
         {/* PESTAÑA: GESTIÓN INTEGRAL DE ÓRDENES DE TALLER                 */}

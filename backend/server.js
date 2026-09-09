@@ -522,12 +522,70 @@ app.patch('/api/inventory/:id', async (req, res) => {
 });
 
 // ==========================================
-// 4. ENDPOINTS DE VENTAS (POS)
+// 4. ENDPOINTS DE VENTAS & COMPROBANTES COMERCIALES
 // ==========================================
+
+// Listar ventas históricas
+app.get('/api/sales', async (req, res) => {
+  const { date, limit = 500 } = req.query;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.json({ success: true, sales: [] });
+  }
+
+  try {
+    let sql = 'SELECT * FROM sales ORDER BY created_at DESC LIMIT $1';
+    let params = [parseInt(limit, 10) || 500];
+
+    if (date) {
+      sql = 'SELECT * FROM sales WHERE DATE(created_at) = $1 ORDER BY created_at DESC LIMIT $2';
+      params = [date, parseInt(limit, 10) || 500];
+    }
+
+    const result = await query(sql, params);
+    const mapped = result.rows.map(row => {
+      const cust = row.customer_data || {};
+      return {
+        id: row.id,
+        ticketNumber: row.ticket_number,
+        documentType: row.document_type || cust.documentType || 'ticket_x',
+        documentNumber: row.document_number || cust.documentNumber || row.ticket_number,
+        items: row.items || [],
+        subtotal: parseFloat(row.subtotal || row.total || 0),
+        discountAmount: parseFloat(row.discount || 0),
+        total: parseFloat(row.total || 0),
+        paymentMethod: row.payment_method || 'Efectivo',
+        customer: cust,
+        seller: row.seller || 'Mostrador Montec',
+        createdAt: row.created_at,
+        formattedDate: new Date(row.created_at).toLocaleString('es-AR')
+      };
+    });
+
+    res.json({
+      success: true,
+      sales: mapped
+    });
+  } catch (error) {
+    console.error('❌ Error al consultar ventas en PostgreSQL:', error);
+    res.status(500).json({ error: 'Error al consultar ventas', details: error.message });
+  }
+});
 
 // Registrar venta y descontar stock automáticamente
 app.post('/api/sales', async (req, res) => {
-  const { items, subtotal, discount, total, paymentMethod, customer, seller } = req.body;
+  const { 
+    items, 
+    subtotal, 
+    discount, 
+    total, 
+    paymentMethod, 
+    customer, 
+    seller, 
+    documentType = 'ticket_x',
+    documentNumber 
+  } = req.body;
   const dbConnected = await isDbConnected();
 
   if (!dbConnected) {
@@ -535,18 +593,21 @@ app.post('/api/sales', async (req, res) => {
   }
 
   try {
-    // Generar ticket correlativo
-    const ticketNumber = `TKT-${Date.now().toString().slice(-6)}`;
+    // Generar ticket o comprobante correlativo
+    const ticketNumber = documentNumber || `TKT-${Date.now().toString().slice(-6)}`;
+    const docNum = documentNumber || ticketNumber;
     
-    // Inserción de venta
+    // Inserción de venta con tipo de documento comercial
     const insertSaleSql = `
-      INSERT INTO sales (ticket_number, items, subtotal, discount, total, payment_method, customer_data, seller)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      INSERT INTO sales (ticket_number, document_type, document_number, items, subtotal, discount, total, payment_method, customer_data, seller)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *;
     `;
 
     const saleResult = await query(insertSaleSql, [
       ticketNumber,
+      documentType || 'ticket_x',
+      docNum,
       JSON.stringify(items || []),
       parseFloat(subtotal || total || 0),
       parseFloat(discount || 0),
@@ -569,14 +630,98 @@ app.post('/api/sales', async (req, res) => {
       }
     }
 
+    const createdRow = saleResult.rows[0];
     res.status(201).json({
       success: true,
       message: 'Venta registrada y stock actualizado con éxito',
-      sale: saleResult.rows[0]
+      sale: {
+        id: createdRow.id,
+        ticketNumber: createdRow.ticket_number,
+        documentType: createdRow.document_type,
+        documentNumber: createdRow.document_number,
+        items: createdRow.items,
+        subtotal: parseFloat(createdRow.subtotal),
+        discountAmount: parseFloat(createdRow.discount),
+        total: parseFloat(createdRow.total),
+        paymentMethod: createdRow.payment_method,
+        customer: createdRow.customer_data,
+        seller: createdRow.seller,
+        createdAt: createdRow.created_at,
+        formattedDate: new Date(createdRow.created_at).toLocaleString('es-AR')
+      }
     });
   } catch (error) {
     console.error('❌ Error al registrar venta:', error);
     res.status(500).json({ error: 'Error al registrar venta en la base de datos', details: error.message });
+  }
+});
+
+// Actualizar tipo de documento o cliente de una venta existente
+app.patch('/api/sales/:id', async (req, res) => {
+  const { id } = req.params;
+  const { documentType, documentNumber, customer } = req.body;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    const fields = [];
+    const params = [];
+    let idx = 1;
+
+    if (documentType !== undefined) {
+      fields.push(`document_type = $${idx++}`);
+      params.push(documentType);
+    }
+    if (documentNumber !== undefined) {
+      fields.push(`document_number = $${idx++}`);
+      params.push(documentNumber);
+    }
+    if (customer !== undefined) {
+      fields.push(`customer_data = $${idx++}`);
+      params.push(JSON.stringify(customer));
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No hay campos a actualizar' });
+    }
+
+    params.push(id);
+    const sql = `UPDATE sales SET ${fields.join(', ')} WHERE id = $${idx} OR ticket_number = $${idx} RETURNING *;`;
+    const result = await query(sql, params);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Venta no encontrada' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Comprobante comercial actualizado',
+      sale: result.rows[0]
+    });
+  } catch (error) {
+    console.error('❌ Error al actualizar venta:', error);
+    res.status(500).json({ error: 'Error al actualizar comprobante en PostgreSQL' });
+  }
+});
+
+// Eliminar venta
+app.delete('/api/sales/:id', async (req, res) => {
+  const { id } = req.params;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    await query('DELETE FROM sales WHERE id = $1 OR ticket_number = $1', [id]);
+    res.json({ success: true, message: 'Venta eliminada' });
+  } catch (error) {
+    console.error('❌ Error al eliminar venta:', error);
+    res.status(500).json({ error: 'Error al eliminar venta' });
   }
 });
 

@@ -129,6 +129,8 @@ export const initDatabaseSchema = async () => {
     CREATE TABLE IF NOT EXISTS sales (
         id SERIAL PRIMARY KEY,
         ticket_number VARCHAR(30) UNIQUE NOT NULL,
+        document_type VARCHAR(50) DEFAULT 'ticket_x',
+        document_number VARCHAR(60),
         items JSONB NOT NULL,
         subtotal NUMERIC(12, 2) NOT NULL,
         discount NUMERIC(12, 2) DEFAULT 0,
@@ -138,6 +140,9 @@ export const initDatabaseSchema = async () => {
         seller VARCHAR(100) DEFAULT 'Mostrador Montec',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
+
+    ALTER TABLE sales ADD COLUMN IF NOT EXISTS document_type VARCHAR(50) DEFAULT 'ticket_x';
+    ALTER TABLE sales ADD COLUMN IF NOT EXISTS document_number VARCHAR(60);
 
     CREATE INDEX IF NOT EXISTS idx_repair_orders_number ON repair_orders(order_number);
     CREATE INDEX IF NOT EXISTS idx_repair_orders_status ON repair_orders(status);
