@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import QuotationTool from './components/QuotationTool';
@@ -16,7 +16,20 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 function AppContent() {
   const { isTallerSubdomain, isAuthenticated, isOperator, isAdmin } = useAuth();
-  const { isAdminOpen, setIsAdminOpen, isTallerOpen, setIsTallerOpen } = useData();
+  const { isAdminOpen, setIsAdminOpen, isTallerOpen, setIsTallerOpen, setIsAdminAuthenticated } = useData();
+
+  // Si el usuario autenticado es Administrador (Dueño), abrir por defecto el Panel de Administrador
+  useEffect(() => {
+    if (isAdmin && isTallerSubdomain) {
+      if (typeof setIsAdminAuthenticated === 'function') {
+        setIsAdminAuthenticated(true);
+      }
+      const viewPref = sessionStorage.getItem('montec_taller_view_preference');
+      if (viewPref !== 'mostrador') {
+        setIsAdminOpen(true);
+      }
+    }
+  }, [isAdmin, isTallerSubdomain, setIsAdminOpen, setIsAdminAuthenticated]);
 
   // MODO 1: SUBDOMINIO O ENTORNO EXCLUSIVO DE TALLER (taller.montec.ar / ?taller=1 / #taller)
   if (isTallerSubdomain) {
@@ -29,7 +42,7 @@ function AppContent() {
         {/* Cockpit de Mostrador Principal */}
         <OperatorCockpit />
 
-        {/* Panel Administrador (si el dueño abre la solapa de finanzas/márgenes) */}
+        {/* Panel Administrador (si el dueño abre la solapa de finanzas/márgenes o entra como admin) */}
         {isAdminOpen && <AdminPanel />}
       </div>
     );

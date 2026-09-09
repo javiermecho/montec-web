@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  ClipboardList, 
-  ShoppingCart, 
-  Lightbulb, 
-  Search, 
-  Wrench, 
-  Package, 
-  ShieldCheck, 
-  DollarSign, 
-  Clock, 
-  LogOut, 
-  Maximize2, 
-  Sliders, 
-  X, 
-  User, 
-  CheckCircle2, 
+import {
+  Plus,
+  ClipboardList,
+  ShoppingCart,
+  Lightbulb,
+  Search,
+  Wrench,
+  Package,
+  ShieldCheck,
+  DollarSign,
+  Clock,
+  LogOut,
+  Maximize2,
+  Sliders,
+  X,
+  User,
+  CheckCircle2,
   AlertTriangle,
   RefreshCw,
   ExternalLink,
@@ -35,11 +35,13 @@ import UnifiedDeliveryModal from './UnifiedDeliveryModal';
 
 export default function OperatorCockpit({ onClose }) {
   const { currentUser, role, isAdmin, logout, elevateToAdmin, isTallerSubdomain } = useAuth();
-  const { 
-    orders, 
-    inventory, 
-    dolarRate, 
-    setIsAdminOpen, 
+  const {
+    orders,
+    inventory,
+    dolarRate,
+    setIsAdminOpen,
+    setIsAdminAuthenticated,
+    loginAdmin,
     setIsTallerOpen,
     panelTheme,
     togglePanelTheme,
@@ -117,6 +119,8 @@ export default function OperatorCockpit({ onClose }) {
       setIsElevateModalOpen(false);
       setElevatePin('');
       setElevateError('');
+      if (typeof setIsAdminAuthenticated === 'function') setIsAdminAuthenticated(true);
+      if (typeof loginAdmin === 'function') loginAdmin(elevatePin);
       setIsAdminOpen(true);
     } else {
       setElevateError(res.error || 'PIN incorrecto');
@@ -124,7 +128,9 @@ export default function OperatorCockpit({ onClose }) {
   };
 
   const handleOpenAdminPanel = () => {
-    if (isAdmin) {
+    sessionStorage.setItem('montec_taller_view_preference', 'admin');
+    if (isAdmin || currentUser?.role === 'admin') {
+      if (typeof setIsAdminAuthenticated === 'function') setIsAdminAuthenticated(true);
       setIsAdminOpen(true);
     } else {
       setIsElevateModalOpen(true);
@@ -132,22 +138,20 @@ export default function OperatorCockpit({ onClose }) {
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex flex-col overflow-hidden animate-fadeIn transition-colors ${
-      isLight ? 'montec-panel-light' : 'bg-[#08080A] text-zinc-100'
-    }`}>
-      
+    <div className={`fixed inset-0 z-50 flex flex-col overflow-hidden animate-fadeIn transition-colors ${isLight ? 'montec-panel-light' : 'bg-[#08080A] text-zinc-100'
+      }`}>
+
       {/* 1. BARRA SUPERIOR DE CABECERA DEL COCKPIT */}
       <header className="bg-[#0c0c10] border-b border-zinc-800/80 px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0 shadow-md">
-        
+
         {/* Izquierda: Logo + Insignia de Rol + Reloj */}
         <div className="flex items-center gap-3">
           <MontecLogo size="sm" />
           <div className="hidden sm:flex items-center gap-2">
-            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold border tracking-wider uppercase ${
-              isAdmin 
-                ? 'bg-purple-950/40 text-purple-300 border-purple-500/40' 
+            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold border tracking-wider uppercase ${isAdmin
+                ? 'bg-purple-950/40 text-purple-300 border-purple-500/40'
                 : 'bg-[#FF5500]/15 text-[#FF5500] border-[#FF5500]/30'
-            }`}>
+              }`}>
               {isAdmin ? 'ADMINISTRADOR (DUEÑO)' : 'COCKPIT MOSTRADOR / OPERADOR'}
             </span>
           </div>
@@ -183,27 +187,25 @@ export default function OperatorCockpit({ onClose }) {
             type="button"
             onClick={() => refreshConnection?.()}
             title={serverStatus === 'online' ? '🟢 Conectado al sistema central' : '🔴 Sin conexión al sistema central. Clic para reintentar'}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-              serverStatus === 'online'
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${serverStatus === 'online'
                 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/50 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
                 : serverStatus === 'checking'
-                ? 'bg-amber-950/40 text-amber-300 border-amber-500/40 animate-pulse'
-                : 'bg-rose-950/40 text-rose-300 border-rose-500/40 hover:bg-rose-900/50'
-            }`}
+                  ? 'bg-amber-950/40 text-amber-300 border-amber-500/40 animate-pulse'
+                  : 'bg-rose-950/40 text-rose-300 border-rose-500/40 hover:bg-rose-900/50'
+              }`}
           >
-            <span className={`w-2 h-2 rounded-full ${
-              serverStatus === 'online'
+            <span className={`w-2 h-2 rounded-full ${serverStatus === 'online'
                 ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]'
                 : serverStatus === 'checking'
-                ? 'bg-amber-400'
-                : 'bg-rose-500'
-            }`} />
+                  ? 'bg-amber-400'
+                  : 'bg-rose-500'
+              }`} />
             <span>
               {serverStatus === 'online'
                 ? 'Conectado'
                 : serverStatus === 'checking'
-                ? 'Verificando...'
-                : 'Sin Conexión'}
+                  ? 'Verificando...'
+                  : 'Sin Conexión'}
             </span>
           </button>
         </div>
@@ -224,15 +226,14 @@ export default function OperatorCockpit({ onClose }) {
           <button
             type="button"
             onClick={handleOpenAdminPanel}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer ${
-              isAdmin 
-                ? 'bg-purple-900/40 hover:bg-purple-900/60 border-purple-500/40 text-purple-200 shadow-sm'
+            className={`px-3 py-1.5 text-xs font-semibold rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer ${isAdmin || currentUser?.role === 'admin'
+                ? 'bg-[#FF5500] hover:bg-[#FF6600] border-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
                 : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-300'
-            }`}
-            title="Ajustes de Precios, Márgenes y Finanzas"
+              }`}
+            title="Ajustes de Precios, Márgenes, Google Analytics y Configuración Técnica"
           >
-            <Sliders className="w-3.5 h-3.5 text-[#FF5500]" />
-            <span className="hidden sm:inline">{isAdmin ? 'Panel Admin' : 'Admin'}</span>
+            <Sliders className="w-3.5 h-3.5" />
+            <span>{isAdmin || currentUser?.role === 'admin' ? 'Panel Administrador' : 'Admin'}</span>
           </button>
 
           {/* Salir */}
@@ -262,7 +263,7 @@ export default function OperatorCockpit({ onClose }) {
 
       {/* 2. BARRA DE ACCESOS RÁPIDOS & ATAJOS DE TECLADO (COCKPIT BAR) */}
       <div className="cockpit-shortcuts-bar bg-[#101015] border-b border-zinc-800/80 px-4 sm:px-6 py-2 flex items-center justify-between gap-2 overflow-x-auto shrink-0">
-        
+
         <div className="flex items-center gap-2">
           {/* F12: NUEVA ORDEN */}
           <button
@@ -281,14 +282,13 @@ export default function OperatorCockpit({ onClose }) {
           <button
             type="button"
             onClick={() => setActiveTab('orders')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0 ${
-              activeTab === 'orders'
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0 ${activeTab === 'orders'
                 ? 'bg-zinc-800 text-white border border-[#FF5500]/50 shadow-sm'
                 : 'text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent'
-            }`}
+              }`}
           >
             <ClipboardList className="w-4 h-4 text-emerald-400" />
-            <span>Órdenes en Taller</span>
+            <span>Órdenes</span>
             <span className="px-1.5 py-0.5 rounded bg-zinc-900 text-[10px] font-mono text-zinc-400 border border-zinc-700">
               F9
             </span>
@@ -298,14 +298,13 @@ export default function OperatorCockpit({ onClose }) {
           <button
             type="button"
             onClick={() => setActiveTab('pos')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0 ${
-              activeTab === 'pos'
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0 ${activeTab === 'pos'
                 ? 'bg-zinc-800 text-white border border-[#FF5500]/50 shadow-sm'
                 : 'text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent'
-            }`}
+              }`}
           >
             <ShoppingCart className="w-4 h-4 text-amber-400" />
-            <span>Venta / POS Accesorios</span>
+            <span>Venta</span>
             <span className="px-1.5 py-0.5 rounded bg-zinc-900 text-[10px] font-mono text-zinc-400 border border-zinc-700">
               F10
             </span>
@@ -315,14 +314,13 @@ export default function OperatorCockpit({ onClose }) {
           <button
             type="button"
             onClick={() => setActiveTab('quote')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0 ${
-              activeTab === 'quote'
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0 ${activeTab === 'quote'
                 ? 'bg-zinc-800 text-white border border-[#FF5500]/50 shadow-sm'
                 : 'text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent'
-            }`}
+              }`}
           >
             <Lightbulb className="w-4 h-4 text-orange-400" />
-            <span>Presupuestar / Repuestos</span>
+            <span> Buscar Repuestos </span>
             <span className="px-1.5 py-0.5 rounded bg-zinc-900 text-[10px] font-mono text-zinc-400 border border-zinc-700">
               F11
             </span>
@@ -345,7 +343,7 @@ export default function OperatorCockpit({ onClose }) {
 
       {/* 3. ÁREA PRINCIPAL DE TRABAJO */}
       <main className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-6 max-w-7xl w-full mx-auto">
-        
+
         {/* PESTAÑA F9: ÓRDENES EN TALLER */}
         {activeTab === 'orders' && (
           <div className="space-y-4">
@@ -378,7 +376,7 @@ export default function OperatorCockpit({ onClose }) {
                 </p>
               </div>
             </div>
-            
+
             <PartsSearchTab />
           </div>
         )}
@@ -387,7 +385,7 @@ export default function OperatorCockpit({ onClose }) {
 
       {/* 4. MODAL F12: INGRESO DE NUEVA ORDEN */}
       {isNewOrderOpen && (
-        <RepairOrderReceiver 
+        <RepairOrderReceiver
           forceOpen={true}
           onClose={() => setIsNewOrderOpen(false)}
         />

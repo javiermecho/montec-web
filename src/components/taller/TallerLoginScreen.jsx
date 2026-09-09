@@ -14,9 +14,11 @@ import {
 } from 'lucide-react';
 import MontecLogo from '../MontecLogo';
 import { useAuth } from '../../context/AuthContext';
+import { useData } from '../../context/DataContext';
 
 export default function TallerLoginScreen({ onCancel }) {
   const { login, isTallerSubdomain } = useAuth();
+  const { loginAdmin, setIsAdminOpen, setIsAdminAuthenticated } = useData();
   
   const [selectedRole, setSelectedRole] = useState('operador'); // 'operador' | 'admin'
   const [pinInput, setPinInput] = useState('');
@@ -30,6 +32,13 @@ export default function TallerLoginScreen({ onCancel }) {
     const res = login(pinInput, selectedRole);
     if (!res.success) {
       setErrorMsg(res.error || 'Credenciales incorrectas');
+    } else {
+      // Si ingresa con rol Administrador (Dueño), abrir directamente el panel de administración
+      if (selectedRole === 'admin' || res.user?.role === 'admin') {
+        if (typeof setIsAdminAuthenticated === 'function') setIsAdminAuthenticated(true);
+        if (typeof loginAdmin === 'function') loginAdmin(pinInput);
+        if (typeof setIsAdminOpen === 'function') setIsAdminOpen(true);
+      }
     }
   };
 

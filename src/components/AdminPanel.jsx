@@ -29,9 +29,11 @@ import {
   BarChart3,
   ClipboardList,
   Sun,
-  Moon
+  Moon,
+  Store
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import { getIphoneGenerationInfo } from '../data/iphonePricingData';
 import MontecLogo from './MontecLogo';
 import PartsSearchTab from './admin/PartsSearchTab';
@@ -74,6 +76,9 @@ export default function AdminPanel() {
     triggerManualBackup,
     serverStatus
   } = useData();
+
+  const { isAdmin, currentUser, logout, isTallerSubdomain } = useAuth();
+  const effectiveIsAdmin = isAdminAuthenticated || isAdmin || currentUser?.role === 'admin';
 
   const isLight = panelTheme === 'light';
 
@@ -135,8 +140,8 @@ export default function AdminPanel() {
 
   if (!isAdminOpen) return null;
 
-  // 1. Pantalla de Login con PIN
-  if (!isAdminAuthenticated) {
+  // 1. Pantalla de Login con PIN (solo si no está autenticado como administrador)
+  if (!effectiveIsAdmin) {
     const handleLoginSubmit = (e) => {
       e.preventDefault();
       if (loginAdmin(pinInput.trim())) {
@@ -339,17 +344,25 @@ export default function AdminPanel() {
           </button>
 
           <button
-            onClick={logoutAdmin}
-            className="px-3.5 py-1.5 text-xs text-zinc-200 hover:text-white rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 transition-colors font-semibold"
+            onClick={() => {
+              logoutAdmin();
+              if (typeof logout === 'function') logout();
+              setIsAdminOpen(false);
+            }}
+            className="px-3.5 py-1.5 text-xs text-zinc-200 hover:text-white rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 transition-colors font-semibold cursor-pointer"
           >
             Cerrar Sesión
           </button>
           <button
-            onClick={() => setIsAdminOpen(false)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold transition-all shadow-[0_0_15px_rgba(255,85,0,0.4)]"
+            onClick={() => {
+              sessionStorage.setItem('montec_taller_view_preference', 'mostrador');
+              setIsAdminOpen(false);
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold transition-all shadow-[0_0_15px_rgba(255,85,0,0.4)] cursor-pointer"
+            title={isTallerSubdomain ? 'Ir al Mostrador / Operaciones de Taller' : 'Volver a la Web'}
           >
-            <X className="w-4 h-4" />
-            <span>Volver a la Web</span>
+            <Store className="w-4 h-4" />
+            <span>{isTallerSubdomain ? 'Ir al Mostrador' : 'Volver a la Web'}</span>
           </button>
         </div>
       </header>
