@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { query, isDbConnected } from './db/index.js';
+import { query, isDbConnected, initDatabaseSchema } from './db/index.js';
 import { runScraperSync } from './scraper/index.js';
 import { normalizeModelName } from './scraper/normalizer.js';
 
@@ -529,8 +529,17 @@ app.post('/api/sales', async (req, res) => {
   }
 });
 
+// Endpoint para auto-inicializar o verificar esquema en Railway
+app.get('/api/db/init', async (req, res) => {
+  const result = await initDatabaseSchema();
+  res.json({
+    message: 'Inicialización de esquema solicitada',
+    ...result
+  });
+});
+
 // Inicio del servidor
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`
   ⚡ ======================================================== ⚡
      montec API Server & Scraper Engine
@@ -539,4 +548,12 @@ app.listen(PORT, () => {
      Ambiente: ${process.env.NODE_ENV || 'development'}
   ⚡ ======================================================== ⚡
   `);
+
+  // Auto-verificación de tablas e índices en PostgreSQL
+  try {
+    await initDatabaseSchema();
+  } catch (e) {
+    console.warn('⚠️ No se pudo auto-inicializar esquema al arranque:', e.message);
+  }
 });
+
