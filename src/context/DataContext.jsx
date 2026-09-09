@@ -309,17 +309,44 @@ export function DataProvider({ children }) {
         setServerStatus('online');
         setServerHealth(health);
 
+        // Helper para normalizar ordenes y asegurar compatibilidad de campos
+        const normalizeOrderData = (ord) => {
+          if (!ord) return ord;
+          const customerObj = ord.customer || ord.client || {};
+          const statusVal = ord.status || ord.service?.status || 'received';
+          return {
+            ...ord,
+            status: statusVal,
+            customer: {
+              ...customerObj,
+              name: customerObj.name || ord.clientName || 'Cliente Mostrador',
+              phone: customerObj.phone || ord.clientPhone || ''
+            },
+            client: customerObj,
+            device: {
+              ...(ord.device || {}),
+              model: ord.device?.model || ord.deviceModel || 'Dispositivo'
+            },
+            service: {
+              ...(ord.service || {}),
+              status: statusVal,
+              requestedRepair: ord.service?.requestedRepair || ord.service?.issue || ord.issue || 'Reparación'
+            }
+          };
+        };
+
         // 1. Sincronizar órdenes desde PostgreSQL en segundo plano
         try {
           const remoteOrders = await api.getOrdenes();
           if (Array.isArray(remoteOrders) && remoteOrders.length > 0) {
+            const normalizedRemote = remoteOrders.map(normalizeOrderData);
             setOrders(prev => {
-              // Combinamos preservando las órdenes remotas como fuente de verdad
-              const merged = [...remoteOrders];
-              // Si hay alguna orden local que aún no esté en la remota, la conservamos
-              prev.forEach(localOrd => {
-                if (!merged.some(m => m.orderNumber === localOrd.orderNumber || m.id === localOrd.id)) {
-                  merged.push(localOrd);
+              // Si hay órdenes reales en PostgreSQL, filtramos la orden de ejemplo de muestra inicial
+              const filteredPrev = prev.filter(o => o.id !== 'order-sample-1' && o.orderNumber !== '#MON-1041');
+              const merged = [...normalizedRemote];
+              filteredPrev.forEach(localOrd => {
+                if (!merged.some(m => m.orderNumber === localOrd.orderNumber || String(m.id) === String(localOrd.id))) {
+                  merged.push(normalizeOrderData(localOrd));
                 }
               });
               try {

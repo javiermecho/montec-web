@@ -19,31 +19,37 @@ app.use(cors({
 app.use(express.json());
 
 // Helper para formatear ordenes de DB a estructura frontend
-const mapDbOrderToFrontend = (row) => ({
-  id: row.id,
-  orderNumber: row.order_number,
-  client: {
+const mapDbOrderToFrontend = (row) => {
+  const customerObj = {
     name: row.client_name,
     phone: row.client_phone,
     ...(row.client_data || {})
-  },
-  device: {
-    model: row.device_model,
-    type: row.device_type,
-    ...(row.device_data || {})
-  },
-  service: {
+  };
+  const serviceObj = {
     status: row.status,
     budgetTotal: parseFloat(row.budget_total || 0),
     deposit: parseFloat(row.deposit || 0),
     balanceDue: parseFloat(row.balance_due || 0),
     ...(row.service_data || {})
-  },
-  payments: row.payments || [],
-  logs: row.logs || [],
-  createdAt: row.created_at,
-  updatedAt: row.updated_at
-});
+  };
+  return {
+    id: row.id,
+    orderNumber: row.order_number,
+    status: row.status,
+    customer: customerObj,
+    client: customerObj,
+    device: {
+      model: row.device_model,
+      type: row.device_type,
+      ...(row.device_data || {})
+    },
+    service: serviceObj,
+    payments: row.payments || [],
+    logs: row.logs || [],
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+};
 
 // Helper para formatear productos
 const mapDbProductToFrontend = (row) => ({

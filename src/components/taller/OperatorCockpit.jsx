@@ -98,6 +98,13 @@ export default function OperatorCockpit({ onClose }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isNewOrderOpen, deliveryOrder, isElevateModalOpen]);
 
+  // Sincronizar con base de datos PostgreSQL de Railway al entrar al cockpit
+  useEffect(() => {
+    if (typeof refreshConnection === 'function') {
+      refreshConnection();
+    }
+  }, []);
+
   // Métricas rápidas de cabecera
   const activeOrdersCount = orders.filter(o => o.service?.status !== 'delivered' && o.service?.status !== 'no_repair').length;
   const readyOrdersCount = orders.filter(o => o.service?.status === 'ready').length;
