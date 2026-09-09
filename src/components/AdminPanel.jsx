@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
-import { 
-  X, 
-  Lock, 
-  Key, 
-  Smartphone, 
-  Cpu, 
-  Laptop, 
-  Plus, 
-  Trash2, 
-  Edit3, 
-  Save, 
-  RotateCcw, 
-  Search, 
-  Check, 
-  AlertCircle, 
-  Download, 
-  ShoppingBag, 
+import {
+  X,
+  Lock,
+  Key,
+  Smartphone,
+  Cpu,
+  Laptop,
+  Plus,
+  Trash2,
+  Edit3,
+  Save,
+  RotateCcw,
+  Search,
+  Check,
+  AlertCircle,
+  Download,
+  ShoppingBag,
   ShoppingCart,
   Boxes,
-  Wrench, 
-  Sliders, 
+  Wrench,
+  Sliders,
   Sparkles,
   DollarSign,
   Clock,
@@ -156,7 +156,7 @@ export default function AdminPanel() {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
         <div className="bg-[#141414] border border-zinc-800 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-[0_0_40px_rgba(255,85,0,0.25)] relative">
-          
+
           <button
             onClick={() => setIsAdminOpen(false)}
             className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800"
@@ -301,10 +301,9 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex flex-col overflow-hidden animate-fadeIn transition-colors ${
-      isLight ? 'montec-panel-light' : 'bg-[#0A0A0A] text-zinc-200'
-    }`}>
-      
+    <div className={`fixed inset-0 z-50 flex flex-col overflow-hidden animate-fadeIn transition-colors ${isLight ? 'montec-panel-light' : 'bg-[#0A0A0A] text-zinc-200'
+      }`}>
+
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl bg-[#FF5500] text-white text-xs sm:text-sm font-semibold shadow-[0_0_25px_rgba(255,85,0,0.5)] animate-bounce">
@@ -371,116 +370,97 @@ export default function AdminPanel() {
       <div className="admin-tabs-bar bg-[#0f0f12] border-b border-zinc-800/80 px-4 sm:px-6 flex items-center gap-2 overflow-x-auto py-2 shrink-0">
         <button
           onClick={() => setActiveTab('models')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
-            activeTab === 'models' 
-              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${activeTab === 'models'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
               : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-          }`}
+            }`}
         >
           <Smartphone className="w-4 h-4" />
-          <span>Catálogo de Modelos ({models.length})</span>
+          <span> Modelos ({models.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('orders')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
-            activeTab === 'orders' 
-              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${activeTab === 'orders'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
               : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-          }`}
+            }`}
         >
           <ClipboardList className="w-4 h-4 text-emerald-400" />
-          <span>Órdenes de Taller ({orders.length})</span>
+          <span>Órdenes ({orders.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('parts_search')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
-            activeTab === 'parts_search' 
-              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${activeTab === 'parts_search'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
               : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-          }`}
+            }`}
         >
           <Search className="w-4 h-4 text-orange-400" />
-          <span>Buscador de Repuestos (Proveedores)</span>
+          <span>Buscar Repuestos </span>
         </button>
 
         <button
           onClick={() => setActiveTab('iphone_lab')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
-            activeTab === 'iphone_lab' 
-              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${activeTab === 'iphone_lab'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
               : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-          }`}
+            }`}
         >
           <Sparkles className="w-4 h-4 text-amber-300" />
-          <span>Laboratorio iPhone</span>
+          <span> Costo iPhone</span>
         </button>
 
         <button
           onClick={() => setActiveTab('pricing')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
-            activeTab === 'pricing' 
-              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${activeTab === 'pricing'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
               : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-          }`}
+            }`}
         >
           <Wrench className="w-4 h-4" />
-          <span>Márgenes Android & Fallas</span>
+          <span> Costo Android </span>
         </button>
 
-        <button
-          onClick={() => setActiveTab('pos')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'pos' 
-              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
-              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-          }`}
-        >
-          <ShoppingCart className="w-4 h-4 text-amber-400" />
-          <span>Punto de Venta (POS)</span>
-        </button>
 
         <button
           onClick={() => setActiveTab('inventory')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'inventory' || activeTab === 'accessories'
-              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'inventory' || activeTab === 'accessories'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
               : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-          }`}
+            }`}
         >
           <Boxes className="w-4 h-4 text-purple-400" />
-          <span>Inventario & Stock ({inventory?.length || accessories?.length || 0})</span>
+          <span>Inventario ({inventory?.length || accessories?.length || 0})</span>
         </button>
 
         <button
           onClick={() => setActiveTab('analytics')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
-            activeTab === 'analytics' 
-              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${activeTab === 'analytics'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
               : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-          }`}
+            }`}
         >
           <BarChart3 className="w-4 h-4 text-emerald-400" />
-          <span>Google Analytics & Leads</span>
+          <span>Google Analytic </span>
         </button>
 
         <button
           onClick={() => setActiveTab('settings')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${
-            activeTab === 'settings' 
-              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]' 
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${activeTab === 'settings'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
               : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
-          }`}
+            }`}
         >
           <Sliders className="w-4 h-4" />
-          <span>Ajustes & Respaldo</span>
+          <span>Ajustes</span>
         </button>
       </div>
 
       {/* Contenido Principal de las Pestañas */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-        
+
         {/* ============================================================== */}
         {/* PESTAÑA: GESTIÓN INTEGRAL DE ÓRDENES DE TALLER                 */}
         {/* ============================================================== */}
@@ -536,11 +516,10 @@ export default function AdminPanel() {
                   value={modelSearch}
                   onChange={(e) => setModelSearch(e.target.value)}
                   placeholder="Buscar modelo o marca (ej: iPhone 14, S23, Moto G, IdeaPad)..."
-                  className={`w-full border rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm outline-none focus:border-[#FF5500] ${
-                    isLight
+                  className={`w-full border rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm outline-none focus:border-[#FF5500] ${isLight
                       ? 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
                       : 'bg-zinc-900 border-zinc-800 text-white placeholder-zinc-500'
-                  }`}
+                    }`}
                 />
               </div>
 
@@ -549,11 +528,10 @@ export default function AdminPanel() {
                   <button
                     key={cat}
                     onClick={() => setModelTypeFilter(cat)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-colors cursor-pointer ${
-                      modelTypeFilter === cat
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border transition-colors cursor-pointer ${modelTypeFilter === cat
                         ? (isLight ? 'bg-orange-100 border-[#FF5500] text-[#FF5500]' : 'bg-zinc-800 border-[#FF5500] text-[#FF5500]')
                         : (isLight ? 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50' : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white')
-                    }`}
+                      }`}
                   >
                     {cat === 'all' ? 'Todos' : cat === 'iphone' ? 'iPhone' : cat === 'android' ? 'Android' : 'Notebooks'}
                   </button>
@@ -562,14 +540,12 @@ export default function AdminPanel() {
             </div>
 
             {/* Tabla de Modelos */}
-            <div className={`border rounded-2xl overflow-hidden shadow-xs transition-colors ${
-              isLight ? 'bg-white border-slate-200' : 'bg-[#121212] border-zinc-800/80'
-            }`}>
+            <div className={`border rounded-2xl overflow-hidden shadow-xs transition-colors ${isLight ? 'bg-white border-slate-200' : 'bg-[#121212] border-zinc-800/80'
+              }`}>
               <div className="overflow-x-auto max-h-[550px]">
                 <table className="w-full text-left text-xs sm:text-sm">
-                  <thead className={`uppercase text-[11px] font-mono tracking-wider sticky top-0 z-10 border-b ${
-                    isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-zinc-900/90 text-zinc-400 border-zinc-800'
-                  }`}>
+                  <thead className={`uppercase text-[11px] font-mono tracking-wider sticky top-0 z-10 border-b ${isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-zinc-900/90 text-zinc-400 border-zinc-800'
+                    }`}>
                     <tr>
                       <th className="px-4 py-3">Tipo</th>
                       <th className="px-4 py-3">Marca</th>
@@ -582,11 +558,10 @@ export default function AdminPanel() {
                     {filteredModelsList.map((m) => (
                       <tr key={m.id} className={`transition-colors ${isLight ? 'hover:bg-slate-50' : 'hover:bg-zinc-900/40'}`}>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                            m.type === 'iphone' ? (isLight ? 'bg-orange-100 text-orange-700' : 'bg-orange-500/20 text-orange-400') :
-                            m.type === 'android' ? (isLight ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500/20 text-emerald-400') :
-                            (isLight ? 'bg-blue-100 text-blue-700' : 'bg-blue-500/20 text-blue-400')
-                          }`}>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${m.type === 'iphone' ? (isLight ? 'bg-orange-100 text-orange-700' : 'bg-orange-500/20 text-orange-400') :
+                              m.type === 'android' ? (isLight ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-500/20 text-emerald-400') :
+                                (isLight ? 'bg-blue-100 text-blue-700' : 'bg-blue-500/20 text-blue-400')
+                            }`}>
                             {m.type === 'iphone' ? 'iPhone' : m.type === 'android' ? 'Android' : 'Notebook'}
                           </span>
                         </td>
@@ -612,11 +587,10 @@ export default function AdminPanel() {
                                 });
                                 setIsModelModalOpen(true);
                               }}
-                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                                isLight
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${isLight
                                   ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-slate-200'
                                   : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white'
-                              }`}
+                                }`}
                               title="Editar"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
@@ -628,11 +602,10 @@ export default function AdminPanel() {
                                   showToast(`Modelo eliminado.`);
                                 }
                               }}
-                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                                isLight
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${isLight
                                   ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200'
                                   : 'bg-zinc-800 hover:bg-rose-950 text-zinc-400 hover:text-rose-400'
-                              }`}
+                                }`}
                               title="Eliminar"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -677,11 +650,10 @@ export default function AdminPanel() {
                       showToast('Valores sugeridos de iPhone restaurados.');
                     }
                   }}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors ${
-                    isLight
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors ${isLight
                       ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
                       : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 hover:text-white'
-                  }`}
+                    }`}
                 >
                   <RotateCcw className="w-3.5 h-3.5 text-[#FF5500]" />
                   <span>Restaurar Sugeridos</span>
@@ -714,7 +686,7 @@ export default function AdminPanel() {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
               {models
                 .filter(m => m.type === 'iphone' && (
-                  !iphoneSearch.trim() || 
+                  !iphoneSearch.trim() ||
                   m.model.toLowerCase().includes(iphoneSearch.toLowerCase())
                 ))
                 .map((m) => {
@@ -1078,11 +1050,10 @@ export default function AdminPanel() {
                     resetPricingRules();
                     showToast('Reglas restablecidas a los valores de Montec ($30k / $80k / x2)');
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${
-                    isLight
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors ${isLight
                       ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
                       : 'bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-200 hover:text-white'
-                  }`}
+                    }`}
                 >
                   Restaurar Predeterminados
                 </button>
@@ -1166,7 +1137,7 @@ export default function AdminPanel() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {issues.map((issue) => (
-                <div 
+                <div
                   key={issue.id}
                   className="bg-[#121212] border border-zinc-800 rounded-2xl p-5 shadow-lg space-y-4"
                 >
@@ -1331,11 +1302,10 @@ export default function AdminPanel() {
                   <h4 className={`font-heading font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>
                     Respaldo en la Nube (PostgreSQL en Railway) & Descarga JSON
                   </h4>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
-                    serverStatus === 'online'
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${serverStatus === 'online'
                       ? 'bg-emerald-950/50 text-emerald-300 border-emerald-500/40'
                       : 'bg-amber-950/50 text-amber-300 border-amber-500/40'
-                  }`}>
+                    }`}>
                     {serverStatus === 'online' ? '🟢 PostgreSQL Sincronizado' : '🟡 Modo Local'}
                   </span>
                 </div>
@@ -1345,13 +1315,11 @@ export default function AdminPanel() {
                 <button
                   onClick={handleExportData}
                   disabled={isBackingUp}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    isBackingUp ? 'opacity-60 cursor-not-allowed' : 'hover:scale-[1.01]'
-                  } ${
-                    isLight
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${isBackingUp ? 'opacity-60 cursor-not-allowed' : 'hover:scale-[1.01]'
+                    } ${isLight
                       ? 'bg-[#FF5500] text-white hover:bg-[#E64D00] shadow-sm'
                       : 'bg-gradient-to-r from-[#FF5500] to-[#E64D00] hover:from-[#FF6600] hover:to-[#FF5500] text-white shadow-[0_0_20px_rgba(255,85,0,0.3)]'
-                  }`}
+                    }`}
                 >
                   <Download className="w-4 h-4 text-white" />
                   <span>{isBackingUp ? 'Generando Backup en PostgreSQL...' : 'Respaldar en la Nube y Descargar JSON'}</span>
