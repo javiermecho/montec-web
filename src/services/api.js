@@ -4,10 +4,14 @@
  */
 
 const getApiBaseUrl = () => {
-  let url = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  let url = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').trim();
   // Si tiene una barra al final, eliminarla para consistencia
   if (url.endsWith('/')) {
     url = url.slice(0, -1);
+  }
+  // Si la URL no termina en /api, anexarlo automáticamente
+  if (!url.endsWith('/api')) {
+    url = `${url}/api`;
   }
   return url;
 };
