@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Menu, X, Shield, Lock, Sliders, ClipboardList } from 'lucide-react';
+import { MessageCircle, Menu, X, Shield, Lock } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
-import { useAuth } from '../context/AuthContext';
 import { trackClickLlamadaOMapa } from '../services/analytics';
 
 export default function Navbar() {
-  const { setIsAdminOpen, setIsQuoteModalOpen, setIsTallerOpen } = useData();
-  const { isAuthenticated, isOperator, isAdmin } = useAuth();
+  const { setIsQuoteModalOpen } = useData();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isOpenNow, setIsOpenNow] = useState(true);
@@ -119,55 +117,10 @@ export default function Navbar() {
               <MessageCircle className="w-4 h-4 fill-white text-transparent" />
               <span>WhatsApp</span>
             </a>
-
-            {/* Acceso a Órdenes de Taller / Recepción */}
-            <button
-              onClick={() => setIsTallerOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-xl transition-all relative group shadow-sm cursor-pointer"
-              title="Recepción de Órdenes & Taller"
-            >
-              <ClipboardList className="w-3.5 h-3.5 text-[#FF5500]" />
-              <span className="font-mono">Taller</span>
-              {isOperator && (
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              )}
-            </button>
-
-            {/* Acceso directo al Panel Administrador */}
-            <button
-              onClick={() => setIsAdminOpen(true)}
-              className="p-2 text-zinc-400 hover:text-white hover:bg-zinc-800/80 border border-zinc-800 rounded-xl transition-colors relative group"
-              title="Panel Técnico / Administrador"
-            >
-              <Sliders className="w-4 h-4 text-[#FF5500]" />
-              {isAdmin && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-purple-500 rounded-full border-2 border-[#121212]" />
-              )}
-            </button>
           </div>
 
           {/* Botón menú móvil */}
           <div className="flex md:hidden items-center space-x-2">
-            <button
-              onClick={() => setIsTallerOpen(true)}
-              className="p-2 text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 rounded-lg relative"
-              aria-label="Taller y Órdenes"
-              title="Taller"
-            >
-              <ClipboardList className="w-4 h-4 text-[#FF5500]" />
-              {isOperator && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full" />
-              )}
-            </button>
-
-            <button
-              onClick={() => setIsAdminOpen(true)}
-              className="p-2 text-[#FF5500] bg-zinc-900 border border-zinc-800 rounded-lg"
-              aria-label="Panel Admin"
-            >
-              <Sliders className="w-4 h-4" />
-            </button>
-
             <a
               href={whatsappUrl}
               target="_blank"
@@ -229,37 +182,6 @@ export default function Navbar() {
                 </a>
               );
             })}
-
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setIsTallerOpen(true);
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-white bg-zinc-900 border border-zinc-800 rounded-lg mt-2"
-            >
-              <span className="flex items-center gap-2">
-                <ClipboardList className="w-4 h-4 text-[#FF5500]" />
-                <span>Recepción de Taller & Órdenes</span>
-              </span>
-              <span className="text-[11px] px-1.5 py-0.5 rounded bg-[#FF5500]/20 text-[#FF5500] font-mono">
-                {isEmployeeAuthenticated ? 'Activo' : '🔒 Acceso'}
-              </span>
-            </button>
-
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setIsAdminOpen(true);
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-zinc-300 bg-zinc-900/60 rounded-lg mt-1"
-            >
-              <span className="flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-zinc-400" />
-                <span>Panel Técnico / Admin</span>
-              </span>
-              <span className="text-xs text-zinc-500 font-mono">PIN</span>
-            </button>
-            
             <div className="pt-2 flex items-center justify-between px-3 text-xs text-zinc-400">
               <div className="flex items-center gap-1.5">
                 <span className={`w-2 h-2 rounded-full ${isOpenNow ? 'bg-emerald-500' : 'bg-[#FF5500]'}`} />
