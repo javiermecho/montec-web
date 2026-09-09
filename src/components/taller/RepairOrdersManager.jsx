@@ -95,6 +95,15 @@ export const STATUS_CONFIG = {
     dotClass: 'bg-emerald-400',
     icon: CheckCircle2
   },
+  repaired: {
+    label: 'Listo para Retirar',
+    shortLabel: 'Reparado OK',
+    color: 'emerald',
+    badgeClass: 'bg-emerald-950/60 text-emerald-200 border-emerald-500/40',
+    lightBadgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    dotClass: 'bg-emerald-400',
+    icon: CheckCircle2
+  },
   no_repair: {
     label: 'Sin Reparación',
     shortLabel: 'Devolución',
