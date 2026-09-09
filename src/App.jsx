@@ -37,13 +37,15 @@ function AppContent() {
       return <TallerLoginScreen />;
     }
 
+    // Si está abierto el panel de administrador, mostrar la interfaz integral de administración
+    if (isAdminOpen) {
+      return <AdminPanel />;
+    }
+
+    // Por defecto en taller, mostrar el Cockpit de Mostrador
     return (
       <div className="min-h-screen bg-[#08080A] text-white">
-        {/* Cockpit de Mostrador Principal */}
         <OperatorCockpit />
-
-        {/* Panel Administrador (si el dueño abre la solapa de finanzas/márgenes o entra como admin) */}
-        {isAdminOpen && <AdminPanel />}
       </div>
     );
   }

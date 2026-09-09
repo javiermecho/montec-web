@@ -252,7 +252,21 @@ export function DataProvider({ children }) {
   });
 
   // 5. Estado de apertura del modal de admin
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(() => {
+    try {
+      const sessionStr = localStorage.getItem('montec_auth_session_v2');
+      if (sessionStr) {
+        const session = JSON.parse(sessionStr);
+        if (session && session.role === 'admin') {
+          const pref = sessionStorage.getItem('montec_taller_view_preference');
+          return pref !== 'mostrador';
+        }
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  });
 
   // 5.1 Estado de apertura del modal de cotizador interactivo
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
