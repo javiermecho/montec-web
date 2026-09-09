@@ -611,9 +611,10 @@ export function DataProvider({ children }) {
           deposit: parseFloat(orderData.service?.deposit || 0),
           balanceDue: parseFloat(orderData.service?.balanceDue || 0),
           warranty: orderData.service?.warranty || '90 días de garantía escrita',
-          status: orderData.status || orderData.service?.status || 'received'
+          status: orderData.status || orderData.service?.status || 'received',
+          technician: orderData.service?.technician || orderData.technician || 'Sin Asignar'
         },
-        operator: 'Operador Mostrador'
+        operator: orderData.service?.technician || 'Operador Mostrador'
       });
 
       if (response && response.success && response.order) {
@@ -1181,8 +1182,12 @@ export function DataProvider({ children }) {
           }
         ];
 
+        const resolutionText = deliveryData.repairResolution === 'ready' 
+          ? '🟢 Reparado OK' 
+          : '🔴 Sin Reparación / Devolución';
+
         const accSummary = accessories.map(a => `${a.quantity}x ${a.name}`).join(', ');
-        const logAction = `Entrega finalizada en mostrador. Saldo cobrado: $${balancePaid.toLocaleString('es-AR')}${
+        const logAction = `Entrega finalizada en mostrador (${resolutionText}). Saldo cobrado: $${balancePaid.toLocaleString('es-AR')}${
           accessories.length > 0 ? ` + Accesorios: ${accSummary} ($${accessoriesTotal.toLocaleString('es-AR')})` : ''
         }. Total abonado: $${totalAmount.toLocaleString('es-AR')} vía ${paymentLabel}.${notes ? ` Nota: ${notes}` : ''}`;
 
@@ -1198,10 +1203,14 @@ export function DataProvider({ children }) {
         return {
           ...o,
           status: 'delivered',
+          repairResolution: deliveryData.repairResolution || 'ready',
+          isRepaired: deliveryData.isRepaired !== undefined ? deliveryData.isRepaired : true,
           payments: newPayments,
           service: {
             ...o.service,
             status: 'delivered',
+            repairResolution: deliveryData.repairResolution || 'ready',
+            isRepaired: deliveryData.isRepaired !== undefined ? deliveryData.isRepaired : true,
             deposit: newDeposit,
             balanceDue: 0,
             deliveredAt: deliveredAt
@@ -1218,6 +1227,28 @@ export function DataProvider({ children }) {
       }
       return updated;
     });
+
+    // 1.b Sincronizar estado 'delivered' y pago en PostgreSQL (Railway)
+    try {
+      const resText = deliveryData.repairResolution === 'ready' ? 'Reparado OK' : 'Sin Reparación / Devolución';
+      api.updateOrdenEstado(orderId, {
+        status: 'delivered',
+        technicalReport: `Entrega realizada: ${resText}. Saldo: $${balancePaid}. Vía ${paymentLabel}`,
+        operator: 'Mostrador Montec',
+        repairResolution: deliveryData.repairResolution || 'ready',
+        isRepaired: deliveryData.isRepaired !== undefined ? deliveryData.isRepaired : true
+      }).catch(err => console.warn('⚠️ No se pudo sincronizar estado de entrega a PostgreSQL:', err.message));
+
+      if (balancePaid > 0) {
+        api.updateOrdenPago(orderId, {
+          amount: balancePaid,
+          method: paymentLabel,
+          note: `Cobro final en mostrador (${resText})`
+        }).catch(err => console.warn('⚠️ No se pudo sincronizar pago a PostgreSQL:', err.message));
+      }
+    } catch (apiErr) {
+      console.warn('⚠️ Error al contactar API para entrega:', apiErr);
+    }
 
     // 2. Si se vendieron accesorios, descontar su stock de inventory
     if (Array.isArray(accessories) && accessories.length > 0) {

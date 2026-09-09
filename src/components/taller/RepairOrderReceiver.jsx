@@ -109,6 +109,47 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
   const [modelSuccessNotice, setModelSuccessNotice] = useState(null);
   const [customBrandInput, setCustomBrandInput] = useState('');
 
+  // Lista de técnicos configurables y asignación
+  const DEFAULT_TECHNICIANS = [
+    'Javier (Laboratorio Central)',
+    'Operador Mostrador',
+    'Técnico 1',
+    'Técnico 2',
+    'Sin Asignar'
+  ];
+
+  const [techniciansList, setTechniciansList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('montec_technicians_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return DEFAULT_TECHNICIANS;
+  });
+
+  const [isAddingTechnician, setIsAddingTechnician] = useState(false);
+  const [newTechnicianInput, setNewTechnicianInput] = useState('');
+
+  const handleAddTechnician = () => {
+    const trimmed = newTechnicianInput.trim();
+    if (!trimmed) return;
+    if (!techniciansList.includes(trimmed)) {
+      const updated = [...techniciansList, trimmed];
+      setTechniciansList(updated);
+      try {
+        localStorage.setItem('montec_technicians_list', JSON.stringify(updated));
+      } catch {}
+    }
+    setFormData(prev => ({
+      ...prev,
+      service: { ...prev.service, technician: trimmed }
+    }));
+    setNewTechnicianInput('');
+    setIsAddingTechnician(false);
+  };
+
   // Refs para atajos de teclado F9, F10, F12
   const clientInputRef = useRef(null);
   const modelInputRef = useRef(null);
@@ -1447,18 +1488,79 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-zinc-300 mb-1">
-                  Asignado a Técnico
-                </label>
-                <input
-                  type="text"
-                  value={formData.service.technician}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    service: { ...prev.service, technician: e.target.value }
-                  }))}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-[#FF5500]"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[11px] font-bold text-zinc-300">
+                    Asignado a Técnico
+                  </label>
+                  {!isAddingTechnician && (
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingTechnician(true)}
+                      className="text-[10px] text-[#FF5500] hover:underline cursor-pointer font-semibold"
+                    >
+                      + Nuevo
+                    </button>
+                  )}
+                </div>
+
+                {isAddingTechnician ? (
+                  <div className="flex items-center gap-1.5 animate-fadeIn">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={newTechnicianInput}
+                      onChange={(e) => setNewTechnicianInput(e.target.value)}
+                      placeholder="Nombre del técnico..."
+                      className="flex-1 bg-zinc-950 border border-[#FF5500] rounded-xl px-2.5 py-1.5 text-xs text-white outline-none"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddTechnician();
+                        } else if (e.key === 'Escape') {
+                          setIsAddingTechnician(false);
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddTechnician}
+                      className="px-2.5 py-1.5 bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold rounded-xl cursor-pointer"
+                    >
+                      OK
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingTechnician(false)}
+                      className="px-2 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs rounded-xl cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    value={formData.service.technician}
+                    onChange={(e) => {
+                      if (e.target.value === '__add_new__') {
+                        setIsAddingTechnician(true);
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          service: { ...prev.service, technician: e.target.value }
+                        }));
+                      }
+                    }}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-2.5 py-2 text-xs text-white outline-none focus:border-[#FF5500] cursor-pointer font-medium"
+                  >
+                    {techniciansList.map(t => (
+                      <option key={t} value={t}>
+                        👨‍🔧 {t}
+                      </option>
+                    ))}
+                    <option value="__add_new__" className="text-[#FF5500] font-bold">
+                      ➕ Agregar nuevo técnico...
+                    </option>
+                  </select>
+                )}
               </div>
             </div>
 

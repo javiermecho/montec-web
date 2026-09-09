@@ -20,7 +20,10 @@ import {
   ShoppingBag, 
   Package, 
   Copy,
-  AlertCircle
+  AlertCircle,
+  Wrench,
+  AlertTriangle,
+  CheckCircle2
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 
@@ -31,6 +34,13 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
 
   // Estados locales
   const balanceDue = Number(order.service?.balanceDue || 0);
+
+  // Resolución técnica al entregar: 'ready' (Reparado OK) o 'no_repair' (Sin Reparar / Devolución)
+  const isInitiallyResolved = order.status === 'ready' || order.status === 'repaired' || order.status === 'no_repair';
+  const initialResolution = order.status === 'no_repair' ? 'no_repair' : (order.status === 'ready' || order.status === 'repaired' ? 'ready' : null);
+  const [deliveryResolution, setDeliveryResolution] = useState(initialResolution);
+  const [waiveRepairBalance, setWaiveRepairBalance] = useState(order.status === 'no_repair');
+
   const [addedAccessories, setAddedAccessories] = useState([]);
   const [accessorySearch, setAccessorySearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
@@ -97,9 +107,10 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     setAddedAccessories(prev => prev.filter(item => item.id !== productId));
   };
 
-  // Cálculos financieros
+  // Cálculos financieros con consideración de saldo bonificado si no hubo reparación
+  const effectiveBalanceDue = waiveRepairBalance ? 0 : balanceDue;
   const accessoriesSubtotal = addedAccessories.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const grossTotal = balanceDue + accessoriesSubtotal;
+  const grossTotal = effectiveBalanceDue + accessoriesSubtotal;
 
   const discountAmount = discountType === 'percent'
     ? Math.round((grossTotal * (Number(discountValue) || 0)) / 100)
@@ -113,6 +124,11 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
 
   // Finalizar entrega y cobro
   const handleFinalize = () => {
+    if (!deliveryResolution) {
+      alert('Por favor selecciona si el equipo se entrega "Reparado OK" o "Sin Reparación".');
+      return;
+    }
+
     if (paymentMethod === 'cash' && cashNum < grandTotal && grossTotal > 0) {
       if (!confirm(`El monto recibido ($${cashNum.toLocaleString('es-AR')}) es menor al Total a Cobrar ($${grandTotal.toLocaleString('es-AR')}). ¿Deseas continuar igual?`)) {
         return;
@@ -122,11 +138,13 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     const deliveryPayload = {
       orderId: order.id,
       orderNumber: order.orderNumber,
-      clientName: order.client?.name || 'Cliente',
-      clientPhone: order.client?.phone || '',
+      clientName: order.client?.name || order.customer?.name || 'Cliente',
+      clientPhone: order.client?.phone || order.customer?.phone || '',
       deviceModel: `${order.device?.brand || ''} ${order.device?.model || ''}`.trim(),
       repairName: order.service?.requestedRepair || 'Reparación de Taller',
-      balancePaid: balanceDue,
+      balancePaid: effectiveBalanceDue,
+      repairResolution: deliveryResolution, // 'ready' | 'no_repair'
+      isRepaired: deliveryResolution === 'ready',
       accessories: addedAccessories.map(a => ({
         id: a.id,
         name: a.name,
@@ -349,8 +367,8 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
             {/* COLUMNA IZQUIERDA: RESUMEN DE LA ORDEN & VENTA CRUZADA (7 COLS) */}
             <div className="lg:col-span-7 space-y-5">
               
-              {/* Tarjeta de Datos del Equipo */}
-              <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 space-y-3">
+              {/* Tarjeta de Datos del Equipo y Resolución Obligatoria */}
+              <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 space-y-4">
                 <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
                   <span className="text-xs font-mono font-bold text-[#FF5500]">DATOS DE LA REPARACIÓN</span>
                   <span className="text-xs text-zinc-400">{order.client?.name || 'Cliente'}</span>
@@ -366,16 +384,102 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                     <span className="font-semibold text-white">{order.client?.phone || 'Sin registrar'}</span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-zinc-500 block">Trabajo Realizado:</span>
+                    <span className="text-zinc-500 block">Trabajo Solicitado:</span>
                     <span className="text-zinc-200">{order.service?.requestedRepair || 'Servicio Técnico'}</span>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-zinc-300">Saldo Pendiente de Taller:</span>
-                  <span className="text-base font-mono font-bold text-orange-400">
-                    ${balanceDue.toLocaleString('es-AR')}
-                  </span>
+                {/* SELECTOR OBLIGATORIO DE RESOLUCIÓN */}
+                <div className="pt-3 border-t border-zinc-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>¿Cómo se entrega el equipo?</span>
+                      <span className="text-rose-400 text-xs">* Obligatorio</span>
+                    </label>
+                    <span className="text-[11px] text-zinc-400">
+                      {deliveryResolution === 'ready' && <span className="text-emerald-400 font-semibold">Reparado OK</span>}
+                      {deliveryResolution === 'no_repair' && <span className="text-amber-400 font-semibold">Sin Reparar</span>}
+                      {!deliveryResolution && <span className="text-rose-400 animate-pulse font-medium">Requerido para entregar</span>}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeliveryResolution('ready');
+                        setWaiveRepairBalance(false);
+                      }}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                        deliveryResolution === 'ready'
+                          ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500/50 shadow-lg shadow-emerald-950/40'
+                          : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-bold text-xs">
+                        <CheckCircle2 className={`w-4 h-4 ${deliveryResolution === 'ready' ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                        <span>🟢 Reparado OK</span>
+                      </div>
+                      <span className="text-[11px] text-zinc-400 leading-tight">
+                        Trabajo finalizado con éxito. Aplica garantía.
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeliveryResolution('no_repair');
+                        setWaiveRepairBalance(true);
+                      }}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                        deliveryResolution === 'no_repair'
+                          ? 'bg-amber-500/15 border-amber-500 text-amber-300 ring-1 ring-amber-500/50 shadow-lg shadow-amber-950/40'
+                          : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 font-bold text-xs">
+                        <AlertTriangle className={`w-4 h-4 ${deliveryResolution === 'no_repair' ? 'text-amber-400' : 'text-zinc-500'}`} />
+                        <span>🔴 Sin Reparar</span>
+                      </div>
+                      <span className="text-[11px] text-zinc-400 leading-tight">
+                        Devolución sin reparación o rechazo.
+                      </span>
+                    </button>
+                  </div>
+
+                  {deliveryResolution === 'no_repair' && (
+                    <div className="mt-2 p-2.5 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-center justify-between text-xs animate-fadeIn">
+                      <div className="flex items-center gap-2 text-amber-200">
+                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                        <span>Equipo sin reparación:</span>
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer select-none text-zinc-300 hover:text-white">
+                        <input
+                          type="checkbox"
+                          checked={waiveRepairBalance}
+                          onChange={(e) => setWaiveRepairBalance(e.target.checked)}
+                          className="rounded border-zinc-700 text-[#FF5500] focus:ring-0 w-3.5 h-3.5 cursor-pointer"
+                        />
+                        <span className="text-[11px]">Bonificar saldo reparación ($0)</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs">
+                  <span className="font-semibold text-zinc-300">Saldo Reparación a Cobrar:</span>
+                  <div className="text-right">
+                    {waiveRepairBalance && balanceDue > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <span className="line-through text-zinc-500 font-mono">${balanceDue.toLocaleString('es-AR')}</span>
+                        <span className="font-mono font-bold text-emerald-400">$0 (Bonificado)</span>
+                      </div>
+                    ) : (
+                      <span className="text-base font-mono font-bold text-orange-400">
+                        ${effectiveBalanceDue.toLocaleString('es-AR')}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -669,10 +773,19 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
               {/* BOTÓN FINALIZAR ENTREGA */}
               <button
                 onClick={handleFinalize}
-                className="w-full py-3.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white font-heading font-bold text-sm shadow-[0_0_25px_rgba(255,85,0,0.4)] hover:shadow-[0_0_35px_rgba(255,85,0,0.6)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                disabled={!deliveryResolution}
+                className={`w-full py-3.5 rounded-xl font-heading font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  deliveryResolution
+                    ? 'bg-[#FF5500] hover:bg-[#FF6600] text-white shadow-[0_0_25px_rgba(255,85,0,0.4)] hover:shadow-[0_0_35px_rgba(255,85,0,0.6)]'
+                    : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+                }`}
               >
                 <Check className="w-5 h-5" />
-                <span>FINALIZAR ENTREGA Y COBRAR</span>
+                <span>
+                  {!deliveryResolution
+                    ? 'SELECCIONA RESOLUCIÓN (REPARADO / SIN REPARAR)'
+                    : 'FINALIZAR ENTREGA Y COBRAR'}
+                </span>
               </button>
 
             </div>

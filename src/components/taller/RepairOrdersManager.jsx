@@ -124,6 +124,16 @@ export const STATUS_CONFIG = {
   }
 };
 
+export const WORKSHOP_TABS = [
+  { key: 'received', shortLabel: 'Recibido', config: STATUS_CONFIG.received },
+  { key: 'waiting_auth', shortLabel: 'Presupuesto Pendiente', config: STATUS_CONFIG.waiting_auth },
+  { key: 'waiting_part', shortLabel: 'Faltante Repuesto', config: STATUS_CONFIG.waiting_part },
+  { key: 'in_progress', shortLabel: 'En Mesa', config: STATUS_CONFIG.in_progress },
+  { key: 'ready', shortLabel: 'Reparado OK', config: STATUS_CONFIG.ready },
+  { key: 'no_repair', shortLabel: 'Devolución', config: STATUS_CONFIG.no_repair },
+  { key: 'delivered', shortLabel: 'Entregados', config: STATUS_CONFIG.delivered },
+];
+
 export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose, isEmbedded = false, onDeliverOrder = null }) {
   const { 
     orders, 
@@ -177,6 +187,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   const [targetStatus, setTargetStatus] = useState(null); // Estado al que se quiere cambiar
   const [techReport, setTechReport] = useState('');
   const [techInternalNote, setTechInternalNote] = useState('');
+  const [deliveryResolutionChoice, setDeliveryResolutionChoice] = useState('ready'); // 'ready' | 'no_repair'
   const [exitChecklist, setExitChecklist] = useState({
     turnsOn: true,
     touchOk: true,
@@ -197,13 +208,25 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     }
   }, [orders]);
 
-  // Contadores por estado
+  // Contadores por estado: 'all' cuenta los equipos activos en taller (excluye delivered)
   const statusCounts = useMemo(() => {
-    const counts = { all: orders.length };
-    Object.keys(STATUS_CONFIG).forEach(k => counts[k] = 0);
+    const activeOrders = orders.filter(o => o.status !== 'delivered');
+    const counts = { 
+      all: activeOrders.length,
+      received: 0,
+      waiting_auth: 0,
+      waiting_part: 0,
+      in_progress: 0,
+      ready: 0,
+      no_repair: 0,
+      delivered: 0
+    };
     orders.forEach(o => {
-      const s = o.status || 'received';
-      if (counts[s] !== undefined) counts[s]++;
+      let s = o.status || 'received';
+      if (s === 'repaired') s = 'ready';
+      if (counts[s] !== undefined) {
+        counts[s]++;
+      }
     });
     return counts;
   }, [orders]);
@@ -220,9 +243,18 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
         if (!match) return false;
       }
 
+      // Si está en 'all' (Taller Activo) y no hay búsqueda por texto ni filtro de cliente:
+      // excluimos las órdenes entregadas para que solo aparezcan en la solapa de 'Entregados'
+      if (statusFilter === 'all' && !searchTerm.trim() && !clientHistoryFilter) {
+        if (order.status === 'delivered') return false;
+      }
+
       // Filtro de estado
-      if (statusFilter !== 'all' && order.status !== statusFilter) {
-        return false;
+      if (statusFilter !== 'all') {
+        const currentStatus = (order.status === 'repaired') ? 'ready' : order.status;
+        if (currentStatus !== statusFilter) {
+          return false;
+        }
       }
 
       // Filtro de texto de búsqueda
@@ -235,6 +267,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
         const deviceModel = `${order.device?.brand || ''} ${order.device?.model || ''}`.toLowerCase();
         const issue = (order.service?.requestedRepair || '').toLowerCase();
         const imei = (order.device?.imei || '').toLowerCase();
+        const tech = (order.service?.technician || '').toLowerCase();
 
         return num.includes(q) || 
                clientName.includes(q) || 
@@ -242,7 +275,8 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                clientPhone.includes(q) || 
                deviceModel.includes(q) || 
                issue.includes(q) ||
-               imei.includes(q);
+               imei.includes(q) ||
+               tech.includes(q);
       }
 
       return true;
@@ -390,9 +424,12 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     if (!selectedOrder || !targetStatus) return;
 
     const statusObj = STATUS_CONFIG[targetStatus] || { label: targetStatus };
+    const resolutionSuffix = targetStatus === 'delivered'
+      ? ` (${deliveryResolutionChoice === 'ready' ? '🟢 Reparado OK' : '🔴 Sin Reparación / Devolución'})`
+      : '';
     const note = techReport 
-      ? `Estado cambiado a ${statusObj.label}. Informe: ${techReport}`
-      : `Estado cambiado a ${statusObj.label}`;
+      ? `Estado cambiado a ${statusObj.label}${resolutionSuffix}. Informe: ${techReport}`
+      : `Estado cambiado a ${statusObj.label}${resolutionSuffix}`;
 
     // Si además escribió una nota interna adicional
     if (techInternalNote.trim()) {
@@ -403,6 +440,8 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     const extraData = {
       technicalReport: techReport,
       lastStatusTransitionDate: new Date().toISOString(),
+      repairResolution: targetStatus === 'delivered' ? deliveryResolutionChoice : undefined,
+      isRepaired: targetStatus === 'delivered' ? (deliveryResolutionChoice === 'ready') : undefined,
       exitChecklist: {
         ...(selectedOrder.exitChecklist || {}),
         ...exitChecklist
@@ -527,7 +566,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                     : 'bg-zinc-900/80 text-zinc-300 border-zinc-700/80 hover:text-white hover:bg-zinc-800')
             }`}
           >
-            <span>Todos</span>
+            <span>En Taller (Activos)</span>
             <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
               statusFilter === 'all'
                 ? 'bg-black/25 text-white font-bold'
@@ -537,7 +576,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
             </span>
           </button>
 
-          {Object.entries(STATUS_CONFIG).map(([statusKey, config]) => {
+          {WORKSHOP_TABS.map(({ key: statusKey, shortLabel, config }) => {
             const isSelected = statusFilter === statusKey;
             return (
               <button
@@ -555,7 +594,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full ${config.dotClass}`} />
-                <span>{config.shortLabel}</span>
+                <span>{shortLabel}</span>
                 <span className="text-[10px] font-mono opacity-80">
                   ({statusCounts[statusKey] || 0})
                 </span>
@@ -681,6 +720,13 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                         }`}>
                           {order.service?.requestedRepair || order.service?.preliminaryDiagnosis || 'Revisión técnica'}
                         </div>
+                        {order.service?.technician && order.service.technician !== 'Sin Asignar' && (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/20">
+                              👨‍🔧 {order.service.technician}
+                            </span>
+                          </div>
+                        )}
                       </td>
 
                       {/* 4. Estado Técnico */}
@@ -691,6 +737,20 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                           <span className={`w-2 h-2 rounded-full ${status.dotClass}`} />
                           <span>{status.label}</span>
                         </span>
+
+                        {order.status === 'delivered' && (
+                          <div className="mt-1">
+                            {(order.repairResolution === 'no_repair' || order.service?.repairResolution === 'no_repair' || order.isRepaired === false) ? (
+                              <span className="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
+                                🔴 Sin Reparar
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                                🟢 Reparado OK
+                              </span>
+                            )}
+                          </div>
+                        )}
 
                         {inactiveAlert && (
                           <div className="mt-1">
@@ -1232,6 +1292,22 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
 
                   <div className="space-y-2 text-xs sm:text-sm">
                     <div className={isLight ? 'text-slate-600' : 'text-zinc-400'}>
+                      <strong className={isLight ? 'text-slate-900' : 'text-zinc-300'}>👨‍🔧 Técnico Asignado:</strong>{' '}
+                      <span className="font-semibold text-[#FF5500]">
+                        {selectedOrder.service?.technician || 'Sin Asignar'}
+                      </span>
+                    </div>
+                    {selectedOrder.status === 'delivered' && (
+                      <div className={isLight ? 'text-slate-600' : 'text-zinc-400'}>
+                        <strong className={isLight ? 'text-slate-900' : 'text-zinc-300'}>Resultado de Entrega:</strong>{' '}
+                        {(selectedOrder.repairResolution === 'no_repair' || selectedOrder.service?.repairResolution === 'no_repair' || selectedOrder.isRepaired === false) ? (
+                          <span className="font-bold text-rose-500">🔴 Sin Reparación / Devolución</span>
+                        ) : (
+                          <span className="font-bold text-emerald-500">🟢 Reparado OK</span>
+                        )}
+                      </div>
+                    )}
+                    <div className={isLight ? 'text-slate-600' : 'text-zinc-400'}>
                       <strong className={isLight ? 'text-slate-900' : 'text-zinc-300'}>Trabajo solicitado:</strong> {selectedOrder.service?.requestedRepair || 'Diagnóstico general'}
                     </div>
                     {selectedOrder.service?.preliminaryDiagnosis && (
@@ -1471,6 +1547,58 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                       }`}
                     />
                   </div>
+                  {/* Si el estado seleccionado es Entregado, solicitar obligatoriamente la resolución */}
+                  {targetStatus === 'delivered' && (
+                    <div className={`p-4 rounded-xl border space-y-2.5 ${isLight ? 'bg-amber-50/50 border-amber-200' : 'bg-zinc-900/90 border-zinc-700'}`}>
+                      <div className="flex items-center justify-between">
+                        <label className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-800' : 'text-white'}`}>
+                          <AlertTriangle className="w-4 h-4 text-amber-500" />
+                          <span>Condición de entrega del equipo (* Obligatorio):</span>
+                        </label>
+                        <span className="text-[11px] font-semibold text-[#FF5500]">
+                          {deliveryResolutionChoice === 'ready' ? '🟢 Se entrega Reparado' : '🔴 Se entrega Sin Reparar'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryResolutionChoice('ready')}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                            deliveryResolutionChoice === 'ready'
+                              ? 'bg-emerald-500/15 border-emerald-500 text-emerald-600 dark:text-emerald-300 ring-1 ring-emerald-500/50 font-bold'
+                              : (isLight ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50' : 'bg-zinc-950 border-zinc-800 text-zinc-400')
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 text-xs">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                            <span>🟢 Reparado OK</span>
+                          </div>
+                          <span className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                            Trabajo finalizado con éxito. Aplica garantía.
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryResolutionChoice('no_repair')}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                            deliveryResolutionChoice === 'no_repair'
+                              ? 'bg-amber-500/15 border-amber-500 text-amber-600 dark:text-amber-300 ring-1 ring-amber-500/50 font-bold'
+                              : (isLight ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50' : 'bg-zinc-950 border-zinc-800 text-zinc-400')
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 text-xs">
+                            <AlertTriangle className="w-4 h-4 text-amber-500" />
+                            <span>🔴 Sin Reparar</span>
+                          </div>
+                          <span className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                            Devolución o rechazo sin reparación.
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Checklist de salida si es Reparado o Entregado */}
                   {(targetStatus === 'ready' || targetStatus === 'delivered') && (

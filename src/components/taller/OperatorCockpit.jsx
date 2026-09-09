@@ -178,11 +178,11 @@ export default function OperatorCockpit({ onClose }) {
             <span className="font-mono font-bold text-white">${dolarRate?.toLocaleString('es-AR')}</span>
           </div>
 
-          {/* Indicador de Conexión Servidor Central (Railway / PostgreSQL) */}
+          {/* Indicador de Conexión */}
           <button
             type="button"
             onClick={() => refreshConnection?.()}
-            title={serverStatus === 'online' ? '🟢 Conectado con base de datos PostgreSQL en Railway' : '🔴 Servidor no detectado. Clic para reintentar conexión'}
+            title={serverStatus === 'online' ? '🟢 Conectado al sistema central' : '🔴 Sin conexión al sistema central. Clic para reintentar'}
             className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
               serverStatus === 'online'
                 ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/50 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
@@ -200,10 +200,10 @@ export default function OperatorCockpit({ onClose }) {
             }`} />
             <span>
               {serverStatus === 'online'
-                ? '🟢 Conectado a Servidor Central (Railway)'
+                ? 'Conectado'
                 : serverStatus === 'checking'
-                ? '🟡 Verificando Servidor...'
-                : '🔴 Sin Conexión (Modo Local)'}
+                ? 'Verificando...'
+                : 'Sin Conexión'}
             </span>
           </button>
         </div>
