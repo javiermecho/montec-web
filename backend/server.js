@@ -258,7 +258,13 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 
   try {
     // 1. Obtener orden existente
-    const existingRes = await query('SELECT * FROM repair_orders WHERE id = $1 OR order_number = $1 LIMIT 1', [id]);
+    const isNum = !isNaN(parseInt(id, 10)) && String(parseInt(id, 10)) === String(id);
+    const existingRes = await query(
+      isNum 
+        ? 'SELECT * FROM repair_orders WHERE id = $1 LIMIT 1'
+        : 'SELECT * FROM repair_orders WHERE LOWER(order_number) = LOWER($1) LIMIT 1',
+      [id]
+    );
     if (existingRes.rowCount === 0) {
       return res.status(404).json({ error: 'Orden no encontrada' });
     }
@@ -293,6 +299,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
       currentOrder.id
     ]);
 
+    console.log(`✅ Estado de orden ${currentOrder.order_number} actualizado a "${status}" en PostgreSQL`);
     res.json({
       success: true,
       message: 'Estado de orden actualizado',
@@ -300,7 +307,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error al actualizar estado de orden:', error);
-    res.status(500).json({ error: 'Error al actualizar estado en la base de datos' });
+    res.status(500).json({ error: 'Error al actualizar estado en la base de datos', details: error.message });
   }
 });
 
@@ -315,7 +322,13 @@ app.patch('/api/orders/:id/payments', async (req, res) => {
   }
 
   try {
-    const existingRes = await query('SELECT * FROM repair_orders WHERE id = $1 OR order_number = $1 LIMIT 1', [id]);
+    const isNum = !isNaN(parseInt(id, 10)) && String(parseInt(id, 10)) === String(id);
+    const existingRes = await query(
+      isNum 
+        ? 'SELECT * FROM repair_orders WHERE id = $1 LIMIT 1'
+        : 'SELECT * FROM repair_orders WHERE LOWER(order_number) = LOWER($1) LIMIT 1',
+      [id]
+    );
     if (existingRes.rowCount === 0) {
       return res.status(404).json({ error: 'Orden no encontrada' });
     }
@@ -364,6 +377,7 @@ app.patch('/api/orders/:id/payments', async (req, res) => {
       currentOrder.id
     ]);
 
+    console.log(`✅ Pago de $${payAmount} registrado en orden ${currentOrder.order_number} en PostgreSQL`);
     res.json({
       success: true,
       message: 'Pago registrado exitosamente',
@@ -371,7 +385,7 @@ app.patch('/api/orders/:id/payments', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error al registrar pago de orden:', error);
-    res.status(500).json({ error: 'Error al registrar pago en la base de datos' });
+    res.status(500).json({ error: 'Error al registrar pago en la base de datos', details: error.message });
   }
 });
 

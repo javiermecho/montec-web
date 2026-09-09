@@ -448,13 +448,20 @@ export function DataProvider({ children }) {
 
   useEffect(() => {
     syncWithServer();
-    // Verificar estado cada 60 segundos
-    const syncInterval = setInterval(() => syncWithServer(true), 60 * 1000);
+    // Polling inteligente cada 10 segundos para sincronización instantánea entre celular y PC
+    const syncInterval = setInterval(() => syncWithServer(true), 10 * 1000);
     const handleOnline = () => syncWithServer();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncWithServer(true);
+      }
+    };
     window.addEventListener('online', handleOnline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       clearInterval(syncInterval);
       window.removeEventListener('online', handleOnline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
@@ -699,7 +706,7 @@ export function DataProvider({ children }) {
     });
   };
 
-  const updateRepairOrderStatus = (orderId, newStatus, note = '', extraData = {}) => {
+  const updateRepairOrderStatus = async (orderId, newStatus, note = '', extraData = {}) => {
     // 1. Actualización optimista inmediata en state y localStorage
     setOrders(prev => {
       const updated = prev.map(o => {
@@ -728,15 +735,28 @@ export function DataProvider({ children }) {
       return updated;
     });
 
-    // 2. Notificación en segundo plano a PostgreSQL
-    api.updateOrdenEstado(orderId, {
-      status: newStatus,
-      technicalReport: note,
-      operator: 'Taller Montec',
-      ...extraData
-    }).catch(e => {
+    // 2. Persistencia en PostgreSQL (Railway)
+    try {
+      const res = await api.updateOrdenEstado(orderId, {
+        status: newStatus,
+        technicalReport: note,
+        operator: 'Taller Montec',
+        ...extraData
+      });
+      if (res && res.success && (res.order || res.data?.order)) {
+        const remoteOrder = res.order || res.data.order;
+        const normalized = normalizeOrderData(remoteOrder);
+        setOrders(prev => {
+          const updated = prev.map(o => (o.id === normalized.id || o.orderNumber === normalized.orderNumber) ? normalized : o);
+          try {
+            localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        });
+      }
+    } catch (e) {
       console.warn('⚠️ No se pudo sincronizar estado con PostgreSQL:', e.message);
-    });
+    }
   };
 
   const addOrderInternalNote = (orderId, noteText, author = 'Taller Montec') => {
