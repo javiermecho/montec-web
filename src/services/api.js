@@ -254,6 +254,43 @@ export async function createVenta(ventaData) {
   return { success: false, error: res.error };
 }
 
+// ============================================================================
+// 5. MÓDULO DE CONFIGURACIONES Y BACKUP CENTRALIZADO
+// ============================================================================
+
+/**
+ * Consulta una configuración o catálogo guardado en PostgreSQL (models, issues, pricing_rules, iphone_configs)
+ */
+export async function getSetting(key) {
+  const res = await request(`/settings/${encodeURIComponent(key)}`, { method: 'GET' });
+  if (res.success) {
+    return res.data?.data;
+  }
+  return null;
+}
+
+/**
+ * Guarda o actualiza una configuración en PostgreSQL
+ */
+export async function saveSetting(key, value) {
+  const res = await request(`/settings/${encodeURIComponent(key)}`, {
+    method: 'POST',
+    body: JSON.stringify({ value })
+  });
+  return res;
+}
+
+/**
+ * Descarga el snapshot de backup completo del sistema desde PostgreSQL
+ */
+export async function getFullBackup() {
+  const res = await request('/backup', { method: 'GET' });
+  if (res.success && res.data?.backup) {
+    return res.data.backup;
+  }
+  return null;
+}
+
 export const api = {
   checkServerHealth,
   getOrdenes,
@@ -265,7 +302,10 @@ export const api = {
   getProductos,
   createProducto,
   updateProducto,
-  createVenta
+  createVenta,
+  getSetting,
+  saveSetting,
+  getFullBackup
 };
 
 export default api;

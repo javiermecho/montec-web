@@ -143,6 +143,13 @@ export const initDatabaseSchema = async () => {
     CREATE INDEX IF NOT EXISTS idx_repair_orders_status ON repair_orders(status);
     CREATE INDEX IF NOT EXISTS idx_inventory_sku ON inventory(sku);
     CREATE INDEX IF NOT EXISTS idx_sales_ticket ON sales(ticket_number);
+
+    -- Tabla de configuraciones y backup (modelos, precios de reparación, fallas, márgenes)
+    CREATE TABLE IF NOT EXISTS app_settings (
+        key VARCHAR(100) PRIMARY KEY,
+        value JSONB NOT NULL,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
   `;
 
   try {

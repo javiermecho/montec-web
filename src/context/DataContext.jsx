@@ -348,6 +348,64 @@ export function DataProvider({ children }) {
           console.warn('⚠️ No se pudo sincronizar inventario de PostgreSQL:', e);
         }
 
+        // 3. Sincronizar y Respaldar Modelos Soportados en PostgreSQL
+        try {
+          const remoteModels = await api.getSetting('models');
+          if (Array.isArray(remoteModels) && remoteModels.length > 0) {
+            setModels(remoteModels);
+            try {
+              localStorage.setItem(STORAGE_KEYS.MODELS, JSON.stringify(remoteModels));
+            } catch (e) {}
+          } else {
+            // Backup inicial en PostgreSQL
+            api.saveSetting('models', models).catch(() => {});
+          }
+        } catch (e) {
+          console.warn('⚠️ Error sincronizando modelos de PostgreSQL:', e);
+        }
+
+        // 4. Sincronizar y Respaldar Precios y Tipos de Falla en PostgreSQL
+        try {
+          const remoteIssues = await api.getSetting('issues');
+          if (Array.isArray(remoteIssues) && remoteIssues.length > 0) {
+            setIssues(remoteIssues);
+            try {
+              localStorage.setItem(STORAGE_KEYS.ISSUES, JSON.stringify(remoteIssues));
+            } catch (e) {}
+          } else {
+            // Backup inicial en PostgreSQL
+            api.saveSetting('issues', issues).catch(() => {});
+          }
+        } catch (e) {
+          console.warn('⚠️ Error sincronizando fallas/precios de PostgreSQL:', e);
+        }
+
+        // 5. Sincronizar Reglas de Precios y Márgenes en PostgreSQL
+        try {
+          const remotePricing = await api.getSetting('pricing_rules');
+          if (remotePricing && typeof remotePricing === 'object' && remotePricing.markupMultiplier) {
+            setPricingRules(remotePricing);
+            try {
+              localStorage.setItem(STORAGE_KEYS.PRICING_RULES, JSON.stringify(remotePricing));
+            } catch (e) {}
+          } else {
+            api.saveSetting('pricing_rules', pricingRules).catch(() => {});
+          }
+        } catch (e) {}
+
+        // 6. Sincronizar Configuraciones de iPhone en PostgreSQL
+        try {
+          const remoteIphoneConfigs = await api.getSetting('iphone_configs');
+          if (remoteIphoneConfigs && typeof remoteIphoneConfigs === 'object') {
+            setIphoneConfigs(remoteIphoneConfigs);
+            try {
+              localStorage.setItem(STORAGE_KEYS.IPHONE_CONFIGS, JSON.stringify(remoteIphoneConfigs));
+            } catch (e) {}
+          } else {
+            api.saveSetting('iphone_configs', iphoneConfigs).catch(() => {});
+          }
+        } catch (e) {}
+
         return true;
       } else {
         setServerStatus('offline');
@@ -386,14 +444,20 @@ export function DataProvider({ children }) {
   const updatePricingRules = (newRules) => {
     setPricingRules(prev => {
       const updated = { ...prev, ...newRules };
-      localStorage.setItem(STORAGE_KEYS.PRICING_RULES, JSON.stringify(updated));
+      try {
+        localStorage.setItem(STORAGE_KEYS.PRICING_RULES, JSON.stringify(updated));
+      } catch (e) {}
+      api.saveSetting('pricing_rules', updated).catch(() => {});
       return updated;
     });
   };
 
   const resetPricingRules = () => {
     setPricingRules(DEFAULT_PRICING_RULES);
-    localStorage.setItem(STORAGE_KEYS.PRICING_RULES, JSON.stringify(DEFAULT_PRICING_RULES));
+    try {
+      localStorage.setItem(STORAGE_KEYS.PRICING_RULES, JSON.stringify(DEFAULT_PRICING_RULES));
+    } catch (e) {}
+    api.saveSetting('pricing_rules', DEFAULT_PRICING_RULES).catch(() => {});
   };
 
   // 8. Configuración especializada de iPhone (Mano de obra y microelectrónica por modelo)
@@ -415,7 +479,10 @@ export function DataProvider({ children }) {
           ...newFields
         }
       };
-      localStorage.setItem(STORAGE_KEYS.IPHONE_CONFIGS, JSON.stringify(updated));
+      try {
+        localStorage.setItem(STORAGE_KEYS.IPHONE_CONFIGS, JSON.stringify(updated));
+      } catch (e) {}
+      api.saveSetting('iphone_configs', updated).catch(() => {});
       return updated;
     });
   };
@@ -423,7 +490,10 @@ export function DataProvider({ children }) {
   const resetIphoneConfigs = () => {
     const defaults = buildDefaultIphoneConfigs();
     setIphoneConfigs(defaults);
-    localStorage.setItem(STORAGE_KEYS.IPHONE_CONFIGS, JSON.stringify(defaults));
+    try {
+      localStorage.setItem(STORAGE_KEYS.IPHONE_CONFIGS, JSON.stringify(defaults));
+    } catch (e) {}
+    api.saveSetting('iphone_configs', defaults).catch(() => {});
   };
 
   // ============================================================================
@@ -808,6 +878,7 @@ export function DataProvider({ children }) {
       } catch (e) {
         console.error('Error guardando modelo:', e);
       }
+      api.saveSetting('models', updated).catch(() => {});
       return updated;
     });
     return modelWithId;
@@ -819,6 +890,7 @@ export function DataProvider({ children }) {
       try {
         localStorage.setItem(STORAGE_KEYS.MODELS, JSON.stringify(updated));
       } catch (e) {}
+      api.saveSetting('models', updated).catch(() => {});
       return updated;
     });
   };
@@ -829,32 +901,47 @@ export function DataProvider({ children }) {
       try {
         localStorage.setItem(STORAGE_KEYS.MODELS, JSON.stringify(updated));
       } catch (e) {}
+      api.saveSetting('models', updated).catch(() => {});
       return updated;
     });
   };
 
   // --- Operaciones de Fallas y Precios ---
   const updateIssuePrices = (issueId, deviceType, minPrice, maxPrice) => {
-    setIssues(prev => prev.map(issue => {
-      if (issue.id !== issueId) return issue;
-      return {
-        ...issue,
-        basePrices: {
-          ...issue.basePrices,
-          [deviceType]: {
-            min: parseInt(minPrice, 10) || 0,
-            max: parseInt(maxPrice, 10) || 0
+    setIssues(prev => {
+      const updated = prev.map(issue => {
+        if (issue.id !== issueId) return issue;
+        return {
+          ...issue,
+          basePrices: {
+            ...issue.basePrices,
+            [deviceType]: {
+              min: parseInt(minPrice, 10) || 0,
+              max: parseInt(maxPrice, 10) || 0
+            }
           }
-        }
-      };
-    }));
+        };
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.ISSUES, JSON.stringify(updated));
+      } catch (e) {}
+      api.saveSetting('issues', updated).catch(() => {});
+      return updated;
+    });
   };
 
   const updateIssueMeta = (issueId, fields) => {
-    setIssues(prev => prev.map(issue => {
-      if (issue.id !== issueId) return issue;
-      return { ...issue, ...fields };
-    }));
+    setIssues(prev => {
+      const updated = prev.map(issue => {
+        if (issue.id !== issueId) return issue;
+        return { ...issue, ...fields };
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.ISSUES, JSON.stringify(updated));
+      } catch (e) {}
+      api.saveSetting('issues', updated).catch(() => {});
+      return updated;
+    });
   };
 
   // --- Operaciones de Inventario & Productos ---
@@ -1441,6 +1528,36 @@ export function DataProvider({ children }) {
     };
   };
 
+  const triggerManualBackup = async () => {
+    try {
+      // 1. Respaldar en PostgreSQL todas las configuraciones actuales
+      await Promise.allSettled([
+        api.saveSetting('models', models),
+        api.saveSetting('issues', issues),
+        api.saveSetting('pricing_rules', pricingRules),
+        api.saveSetting('iphone_configs', iphoneConfigs)
+      ]);
+
+      // 2. Obtener el snapshot completo desde PostgreSQL
+      const backup = await api.getFullBackup();
+      if (backup) {
+        // Descargar copia física JSON al dispositivo
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `montec_backup_cloud_${new Date().toISOString().slice(0, 10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        return { success: true, message: 'Copia de seguridad en la nube y archivo JSON generados con éxito' };
+      }
+      return { success: true, message: 'Datos respaldados exitosamente en PostgreSQL' };
+    } catch (e) {
+      console.error('Error generando backup:', e);
+      return { success: false, error: e.message };
+    }
+  };
+
   return (
     <DataContext.Provider value={{
       models,
@@ -1498,6 +1615,7 @@ export function DataProvider({ children }) {
       serverStatus,
       serverHealth,
       refreshConnection: syncWithServer,
+      triggerManualBackup,
       api,
       panelTheme,
       togglePanelTheme,

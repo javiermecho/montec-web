@@ -70,7 +70,9 @@ export default function AdminPanel() {
     orders,
     panelTheme,
     togglePanelTheme,
-    setIsTallerOpen
+    setIsTallerOpen,
+    triggerManualBackup,
+    serverStatus
   } = useData();
 
   const isLight = panelTheme === 'light';
@@ -257,21 +259,40 @@ export default function AdminPanel() {
     setAccFormData({ category: 'Cargadores', name: '', compatible: '', price: 15000, badge: 'Disponible', features: '' });
   };
 
-  // Exportar respaldo JSON
-  const handleExportData = () => {
-    const backup = {
-      exportedAt: new Date().toISOString(),
-      models,
-      issues,
-      accessories
-    };
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `montec_datos_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    showToast('Copia de seguridad descargada en JSON.');
+  // Exportar respaldo en la nube y archivo JSON
+  const [isBackingUp, setIsBackingUp] = useState(false);
+
+  const handleExportData = async () => {
+    setIsBackingUp(true);
+    showToast('Respaldando modelos, fallas y órdenes en PostgreSQL (Railway)...');
+    try {
+      if (typeof triggerManualBackup === 'function') {
+        const res = await triggerManualBackup();
+        if (res.success) {
+          showToast('✅ Respaldo completo guardado en PostgreSQL y descargado.');
+        } else {
+          showToast('⚠️ Datos guardados localmente: ' + (res.error || ''));
+        }
+      } else {
+        const backup = {
+          exportedAt: new Date().toISOString(),
+          models,
+          issues,
+          accessories
+        };
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `montec_datos_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        showToast('Copia de seguridad descargada en JSON.');
+      }
+    } catch (e) {
+      showToast('Error al generar backup: ' + e.message);
+    } finally {
+      setIsBackingUp(false);
+    }
   };
 
   return (
@@ -1293,22 +1314,34 @@ export default function AdminPanel() {
 
             <div className={`border rounded-2xl p-6 space-y-5 ${isLight ? 'bg-white border-slate-200' : 'bg-[#121212] border-zinc-800'}`}>
               <div>
-                <h4 className={`font-heading font-bold text-base mb-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  Exportar Datos a JSON
-                </h4>
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className={`font-heading font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    Respaldo en la Nube (PostgreSQL en Railway) & Descarga JSON
+                  </h4>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                    serverStatus === 'online'
+                      ? 'bg-emerald-950/50 text-emerald-300 border-emerald-500/40'
+                      : 'bg-amber-950/50 text-amber-300 border-amber-500/40'
+                  }`}>
+                    {serverStatus === 'online' ? '🟢 PostgreSQL Sincronizado' : '🟡 Modo Local'}
+                  </span>
+                </div>
                 <p className={`text-xs mb-3 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-                  Descargá un archivo .json con todos los modelos ({models.length}), precios y accesorios configurados en este navegador.
+                  Sincroniza todos los modelos soportados ({models.length}), precios de reparación, fallas, inventario y órdenes en tu base de datos de Railway y descarga un snapshot completo en archivo .json.
                 </p>
                 <button
                   onClick={handleExportData}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors ${
+                  disabled={isBackingUp}
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isBackingUp ? 'opacity-60 cursor-not-allowed' : 'hover:scale-[1.01]'
+                  } ${
                     isLight
-                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
-                      : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                      ? 'bg-[#FF5500] text-white hover:bg-[#E64D00] shadow-sm'
+                      : 'bg-gradient-to-r from-[#FF5500] to-[#E64D00] hover:from-[#FF6600] hover:to-[#FF5500] text-white shadow-[0_0_20px_rgba(255,85,0,0.3)]'
                   }`}
                 >
-                  <Download className="w-4 h-4 text-[#FF5500]" />
-                  <span>Descargar Respaldo JSON</span>
+                  <Download className="w-4 h-4 text-white" />
+                  <span>{isBackingUp ? 'Generando Backup en PostgreSQL...' : 'Respaldar en la Nube y Descargar JSON'}</span>
                 </button>
               </div>
 

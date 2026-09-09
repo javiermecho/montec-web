@@ -119,3 +119,12 @@ CREATE TABLE IF NOT EXISTS sales (
 
 CREATE INDEX IF NOT EXISTS idx_sales_ticket ON sales(ticket_number);
 CREATE INDEX IF NOT EXISTS idx_sales_created ON sales(created_at);
+
+-- 8. Tabla de Configuraciones del Sistema y Backup Centralizado (Modelos, Fallas, Precios, Márgenes)
+CREATE TABLE IF NOT EXISTS app_settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_settings_updated ON app_settings(updated_at);

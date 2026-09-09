@@ -568,6 +568,119 @@ app.get('/api/db/init', async (req, res) => {
   });
 });
 
+// ==========================================
+// 5. ENDPOINTS DE CONFIGURACIONES & BACKUP
+// ==========================================
+
+// Obtener configuración (modelos, fallas/precios, márgenes, configs de iphone)
+app.get('/api/settings/:key', async (req, res) => {
+  const { key } = req.params;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    const result = await query('SELECT value, updated_at FROM app_settings WHERE key = $1 LIMIT 1', [key]);
+    if (result.rowCount === 0) {
+      return res.json({ success: true, key, data: null });
+    }
+    res.json({
+      success: true,
+      key,
+      data: result.rows[0].value,
+      updatedAt: result.rows[0].updated_at
+    });
+  } catch (error) {
+    console.error(`❌ Error al obtener setting ${key}:`, error);
+    res.status(500).json({ error: 'Error al consultar configuración' });
+  }
+});
+
+// Guardar o actualizar configuración en PostgreSQL
+app.post('/api/settings/:key', async (req, res) => {
+  const { key } = req.params;
+  const { value } = req.body;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  if (value === undefined) {
+    return res.status(400).json({ error: 'Se requiere el campo value en el cuerpo de la solicitud' });
+  }
+
+  try {
+    const upsertSql = `
+      INSERT INTO app_settings (key, value, updated_at)
+      VALUES ($1, $2, CURRENT_TIMESTAMP)
+      ON CONFLICT (key) 
+      DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP
+      RETURNING *;
+    `;
+    const result = await query(upsertSql, [key, JSON.stringify(value)]);
+    res.json({
+      success: true,
+      message: `Configuración '${key}' respaldada exitosamente en PostgreSQL`,
+      key,
+      data: result.rows[0].value,
+      updatedAt: result.rows[0].updated_at
+    });
+  } catch (error) {
+    console.error(`❌ Error al guardar setting ${key}:`, error);
+    res.status(500).json({ error: 'Error al respaldar configuración en base de datos' });
+  }
+});
+
+// Generar backup completo de todo el sistema (Órdenes, Inventario, Ventas, Modelos, Precios)
+app.get('/api/backup', async (req, res) => {
+  const dbConnected = await isDbConnected();
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible para generar backup' });
+  }
+
+  try {
+    const ordersRes = await query('SELECT * FROM repair_orders ORDER BY id ASC');
+    const inventoryRes = await query('SELECT * FROM inventory ORDER BY id ASC');
+    const salesRes = await query('SELECT * FROM sales ORDER BY id ASC');
+    const settingsRes = await query('SELECT * FROM app_settings ORDER BY key ASC');
+
+    const settingsMap = {};
+    settingsRes.rows.forEach(r => {
+      settingsMap[r.key] = r.value;
+    });
+
+    const backupSnapshot = {
+      system: 'montec.ar Taller & POS',
+      version: '1.0.0',
+      exportedAt: new Date().toISOString(),
+      location: 'Montes Carballo 943, Mar del Plata',
+      counts: {
+        orders: ordersRes.rowCount,
+        inventory: inventoryRes.rowCount,
+        sales: salesRes.rowCount,
+        settingsKeys: settingsRes.rowCount
+      },
+      data: {
+        repairOrders: ordersRes.rows.map(mapDbOrderToFrontend),
+        inventory: inventoryRes.rows.map(mapDbProductToFrontend),
+        sales: salesRes.rows,
+        settings: settingsMap
+      }
+    };
+
+    res.json({
+      success: true,
+      backup: backupSnapshot
+    });
+  } catch (error) {
+    console.error('❌ Error al generar backup:', error);
+    res.status(500).json({ error: 'Error al exportar snapshot del sistema' });
+  }
+});
+
 // Inicio del servidor
 app.listen(PORT, async () => {
   console.log(`
