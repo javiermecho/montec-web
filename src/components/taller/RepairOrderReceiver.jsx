@@ -591,9 +591,14 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
     handleSelectIssueType({ id: selectedIssueId }, mod.key);
   };
 
+  // Estado de envío a base de datos
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+
   // Validar y Crear Orden
-  const handleSubmitOrder = (e) => {
+  const handleSubmitOrder = async (e) => {
     e?.preventDefault();
+
+    if (isSubmittingOrder) return;
 
     if (!formData.customer.name.trim()) {
       alert('Por favor, ingresá el nombre del cliente.');
@@ -620,26 +625,35 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
     const totalNum = parseFloat(formData.service.budgetTotal) || 0;
     const depositNum = parseFloat(formData.service.deposit) || 0;
 
-    // Guardar orden
-    const savedOrder = createRepairOrder({
-      customer: formData.customer,
-      device: formData.device,
-      service: {
-        ...formData.service,
-        budgetTotal: totalNum,
-        deposit: depositNum,
-        balanceDue: Math.max(0, totalNum - depositNum),
-        warranty: formData.service.warranty || '90 días de garantía escrita'
-      }
-    });
+    setIsSubmittingOrder(true);
 
-    // Abrir ticket de impresión y comprobante
-    setActiveTicketOrder(savedOrder);
-    setActiveSubModal('ticket_view');
+    try {
+      // Guardar orden (sincroniza con PostgreSQL en Railway y obtiene #MON-XXXX oficial)
+      const savedOrder = await createRepairOrder({
+        customer: formData.customer,
+        device: formData.device,
+        service: {
+          ...formData.service,
+          budgetTotal: totalNum,
+          deposit: depositNum,
+          balanceDue: Math.max(0, totalNum - depositNum),
+          warranty: formData.service.warranty || '90 días de garantía escrita'
+        }
+      });
 
-    // Resetear formulario a nuevo
-    setFormData(initialFormState);
-    setModelSearchQuery('');
+      // Abrir ticket de impresión y comprobante
+      setActiveTicketOrder(savedOrder);
+      setActiveSubModal('ticket_view');
+
+      // Resetear formulario a nuevo
+      setFormData(initialFormState);
+      setModelSearchQuery('');
+    } catch (err) {
+      console.error('Error al generar orden:', err);
+      alert('Ocurrió un inconveniente al generar la orden. Se guardó localmente.');
+    } finally {
+      setIsSubmittingOrder(false);
+    }
   };
 
   // Login de empleados
@@ -1956,10 +1970,22 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full py-3.5 bg-gradient-to-r from-[#FF5500] to-[#E64D00] hover:from-[#FF6600] hover:to-[#FF5500] text-white font-heading font-black rounded-xl text-sm shadow-[0_0_30px_rgba(255,85,0,0.5)] transition-all transform hover:scale-[1.01] active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+                disabled={isSubmittingOrder}
+                className={`w-full py-3.5 bg-gradient-to-r from-[#FF5500] to-[#E64D00] hover:from-[#FF6600] hover:to-[#FF5500] text-white font-heading font-black rounded-xl text-sm shadow-[0_0_30px_rgba(255,85,0,0.5)] transition-all transform flex items-center justify-center gap-2 ${
+                  isSubmittingOrder ? 'opacity-70 cursor-not-allowed' : 'hover:scale-[1.01] active:scale-98 cursor-pointer'
+                }`}
               >
-                <Save className="w-4 h-4 fill-white" />
-                <span>GENERAR ORDEN DE SERVICIO (F12)</span>
+                {isSubmittingOrder ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>SINCRONIZANDO CON BASE DE DATOS...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 fill-white" />
+                    <span>GENERAR ORDEN DE SERVICIO (F12)</span>
+                  </>
+                )}
               </button>
             </div>
 

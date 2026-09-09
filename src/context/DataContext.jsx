@@ -16,6 +16,7 @@ import {
   getGuildBateriaCost,
   getGuildTapaCost
 } from '../data/iphonePricingData';
+import { api } from '../services/api';
 
 const DataContext = createContext(null);
 
@@ -295,6 +296,83 @@ export function DataProvider({ children }) {
     return () => clearInterval(interval);
   }, []);
 
+  // 6.1 Monitoreo de Conexión con Railway / PostgreSQL
+  const [serverStatus, setServerStatus] = useState('checking'); // 'checking' | 'online' | 'offline'
+  const [serverHealth, setServerHealth] = useState(null);
+
+  const syncWithServer = async (silent = false) => {
+    try {
+      if (!silent) setServerStatus('checking');
+      const health = await api.checkServerHealth();
+      
+      if (health && health.status === 'online') {
+        setServerStatus('online');
+        setServerHealth(health);
+
+        // 1. Sincronizar órdenes desde PostgreSQL en segundo plano
+        try {
+          const remoteOrders = await api.getOrdenes();
+          if (Array.isArray(remoteOrders) && remoteOrders.length > 0) {
+            setOrders(prev => {
+              // Combinamos preservando las órdenes remotas como fuente de verdad
+              const merged = [...remoteOrders];
+              // Si hay alguna orden local que aún no esté en la remota, la conservamos
+              prev.forEach(localOrd => {
+                if (!merged.some(m => m.orderNumber === localOrd.orderNumber || m.id === localOrd.id)) {
+                  merged.push(localOrd);
+                }
+              });
+              try {
+                localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(merged));
+              } catch (e) {}
+              return merged;
+            });
+          }
+        } catch (e) {
+          console.warn('⚠️ No se pudieron cargar órdenes de PostgreSQL:', e);
+        }
+
+        // 2. Sincronizar productos de inventario desde PostgreSQL si existen
+        try {
+          const remoteProducts = await api.getProductos();
+          if (Array.isArray(remoteProducts) && remoteProducts.length > 0) {
+            setInventory(prev => {
+              const merged = [...remoteProducts];
+              try {
+                localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(merged));
+              } catch (e) {}
+              return merged;
+            });
+          }
+        } catch (e) {
+          console.warn('⚠️ No se pudo sincronizar inventario de PostgreSQL:', e);
+        }
+
+        return true;
+      } else {
+        setServerStatus('offline');
+        setServerHealth(null);
+        return false;
+      }
+    } catch (err) {
+      setServerStatus('offline');
+      setServerHealth(null);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    syncWithServer();
+    // Verificar estado cada 60 segundos
+    const syncInterval = setInterval(() => syncWithServer(true), 60 * 1000);
+    const handleOnline = () => syncWithServer();
+    window.addEventListener('online', handleOnline);
+    return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, []);
+
   // 7. Reglas de márgenes y mano de obra (Android / Global)
   const [pricingRules, setPricingRules] = useState(() => {
     try {
@@ -388,8 +466,88 @@ export function DataProvider({ children }) {
   };
 
   // --- Operaciones de Órdenes de Reparación ---
-  const createRepairOrder = (orderData) => {
-    // Generar correlativo automático #MON-XXXX
+  const createRepairOrder = async (orderData) => {
+    // 1. Intentar registrar en PostgreSQL mediante Railway si la API está accesible
+    try {
+      const response = await api.createOrden({
+        client: {
+          name: orderData.customer?.name || orderData.client?.name || 'Cliente Mostrador',
+          phone: orderData.customer?.phone || orderData.client?.phone || '',
+          docNumber: orderData.customer?.docNumber || '',
+          docType: orderData.customer?.docType || 'DNI',
+          email: orderData.customer?.email || '',
+          address: orderData.customer?.address || '',
+          internalNotes: orderData.customer?.internalNotes || ''
+        },
+        device: {
+          model: orderData.device?.model || '',
+          brand: orderData.device?.brand || '',
+          type: orderData.device?.type || 'Smartphone',
+          imei: orderData.device?.imei || '',
+          color: orderData.device?.color || '',
+          patternLock: orderData.device?.security?.patternSequence?.join('-') || orderData.device?.patternLock || '',
+          pinLock: orderData.device?.security?.pin || orderData.device?.pinLock || '',
+          security: orderData.device?.security || {},
+          checklist: orderData.device?.checklist || {}
+        },
+        service: {
+          requestedRepair: orderData.service?.requestedRepair || '',
+          issue: orderData.service?.requestedRepair || orderData.service?.issue || '',
+          diagnosis: orderData.service?.diagnosis || '',
+          budgetTotal: parseFloat(orderData.service?.budgetTotal || 0),
+          deposit: parseFloat(orderData.service?.deposit || 0),
+          balanceDue: parseFloat(orderData.service?.balanceDue || 0),
+          warranty: orderData.service?.warranty || '90 días de garantía escrita',
+          status: orderData.status || orderData.service?.status || 'received'
+        },
+        operator: 'Operador Mostrador'
+      });
+
+      if (response && response.success && response.order) {
+        const savedOrder = {
+          ...orderData,
+          id: String(response.order.id),
+          orderNumber: response.order.orderNumber, // Ej: #MON-1042 oficial desde PostgreSQL
+          createdAt: response.order.createdAt || new Date().toISOString(),
+          updatedAt: response.order.updatedAt || new Date().toISOString(),
+          status: response.order.service?.status || 'received',
+          customer: {
+            ...orderData.customer,
+            name: response.order.client?.name || orderData.customer?.name,
+            phone: response.order.client?.phone || orderData.customer?.phone
+          },
+          device: {
+            ...orderData.device,
+            model: response.order.device?.model || orderData.device?.model
+          },
+          service: {
+            ...orderData.service,
+            ...response.order.service
+          },
+          logs: response.order.logs || [
+            {
+              timestamp: new Date().toISOString(),
+              action: 'Recepción e ingreso de orden a taller (PostgreSQL)',
+              status: 'received'
+            }
+          ]
+        };
+
+        setOrders(prev => {
+          const updated = [savedOrder, ...prev];
+          try {
+            localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        });
+
+        return savedOrder;
+      }
+    } catch (apiErr) {
+      console.warn('⚠️ Guardando orden localmente por falla de red con Railway:', apiErr.message);
+    }
+
+    // Fallback a correlativo local si la API estuviera offline o inaccesible
     const nextNumber = orders.reduce((max, o) => {
       const num = parseInt((o.orderNumber || '').replace(/[^0-9]/g, ''), 10);
       return !isNaN(num) && num > max ? num : max;
@@ -406,7 +564,7 @@ export function DataProvider({ children }) {
       logs: [
         {
           timestamp: new Date().toISOString(),
-          action: 'Recepción e ingreso de orden a taller',
+          action: 'Recepción e ingreso de orden a taller (Local)',
           status: orderData.status || 'received'
         }
       ]
@@ -445,6 +603,7 @@ export function DataProvider({ children }) {
   };
 
   const updateRepairOrderStatus = (orderId, newStatus, note = '', extraData = {}) => {
+    // 1. Actualización optimista inmediata en state y localStorage
     setOrders(prev => {
       const updated = prev.map(o => {
         if (o.id !== orderId && o.orderNumber !== orderId) return o;
@@ -470,6 +629,16 @@ export function DataProvider({ children }) {
         console.error('Error actualizando orden:', e);
       }
       return updated;
+    });
+
+    // 2. Notificación en segundo plano a PostgreSQL
+    api.updateOrdenEstado(orderId, {
+      status: newStatus,
+      technicalReport: note,
+      operator: 'Taller Montec',
+      ...extraData
+    }).catch(e => {
+      console.warn('⚠️ No se pudo sincronizar estado con PostgreSQL:', e.message);
     });
   };
 
@@ -514,6 +683,8 @@ export function DataProvider({ children }) {
   const recordOrderPayment = (orderId, paymentAmount, paymentMethod = 'Efectivo', note = '') => {
     const amount = Number(paymentAmount) || 0;
     if (amount <= 0) return;
+
+    // 1. Actualización optimista local
     setOrders(prev => {
       const updated = prev.map(o => {
         if (o.id !== orderId && o.orderNumber !== orderId) return o;
@@ -558,6 +729,15 @@ export function DataProvider({ children }) {
         console.error('Error registrando cobro:', e);
       }
       return updated;
+    });
+
+    // 2. Notificación en segundo plano a PostgreSQL
+    api.updateOrdenPago(orderId, {
+      amount,
+      method: paymentMethod,
+      operator: 'Operador Mostrador'
+    }).catch(e => {
+      console.warn('⚠️ No se pudo sincronizar cobro con PostgreSQL:', e.message);
     });
   };
 
@@ -711,14 +891,26 @@ export function DataProvider({ children }) {
         visibleInWeb: updatedFields.visibleInWeb !== undefined ? Boolean(updatedFields.visibleInWeb) : p.visibleInWeb
       };
     }));
+
+    // Sincronizar con PostgreSQL
+    api.updateProducto(id, updatedFields).catch(e => {
+      console.warn('⚠️ No se pudo sincronizar producto con Railway:', e.message);
+    });
   };
 
   const updateProductStock = (id, amount, isDelta = false) => {
+    let finalStock = 0;
     setInventory(prev => prev.map(p => {
       if (p.id !== id && p.sku !== id) return p;
       const newStock = isDelta ? Math.max(0, (p.stock || 0) + Number(amount)) : Math.max(0, Number(amount));
+      finalStock = newStock;
       return { ...p, stock: newStock };
     }));
+
+    // Sincronizar stock con PostgreSQL
+    api.updateProducto(id, { stock: finalStock }).catch(e => {
+      console.warn('⚠️ No se pudo actualizar stock en Railway:', e.message);
+    });
   };
 
   const deleteProduct = (id) => {
@@ -757,7 +949,7 @@ export function DataProvider({ children }) {
       seller: saleData.seller || 'Mostrador Montec'
     };
 
-    // 1. Descontar stock de cada producto vendido
+    // 1. Descontar stock de cada producto vendido localmente
     if (Array.isArray(saleData.items) && saleData.items.length > 0) {
       setInventory(prev => {
         return prev.map(prod => {
@@ -774,8 +966,21 @@ export function DataProvider({ children }) {
       });
     }
 
-    // 2. Registrar venta en el historial
+    // 2. Registrar venta en el historial local
     setSales(prev => [newSale, ...prev]);
+
+    // 3. Sincronizar venta y descuento atómico de stock en PostgreSQL (Railway)
+    api.createVenta({
+      items: newSale.items,
+      subtotal: newSale.subtotal,
+      discount: newSale.discountAmount,
+      total: newSale.total,
+      paymentMethod: newSale.paymentMethod,
+      customer: newSale.customer,
+      seller: newSale.seller
+    }).catch(e => {
+      console.warn('⚠️ No se pudo registrar venta en PostgreSQL:', e.message);
+    });
 
     return newSale;
   };
@@ -1286,6 +1491,10 @@ export function DataProvider({ children }) {
       recordOrderPayment,
       deleteRepairOrder,
       searchClients,
+      serverStatus,
+      serverHealth,
+      refreshConnection: syncWithServer,
+      api,
       panelTheme,
       togglePanelTheme,
       setPanelTheme

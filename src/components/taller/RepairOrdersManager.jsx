@@ -123,11 +123,20 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     addOrderInternalNote,
     recordOrderPayment,
     deleteRepairOrder,
+    refreshConnection,
+    serverStatus,
     panelTheme,
     togglePanelTheme
   } = useData();
 
   const isLight = panelTheme === 'light';
+
+  // Sincronizar órdenes desde PostgreSQL en Railway al abrir el gestor
+  useEffect(() => {
+    if (typeof refreshConnection === 'function') {
+      refreshConnection();
+    }
+  }, []);
 
   // Estados de vista y filtrado
   const [searchTerm, setSearchTerm] = useState('');

@@ -13,10 +13,54 @@ const PORT = process.env.PORT || 5000;
 // Middlewares
 app.use(cors({
   origin: '*', // Permite solicitudes desde montec.ar en Hostinger o localhost
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-scraper-key']
 }));
 app.use(express.json());
+
+// Helper para formatear ordenes de DB a estructura frontend
+const mapDbOrderToFrontend = (row) => ({
+  id: row.id,
+  orderNumber: row.order_number,
+  client: {
+    name: row.client_name,
+    phone: row.client_phone,
+    ...(row.client_data || {})
+  },
+  device: {
+    model: row.device_model,
+    type: row.device_type,
+    ...(row.device_data || {})
+  },
+  service: {
+    status: row.status,
+    budgetTotal: parseFloat(row.budget_total || 0),
+    deposit: parseFloat(row.deposit || 0),
+    balanceDue: parseFloat(row.balance_due || 0),
+    ...(row.service_data || {})
+  },
+  payments: row.payments || [],
+  logs: row.logs || [],
+  createdAt: row.created_at,
+  updatedAt: row.updated_at
+});
+
+// Helper para formatear productos
+const mapDbProductToFrontend = (row) => ({
+  id: row.id,
+  sku: row.sku,
+  barcode: row.barcode,
+  name: row.name,
+  category: row.category,
+  compatible: row.compatible,
+  costPrice: parseFloat(row.cost_price || 0),
+  price: parseFloat(row.price || 0),
+  stock: parseInt(row.stock || 0, 10),
+  minStock: parseInt(row.min_stock || 3, 10),
+  visibleInWeb: row.visible_in_web !== false,
+  image: row.image,
+  badge: row.badge
+});
 
 // 1. Healthcheck para Railway y monitoreo
 app.get('/api/health', async (req, res) => {
@@ -34,151 +78,454 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
-// 2. Endpoint: Listado de repuestos con filtros (marca, modelo, categoría)
-app.get('/api/repuestos', async (req, res) => {
-  const { brand, model, category, inStock } = req.query;
+// ==========================================
+// 2. ENDPOINTS DE ÓRDENES DE TALLER
+// ==========================================
+
+// Listar órdenes (con filtros opcionales de status o search)
+app.get('/api/orders', async (req, res) => {
+  const { status, search } = req.query;
   const dbConnected = await isDbConnected();
 
   if (!dbConnected) {
-    // Fallback con datos estáticos si la base de datos aún no fue enlazada en Railway
     return res.json({
-      source: 'fallback_memory',
-      message: 'Base de datos en modo fallback. Configura DATABASE_URL en Railway para sincronización persistente.',
-      data: [
-        { brand: 'Apple', model: 'iPhone 11', category: 'pantalla', final_price: 55000, in_stock: true },
-        { brand: 'Apple', model: 'iPhone 12', category: 'pantalla', final_price: 85000, in_stock: true },
-        { brand: 'Apple', model: 'iPhone 11', category: 'bateria', final_price: 38000, in_stock: true },
-        { brand: 'Samsung', model: 'Galaxy A54 5G', category: 'pantalla', final_price: 64000, in_stock: true },
-        { brand: 'Motorola', model: 'Moto G84 5G', category: 'pin_carga', final_price: 22000, in_stock: true }
-      ]
+      source: 'offline_memory',
+      orders: []
     });
   }
 
   try {
-    let sql = 'SELECT * FROM replacement_parts WHERE 1=1';
+    let sql = 'SELECT * FROM repair_orders WHERE 1=1';
     const params = [];
     let counter = 1;
 
-    if (brand) {
-      sql += ` AND LOWER(brand) = LOWER($${counter++})`;
-      params.push(brand);
+    if (status && status !== 'all') {
+      sql += ` AND status = $${counter++}`;
+      params.push(status);
     }
-    if (model) {
-      sql += ` AND LOWER(normalized_model) LIKE LOWER($${counter++})`;
-      params.push(`%${model}%`);
+    if (search) {
+      sql += ` AND (LOWER(order_number) LIKE LOWER($${counter}) OR LOWER(client_name) LIKE LOWER($${counter}) OR LOWER(device_model) LIKE LOWER($${counter}) OR client_phone LIKE $${counter})`;
+      params.push(`%${search}%`);
+      counter++;
     }
-    if (category) {
+
+    sql += ' ORDER BY created_at DESC';
+
+    const result = await query(sql, params);
+    const orders = result.rows.map(mapDbOrderToFrontend);
+
+    res.json({
+      success: true,
+      count: orders.length,
+      orders
+    });
+  } catch (error) {
+    console.error('❌ Error al consultar órdenes:', error);
+    res.status(500).json({ error: 'Error al consultar órdenes en PostgreSQL', details: error.message });
+  }
+});
+
+// Obtener orden individual por ID o OrderNumber
+app.get('/api/orders/:id', async (req, res) => {
+  const { id } = req.params;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    const isNum = !isNaN(parseInt(id, 10)) && String(parseInt(id, 10)) === id;
+    const sql = isNum 
+      ? 'SELECT * FROM repair_orders WHERE id = $1 LIMIT 1'
+      : 'SELECT * FROM repair_orders WHERE LOWER(order_number) = LOWER($1) LIMIT 1';
+
+    const result = await query(sql, [id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Orden no encontrada' });
+    }
+
+    res.json({
+      success: true,
+      order: mapDbOrderToFrontend(result.rows[0])
+    });
+  } catch (error) {
+    console.error('❌ Error al buscar orden:', error);
+    res.status(500).json({ error: 'Error al buscar orden en la base de datos' });
+  }
+});
+
+// Crear nueva orden de reparación (genera #MON-XXXX con secuencia en PostgreSQL)
+app.post('/api/orders', async (req, res) => {
+  const data = req.body;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos PostgreSQL en Railway no conectada' });
+  }
+
+  try {
+    // Si no trae número oficial de orden, se genera correlativo desde la secuencia de DB
+    let orderNumber = data.orderNumber;
+    if (!orderNumber || !orderNumber.startsWith('#MON-')) {
+      const seqRes = await query("SELECT nextval('repair_order_seq') AS next_num");
+      const nextNum = seqRes.rows[0]?.next_num || (1040 + Math.floor(Math.random() * 500));
+      orderNumber = `#MON-${nextNum}`;
+    }
+
+    const clientName = data.client?.name || data.clientName || 'Cliente Mostrador';
+    const clientPhone = data.client?.phone || data.clientPhone || '';
+    const deviceModel = data.device?.model || data.deviceModel || 'Dispositivo';
+    const deviceType = data.device?.type || data.deviceType || 'Smartphone';
+    const status = data.service?.status || data.status || 'received';
+    const budgetTotal = parseFloat(data.service?.budgetTotal ?? data.budgetTotal ?? 0);
+    const deposit = parseFloat(data.service?.deposit ?? data.deposit ?? 0);
+    const balanceDue = budgetTotal - deposit;
+
+    const clientData = data.client || {};
+    const deviceData = data.device || {};
+    const serviceData = {
+      issue: data.service?.issue || data.issue || '',
+      diagnosis: data.service?.diagnosis || '',
+      patternLock: data.device?.patternLock || data.patternLock || '',
+      pinLock: data.device?.pinLock || data.pinLock || '',
+      ...(data.service || {})
+    };
+
+    const initialPayments = data.payments || (deposit > 0 ? [{
+      id: `PAY-${Date.now()}`,
+      date: new Date().toISOString(),
+      type: 'seña',
+      amount: deposit,
+      method: data.paymentMethod || 'Efectivo',
+      receiver: data.operator || 'Operador Mostrador'
+    }] : []);
+
+    const initialLogs = data.logs || [{
+      date: new Date().toISOString(),
+      action: 'Orden Ingresada',
+      details: `Equipo recibido: ${deviceModel} (${serviceData.issue || 'Sin falla especificada'}). Seña: $${deposit}.`,
+      user: data.operator || 'Operador Mostrador'
+    }];
+
+    const insertSql = `
+      INSERT INTO repair_orders (
+        order_number, client_name, client_phone, device_model, device_type,
+        status, budget_total, deposit, balance_due,
+        client_data, device_data, service_data, payments, logs
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+      ) RETURNING *;
+    `;
+
+    const values = [
+      orderNumber, clientName, clientPhone, deviceModel, deviceType,
+      status, budgetTotal, deposit, balanceDue,
+      JSON.stringify(clientData), JSON.stringify(deviceData), JSON.stringify(serviceData),
+      JSON.stringify(initialPayments), JSON.stringify(initialLogs)
+    ];
+
+    const result = await query(insertSql, values);
+    const createdOrder = mapDbOrderToFrontend(result.rows[0]);
+
+    console.log(`✅ Orden ${createdOrder.orderNumber} creada exitosamente en PostgreSQL`);
+    res.status(201).json({
+      success: true,
+      message: 'Orden creada exitosamente',
+      order: createdOrder
+    });
+  } catch (error) {
+    console.error('❌ Error al crear orden en PostgreSQL:', error);
+    res.status(500).json({ error: 'Error al registrar orden en la base de datos', details: error.message });
+  }
+});
+
+// Actualizar estado e informe técnico de una orden
+app.patch('/api/orders/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status, technicalReport, operator, internalNotes } = req.body;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    // 1. Obtener orden existente
+    const existingRes = await query('SELECT * FROM repair_orders WHERE id = $1 OR order_number = $1 LIMIT 1', [id]);
+    if (existingRes.rowCount === 0) {
+      return res.status(404).json({ error: 'Orden no encontrada' });
+    }
+
+    const currentOrder = existingRes.rows[0];
+    const updatedServiceData = {
+      ...(currentOrder.service_data || {}),
+      technicalReport: technicalReport || currentOrder.service_data?.technicalReport,
+      internalNotes: internalNotes || currentOrder.service_data?.internalNotes
+    };
+
+    const currentLogs = Array.isArray(currentOrder.logs) ? currentOrder.logs : [];
+    const newLog = {
+      date: new Date().toISOString(),
+      action: `Cambio de Estado a: ${status}`,
+      details: technicalReport || 'Estado actualizado desde panel de taller',
+      user: operator || 'Taller Montec'
+    };
+    const updatedLogs = [newLog, ...currentLogs];
+
+    const updateSql = `
+      UPDATE repair_orders 
+      SET status = $1, service_data = $2, logs = $3, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4
+      RETURNING *;
+    `;
+
+    const result = await query(updateSql, [
+      status, 
+      JSON.stringify(updatedServiceData), 
+      JSON.stringify(updatedLogs), 
+      currentOrder.id
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Estado de orden actualizado',
+      order: mapDbOrderToFrontend(result.rows[0])
+    });
+  } catch (error) {
+    console.error('❌ Error al actualizar estado de orden:', error);
+    res.status(500).json({ error: 'Error al actualizar estado en la base de datos' });
+  }
+});
+
+// Registrar pago / seña o cobro de saldo
+app.patch('/api/orders/:id/payments', async (req, res) => {
+  const { id } = req.params;
+  const { amount, method, operator, isFinalPayment } = req.body;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    const existingRes = await query('SELECT * FROM repair_orders WHERE id = $1 OR order_number = $1 LIMIT 1', [id]);
+    if (existingRes.rowCount === 0) {
+      return res.status(404).json({ error: 'Orden no encontrada' });
+    }
+
+    const currentOrder = existingRes.rows[0];
+    const payAmount = parseFloat(amount || 0);
+    const newBalance = Math.max(0, parseFloat(currentOrder.balance_due || 0) - payAmount);
+    
+    const currentPayments = Array.isArray(currentOrder.payments) ? currentOrder.payments : [];
+    const newPayment = {
+      id: `PAY-${Date.now()}`,
+      date: new Date().toISOString(),
+      type: isFinalPayment ? 'saldo_final' : 'pago_parcial',
+      amount: payAmount,
+      method: method || 'Efectivo',
+      receiver: operator || 'Operador Mostrador'
+    };
+    const updatedPayments = [...currentPayments, newPayment];
+
+    const currentLogs = Array.isArray(currentOrder.logs) ? currentOrder.logs : [];
+    const newLog = {
+      date: new Date().toISOString(),
+      action: isFinalPayment ? 'Cobro Final Registrado' : 'Pago Registrado',
+      details: `Cobro de $${payAmount.toLocaleString('es-AR')} por ${method || 'Efectivo'}. Saldo restante: $${newBalance.toLocaleString('es-AR')}.`,
+      user: operator || 'Operador Mostrador'
+    };
+    const updatedLogs = [newLog, ...currentLogs];
+
+    let newStatus = currentOrder.status;
+    if (isFinalPayment && newBalance === 0 && newStatus !== 'delivered') {
+      newStatus = 'delivered';
+    }
+
+    const updateSql = `
+      UPDATE repair_orders 
+      SET balance_due = $1, status = $2, payments = $3, logs = $4, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $5
+      RETURNING *;
+    `;
+
+    const result = await query(updateSql, [
+      newBalance,
+      newStatus,
+      JSON.stringify(updatedPayments),
+      JSON.stringify(updatedLogs),
+      currentOrder.id
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Pago registrado exitosamente',
+      order: mapDbOrderToFrontend(result.rows[0])
+    });
+  } catch (error) {
+    console.error('❌ Error al registrar pago de orden:', error);
+    res.status(500).json({ error: 'Error al registrar pago en la base de datos' });
+  }
+});
+
+// ==========================================
+// 3. ENDPOINTS DE INVENTARIO Y PRODUCTOS
+// ==========================================
+
+// Listar productos de inventario
+app.get('/api/inventory', async (req, res) => {
+  const { category, inStockOnly } = req.query;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.json({
+      source: 'offline_memory',
+      products: []
+    });
+  }
+
+  try {
+    let sql = 'SELECT * FROM inventory WHERE 1=1';
+    const params = [];
+    let counter = 1;
+
+    if (category && category !== 'Todos') {
       sql += ` AND LOWER(category) = LOWER($${counter++})`;
       params.push(category);
     }
-    if (inStock !== undefined) {
-      sql += ` AND in_stock = $${counter++}`;
-      params.push(inStock === 'true');
+    if (inStockOnly === 'true') {
+      sql += ' AND stock > 0';
     }
 
-    sql += ' ORDER BY final_price ASC LIMIT 100';
+    sql += ' ORDER BY category ASC, name ASC';
 
     const result = await query(sql, params);
+    const products = result.rows.map(mapDbProductToFrontend);
+
     res.json({
-      source: 'postgresql_railway',
-      count: result.rowCount,
-      data: result.rows
+      success: true,
+      count: products.length,
+      products
     });
   } catch (error) {
-    console.error('❌ Error al consultar repuestos:', error);
-    res.status(500).json({ error: 'Error al consultar repuestos en la base de datos' });
+    console.error('❌ Error al consultar inventario:', error);
+    res.status(500).json({ error: 'Error al consultar inventario en PostgreSQL' });
   }
 });
 
-// 3. Endpoint: Cotizador inteligente de reparación
-app.post('/api/cotizar', async (req, res) => {
-  const { deviceType, brand, model, issueType } = req.body;
-
-  if (!model || !issueType) {
-    return res.status(400).json({ error: 'Faltan parámetros requeridos: model y issueType' });
-  }
-
-  const normalized = normalizeModelName(model);
+// Actualizar stock o detalles de producto
+app.patch('/api/inventory/:id', async (req, res) => {
+  const { id } = req.params;
+  const { stock, price, costPrice, name, category } = req.body;
   const dbConnected = await isDbConnected();
 
-  let estimatedMin = 25000;
-  let estimatedMax = 45000;
-  let duration = '45 a 60 minutos en el acto';
-  let warranty = '90 días de garantía escrita';
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
 
-  // Si la base de datos está conectada, consultamos el repuesto real del scraper
-  if (dbConnected) {
-    try {
-      const partQuery = await query(`
-        SELECT final_price, in_stock, category 
-        FROM replacement_parts 
-        WHERE LOWER(normalized_model) LIKE LOWER($1) 
-        ORDER BY final_price ASC 
-        LIMIT 1
-      `, [`%${normalized.model}%`]);
+  try {
+    const fields = [];
+    const params = [];
+    let counter = 1;
 
-      if (partQuery.rowCount > 0) {
-        const baseCost = parseFloat(partQuery.rows[0].final_price);
-        estimatedMin = Math.round((baseCost * 0.95) / 500) * 500;
-        estimatedMax = Math.round((baseCost * 1.15) / 500) * 500;
-      }
-
-      // Registro analítico de la cotización
-      await query(`
-        INSERT INTO quotations_log (device_type, brand, model_name, issue_type, estimated_min, estimated_max)
-        VALUES ($1, $2, $3, $4, $5, $6)
-      `, [deviceType || 'smartphone', normalized.brand, normalized.model, issueType, estimatedMin, estimatedMax]);
-
-    } catch (e) {
-      console.warn('⚠️ No se pudo registrar cotización en DB:', e.message);
+    if (stock !== undefined) {
+      fields.push(`stock = $${counter++}`);
+      params.push(parseInt(stock, 10));
     }
-  }
+    if (price !== undefined) {
+      fields.push(`price = $${counter++}`);
+      params.push(parseFloat(price));
+    }
+    if (costPrice !== undefined) {
+      fields.push(`cost_price = $${counter++}`);
+      params.push(parseFloat(costPrice));
+    }
+    if (name) {
+      fields.push(`name = $${counter++}`);
+      params.push(name);
+    }
+    if (category) {
+      fields.push(`category = $${counter++}`);
+      params.push(category);
+    }
 
-  // Tiempos según falla
-  if (issueType.includes('motherboard') || issueType.includes('placa')) {
-    duration = '24 a 48 hs (Laboratorio Técnico)';
-    estimatedMin += 25000;
-    estimatedMax += 45000;
-  }
+    fields.push('updated_at = CURRENT_TIMESTAMP');
+    params.push(id);
 
-  res.json({
-    success: true,
-    device: {
-      type: deviceType,
-      brand: normalized.brand,
-      model: normalized.model
-    },
-    issue: issueType,
-    estimate: {
-      min: estimatedMin,
-      max: estimatedMax,
-      currency: 'ARS',
-      formatted: `$${estimatedMin.toLocaleString('es-AR')} a $${estimatedMax.toLocaleString('es-AR')}`
-    },
-    duration,
-    warranty,
-    location: 'Montes Carballo 943, Mar del Plata'
-  });
+    const sql = `UPDATE inventory SET ${fields.join(', ')} WHERE id = $${counter} RETURNING *;`;
+    const result = await query(sql, params);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+
+    res.json({
+      success: true,
+      product: mapDbProductToFrontend(result.rows[0])
+    });
+  } catch (error) {
+    console.error('❌ Error al actualizar producto:', error);
+    res.status(500).json({ error: 'Error al actualizar producto' });
+  }
 });
 
-// 4. Endpoint: Disparador del Scraper de Distribuidores de Mar del Plata
-app.post('/api/scraper/trigger', async (req, res) => {
-  const secret = req.headers['x-scraper-key'] || req.body?.secretKey;
-  const expectedSecret = process.env.SCRAPER_SECRET_KEY || 'montec_mdp_secret_scrape_2026';
+// ==========================================
+// 4. ENDPOINTS DE VENTAS (POS)
+// ==========================================
 
-  if (secret !== expectedSecret) {
-    return res.status(401).json({ error: 'No autorizado. Provee el header x-scraper-key correcto.' });
+// Registrar venta y descontar stock automáticamente
+app.post('/api/sales', async (req, res) => {
+  const { items, subtotal, discount, total, paymentMethod, customer, seller } = req.body;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
   }
 
-  // Ejecución en segundo plano o sincrónica
   try {
-    const result = await runScraperSync();
-    res.json({
-      message: 'Scraper ejecutado exitosamente',
-      result
+    // Generar ticket correlativo
+    const ticketNumber = `TKT-${Date.now().toString().slice(-6)}`;
+    
+    // Inserción de venta
+    const insertSaleSql = `
+      INSERT INTO sales (ticket_number, items, subtotal, discount, total, payment_method, customer_data, seller)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING *;
+    `;
+
+    const saleResult = await query(insertSaleSql, [
+      ticketNumber,
+      JSON.stringify(items || []),
+      parseFloat(subtotal || total || 0),
+      parseFloat(discount || 0),
+      parseFloat(total || 0),
+      paymentMethod || 'Efectivo',
+      JSON.stringify(customer || {}),
+      seller || 'Mostrador Montec'
+    ]);
+
+    // Descontar stock de cada producto vendido
+    if (Array.isArray(items)) {
+      for (const item of items) {
+        if (item.id || item.sku) {
+          await query(`
+            UPDATE inventory 
+            SET stock = GREATEST(0, stock - $1), updated_at = CURRENT_TIMESTAMP 
+            WHERE id = $2 OR sku = $3
+          `, [item.quantity || 1, item.id || null, item.sku || null]);
+        }
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Venta registrada y stock actualizado con éxito',
+      sale: saleResult.rows[0]
     });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error('❌ Error al registrar venta:', error);
+    res.status(500).json({ error: 'Error al registrar venta en la base de datos', details: error.message });
   }
 });
 

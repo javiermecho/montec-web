@@ -42,7 +42,9 @@ export default function OperatorCockpit({ onClose }) {
     setIsAdminOpen, 
     setIsTallerOpen,
     panelTheme,
-    togglePanelTheme
+    togglePanelTheme,
+    serverStatus,
+    refreshConnection
   } = useData();
 
   const isLight = panelTheme === 'light';
@@ -168,6 +170,35 @@ export default function OperatorCockpit({ onClose }) {
             <span className="text-zinc-400">Dólar Blue:</span>
             <span className="font-mono font-bold text-white">${dolarRate?.toLocaleString('es-AR')}</span>
           </div>
+
+          {/* Indicador de Conexión Servidor Central (Railway / PostgreSQL) */}
+          <button
+            type="button"
+            onClick={() => refreshConnection?.()}
+            title={serverStatus === 'online' ? '🟢 Conectado con base de datos PostgreSQL en Railway' : '🔴 Servidor no detectado. Clic para reintentar conexión'}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+              serverStatus === 'online'
+                ? 'bg-emerald-950/40 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/50 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                : serverStatus === 'checking'
+                ? 'bg-amber-950/40 text-amber-300 border-amber-500/40 animate-pulse'
+                : 'bg-rose-950/40 text-rose-300 border-rose-500/40 hover:bg-rose-900/50'
+            }`}
+          >
+            <span className={`w-2 h-2 rounded-full ${
+              serverStatus === 'online'
+                ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]'
+                : serverStatus === 'checking'
+                ? 'bg-amber-400'
+                : 'bg-rose-500'
+            }`} />
+            <span>
+              {serverStatus === 'online'
+                ? '🟢 Conectado a Servidor Central (Railway)'
+                : serverStatus === 'checking'
+                ? '🟡 Verificando Servidor...'
+                : '🔴 Sin Conexión (Modo Local)'}
+            </span>
+          </button>
         </div>
 
         {/* Derecha: Botón Tema + Panel Admin + Cerrar Sesión */}

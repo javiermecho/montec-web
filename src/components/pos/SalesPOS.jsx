@@ -41,8 +41,15 @@ const MONTEC_ADDRESS = 'Montes Carballo 943, Mar del Plata';
 const MONTEC_PHONE = '5492235000000';
 
 export default function SalesPOS() {
-  const { inventory, recordStock, recordSale, panelTheme } = useData();
+  const { inventory, recordStock, recordSale, refreshConnection, panelTheme } = useData();
   const isLight = panelTheme === 'light';
+
+  // Consultar productos y stock actualizado desde PostgreSQL en Railway al ingresar al POS
+  useEffect(() => {
+    if (typeof refreshConnection === 'function') {
+      refreshConnection();
+    }
+  }, []);
 
   // --- Estados del Buscador y Catálogo ---
   const [searchTerm, setSearchTerm] = useState('');
