@@ -26,11 +26,11 @@ const mapDbOrderToFrontend = (row) => {
     ...(row.client_data || {})
   };
   const serviceObj = {
+    ...(row.service_data || {}),
     status: row.status,
     budgetTotal: parseFloat(row.budget_total || 0),
     deposit: parseFloat(row.deposit || 0),
-    balanceDue: parseFloat(row.balance_due || 0),
-    ...(row.service_data || {})
+    balanceDue: parseFloat(row.balance_due || 0)
   };
   return {
     id: row.id,
@@ -272,6 +272,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     const currentOrder = existingRes.rows[0];
     const updatedServiceData = {
       ...(currentOrder.service_data || {}),
+      status: status,
       technicalReport: technicalReport || currentOrder.service_data?.technicalReport,
       internalNotes: internalNotes || currentOrder.service_data?.internalNotes
     };
