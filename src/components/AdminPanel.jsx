@@ -41,6 +41,7 @@ import PartsSearchTab from './admin/PartsSearchTab';
 import AnalyticsTab from './admin/AnalyticsTab';
 import RepairOrdersManager from './taller/RepairOrdersManager';
 import SalesPOS from './pos/SalesPOS';
+import CommercialInvoicePOS from './pos/CommercialInvoicePOS';
 import InventoryManager from './inventory/InventoryManager';
 import DailySalesTab from './admin/DailySalesTab';
 
@@ -497,7 +498,7 @@ export default function AdminPanel() {
         {/* PESTAÑA: PUNTO DE VENTA (POS DE MOSTRADOR)                     */}
         {/* ============================================================== */}
         {activeTab === 'pos' && (
-          <SalesPOS />
+          <CommercialInvoicePOS onOpenDailyCash={() => setActiveTab('sales')} onClose={() => setActiveTab('models')} />
         )}
 
         {/* ============================================================== */}

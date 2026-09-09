@@ -42,11 +42,14 @@ import {
   Banknote,
   RotateCcw,
   Sun,
-  Moon
+  Moon,
+  Wallet,
+  Receipt
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { PatternThumbnail } from './PatternLockInput';
 import OrderTicketModal from './OrderTicketModal';
+import DailySalesTab from '../admin/DailySalesTab';
 
 // CONFIGURACIÓN DE ESTADOS TÉCNICOS (ESTILO SISTROFIX PROFESIONAL)
 export const STATUS_CONFIG = {
@@ -134,7 +137,7 @@ export const WORKSHOP_TABS = [
   { key: 'delivered', shortLabel: 'Entregados', config: STATUS_CONFIG.delivered },
 ];
 
-export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose, isEmbedded = false, onDeliverOrder = null }) {
+export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose, isEmbedded = false, onDeliverOrder = null, onOpenDailyCash = null }) {
   const { 
     orders, 
     updateRepairOrder,
@@ -162,6 +165,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [ticketModalOrder, setTicketModalOrder] = useState(null);
+  const [isDailyCashModalOpen, setIsDailyCashModalOpen] = useState(false);
 
   // Estados del Drawer / Detalle de Orden
   const [activeTab, setActiveTab] = useState('summary'); // 'summary', 'technician', 'notes', 'history'
@@ -2112,6 +2116,17 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
               )}
             </button>
 
+            {/* Botón de Acceso a Caja Diaria */}
+            <button
+              type="button"
+              onClick={onOpenDailyCash ? onOpenDailyCash : () => setIsDailyCashModalOpen(true)}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all cursor-pointer active:scale-95"
+              title="Consultar Caja Diaria, cobros y ventas del día"
+            >
+              <Wallet className="w-4 h-4" />
+              <span className="hidden sm:inline">Caja Diaria</span>
+            </button>
+
             {onNewOrder && (
               <button
                 type="button"
@@ -2150,6 +2165,34 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
           order={ticketModalOrder}
           onClose={() => setTicketModalOrder(null)}
         />
+      )}
+
+      {/* MODAL DE CAJA DIARIA FLOTANTE EN TALLER */}
+      {isDailyCashModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-[#121218] border border-zinc-700 rounded-2xl w-full max-w-5xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-[#161620]">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Caja Diaria & Movimientos de Mostrador</h3>
+                  <p className="text-[11px] text-zinc-400">Control de ingresos por reparaciones, facturas, remitos y medios de pago</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsDailyCashModalOpen(false)} 
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+              <DailySalesTab />
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

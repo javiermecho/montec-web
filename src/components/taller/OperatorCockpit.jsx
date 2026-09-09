@@ -22,13 +22,17 @@ import {
   ChevronRight,
   Sun,
   Moon,
-  Store
+  Store,
+  Wallet,
+  Receipt
 } from 'lucide-react';
 import MontecLogo from '../MontecLogo';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
 import RepairOrdersManager from './RepairOrdersManager';
 import SalesPOS from '../pos/SalesPOS';
+import CommercialInvoicePOS from '../pos/CommercialInvoicePOS';
+import DailySalesTab from '../admin/DailySalesTab';
 import PartsSearchTab from '../admin/PartsSearchTab';
 import RepairOrderReceiver from './RepairOrderReceiver';
 import UnifiedDeliveryModal from './UnifiedDeliveryModal';
@@ -80,6 +84,9 @@ export default function OperatorCockpit({ onClose }) {
       if (e.key === 'F12') {
         e.preventDefault();
         setIsNewOrderOpen(prev => !prev);
+      } else if (e.key === 'F8') {
+        e.preventDefault();
+        setActiveTab('daily_cash');
       } else if (e.key === 'F9') {
         e.preventDefault();
         setActiveTab('orders');
@@ -310,6 +317,22 @@ export default function OperatorCockpit({ onClose }) {
             </span>
           </button>
 
+          {/* F8: CAJA DIARIA & VENTAS */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('daily_cash')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0 ${activeTab === 'daily_cash'
+                ? 'bg-zinc-800 text-white border border-emerald-500/50 shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent'
+              }`}
+          >
+            <Wallet className="w-4 h-4 text-emerald-400" />
+            <span>Caja Diaria</span>
+            <span className="px-1.5 py-0.5 rounded bg-zinc-900 text-[10px] font-mono text-zinc-400 border border-zinc-700">
+              F8
+            </span>
+          </button>
+
           {/* F11: PRESUPUESTAR & REPUESTOS */}
           <button
             type="button"
@@ -351,14 +374,25 @@ export default function OperatorCockpit({ onClose }) {
               isEmbedded={true}
               onNewOrder={() => setIsNewOrderOpen(true)}
               onDeliverOrder={(order) => setDeliveryOrder(order)}
+              onOpenDailyCash={() => setActiveTab('daily_cash')}
             />
           </div>
         )}
 
-        {/* PESTAÑA F10: PUNTO DE VENTA (POS DE MOSTRADOR) */}
+        {/* PESTAÑA F10: FACTURACIÓN & PUNTO DE VENTA (ESTILO SISTROFIX) */}
         {activeTab === 'pos' && (
           <div className="space-y-4">
-            <SalesPOS />
+            <CommercialInvoicePOS
+              onOpenDailyCash={() => setActiveTab('daily_cash')}
+              onClose={() => setActiveTab('orders')}
+            />
+          </div>
+        )}
+
+        {/* PESTAÑA F8: CAJA DIARIA & COMPROBANTES DE MOSTRADOR */}
+        {activeTab === 'daily_cash' && (
+          <div className="space-y-4">
+            <DailySalesTab />
           </div>
         )}
 
