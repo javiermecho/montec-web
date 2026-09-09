@@ -305,7 +305,7 @@ export function DataProvider({ children }) {
       if (!silent) setServerStatus('checking');
       const health = await api.checkServerHealth();
       
-      if (health && health.status === 'online') {
+      if (health && (health.online || health.status === 'online')) {
         setServerStatus('online');
         setServerHealth(health);
 

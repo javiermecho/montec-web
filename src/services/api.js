@@ -90,6 +90,7 @@ export async function checkServerHealth() {
   if (res.success && res.data) {
     return {
       online: true,
+      status: 'online',
       database: res.data.database?.connected ?? true,
       service: res.data.service || 'online',
       data: res.data
@@ -97,6 +98,7 @@ export async function checkServerHealth() {
   }
   return {
     online: false,
+    status: 'offline',
     database: false,
     error: res.error
   };
