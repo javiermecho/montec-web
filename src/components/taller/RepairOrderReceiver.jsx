@@ -40,6 +40,7 @@ import {
   Moon
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
 import { searchPartsForRepair, generateQuickSupplierLinks, detectPartCategory } from '../../services/partsSearchService';
 import PatternLockInput from './PatternLockInput';
 import OrderTicketModal from './OrderTicketModal';
@@ -47,6 +48,7 @@ import RepairOrdersManager from './RepairOrdersManager';
 import CostBreakdownModal from './CostBreakdownModal';
 
 export default function RepairOrderReceiver({ forceOpen = false, onClose = null }) {
+  const auth = useAuth();
   const { 
     isTallerOpen, 
     setIsTallerOpen, 
@@ -677,8 +679,11 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
 
   if (!isTallerOpen && !forceOpen) return null;
 
-  // 1. PANTALLA DE LOGIN SI NO ESTÁ AUTENTICADO COMO EMPLEADO
-  if (!isEmployeeAuthenticated) {
+  // Si ya está autenticado en la sesión (por PIN 1234 o Admin) o se invoca desde el Cockpit, NUNCA pedir clave
+  const isAlreadyAuthenticated = Boolean(auth?.isAuthenticated || isEmployeeAuthenticated || forceOpen);
+
+  // 1. PANTALLA DE LOGIN SI NO ESTÁ AUTENTICADO
+  if (!isAlreadyAuthenticated) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
         <div className="bg-[#141416] border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-[0_0_50px_rgba(255,85,0,0.3)] relative">
