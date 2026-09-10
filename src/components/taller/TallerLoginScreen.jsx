@@ -10,15 +10,18 @@ import {
   Smartphone, 
   Store, 
   Check, 
-  ExternalLink 
+  ExternalLink,
+  Download
 } from 'lucide-react';
 import MontecLogo from '../MontecLogo';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 export default function TallerLoginScreen({ onCancel }) {
   const { login, isTallerSubdomain } = useAuth();
   const { loginAdmin, setIsAdminOpen, setIsAdminAuthenticated } = useData();
+  const { isInstalled, installApp } = usePWAInstall();
   
   const [selectedRole, setSelectedRole] = useState('operador'); // 'operador' | 'admin'
   const [pinInput, setPinInput] = useState('');
@@ -163,6 +166,21 @@ export default function TallerLoginScreen({ onCancel }) {
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
+
+          {/* BOTÓN INSTALAR EN ESCRITORIO (PWA) */}
+          {!isInstalled && (
+            <div className="pt-3 border-t border-zinc-800/60">
+              <button
+                type="button"
+                onClick={installApp}
+                className="w-full py-2.5 px-3 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700/80 hover:border-[#FF5500]/60 text-zinc-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm group hover:shadow-[0_0_15px_rgba(255,85,0,0.25)]"
+                title="Instalar montec Taller como Aplicación en el Escritorio"
+              >
+                <Download className="w-4 h-4 text-[#FF5500] group-hover:scale-110 transition-transform" />
+                <span>Instalar montec Taller en el Escritorio</span>
+              </button>
+            </div>
+          )}
 
           {/* ACCIÓN SECUNDARIA */}
           {onCancel && (

@@ -24,11 +24,13 @@ import {
   Moon,
   Store,
   Wallet,
-  Receipt
+  Receipt,
+  Download
 } from 'lucide-react';
 import MontecLogo from '../MontecLogo';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 import RepairOrdersManager from './RepairOrdersManager';
 import SalesPOS from '../pos/SalesPOS';
 import CommercialInvoicePOS from '../pos/CommercialInvoicePOS';
@@ -39,6 +41,7 @@ import UnifiedDeliveryModal from './UnifiedDeliveryModal';
 
 export default function OperatorCockpit({ onClose }) {
   const { currentUser, role, isAdmin, logout, elevateToAdmin, isTallerSubdomain } = useAuth();
+  const { isInstalled, installApp } = usePWAInstall();
   const {
     orders,
     inventory,
@@ -228,6 +231,20 @@ export default function OperatorCockpit({ onClose }) {
           >
             {isLight ? <Moon className="w-3.5 h-3.5 text-amber-400" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
           </button>
+
+          {/* Botón Instalar en Escritorio (PWA) */}
+          {!isInstalled && (
+            <button
+              type="button"
+              onClick={installApp}
+              className="px-3 py-1.5 text-xs font-bold rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer bg-zinc-900 hover:bg-zinc-800 border-[#FF5500]/50 text-[#FF5500] hover:text-white shadow-sm hover:border-[#FF5500] hover:shadow-[0_0_12px_rgba(255,85,0,0.3)]"
+              title="Instalar montec Taller como Aplicación en el Escritorio"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Instalar en Escritorio</span>
+              <span className="md:hidden">Instalar</span>
+            </button>
+          )}
 
           {/* Acceso a Panel Administrador */}
           <button
