@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 import { getIphoneGenerationInfo } from '../data/iphonePricingData';
 import MontecLogo from './MontecLogo';
 import PartsSearchTab from './admin/PartsSearchTab';
@@ -85,6 +86,7 @@ export default function AdminPanel() {
   const effectiveIsAdmin = isAdminAuthenticated || isAdmin || currentUser?.role === 'admin';
 
   const isLight = panelTheme === 'light';
+  const { isInstalled, installApp } = usePWAInstall();
 
   // Estados de interfaz
   const [pinInput, setPinInput] = useState('');
@@ -345,6 +347,20 @@ export default function AdminPanel() {
               </>
             )}
           </button>
+
+          {/* Botón Instalar en Escritorio (PWA) */}
+          {!isInstalled && (
+            <button
+              type="button"
+              onClick={installApp}
+              className="px-3.5 py-1.5 text-xs font-bold rounded-xl border flex items-center gap-1.5 transition-all cursor-pointer bg-zinc-900 hover:bg-zinc-800 border-[#FF5500]/50 text-[#FF5500] hover:text-white shadow-sm hover:border-[#FF5500] hover:shadow-[0_0_12px_rgba(255,85,0,0.3)]"
+              title="Instalar montec Taller como Aplicación en el Escritorio"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Instalar en Escritorio</span>
+              <span className="md:hidden">Instalar</span>
+            </button>
+          )}
 
           <button
             onClick={() => {
