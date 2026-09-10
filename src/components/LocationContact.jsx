@@ -27,7 +27,7 @@ export default function LocationContact() {
   const instagramUrl = 'https://instagram.com/montec.arg';
 
   return (
-    <section id="ubicacion" className="py-20 px-4 sm:px-6 lg:px-8 relative bg-zinc-950/80 border-t border-zinc-900">
+    <section id="ubicacion" className="py-20 px-4 sm:px-6 lg:px-8 relative bg-zinc-950/80 border-t border-zinc-900 w-full max-w-full overflow-hidden">
       
       {/* Background Glow */}
       <div className="absolute bottom-10 right-10 w-[400px] h-[350px] bg-[#FF5500]/10 blur-[140px] pointer-events-none -z-10" />

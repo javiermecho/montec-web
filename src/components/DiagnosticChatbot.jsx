@@ -730,13 +730,13 @@ export default function DiagnosticChatbot() {
   return (
     <>
       {/* 1. Burbuja Flotante en la esquina inferior derecha */}
-      <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end pointer-events-auto">
+      <div className="fixed bottom-4 right-4 sm:bottom-5 sm:right-5 z-40 flex flex-col items-end pointer-events-auto max-w-[calc(100vw-32px)]">
         
         {/* Tooltip de Bienvenida (visible cuando está cerrado y hay notificación) */}
         {!isOpen && hasUnreadNotification && (
           <div 
             onClick={() => setIsOpen(true)}
-            className="mb-3 mr-1 bg-[#18181B] border border-[#FF5500]/50 text-white text-xs px-3.5 py-2.5 rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.8)] flex items-center gap-2.5 cursor-pointer max-w-[280px] animate-bounce-subtle group hover:border-[#FF5500]"
+            className="mb-3 mr-1 bg-[#18181B] border border-[#FF5500]/50 text-white text-xs px-3.5 py-2.5 rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.8)] flex items-center gap-2.5 cursor-pointer w-auto max-w-[calc(100vw-48px)] sm:max-w-[280px] animate-bounce-subtle group hover:border-[#FF5500]"
           >
             <div className="w-2 h-2 rounded-full bg-[#FF5500] animate-ping shrink-0" />
             <span className="font-medium text-[11px] leading-tight text-zinc-200">
@@ -779,7 +779,7 @@ export default function DiagnosticChatbot() {
 
       {/* 2. Modal Flotante de Chat */}
       {isOpen && (
-        <div className="fixed bottom-20 right-3 sm:bottom-24 sm:right-6 z-50 w-[94vw] sm:w-[430px] h-[600px] max-h-[85vh] bg-[#121214] border border-zinc-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] flex flex-col overflow-hidden backdrop-blur-2xl animate-fade-in">
+        <div className="fixed bottom-16 right-3 left-3 sm:left-auto sm:right-6 sm:bottom-24 z-50 w-auto sm:w-[430px] max-w-[calc(100vw-24px)] sm:max-w-[430px] h-[600px] max-h-[85vh] bg-[#121214] border border-zinc-800 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.95)] flex flex-col overflow-hidden backdrop-blur-2xl animate-fade-in">
           
           {/* Header del Chat */}
           <div className="bg-gradient-to-r from-zinc-900 via-[#18181B] to-zinc-900 border-b border-zinc-800/80 px-4 py-3 flex items-center justify-between">

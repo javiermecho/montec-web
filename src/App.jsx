@@ -44,7 +44,7 @@ function AppContent() {
 
     // Por defecto en taller, mostrar el Cockpit de Mostrador
     return (
-      <div className="min-h-screen bg-[#08080A] text-white">
+      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#08080A] text-white">
         <OperatorCockpit />
       </div>
     );
@@ -52,12 +52,12 @@ function AppContent() {
 
   // MODO 2: SITIO WEB PÚBLICO COMERCIAL (montec.ar)
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col selection:bg-[#FF5500] selection:text-white">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#0A0A0A] text-white flex flex-col selection:bg-[#FF5500] selection:text-white">
       {/* Navbar flotante superior con acceso admin y taller */}
       <Navbar />
 
       {/* Contenido Principal Comercial */}
-      <main className="flex-1">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">
         <Hero />
         <QuotationTool />
         <Laboratory />

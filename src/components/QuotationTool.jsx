@@ -272,7 +272,7 @@ export default function QuotationTool() {
   return (
     <>
       {/* SECCIÓN COMPACTA EN LA PÁGINA PRINCIPAL */}
-      <section id="cotizador" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 relative">
+      <section id="cotizador" className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 relative w-full max-w-full overflow-hidden">
         {/* Glow decorativo de fondo */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#FF5500]/10 blur-[120px] rounded-full pointer-events-none -z-10" />
 

@@ -3,10 +3,22 @@
 @tailwind utilities;
 
 @layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
   :root {
     color-scheme: dark;
   }
   
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
   html {
     scroll-behavior: smooth;
     font-family: 'Inter', 'Montserrat', sans-serif;
@@ -15,7 +27,17 @@
   body {
     background-color: #0A0A0A;
     color: #F4F4F5;
+  }
+
+  #root {
+    width: 100%;
+    max-width: 100%;
     overflow-x: hidden;
+  }
+
+  img, svg, video, iframe {
+    max-width: 100%;
+    height: auto;
   }
 
   /* Custom scrollbar */

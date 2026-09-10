@@ -33,7 +33,7 @@ export default function Accessories() {
   };
 
   return (
-    <section id="accesorios" className="py-20 px-4 sm:px-6 lg:px-8 relative">
+    <section id="accesorios" className="py-20 px-4 sm:px-6 lg:px-8 relative w-full max-w-full overflow-hidden">
       
       {/* Background Glow */}
       <div className="absolute top-1/3 left-10 w-[350px] h-[350px] bg-[#FF5500]/10 blur-[130px] pointer-events-none -z-10" />

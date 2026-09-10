@@ -37,7 +37,7 @@ export default function Laboratory() {
   ];
 
   return (
-    <section id="laboratorio" className="py-20 px-4 sm:px-6 lg:px-8 relative bg-zinc-950/60 border-y border-zinc-900">
+    <section id="laboratorio" className="py-20 px-4 sm:px-6 lg:px-8 relative bg-zinc-950/60 border-y border-zinc-900 w-full max-w-full overflow-hidden">
       
       {/* Glow de ambientación */}
       <div className="absolute top-0 right-1/4 w-[400px] h-[300px] bg-[#FF5500]/10 blur-[140px] pointer-events-none -z-10" />

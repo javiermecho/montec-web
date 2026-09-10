@@ -22,7 +22,7 @@ export default function Hero() {
   ];
 
   return (
-    <section id="inicio" className="relative min-h-[92vh] flex items-center justify-center pt-28 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <section id="inicio" className="relative w-full max-w-full min-h-[92vh] flex items-center justify-center pt-28 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
       
       {/* Luces de Fondo Neón Ambientales */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] sm:w-[650px] h-[350px] bg-[#FF5500]/15 blur-[120px] rounded-full pointer-events-none -z-10" />

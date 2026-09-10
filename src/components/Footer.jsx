@@ -10,7 +10,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-[#0A0A0A] border-t border-zinc-900 pt-16 pb-12 px-4 sm:px-6 lg:px-8 text-zinc-400 text-sm">
+    <footer className="bg-[#0A0A0A] border-t border-zinc-900 pt-16 pb-12 px-4 sm:px-6 lg:px-8 text-zinc-400 text-sm w-full max-w-full overflow-hidden">
       <div className="max-w-6xl mx-auto">
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-zinc-900">

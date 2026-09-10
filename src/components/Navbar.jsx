@@ -46,7 +46,7 @@ export default function Navbar() {
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('¡Hola montec! Quisiera hacer una consulta técnica sobre mi equipo.')}`;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300 px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4">
+    <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300 px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 w-full max-w-full">
       <nav 
         className={`max-w-7xl mx-auto rounded-2xl transition-all duration-300 border ${
           scrolled 
