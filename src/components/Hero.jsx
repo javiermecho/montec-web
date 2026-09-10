@@ -23,18 +23,18 @@ export default function Hero() {
 
   return (
     <section id="inicio" className="relative w-full max-w-full min-h-[92vh] flex items-center justify-center pt-28 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      
+
       {/* Luces de Fondo Neón Ambientales */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] sm:w-[650px] h-[350px] bg-[#FF5500]/15 blur-[120px] rounded-full pointer-events-none -z-10" />
       <div className="absolute bottom-10 right-10 w-[300px] h-[250px] bg-orange-600/10 blur-[100px] rounded-full pointer-events-none -z-10" />
-      
+
       {/* Grid sutil de fondo tecnológico */}
-      <div 
-        className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)] pointer-events-none -z-10" 
+      <div
+        className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_40%,#000_70%,transparent_100%)] pointer-events-none -z-10"
       />
 
       <div className="max-w-5xl mx-auto text-center">
-        
+
         {/* Badge superior */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-700/80 shadow-inner mb-6 animate-pulse-glow">
           <span className="flex h-2 w-2 relative">
@@ -47,13 +47,13 @@ export default function Hero() {
         </div>
 
         {/* Titular Principal */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold font-heading text-white tracking-tight leading-[1.15] mb-6">
-          Servicio Técnico Especializado & <br className="hidden sm:inline" />
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold font-heading text-white tracking-tight leading-[1.15] mb-6">
+          Servicio Técnico Especializado <br className="hidden sm:inline" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
-            Microelectrónica en
+            de Celulares y Pc
           </span>{' '}
-          <span className="text-[#FF5500] drop-shadow-[0_0_25px_rgba(255,85,0,0.45)]">
-            Mar del Plata
+          <span className="block text-xl sm:text-3xl lg:text-4xl font-bold text-[#FF5500] drop-shadow-[0_0_25px_rgba(255,85,0,0.45)] mt-2">
+            Mar del Plata - Constitución
           </span>
         </h1>
 
@@ -84,8 +84,8 @@ export default function Hero() {
         {/* Puntos destacados / Pilares inmediatos */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto mb-14 text-left">
           {highlights.map((item, idx) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-900/40 border border-zinc-800/60 backdrop-blur-sm"
             >
               <CheckCircle2 className="w-4 h-4 text-[#FF5500] shrink-0" />
@@ -103,8 +103,8 @@ export default function Hero() {
           </p>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
             {brands.map((b) => (
-              <div 
-                key={b.name} 
+              <div
+                key={b.name}
                 className="flex flex-col items-center justify-center p-3 rounded-xl bg-zinc-900/30 border border-zinc-800/50 hover:border-[#FF5500]/40 transition-colors group"
               >
                 <span className="font-heading font-bold text-base text-zinc-300 group-hover:text-white transition-colors">
