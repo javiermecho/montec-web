@@ -42,17 +42,17 @@ export default function Hero() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF5500]"></span>
           </span>
           <span className="text-xs sm:text-sm font-semibold text-zinc-200">
-            Laboratorio Especializado en <span className="text-[#FF5500]">Mar del Plata</span>
+            Laboratorio Especializado
           </span>
         </div>
 
         {/* Titular Principal */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold font-heading text-white tracking-tight leading-[1.15] mb-6">
-          Servicio Técnico Especializado <br className="hidden sm:inline" />
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold font-heading text-white tracking-tight leading-[1.15] mb-6">
+          Servicio Técnico <br className="hidden sm:inline" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
             de Celulares y Pc
           </span>{' '}
-          <span className="block text-xl sm:text-3xl lg:text-4xl font-bold text-[#FF5500] drop-shadow-[0_0_25px_rgba(255,85,0,0.45)] mt-2">
+          <span className="block text-2xl sm:text-4xl lg:text-5xl font-bold text-[#FF5500] drop-shadow-[0_0_25px_rgba(255,85,0,0.45)] mt-2">
             Mar del Plata - Constitución
           </span>
         </h1>
