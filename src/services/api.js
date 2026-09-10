@@ -233,6 +233,16 @@ export async function updateProducto(id, productData) {
   return res;
 }
 
+/**
+ * Elimina un producto del catálogo de inventario
+ */
+export async function deleteProducto(id) {
+  const res = await request(`/inventory/${encodeURIComponent(id)}`, {
+    method: 'DELETE'
+  });
+  return res;
+}
+
 // ============================================================================
 // 4. MÓDULO DE VENTAS (PUNTO DE VENTA - POS)
 // ============================================================================
@@ -341,6 +351,7 @@ export const api = {
   getProductos,
   createProducto,
   updateProducto,
+  deleteProducto,
   getVentas,
   createVenta,
   updateVenta,

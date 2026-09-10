@@ -104,7 +104,7 @@ export default function Accessories() {
                       {isOutOfStock ? 'Agotado' : (item.badge || 'Disponible')}
                     </span>
 
-                    {item.image ? (
+                    {item.image && (
                       <img 
                         src={item.image} 
                         alt={item.name} 
@@ -112,12 +112,20 @@ export default function Accessories() {
                           isOutOfStock ? 'grayscale opacity-75' : ''
                         }`}
                         loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          const fallback = e.currentTarget.parentElement?.querySelector('.image-fallback-icon');
+                          if (fallback) fallback.classList.remove('hidden');
+                        }}
                       />
-                    ) : (
-                      <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 group-hover:scale-110 transition-transform duration-300">
-                        {getCategoryIcon(item.category)}
-                      </div>
                     )}
+                    <div 
+                      className={`image-fallback-icon p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 group-hover:scale-110 transition-transform duration-300 ${
+                        item.image ? 'hidden' : 'flex'
+                      }`}
+                    >
+                      {getCategoryIcon(item.category)}
+                    </div>
                   </div>
 
                   {/* Nombre y Compatibilidad */}

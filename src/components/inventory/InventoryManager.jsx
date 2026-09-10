@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { ACCESSORIES_CATEGORIES } from '../../data/accessoriesData';
+import ImageUploadDropzone from '../common/ImageUploadDropzone';
 
 export default function InventoryManager() {
   const { 
@@ -38,9 +39,10 @@ export default function InventoryManager() {
   const [categoryFilter, setCategoryFilter] = useState('Todos');
   const [stockFilter, setStockFilter] = useState('all'); // 'all', 'low', 'out'
 
-  // --- Estados del Modal de Alta/Edición de Producto ---
+  // --- Estados de Modales ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   // Formulario de Producto
   const [formData, setFormData] = useState({
@@ -410,11 +412,27 @@ export default function InventoryManager() {
                         isOutOfStock ? (isLight ? 'bg-rose-50/20' : 'bg-rose-950/10') : ''
                       }`}
                     >
-                      {/* Imagen */}
+                      {/* Imagen con Click para ampliar */}
                       <td className="py-3 px-4 align-middle">
-                        <div className="w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden flex items-center justify-center shrink-0">
+                        <div 
+                          onClick={() => prod.image && setPreviewImage(prod.image)}
+                          className={`w-11 h-11 rounded-xl bg-zinc-900 border border-zinc-800 overflow-hidden flex items-center justify-center shrink-0 ${
+                            prod.image ? 'cursor-pointer hover:border-[#FF5500] hover:scale-105 transition-all shadow-sm group' : ''
+                          }`}
+                          title={prod.image ? 'Clic para ver foto ampliada' : 'Sin foto'}
+                        >
                           {prod.image ? (
-                            <img src={prod.image} alt={prod.name} className="w-full h-full object-cover" />
+                            <img 
+                              src={prod.image} 
+                              alt={prod.name} 
+                              className="w-full h-full object-cover group-hover:opacity-90"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                if (e.currentTarget.parentElement) {
+                                  e.currentTarget.parentElement.innerHTML = '<span class="text-zinc-600 text-[10px] font-mono">IMG</span>';
+                                }
+                              }}
+                            />
                           ) : (
                             <Package className="w-5 h-5 text-zinc-600" />
                           )}
@@ -724,17 +742,13 @@ export default function InventoryManager() {
                 </div>
               </div>
 
-              {/* Imagen y Compatibilidad */}
-              <div>
-                <label className="block font-bold mb-1">URL de Imagen del Producto</label>
-                <input
-                  type="url"
+              {/* Imagen del Producto (Dropzone, Cámara y Galería) */}
+              <div className="pt-1">
+                <ImageUploadDropzone
                   value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className={`w-full border rounded-xl px-3 py-2 outline-none focus:border-[#FF5500] ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
-                  }`}
+                  onChange={(img) => setFormData({ ...formData, image: img })}
+                  isLight={isLight}
+                  label="Foto del Producto / Accesorio (PC o Celular)"
                 />
               </div>
 
@@ -791,6 +805,33 @@ export default function InventoryManager() {
 
             </form>
 
+          </div>
+        </div>
+      )}
+
+      {/* 6. MODAL LIGHTBOX DE FOTO AMPLIADA */}
+      {previewImage && (
+        <div 
+          onClick={() => setPreviewImage(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in cursor-pointer font-sans"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-2xl max-h-[85vh] p-3 bg-[#141417] border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col items-center"
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white rounded-full bg-black/60 hover:bg-zinc-800 transition-colors cursor-pointer z-10"
+              title="Cerrar vista previa"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img 
+              src={previewImage} 
+              alt="Foto ampliada del producto" 
+              className="max-h-[75vh] w-auto max-w-full object-contain rounded-2xl" 
+            />
           </div>
         </div>
       )}

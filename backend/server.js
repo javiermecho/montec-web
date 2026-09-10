@@ -16,7 +16,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-scraper-key']
 }));
-app.use(express.json());
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
 // Helper para formatear ordenes de DB a estructura frontend
 const mapDbOrderToFrontend = (row) => {
@@ -465,12 +466,99 @@ app.get('/api/inventory', async (req, res) => {
   }
 });
 
-// Actualizar stock o detalles de producto
-app.patch('/api/inventory/:id', async (req, res) => {
-  const { id } = req.params;
-  const { stock, price, costPrice, name, category } = req.body;
-  const dbConnected = await isDbConnected();
+// Crear nuevo producto en inventario
+app.post('/api/inventory', async (req, res) => {
+  const {
+    name,
+    category = 'Cargadores & Fuentes',
+    sku,
+    barcode,
+    compatible,
+    costPrice = 0,
+    price = 0,
+    stock = 0,
+    minStock = 3,
+    visibleInWeb = true,
+    image,
+    badge = 'Disponible'
+  } = req.body;
 
+  const dbConnected = await isDbConnected();
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  if (!name || price === undefined) {
+    return res.status(400).json({ error: 'El nombre y el precio del producto son obligatorios' });
+  }
+
+  try {
+    const generatedSku = (sku || `SKU-${Date.now().toString().slice(-6)}`).toUpperCase().trim();
+    const sql = `
+      INSERT INTO inventory (
+        sku, barcode, name, category, compatible, cost_price, price, stock, min_stock, visible_in_web, image, badge
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      ON CONFLICT (sku) DO UPDATE SET
+        name = EXCLUDED.name,
+        category = EXCLUDED.category,
+        compatible = EXCLUDED.compatible,
+        cost_price = EXCLUDED.cost_price,
+        price = EXCLUDED.price,
+        stock = EXCLUDED.stock,
+        min_stock = EXCLUDED.min_stock,
+        visible_in_web = EXCLUDED.visible_in_web,
+        image = COALESCE(EXCLUDED.image, inventory.image),
+        badge = EXCLUDED.badge,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *;
+    `;
+    const params = [
+      generatedSku,
+      (barcode || '').trim() || null,
+      name.trim(),
+      category.trim(),
+      compatible || null,
+      parseFloat(costPrice) || 0,
+      parseFloat(price) || 0,
+      parseInt(stock, 10) || 0,
+      parseInt(minStock, 10) || 3,
+      visibleInWeb !== false,
+      image || null,
+      badge || 'Disponible'
+    ];
+    const result = await query(sql, params);
+    const product = mapDbProductToFrontend(result.rows[0]);
+
+    res.status(201).json({
+      success: true,
+      message: 'Producto guardado exitosamente en la base de datos',
+      product
+    });
+  } catch (error) {
+    console.error('❌ Error al registrar producto en PostgreSQL:', error);
+    res.status(500).json({ error: 'Error al registrar producto en la base de datos', details: error.message });
+  }
+});
+
+// Actualizar producto (PATCH o PUT)
+const handleUpdateProduct = async (req, res) => {
+  const { id } = req.params;
+  const {
+    stock,
+    price,
+    costPrice,
+    name,
+    category,
+    image,
+    compatible,
+    badge,
+    barcode,
+    sku,
+    minStock,
+    visibleInWeb
+  } = req.body;
+
+  const dbConnected = await isDbConnected();
   if (!dbConnected) {
     return res.status(503).json({ error: 'Base de datos no disponible' });
   }
@@ -492,19 +580,54 @@ app.patch('/api/inventory/:id', async (req, res) => {
       fields.push(`cost_price = $${counter++}`);
       params.push(parseFloat(costPrice));
     }
-    if (name) {
+    if (name !== undefined) {
       fields.push(`name = $${counter++}`);
       params.push(name);
     }
-    if (category) {
+    if (category !== undefined) {
       fields.push(`category = $${counter++}`);
       params.push(category);
+    }
+    if (image !== undefined) {
+      fields.push(`image = $${counter++}`);
+      params.push(image);
+    }
+    if (compatible !== undefined) {
+      fields.push(`compatible = $${counter++}`);
+      params.push(compatible);
+    }
+    if (badge !== undefined) {
+      fields.push(`badge = $${counter++}`);
+      params.push(badge);
+    }
+    if (barcode !== undefined) {
+      fields.push(`barcode = $${counter++}`);
+      params.push(barcode);
+    }
+    if (sku !== undefined) {
+      fields.push(`sku = $${counter++}`);
+      params.push(sku.toUpperCase().trim());
+    }
+    if (minStock !== undefined) {
+      fields.push(`min_stock = $${counter++}`);
+      params.push(parseInt(minStock, 10));
+    }
+    if (visibleInWeb !== undefined) {
+      fields.push(`visible_in_web = $${counter++}`);
+      params.push(Boolean(visibleInWeb));
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No se enviaron campos a actualizar' });
     }
 
     fields.push('updated_at = CURRENT_TIMESTAMP');
     params.push(id);
 
-    const sql = `UPDATE inventory SET ${fields.join(', ')} WHERE id = $${counter} RETURNING *;`;
+    const isNum = !isNaN(parseInt(id, 10)) && String(parseInt(id, 10)) === String(id);
+    const whereClause = isNum ? `id = $${counter}` : `LOWER(sku) = LOWER($${counter})`;
+
+    const sql = `UPDATE inventory SET ${fields.join(', ')} WHERE ${whereClause} RETURNING *;`;
     const result = await query(sql, params);
 
     if (result.rowCount === 0) {
@@ -513,11 +636,46 @@ app.patch('/api/inventory/:id', async (req, res) => {
 
     res.json({
       success: true,
+      message: 'Producto actualizado exitosamente',
       product: mapDbProductToFrontend(result.rows[0])
     });
   } catch (error) {
     console.error('❌ Error al actualizar producto:', error);
-    res.status(500).json({ error: 'Error al actualizar producto' });
+    res.status(500).json({ error: 'Error al actualizar producto', details: error.message });
+  }
+};
+
+app.patch('/api/inventory/:id', handleUpdateProduct);
+app.put('/api/inventory/:id', handleUpdateProduct);
+
+// Eliminar producto de inventario
+app.delete('/api/inventory/:id', async (req, res) => {
+  const { id } = req.params;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    const isNum = !isNaN(parseInt(id, 10)) && String(parseInt(id, 10)) === String(id);
+    const sql = isNum 
+      ? 'DELETE FROM inventory WHERE id = $1 RETURNING *;'
+      : 'DELETE FROM inventory WHERE LOWER(sku) = LOWER($1) RETURNING *;';
+    const result = await query(sql, [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Producto eliminado exitosamente',
+      deletedProduct: mapDbProductToFrontend(result.rows[0])
+    });
+  } catch (error) {
+    console.error('❌ Error al eliminar producto en PostgreSQL:', error);
+    res.status(500).json({ error: 'Error al eliminar producto' });
   }
 });
 

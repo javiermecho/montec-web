@@ -1056,7 +1056,7 @@ export function DataProvider({ children }) {
   };
 
   // --- Operaciones de Inventario & Productos ---
-  const addProduct = (item) => {
+  const addProduct = async (item) => {
     const cost = Number(item.costPrice) || 0;
     const price = Number(item.price) || 0;
     const newProduct = {
@@ -1077,6 +1077,18 @@ export function DataProvider({ children }) {
     };
 
     setInventory(prev => [newProduct, ...prev]);
+
+    // Sincronizar inmediatamente con PostgreSQL / Railway
+    try {
+      const res = await api.createProducto(newProduct);
+      if (res?.success && res.product) {
+        setInventory(prev => prev.map(p => p.sku === newProduct.sku ? { ...newProduct, id: res.product.id } : p));
+        return res.product;
+      }
+    } catch (e) {
+      console.warn('⚠️ No se pudo sincronizar producto con Railway:', e.message);
+    }
+
     return newProduct;
   };
 
@@ -1090,7 +1102,8 @@ export function DataProvider({ children }) {
         price: updatedFields.price !== undefined ? Number(updatedFields.price) : p.price,
         stock: updatedFields.stock !== undefined ? parseInt(updatedFields.stock, 10) : p.stock,
         minStock: updatedFields.minStock !== undefined ? parseInt(updatedFields.minStock, 10) : p.minStock,
-        visibleInWeb: updatedFields.visibleInWeb !== undefined ? Boolean(updatedFields.visibleInWeb) : p.visibleInWeb
+        visibleInWeb: updatedFields.visibleInWeb !== undefined ? Boolean(updatedFields.visibleInWeb) : p.visibleInWeb,
+        image: updatedFields.image !== undefined ? updatedFields.image : p.image
       };
     }));
 
@@ -1117,6 +1130,9 @@ export function DataProvider({ children }) {
 
   const deleteProduct = (id) => {
     setInventory(prev => prev.filter(p => p.id !== id && p.sku !== id));
+    api.deleteProducto(id).catch(e => {
+      console.warn('⚠️ No se pudo eliminar producto en Railway:', e.message);
+    });
   };
 
   // Aliases para retrocompatibilidad con componentes existentes
