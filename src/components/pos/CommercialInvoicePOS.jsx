@@ -541,19 +541,25 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
     }`}>
       
       {/* 1. ENCABEZADO: TÍTULO DEL MÓDULO & BOTÓN AYUDA */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-zinc-800/70 bg-[#121218]">
+      <div className={`flex items-center justify-between px-4 sm:px-6 py-3 border-b transition-colors ${
+        isLight ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#121218] border-zinc-800/70'
+      }`}>
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-[#FF5500]/15 text-[#FF5500] border border-[#FF5500]/30">
             <Receipt className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-sm sm:text-base font-bold tracking-tight text-white flex items-center gap-2">
+            <h2 className={`text-sm sm:text-base font-bold tracking-tight flex items-center gap-2 ${
+              isLight ? 'text-slate-900' : 'text-white'
+            }`}>
               <span>Facturación & Punto de Venta</span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border ${
+                isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+              }`}>
                 Operativo
               </span>
             </h2>
-            <p className="text-[11px] text-zinc-400">
+            <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
               Emisión de Facturas (A/B/C), Remitos, Presupuestos y Cobranzas comerciales de mostrador
             </p>
           </div>
@@ -564,9 +570,13 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
             <button
               type="button"
               onClick={onOpenDailyCash}
-              className="px-3 py-1.5 rounded-xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors ${
+                isLight
+                  ? 'border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900'
+                  : 'border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white'
+              }`}
             >
-              <Wallet className="w-3.5 h-3.5 text-emerald-400" />
+              <Wallet className="w-3.5 h-3.5 text-emerald-500" />
               <span>Caja Diaria</span>
             </button>
           )}
@@ -574,7 +584,11 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
           <button
             type="button"
             onClick={() => setIsHelpModalOpen(true)}
-            className="px-2.5 py-1.5 rounded-xl border border-zinc-700/80 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-mono font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+            className={`px-2.5 py-1.5 rounded-xl border text-xs font-mono font-semibold flex items-center gap-1 cursor-pointer transition-colors ${
+              isLight
+                ? 'border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900'
+                : 'border-zinc-700/80 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white'
+            }`}
             title="Ver atajos de teclado y ayuda"
           >
             <HelpCircle className="w-3.5 h-3.5 text-[#FF5500]" />
@@ -593,7 +607,9 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
           <div className={`lg:col-span-7 p-4 rounded-xl border flex flex-col justify-between ${
             isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#15151c] border-zinc-800/80'
           }`}>
-            <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/60">
+            <div className={`flex items-center justify-between pb-2 mb-3 border-b ${
+              isLight ? 'border-slate-200' : 'border-zinc-800/60'
+            }`}>
               <span className="text-xs font-bold uppercase tracking-wider text-[#FF5500] flex items-center gap-1.5">
                 <User className="w-3.5 h-3.5" />
                 <span>Datos del Cliente</span>
@@ -603,7 +619,11 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                 <button
                   type="button"
                   onClick={() => setIsSearchClientsModalOpen(true)}
-                  className="px-2 py-0.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-[11px] font-semibold flex items-center gap-1 border border-zinc-700 cursor-pointer transition-colors"
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 border cursor-pointer transition-colors ${
+                    isLight
+                      ? 'bg-slate-200 hover:bg-slate-300 text-slate-700 border-slate-300'
+                      : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border-zinc-700'
+                  }`}
                 >
                   <Search className="w-3 h-3 text-[#FF5500]" />
                   <span>Buscar Clientes</span>
@@ -614,8 +634,10 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                   onClick={() => setIsClientNotesModalOpen(true)}
                   className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold border cursor-pointer transition-colors flex items-center gap-1 ${
                     clientInternalNotes.trim()
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                      : 'bg-zinc-800/60 text-zinc-400 border-zinc-700 hover:text-zinc-200'
+                      ? 'bg-amber-500/20 text-amber-500 border-amber-500/40'
+                      : isLight
+                        ? 'bg-slate-200 text-slate-600 border-slate-300 hover:text-slate-900'
+                        : 'bg-zinc-800/60 text-zinc-400 border-zinc-700 hover:text-zinc-200'
                   }`}
                 >
                   <span>Notas internas ({clientInternalNotes.trim() ? 1 : 0})</span>
@@ -706,7 +728,9 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
 
               {/* Teléfono WhatsApp */}
               <div className="sm:col-span-6 flex items-center gap-1">
-                <span className="px-2 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-[11px] font-mono text-zinc-400">
+                <span className={`px-2 py-1.5 rounded-lg text-[11px] font-mono border ${
+                  isLight ? 'bg-slate-100 border-slate-300 text-slate-600' : 'bg-zinc-900 border-zinc-700 text-zinc-400'
+                }`}>
                   🇦🇷 +54
                 </span>
                 <input
@@ -750,8 +774,10 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
             isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#15151c] border-zinc-800/80'
           }`}>
             <div>
-              <div className="flex items-center justify-between pb-2 mb-3 border-b border-zinc-800/60">
-                <span className="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+              <div className={`flex items-center justify-between pb-2 mb-3 border-b ${
+                isLight ? 'border-slate-200' : 'border-zinc-800/60'
+              }`}>
+                <span className="text-xs font-bold uppercase tracking-wider text-sky-500 flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5" />
                   <span>Comprobante Comercial</span>
                 </span>
@@ -765,7 +791,9 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-2.5">
                 <div>
-                  <label className="text-[10px] font-semibold text-zinc-400 block mb-1">
+                  <label className={`text-[10px] font-semibold block mb-1 ${
+                    isLight ? 'text-slate-600' : 'text-zinc-400'
+                  }`}>
                     Tipo de Documento:
                   </label>
                   <select
@@ -786,7 +814,9 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-semibold text-zinc-400 block mb-1">
+                  <label className={`text-[10px] font-semibold block mb-1 ${
+                    isLight ? 'text-slate-600' : 'text-zinc-400'
+                  }`}>
                     Sig. Nro. Comp.:
                   </label>
                   <input
@@ -802,7 +832,9 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
               </div>
 
               {/* Opciones adicionales */}
-              <div className="flex items-center gap-4 text-xs text-zinc-300 mb-2">
+              <div className={`flex items-center gap-4 text-xs mb-2 ${
+                isLight ? 'text-slate-700' : 'text-zinc-300'
+              }`}>
                 <label className="flex items-center gap-1.5 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -827,9 +859,11 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
 
             {/* Cuadro de descripción explicativa idéntica al sistema de referencia */}
             <div className={`p-2.5 rounded-lg text-[11px] leading-relaxed border ${
-              isLight ? 'bg-white border-slate-200 text-slate-600' : 'bg-zinc-900/90 border-zinc-800 text-zinc-400'
+              isLight ? 'bg-white border-slate-200 text-slate-600 shadow-2xs' : 'bg-zinc-900/90 border-zinc-800 text-zinc-400'
             }`}>
-              <strong className="text-zinc-200 block mb-0.5">Descripción del comprobante:</strong>
+              <strong className={`block mb-0.5 ${isLight ? 'text-slate-800' : 'text-zinc-200'}`}>
+                Descripción del comprobante:
+              </strong>
               {DOCUMENT_DEFINITIONS[selectedDocType]?.description}
             </div>
 
@@ -841,8 +875,10 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
         <div className={`p-4 rounded-xl border ${
           isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#15151c] border-zinc-800/80'
         }`}>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 mb-3 border-b border-zinc-800/60">
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
+          <div className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 mb-3 border-b ${
+            isLight ? 'border-slate-200' : 'border-zinc-800/60'
+          }`}>
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-500 flex items-center gap-1.5">
               <Package className="w-3.5 h-3.5" />
               <span>Agregar nuevo producto o servicio</span>
             </span>
@@ -875,7 +911,11 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
               <button
                 type="button"
                 onClick={() => setIsCustomItemModalOpen(true)}
-                className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold flex items-center gap-1.5 border border-zinc-700 transition-colors cursor-pointer whitespace-nowrap"
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition-colors cursor-pointer whitespace-nowrap ${
+                  isLight
+                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300'
+                    : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700'
+                }`}
               >
                 <Plus className="w-3.5 h-3.5 text-[#FF5500]" />
                 <span>Servicio / Ítem Libre</span>
@@ -884,9 +924,13 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
           </div>
 
           {/* TABLA DE ÍTEMS DEL COMPROBANTE */}
-          <div className="overflow-x-auto rounded-lg border border-zinc-800/80 bg-zinc-950/60 max-h-64 scrollbar-thin">
+          <div className={`overflow-x-auto rounded-lg border max-h-64 scrollbar-thin ${
+            isLight ? 'border-slate-200 bg-white' : 'border-zinc-800/80 bg-zinc-950/60'
+          }`}>
             <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-zinc-900 text-zinc-400 font-mono text-[11px] uppercase tracking-wider border-b border-zinc-800 sticky top-0 z-10">
+              <thead className={`font-mono text-[11px] uppercase tracking-wider border-b sticky top-0 z-10 ${
+                isLight ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+              }`}>
                 <tr>
                   <th className="py-2.5 px-3 min-w-[90px]">SKU</th>
                   <th className="py-2.5 px-3 min-w-[200px]">Nombre / Concepto</th>
@@ -899,13 +943,13 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                   <th className="py-2.5 px-3 w-10 text-center"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60 font-sans">
+              <tbody className={`divide-y font-sans ${isLight ? 'divide-slate-200' : 'divide-zinc-800/60'}`}>
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-8 text-center text-zinc-500 italic">
+                    <td colSpan={9} className={`py-8 text-center italic ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
                       No hay productos ni servicios agregados al comprobante.
                       <br />
-                      <span className="text-[11px] text-zinc-600">
+                      <span className={`text-[11px] ${isLight ? 'text-slate-600' : 'text-zinc-600'}`}>
                         Presioná <strong>[F12]</strong> para ingresar un código o <strong>[F9]</strong> para buscar en el inventario.
                       </span>
                     </td>
@@ -917,25 +961,29 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                     const lineTotal = lineBruto - lineDiscount;
 
                     return (
-                      <tr key={item.id} className="hover:bg-zinc-900/40 transition-colors">
-                        <td className="py-2 px-3 font-mono font-semibold text-zinc-300">
+                      <tr key={item.id} className={`transition-colors ${isLight ? 'hover:bg-slate-50' : 'hover:bg-zinc-900/40'}`}>
+                        <td className={`py-2 px-3 font-mono font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
                           {item.sku}
                         </td>
-                        <td className="py-2 px-3 font-semibold text-white">
+                        <td className="py-2 px-3 font-semibold">
                           <input
                             type="text"
                             value={item.name}
                             onChange={(e) => updateItemRow(item.id, 'name', e.target.value)}
-                            className="w-full bg-transparent border-b border-transparent hover:border-zinc-700 focus:border-[#FF5500] outline-none text-xs font-semibold text-white"
+                            className={`w-full bg-transparent border-b border-transparent outline-none text-xs font-semibold ${
+                              isLight ? 'text-slate-900 hover:border-slate-300 focus:border-[#FF5500]' : 'text-white hover:border-zinc-700 focus:border-[#FF5500]'
+                            }`}
                           />
                         </td>
-                        <td className="py-2 px-3 text-zinc-400">
+                        <td className="py-2 px-3">
                           <input
                             type="text"
                             value={item.color}
                             onChange={(e) => updateItemRow(item.id, 'color', e.target.value)}
                             placeholder="-"
-                            className="w-full bg-transparent border-b border-transparent hover:border-zinc-700 focus:border-[#FF5500] outline-none text-xs text-zinc-300"
+                            className={`w-full bg-transparent border-b border-transparent outline-none text-xs ${
+                              isLight ? 'text-slate-600 hover:border-slate-300 focus:border-[#FF5500]' : 'text-zinc-300 hover:border-zinc-700 focus:border-[#FF5500]'
+                            }`}
                           />
                         </td>
                         <td className="py-2 px-3 text-center">
@@ -944,7 +992,9 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                             min="1"
                             value={item.quantity}
                             onChange={(e) => updateItemRow(item.id, 'quantity', e.target.value)}
-                            className="w-14 text-center px-1 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-xs font-mono font-bold text-white outline-none focus:border-[#FF5500]"
+                            className={`w-14 text-center px-1 py-0.5 rounded border text-xs font-mono font-bold outline-none focus:border-[#FF5500] ${
+                              isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                            }`}
                           />
                         </td>
                         <td className="py-2 px-3 text-right">
@@ -953,21 +1003,27 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                             min="0"
                             value={item.price}
                             onChange={(e) => updateItemRow(item.id, 'price', e.target.value)}
-                            className="w-24 text-right px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-xs font-mono font-bold text-emerald-400 outline-none focus:border-[#FF5500]"
+                            className={`w-24 text-right px-1.5 py-0.5 rounded border text-xs font-mono font-bold outline-none focus:border-[#FF5500] ${
+                              isLight ? 'bg-white border-slate-300 text-emerald-600' : 'bg-zinc-900 border-zinc-700 text-emerald-400'
+                            }`}
                           />
                         </td>
                         <td className="py-2 px-3 text-center">
                           <select
                             value={item.ivaPercent}
                             onChange={(e) => updateItemRow(item.id, 'ivaPercent', e.target.value)}
-                            className="px-1 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-[11px] font-mono text-zinc-300 outline-none cursor-pointer"
+                            className={`px-1 py-0.5 rounded border text-[11px] font-mono outline-none cursor-pointer ${
+                              isLight ? 'bg-white border-slate-300 text-slate-800' : 'bg-zinc-900 border-zinc-700 text-zinc-300'
+                            }`}
                           >
                             <option value="21">21%</option>
                             <option value="10.5">10.5%</option>
                             <option value="0">0%</option>
                           </select>
                         </td>
-                        <td className="py-2 px-3 text-right font-mono font-bold text-white">
+                        <td className={`py-2 px-3 text-right font-mono font-bold ${
+                          isLight ? 'text-slate-900' : 'text-white'
+                        }`}>
                           ${Math.round(lineTotal).toLocaleString('es-AR')}
                         </td>
                         <td className="py-2 px-3 text-center">
@@ -977,14 +1033,16 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                             max="100"
                             value={item.discountPercent}
                             onChange={(e) => updateItemRow(item.id, 'discountPercent', e.target.value)}
-                            className="w-12 text-center px-1 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-xs font-mono text-amber-300 outline-none focus:border-[#FF5500]"
+                            className={`w-12 text-center px-1 py-0.5 rounded border text-xs font-mono outline-none focus:border-[#FF5500] ${
+                              isLight ? 'bg-white border-slate-300 text-amber-600 font-bold' : 'bg-zinc-900 border-zinc-700 text-amber-300'
+                            }`}
                           />
                         </td>
                         <td className="py-2 px-3 text-center">
                           <button
                             type="button"
                             onClick={() => removeItemRow(item.id)}
-                            className="p-1 rounded-md text-rose-400 hover:text-white hover:bg-rose-600/80 transition-colors cursor-pointer"
+                            className="p-1 rounded-md text-rose-500 hover:text-white hover:bg-rose-600 transition-colors cursor-pointer"
                             title="Eliminar fila"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1009,8 +1067,10 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
             <div className={`p-3.5 rounded-xl border ${
               isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#15151c] border-zinc-800/80'
             }`}>
-              <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800/60">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+              <div className={`flex items-center justify-between pb-2 mb-2 border-b ${
+                isLight ? 'border-slate-200' : 'border-zinc-800/60'
+              }`}>
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
                   <Percent className="w-3.5 h-3.5" />
                   <span>Descuentos Globales</span>
                 </span>
@@ -1018,26 +1078,32 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                 <button
                   type="button"
                   onClick={() => setIsAddDiscountModalOpen(true)}
-                  className="px-2 py-0.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-semibold flex items-center gap-1 border border-zinc-700 cursor-pointer"
+                  className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold flex items-center gap-1 border cursor-pointer transition-colors ${
+                    isLight
+                      ? 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300'
+                      : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
+                  }`}
                 >
-                  <Plus className="w-3 h-3 text-amber-400" />
+                  <Plus className="w-3 h-3 text-amber-500" />
                   <span>Agregar Descuento</span>
                 </button>
               </div>
 
               {discountsList.length === 0 ? (
-                <p className="text-[11px] text-zinc-500 italic py-1">Sin descuentos globales aplicados.</p>
+                <p className={`text-[11px] italic py-1 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Sin descuentos globales aplicados.</p>
               ) : (
                 <div className="space-y-1.5">
                   {discountsList.map(d => (
-                    <div key={d.id} className="flex items-center justify-between py-1 px-2.5 rounded bg-zinc-900 border border-zinc-800 text-xs">
-                      <span className="font-semibold text-zinc-300">{d.name}</span>
+                    <div key={d.id} className={`flex items-center justify-between py-1 px-2.5 rounded text-xs border ${
+                      isLight ? 'bg-white border-slate-200' : 'bg-zinc-900 border-zinc-800'
+                    }`}>
+                      <span className={`font-semibold ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>{d.name}</span>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-amber-400">-{d.percent}%</span>
+                        <span className={`font-mono font-bold ${isLight ? 'text-amber-600' : 'text-amber-400'}`}>-{d.percent}%</span>
                         <button
                           type="button"
                           onClick={() => removeDiscount(d.id)}
-                          className="text-zinc-500 hover:text-rose-400 p-0.5"
+                          className="text-zinc-400 hover:text-rose-500 p-0.5"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -1052,7 +1118,9 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
             <div className={`p-3.5 rounded-xl border ${
               isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#15151c] border-zinc-800/80'
             }`}>
-              <span className="text-xs font-bold uppercase tracking-wider text-zinc-300 block mb-1.5">
+              <span className={`text-xs font-bold uppercase tracking-wider block mb-1.5 ${
+                isLight ? 'text-slate-700' : 'text-zinc-300'
+              }`}>
                 Notas del Comprobante:
               </span>
               <textarea
@@ -1076,7 +1144,9 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
               
               {/* Medio de Pago */}
               <div>
-                <label className="text-[10px] font-bold uppercase text-zinc-400 block mb-1">
+                <label className={`text-[10px] font-bold uppercase block mb-1 ${
+                  isLight ? 'text-slate-600' : 'text-zinc-400'
+                }`}>
                   Medio de Cobro:
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -1088,7 +1158,9 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                       className={`px-2 py-1.5 rounded-lg border text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                         paymentMethod === m.id
                           ? 'bg-[#FF5500] text-white border-[#FF5500] shadow-sm'
-                          : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
+                          : isLight
+                            ? 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200 hover:text-slate-900'
+                            : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
                       }`}
                     >
                       <m.icon className="w-3.5 h-3.5" />
@@ -1100,53 +1172,65 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
 
               {/* Adelantos / Señas */}
               <div className="flex items-center justify-between pt-1">
-                <span className="text-zinc-400 font-semibold">Adelantos / Seña:</span>
+                <span className={`font-semibold ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>Adelantos / Seña:</span>
                 <input
                   type="number"
                   min="0"
                   value={advancePayment}
                   onChange={(e) => setAdvancePayment(Math.max(0, Number(e.target.value) || 0))}
-                  className="w-28 text-right px-2 py-1 rounded bg-zinc-900 border border-zinc-700 font-mono font-bold text-emerald-400 text-xs outline-none focus:border-[#FF5500]"
+                  className={`w-28 text-right px-2 py-1 rounded border font-mono font-bold text-xs outline-none focus:border-[#FF5500] ${
+                    isLight ? 'bg-white border-slate-300 text-emerald-600' : 'bg-zinc-900 border-zinc-700 text-emerald-400'
+                  }`}
                 />
               </div>
 
               {/* Importe Neto */}
               <div className="flex items-center justify-between">
-                <span className="text-zinc-400 font-semibold">Importe NETO:</span>
-                <span className="font-mono font-bold text-white">
+                <span className={`font-semibold ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>Importe NETO:</span>
+                <span className={`font-mono font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   ${calculations.neto.toLocaleString('es-AR')}
                 </span>
               </div>
 
               {/* IVA / Impuestos */}
               <div className="flex items-center justify-between">
-                <span className="text-zinc-400 font-semibold">IVA / Impuestos:</span>
-                <span className="font-mono font-bold text-zinc-300">
+                <span className={`font-semibold ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>IVA / Impuestos:</span>
+                <span className={`font-mono font-bold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
                   ${calculations.iva.toLocaleString('es-AR')}
                 </span>
               </div>
 
               {/* Total Descuentos */}
               <div className="flex items-center justify-between">
-                <span className="text-zinc-400 font-semibold">Total Descuentos:</span>
-                <span className="font-mono font-bold text-amber-400">
+                <span className={`font-semibold ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>Total Descuentos:</span>
+                <span className={`font-mono font-bold ${isLight ? 'text-amber-600' : 'text-amber-400'}`}>
                   -${calculations.totalDiscounts.toLocaleString('es-AR')}
                 </span>
               </div>
 
             </div>
 
-            {/* TOTAL DESTACADO (Display verde idéntico a la captura) */}
-            <div className="mt-4 pt-3 border-t border-zinc-800/80">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+            {/* TOTAL DESTACADO */}
+            <div className={`mt-4 pt-3 border-t ${isLight ? 'border-slate-200' : 'border-zinc-800/80'}`}>
+              <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${
+                isLight ? 'text-slate-600' : 'text-zinc-400'
+              }`}>
                 Total (NETO + IVA):
               </span>
-              <div className="px-4 py-3 rounded-xl bg-emerald-950/40 border-2 border-emerald-500/60 shadow-[0_0_20px_rgba(16,185,129,0.2)] text-right">
-                <div className="text-2xl sm:text-3xl font-mono font-black text-emerald-400 tracking-tight">
+              <div className={`px-4 py-3 rounded-xl border-2 text-right transition-all ${
+                isLight
+                  ? 'bg-emerald-50 border-emerald-500/50 shadow-xs'
+                  : 'bg-emerald-950/40 border-emerald-500/60 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+              }`}>
+                <div className={`text-2xl sm:text-3xl font-mono font-black tracking-tight ${
+                  isLight ? 'text-emerald-700' : 'text-emerald-400'
+                }`}>
                   ${calculations.total.toLocaleString('es-AR')}
                 </div>
                 {advancePayment > 0 && (
-                  <div className="text-[11px] font-mono font-bold text-amber-400 mt-0.5">
+                  <div className={`text-[11px] font-mono font-bold mt-0.5 ${
+                    isLight ? 'text-amber-700' : 'text-amber-400'
+                  }`}>
                     Saldo al retirar: ${calculations.saldo.toLocaleString('es-AR')}
                   </div>
                 )}
@@ -1178,7 +1262,7 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
               <button
                 type="button"
                 onClick={() => setIsSearchClientsModalOpen(true)}
-                className="w-full py-2 px-3 rounded-lg bg-teal-800 hover:bg-teal-700 text-white border border-teal-600/40 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+                className="w-full py-2 px-3 rounded-lg bg-teal-700 hover:bg-teal-600 text-white border border-teal-600 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
               >
                 <Users className="w-3.5 h-3.5" />
                 <span>Buscar Clientes</span>
@@ -1187,7 +1271,11 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
               <button
                 type="button"
                 onClick={onOpenDailyCash}
-                className="w-full py-2 px-3 rounded-lg bg-teal-900/80 hover:bg-teal-800 text-teal-100 border border-teal-700/50 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+                className={`w-full py-2 px-3 rounded-lg border flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm ${
+                  isLight
+                    ? 'bg-teal-800 hover:bg-teal-700 text-white border-teal-700'
+                    : 'bg-teal-900/80 hover:bg-teal-800 text-teal-100 border-teal-700/50'
+                }`}
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span>Buscar Comprobantes</span>
@@ -1199,7 +1287,11 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                   setSelectedDocType('PRESUPUESTO');
                   alert('💡 Modo Presupuesto activo: podés presupuestar y no afectará stock ni caja.');
                 }}
-                className="w-full py-2 px-3 rounded-lg bg-sky-900/80 hover:bg-sky-800 text-sky-100 border border-sky-700/50 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+                className={`w-full py-2 px-3 rounded-lg border flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm ${
+                  isLight
+                    ? 'bg-sky-700 hover:bg-sky-600 text-white border-sky-600'
+                    : 'bg-sky-900/80 hover:bg-sky-800 text-sky-100 border-sky-700/50'
+                }`}
               >
                 <Tag className="w-3.5 h-3.5" />
                 <span>Crear Presupuesto</span>
@@ -1209,7 +1301,11 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                 <button
                   type="button"
                   onClick={onOpenDailyCash}
-                  className="w-full py-2 px-3 rounded-lg bg-rose-900/80 hover:bg-rose-800 text-rose-100 border border-rose-700/50 flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm"
+                  className={`w-full py-2 px-3 rounded-lg border flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-sm ${
+                    isLight
+                      ? 'bg-rose-700 hover:bg-rose-600 text-white border-rose-600'
+                      : 'bg-rose-900/80 hover:bg-rose-800 text-rose-100 border-rose-700/50'
+                  }`}
                 >
                   <Store className="w-3.5 h-3.5" />
                   <span>Cerrar Punto Venta / Caja</span>
@@ -1239,29 +1335,35 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
       {/* ================================================================= */}
       {isSearchProductsModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#121218] border border-zinc-700 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-            <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-[#161620]">
+          <div className={`border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] ${
+            isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#121218] border-zinc-700 text-white'
+          }`}>
+            <div className={`flex items-center justify-between p-4 border-b ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#161620] border-zinc-800'
+            }`}>
               <div className="flex items-center gap-2">
                 <Search className="w-4 h-4 text-[#FF5500]" />
-                <h3 className="text-sm font-bold text-white">Catálogo de Productos & Repuestos [F9]</h3>
+                <h3 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Catálogo de Productos & Repuestos [F9]</h3>
               </div>
-              <button onClick={() => setIsSearchProductsModalOpen(false)} className="text-zinc-400 hover:text-white p-1">
+              <button onClick={() => setIsSearchProductsModalOpen(false)} className={`p-1 ${isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'}`}>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 border-b border-zinc-800">
+            <div className={`p-4 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
               <input
                 type="text"
                 autoFocus
                 value={productSearchTerm}
                 onChange={(e) => setProductSearchTerm(e.target.value)}
                 placeholder="Escribí para buscar por nombre, SKU, modelo o categoría..."
-                className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs text-white outline-none focus:border-[#FF5500]"
+                className={`w-full px-3.5 py-2 rounded-xl border text-xs outline-none focus:border-[#FF5500] ${
+                  isLight ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400' : 'bg-zinc-900 border-zinc-700 text-white'
+                }`}
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 divide-y divide-zinc-800/60">
+            <div className={`flex-1 overflow-y-auto p-2 divide-y ${isLight ? 'divide-slate-200' : 'divide-zinc-800/60'}`}>
               {inventory
                 .filter(p => {
                   if (!productSearchTerm.trim()) return true;
@@ -1278,11 +1380,13 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                       addItemToTable(prod);
                       setIsSearchProductsModalOpen(false);
                     }}
-                    className="p-3 flex items-center justify-between hover:bg-zinc-800/60 rounded-xl cursor-pointer transition-colors"
+                    className={`p-3 flex items-center justify-between rounded-xl cursor-pointer transition-colors ${
+                      isLight ? 'hover:bg-slate-100' : 'hover:bg-zinc-800/60'
+                    }`}
                   >
                     <div>
-                      <span className="text-xs font-bold text-white block">{prod.name}</span>
-                      <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono mt-0.5">
+                      <span className={`text-xs font-bold block ${isLight ? 'text-slate-900' : 'text-white'}`}>{prod.name}</span>
+                      <div className={`flex items-center gap-2 text-[11px] font-mono mt-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                         <span className="text-[#FF5500]">SKU: {prod.sku}</span>
                         <span>•</span>
                         <span>Stock: {prod.stock || 0}</span>
@@ -1291,10 +1395,10 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-bold font-mono text-emerald-400 block">
+                      <span className={`text-sm font-bold font-mono block ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`}>
                         ${Number(prod.price || 0).toLocaleString('es-AR')}
                       </span>
-                      <span className="text-[10px] text-zinc-400">Clic para agregar</span>
+                      <span className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-zinc-400'}`}>Clic para agregar</span>
                     </div>
                   </div>
                 ))}
@@ -1308,43 +1412,51 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
       {/* ================================================================= */}
       {isSearchClientsModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#121218] border border-zinc-700 rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-            <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-[#161620]">
+          <div className={`border rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh] ${
+            isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#121218] border-zinc-700 text-white'
+          }`}>
+            <div className={`flex items-center justify-between p-4 border-b ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#161620] border-zinc-800'
+            }`}>
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-teal-400" />
-                <h3 className="text-sm font-bold text-white">Buscar Clientes Guardados</h3>
+                <Users className="w-4 h-4 text-teal-500" />
+                <h3 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Buscar Clientes Guardados</h3>
               </div>
-              <button onClick={() => setIsSearchClientsModalOpen(false)} className="text-zinc-400 hover:text-white p-1">
+              <button onClick={() => setIsSearchClientsModalOpen(false)} className={`p-1 ${isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'}`}>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 border-b border-zinc-800">
+            <div className={`p-4 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
               <input
                 type="text"
                 autoFocus
                 value={clientSearchQuery}
                 onChange={(e) => setClientSearchQuery(e.target.value)}
                 placeholder="Buscar por nombre, CUIT, DNI o teléfono..."
-                className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs text-white outline-none focus:border-[#FF5500]"
+                className={`w-full px-3.5 py-2 rounded-xl border text-xs outline-none focus:border-[#FF5500] ${
+                  isLight ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400' : 'bg-zinc-900 border-zinc-700 text-white'
+                }`}
               />
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 divide-y divide-zinc-800/60">
+            <div className={`flex-1 overflow-y-auto p-2 divide-y ${isLight ? 'divide-slate-200' : 'divide-zinc-800/60'}`}>
               {searchClients(clientSearchQuery).map((c, idx) => (
                 <div
                   key={idx}
                   onClick={() => selectClient(c)}
-                  className="p-3 flex items-center justify-between hover:bg-zinc-800/60 rounded-xl cursor-pointer transition-colors"
+                  className={`p-3 flex items-center justify-between rounded-xl cursor-pointer transition-colors ${
+                    isLight ? 'hover:bg-slate-100' : 'hover:bg-zinc-800/60'
+                  }`}
                 >
                   <div>
-                    <span className="text-xs font-bold text-white block">{c.name}</span>
-                    <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono mt-0.5">
+                    <span className={`text-xs font-bold block ${isLight ? 'text-slate-900' : 'text-white'}`}>{c.name}</span>
+                    <div className={`flex items-center gap-2 text-[11px] font-mono mt-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                       <span>Doc: {c.docNumber || 'S/D'}</span>
                       <span>•</span>
                       <span>Tel: {c.phone || 'S/T'}</span>
                       <span>•</span>
-                      <span className="text-teal-400">{c.taxCondition || 'Consumidor Final'}</span>
+                      <span className="text-teal-500 font-semibold">{c.taxCondition || 'Consumidor Final'}</span>
                     </div>
                   </div>
                   <span className="text-xs font-bold text-[#FF5500]">Seleccionar</span>
@@ -1360,30 +1472,34 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
       {/* ================================================================= */}
       {isCustomItemModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#121218] border border-zinc-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-5">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-zinc-800">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <div className={`border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-5 ${
+            isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#121218] border-zinc-700 text-white'
+          }`}>
+            <div className={`flex items-center justify-between pb-3 mb-4 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
+              <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 <Plus className="w-4 h-4 text-[#FF5500]" />
                 <span>Agregar Servicio o Ítem Manual</span>
               </h3>
-              <button onClick={() => setIsCustomItemModalOpen(false)} className="text-zinc-400 hover:text-white">
+              <button onClick={() => setIsCustomItemModalOpen(false)} className={isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'}>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleAddCustomItemSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="text-zinc-400 block mb-1">SKU / Código:</label>
+                <label className={`block mb-1 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>SKU / Código:</label>
                 <input
                   type="text"
                   value={customItemForm.sku}
                   onChange={(e) => setCustomItemForm(p => ({ ...p, sku: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-mono text-white outline-none focus:border-[#FF5500]"
+                  className={`w-full px-3 py-2 rounded-xl border text-xs font-mono outline-none focus:border-[#FF5500] ${
+                    isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="text-zinc-400 block mb-1">Concepto / Nombre del Servicio o Producto:</label>
+                <label className={`block mb-1 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>Concepto / Nombre del Servicio o Producto:</label>
                 <input
                   type="text"
                   required
@@ -1391,24 +1507,28 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                   value={customItemForm.name}
                   onChange={(e) => setCustomItemForm(p => ({ ...p, name: e.target.value }))}
                   placeholder="Ej: Cambio de Módulo, Mano de obra, etc."
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-semibold text-white outline-none focus:border-[#FF5500]"
+                  className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold outline-none focus:border-[#FF5500] ${
+                    isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                  }`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-zinc-400 block mb-1">Cantidad:</label>
+                  <label className={`block mb-1 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>Cantidad:</label>
                   <input
                     type="number"
                     min="1"
                     value={customItemForm.quantity}
                     onChange={(e) => setCustomItemForm(p => ({ ...p, quantity: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-mono font-bold text-white outline-none focus:border-[#FF5500]"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-mono font-bold outline-none focus:border-[#FF5500] ${
+                      isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="text-zinc-400 block mb-1">Precio Unitario ($):</label>
+                  <label className={`block mb-1 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>Precio Unitario ($):</label>
                   <input
                     type="number"
                     min="0"
@@ -1416,18 +1536,22 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                     value={customItemForm.price}
                     onChange={(e) => setCustomItemForm(p => ({ ...p, price: e.target.value }))}
                     placeholder="0"
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-mono font-bold text-emerald-400 outline-none focus:border-[#FF5500]"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-mono font-bold outline-none focus:border-[#FF5500] ${
+                      isLight ? 'bg-white border-slate-300 text-emerald-600' : 'bg-zinc-900 border-zinc-700 text-emerald-400'
+                    }`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-zinc-400 block mb-1">Alícuota IVA:</label>
+                  <label className={`block mb-1 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>Alícuota IVA:</label>
                   <select
                     value={customItemForm.ivaPercent}
                     onChange={(e) => setCustomItemForm(p => ({ ...p, ivaPercent: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs text-white outline-none"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs outline-none cursor-pointer ${
+                      isLight ? 'bg-white border-slate-300 text-slate-800' : 'bg-zinc-900 border-zinc-700 text-white'
+                    }`}
                   >
                     <option value="21">21%</option>
                     <option value="10.5">10.5%</option>
@@ -1436,14 +1560,16 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                 </div>
 
                 <div>
-                  <label className="text-zinc-400 block mb-1">% Bonif. / Desc.:</label>
+                  <label className={`block mb-1 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>% Bonif. / Desc.:</label>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     value={customItemForm.discountPercent}
                     onChange={(e) => setCustomItemForm(p => ({ ...p, discountPercent: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-mono text-amber-300 outline-none"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs font-mono outline-none ${
+                      isLight ? 'bg-white border-slate-300 text-amber-600 font-bold' : 'bg-zinc-900 border-zinc-700 text-amber-300'
+                    }`}
                   />
                 </div>
               </div>
@@ -1452,13 +1578,15 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                 <button
                   type="button"
                   onClick={() => setIsCustomItemModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 text-xs font-semibold"
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer ${
+                    isLight ? 'bg-slate-200 hover:bg-slate-300 text-slate-700' : 'bg-zinc-800 text-zinc-300'
+                  }`}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold"
+                  className="px-4 py-2 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold cursor-pointer"
                 >
                   Agregar a Comprobante
                 </button>
@@ -1473,31 +1601,35 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
       {/* ================================================================= */}
       {isAddDiscountModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#121218] border border-zinc-700 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-5">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-zinc-800">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Percent className="w-4 h-4 text-amber-400" />
+          <div className={`border rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-5 ${
+            isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#121218] border-zinc-700 text-white'
+          }`}>
+            <div className={`flex items-center justify-between pb-3 mb-4 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
+              <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                <Percent className="w-4 h-4 text-amber-500" />
                 <span>Agregar Descuento Global</span>
               </h3>
-              <button onClick={() => setIsAddDiscountModalOpen(false)} className="text-zinc-400 hover:text-white">
+              <button onClick={() => setIsAddDiscountModalOpen(false)} className={isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'}>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleAddDiscountSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="text-zinc-400 block mb-1">Concepto del Descuento:</label>
+                <label className={`block mb-1 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>Concepto del Descuento:</label>
                 <input
                   type="text"
                   required
                   value={newDiscountName}
                   onChange={(e) => setNewDiscountName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-semibold text-white outline-none focus:border-[#FF5500]"
+                  className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold outline-none focus:border-[#FF5500] ${
+                    isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="text-zinc-400 block mb-1">Porcentaje de Descuento (%):</label>
+                <label className={`block mb-1 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>Porcentaje de Descuento (%):</label>
                 <input
                   type="number"
                   min="1"
@@ -1505,7 +1637,9 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                   required
                   value={newDiscountPercent}
                   onChange={(e) => setNewDiscountPercent(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-mono font-bold text-amber-400 outline-none focus:border-[#FF5500]"
+                  className={`w-full px-3 py-2 rounded-xl border text-xs font-mono font-bold outline-none focus:border-[#FF5500] ${
+                    isLight ? 'bg-white border-slate-300 text-amber-600' : 'bg-zinc-900 border-zinc-700 text-amber-400'
+                  }`}
                 />
               </div>
 
@@ -1513,13 +1647,15 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                 <button
                   type="button"
                   onClick={() => setIsAddDiscountModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-zinc-800 text-zinc-300 text-xs font-semibold"
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer ${
+                    isLight ? 'bg-slate-200 hover:bg-slate-300 text-slate-700' : 'bg-zinc-800 text-zinc-300'
+                  }`}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-zinc-950 font-extrabold text-xs"
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-zinc-950 font-extrabold text-xs cursor-pointer"
                 >
                   Aplicar Descuento
                 </button>
@@ -1534,19 +1670,21 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
       {/* ================================================================= */}
       {isClientNotesModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#121218] border border-zinc-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-5">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-zinc-800">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <div className={`border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-5 ${
+            isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#121218] border-zinc-700 text-white'
+          }`}>
+            <div className={`flex items-center justify-between pb-3 mb-4 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
+              <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 <User className="w-4 h-4 text-[#FF5500]" />
                 <span>Notas Internas del Cliente</span>
               </h3>
-              <button onClick={() => setIsClientNotesModalOpen(false)} className="text-zinc-400 hover:text-white">
+              <button onClick={() => setIsClientNotesModalOpen(false)} className={isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'}>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
-              <p className="text-zinc-400 text-[11px]">
+              <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                 Estas notas son de uso interno del mostrador y taller (preferencias, cuenta corriente, historial):
               </p>
               <textarea
@@ -1554,13 +1692,15 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                 onChange={(e) => setClientInternalNotes(e.target.value)}
                 rows={4}
                 placeholder="Escribí notas del cliente aquí..."
-                className="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-200 outline-none focus:border-[#FF5500] resize-none"
+                className={`w-full p-3 rounded-xl border text-xs outline-none focus:border-[#FF5500] resize-none ${
+                  isLight ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400' : 'bg-zinc-900 border-zinc-700 text-zinc-200'
+                }`}
               />
               <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={() => setIsClientNotesModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white font-bold text-xs"
+                  className="px-4 py-2 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white font-bold text-xs cursor-pointer"
                 >
                   Guardar Notas
                 </button>
@@ -1575,49 +1715,53 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
       {/* ================================================================= */}
       {isHelpModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#121218] border border-zinc-700 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-5">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-zinc-800">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <div className={`border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-5 ${
+            isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#121218] border-zinc-700 text-white'
+          }`}>
+            <div className={`flex items-center justify-between pb-3 mb-4 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
+              <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 <HelpCircle className="w-4 h-4 text-[#FF5500]" />
                 <span>Atajos Rápidos de Teclado</span>
               </h3>
-              <button onClick={() => setIsHelpModalOpen(false)} className="text-zinc-400 hover:text-white">
+              <button onClick={() => setIsHelpModalOpen(false)} className={isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'}>
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-2.5 text-xs text-zinc-300">
-              <div className="flex items-center justify-between py-1.5 border-b border-zinc-800/60 font-mono">
-                <span className="px-2 py-0.5 rounded bg-zinc-800 text-white font-bold">[F1]</span>
-                <span className="font-sans text-zinc-400">Ver esta ayuda</span>
+            <div className={`space-y-2.5 text-xs ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+              <div className={`flex items-center justify-between py-1.5 border-b font-mono ${isLight ? 'border-slate-200' : 'border-zinc-800/60'}`}>
+                <span className={`px-2 py-0.5 rounded font-bold ${isLight ? 'bg-slate-200 text-slate-800' : 'bg-zinc-800 text-white'}`}>[F1]</span>
+                <span className={`font-sans ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Ver esta ayuda</span>
               </div>
-              <div className="flex items-center justify-between py-1.5 border-b border-zinc-800/60 font-mono">
-                <span className="px-2 py-0.5 rounded bg-sky-900/60 text-sky-300 font-bold border border-sky-700/50">[F9]</span>
-                <span className="font-sans text-zinc-400">Buscar productos en inventario</span>
+              <div className={`flex items-center justify-between py-1.5 border-b font-mono ${isLight ? 'border-slate-200' : 'border-zinc-800/60'}`}>
+                <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-600 font-bold border border-sky-400/40">[F9]</span>
+                <span className={`font-sans ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Buscar productos en inventario</span>
               </div>
-              <div className="flex items-center justify-between py-1.5 border-b border-zinc-800/60 font-mono">
-                <span className="px-2 py-0.5 rounded bg-blue-900/60 text-blue-300 font-bold border border-blue-700/50">[F10]</span>
-                <span className="font-sans text-zinc-400">Facturar y emitir comprobante</span>
+              <div className={`flex items-center justify-between py-1.5 border-b font-mono ${isLight ? 'border-slate-200' : 'border-zinc-800/60'}`}>
+                <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-600 font-bold border border-blue-400/40">[F10]</span>
+                <span className={`font-sans ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Facturar y emitir comprobante</span>
               </div>
-              <div className="flex items-center justify-between py-1.5 border-b border-zinc-800/60 font-mono">
-                <span className="px-2 py-0.5 rounded bg-zinc-800 text-white font-bold">[F11]</span>
-                <span className="font-sans text-zinc-400">Enfocar CUIT/DNI del cliente</span>
+              <div className={`flex items-center justify-between py-1.5 border-b font-mono ${isLight ? 'border-slate-200' : 'border-zinc-800/60'}`}>
+                <span className={`px-2 py-0.5 rounded font-bold ${isLight ? 'bg-slate-200 text-slate-800' : 'bg-zinc-800 text-white'}`}>[F11]</span>
+                <span className={`font-sans ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Enfocar CUIT/DNI del cliente</span>
               </div>
-              <div className="flex items-center justify-between py-1.5 border-b border-zinc-800/60 font-mono">
-                <span className="px-2 py-0.5 rounded bg-zinc-800 text-white font-bold">[F12]</span>
-                <span className="font-sans text-zinc-400">Enfocar SKU / Código de barras</span>
+              <div className={`flex items-center justify-between py-1.5 border-b font-mono ${isLight ? 'border-slate-200' : 'border-zinc-800/60'}`}>
+                <span className={`px-2 py-0.5 rounded font-bold ${isLight ? 'bg-slate-200 text-slate-800' : 'bg-zinc-800 text-white'}`}>[F12]</span>
+                <span className={`font-sans ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Enfocar SKU / Código de barras</span>
               </div>
               <div className="flex items-center justify-between py-1.5 font-mono">
-                <span className="px-2 py-0.5 rounded bg-zinc-800 text-white font-bold">[Esc]</span>
-                <span className="font-sans text-zinc-400">Cerrar modal o salir</span>
+                <span className={`px-2 py-0.5 rounded font-bold ${isLight ? 'bg-slate-200 text-slate-800' : 'bg-zinc-800 text-white'}`}>[Esc]</span>
+                <span className={`font-sans ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Cerrar modal o salir</span>
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-zinc-800 flex justify-end">
+            <div className={`mt-4 pt-3 border-t flex justify-end ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
               <button
                 type="button"
                 onClick={() => setIsHelpModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold"
+                className={`px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer ${
+                  isLight ? 'bg-slate-200 hover:bg-slate-300 text-slate-800' : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                }`}
               >
                 Entendido
               </button>
@@ -1631,17 +1775,21 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
       {/* ================================================================= */}
       {emittedVoucher && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#121218] border border-emerald-500/40 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          <div className={`border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh] ${
+            isLight ? 'bg-white border-emerald-400/60' : 'bg-[#121218] border-emerald-500/40'
+          }`}>
             
             {/* Header modal */}
-            <div className="p-4 bg-emerald-950/40 border-b border-emerald-500/30 flex items-center justify-between">
+            <div className={`p-4 border-b flex items-center justify-between ${
+              isLight ? 'bg-emerald-50 border-emerald-200' : 'bg-emerald-950/40 border-emerald-500/30'
+            }`}>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                 <div>
-                  <h3 className="text-sm font-bold text-white">
+                  <h3 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                     ¡Comprobante Emitido Exitosamente!
                   </h3>
-                  <span className="text-[11px] font-mono text-emerald-300">
+                  <span className={`text-[11px] font-mono font-bold ${isLight ? 'text-emerald-700' : 'text-emerald-300'}`}>
                     {emittedVoucher.documentNumber}
                   </span>
                 </div>
@@ -1651,34 +1799,38 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                   setEmittedVoucher(null);
                   resetForm();
                 }}
-                className="text-zinc-400 hover:text-white p-1"
+                className={`p-1 cursor-pointer ${isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'}`}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Vista física del ticket/comprobante */}
-            <div className="p-5 flex-1 overflow-y-auto space-y-4 font-mono text-xs text-zinc-300 bg-black/40">
-              <div className="text-center pb-3 border-b border-zinc-800">
-                <h2 className="text-base font-black text-white font-sans">MONTEC</h2>
-                <p className="text-[11px] text-zinc-400">Servicio Técnico Especializado</p>
-                <p className="text-[10px] text-zinc-500">Montes Carballo 943 • Mar del Plata</p>
-                <p className="text-[10px] text-zinc-500">Tel / WhatsApp: +54 9 223 542-8827</p>
-                <div className="mt-2 inline-block px-3 py-1 rounded bg-zinc-900 border border-zinc-700 font-bold text-white">
+            <div className={`p-5 flex-1 overflow-y-auto space-y-4 font-mono text-xs ${
+              isLight ? 'bg-slate-50 text-slate-700' : 'bg-black/40 text-zinc-300'
+            }`}>
+              <div className={`text-center pb-3 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
+                <h2 className={`text-base font-black font-sans ${isLight ? 'text-slate-900' : 'text-white'}`}>MONTEC</h2>
+                <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Servicio Técnico Especializado</p>
+                <p className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>Montes Carballo 943 • Mar del Plata</p>
+                <p className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>Tel / WhatsApp: +54 9 223 542-8827</p>
+                <div className={`mt-2 inline-block px-3 py-1 rounded border font-bold ${
+                  isLight ? 'bg-white border-slate-300 text-slate-900 shadow-2xs' : 'bg-zinc-900 border-zinc-700 text-white'
+                }`}>
                   {DOCUMENT_DEFINITIONS[emittedVoucher.documentType?.toUpperCase()]?.label || emittedVoucher.documentType}
                 </div>
               </div>
 
-              <div className="space-y-1 text-[11px] pb-2 border-b border-zinc-800">
-                <div>N° Comprobante: <strong className="text-white">{emittedVoucher.documentNumber}</strong></div>
-                <div>Fecha y Hora: <span className="text-zinc-400">{emittedVoucher.formattedDate}</span></div>
-                <div>Cliente: <strong className="text-white">{emittedVoucher.customer?.name}</strong></div>
-                <div>Doc: <span className="text-zinc-400">{emittedVoucher.customer?.docType} {emittedVoucher.customer?.docNumber || 'Consumidor Final'}</span></div>
-                <div>Condición IVA: <span className="text-zinc-400">{emittedVoucher.customer?.taxCondition}</span></div>
+              <div className={`space-y-1 text-[11px] pb-2 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
+                <div>N° Comprobante: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{emittedVoucher.documentNumber}</strong></div>
+                <div>Fecha y Hora: <span className={isLight ? 'text-slate-500' : 'text-zinc-400'}>{emittedVoucher.formattedDate}</span></div>
+                <div>Cliente: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{emittedVoucher.customer?.name}</strong></div>
+                <div>Doc: <span className={isLight ? 'text-slate-500' : 'text-zinc-400'}>{emittedVoucher.customer?.docType} {emittedVoucher.customer?.docNumber || 'Consumidor Final'}</span></div>
+                <div>Condición IVA: <span className={isLight ? 'text-slate-500' : 'text-zinc-400'}>{emittedVoucher.customer?.taxCondition}</span></div>
               </div>
 
-              <div className="space-y-1.5 pb-2 border-b border-zinc-800">
-                <div className="flex justify-between font-bold text-zinc-400 text-[10px] uppercase">
+              <div className={`space-y-1.5 pb-2 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
+                <div className={`flex justify-between font-bold text-[10px] uppercase ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
                   <span>Cant • Concepto</span>
                   <span>Subtotal</span>
                 </div>
@@ -1687,7 +1839,7 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                     <span className="truncate pr-2">
                       {item.quantity}x {item.name} {item.color !== '-' ? `(${item.color})` : ''}
                     </span>
-                    <span className="font-bold text-white whitespace-nowrap">
+                    <span className={`font-bold whitespace-nowrap ${isLight ? 'text-slate-900' : 'text-white'}`}>
                       ${Math.round(item.subtotal || item.quantity * item.price).toLocaleString('es-AR')}
                     </span>
                   </div>
@@ -1695,32 +1847,40 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
               </div>
 
               <div className="space-y-1 pt-1 text-right">
-                <div className="flex justify-between text-zinc-400">
+                <div className={`flex justify-between ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
                   <span>Subtotal Neto:</span>
                   <span>${emittedVoucher.subtotal?.toLocaleString('es-AR')}</span>
                 </div>
                 {emittedVoucher.discountAmount > 0 && (
-                  <div className="flex justify-between text-amber-400">
+                  <div className={`flex justify-between ${isLight ? 'text-amber-600 font-bold' : 'text-amber-400'}`}>
                     <span>Descuentos:</span>
                     <span>-${emittedVoucher.discountAmount?.toLocaleString('es-AR')}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-base font-bold text-emerald-400 pt-1 border-t border-zinc-800">
+                <div className={`flex justify-between text-base font-bold pt-1 border-t ${
+                  isLight ? 'border-slate-200 text-emerald-600' : 'border-zinc-800 text-emerald-400'
+                }`}>
                   <span>TOTAL:</span>
                   <span>${emittedVoucher.total?.toLocaleString('es-AR')}</span>
                 </div>
-                <div className="text-[10px] text-zinc-500 pt-1">
-                  Medio de Pago: <strong className="text-zinc-300">{emittedVoucher.paymentMethod}</strong>
+                <div className={`text-[10px] pt-1 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                  Medio de Pago: <strong className={isLight ? 'text-slate-800' : 'text-zinc-300'}>{emittedVoucher.paymentMethod}</strong>
                 </div>
               </div>
             </div>
 
             {/* Acciones de comprobante */}
-            <div className="p-4 border-t border-zinc-800 bg-[#161620] flex flex-wrap items-center justify-between gap-2">
+            <div className={`p-4 border-t flex flex-wrap items-center justify-between gap-2 ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#161620] border-zinc-800'
+            }`}>
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer ${
+                  isLight
+                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300'
+                    : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                }`}
               >
                 <Printer className="w-4 h-4 text-[#FF5500]" />
                 <span>Imprimir de Nuevo</span>
