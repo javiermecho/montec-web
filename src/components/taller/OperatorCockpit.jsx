@@ -152,7 +152,7 @@ export default function OperatorCockpit({ onClose }) {
       }`}>
 
       {/* 1. BARRA SUPERIOR DE CABECERA DEL COCKPIT */}
-      <header className="bg-[#0c0c10] border-b border-zinc-800/80 px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0 shadow-md">
+      <header className="cockpit-header panel-top-header bg-[#0c0c10] border-b border-zinc-800/80 px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0 shadow-md">
 
         {/* Izquierda: Logo + Insignia de Rol + Reloj */}
         <div className="flex items-center gap-3">
@@ -286,7 +286,7 @@ export default function OperatorCockpit({ onClose }) {
       </header>
 
       {/* 2. BARRA DE ACCESOS RÁPIDOS & ATAJOS DE TECLADO (COCKPIT BAR) */}
-      <div className="cockpit-shortcuts-bar bg-[#101015] border-b border-zinc-800/80 px-4 sm:px-6 py-2 flex items-center justify-between gap-2 overflow-x-auto shrink-0">
+      <div className="cockpit-shortcuts-bar admin-tabs-bar bg-[#101015] border-b border-zinc-800/80 px-4 sm:px-6 py-2 flex items-center justify-between gap-2 overflow-x-auto shrink-0">
 
         <div className="flex items-center gap-2">
           {/* F12: NUEVA ORDEN */}

@@ -106,65 +106,153 @@
   color: #0f172a !important;
 }
 
-/* Encabezados Superiores: SIEMPRE NEGROS para que el logo Montec ('tec' en blanco) nunca se pierda */
+/* ==========================================================================
+   ENCABEZADOS SUPERIORES: SIEMPRE OSCUROS EN MOSTRADOR Y ADMINISTRACIÓN
+   (Preservan branding Montec, badges de taller y atajos de teclado sin alterar)
+   ========================================================================== */
 .montec-panel-light header,
 .montec-panel-light .panel-top-header,
-.montec-panel-light .admin-tabs-bar {
-  background-color: #09090b !important;
+.montec-panel-light .admin-tabs-bar,
+.montec-panel-light .cockpit-header,
+.montec-panel-light .cockpit-shortcuts-bar {
+  background-color: #0c0c10 !important;
   border-color: #27272a !important;
   color: #ffffff !important;
 }
 
-.montec-panel-light header *,
-.montec-panel-light .panel-top-header *,
-.montec-panel-light .admin-tabs-bar * {
-  /* Mantener colores de texto del encabezado oscuro */
+.montec-panel-light .cockpit-shortcuts-bar {
+  background-color: #101015 !important;
 }
 
+/* Preservar cajas internas, pastillas y badges de los encabezados */
+.montec-panel-light header div[class*="bg-zinc-900"],
+.montec-panel-light .panel-top-header div[class*="bg-zinc-900"],
+.montec-panel-light .admin-tabs-bar div[class*="bg-zinc-900"],
+.montec-panel-light .cockpit-header div[class*="bg-zinc-900"],
+.montec-panel-light .cockpit-shortcuts-bar div[class*="bg-zinc-900"],
+.montec-panel-light header div[class*="bg-zinc-800"],
+.montec-panel-light .cockpit-header div[class*="bg-zinc-800"],
+.montec-panel-light .cockpit-shortcuts-bar div[class*="bg-zinc-800"] {
+  background-color: #18181b !important;
+  border-color: #27272a !important;
+}
+
+/* Preservar botones dentro de los encabezados (F12, F9, F10, F8, F11, tema, admin, logout) */
+.montec-panel-light .cockpit-shortcuts-bar button:not([class*="bg-[#FF5500]"]):not([class*="bg-zinc-800"]) {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: #a1a1aa !important;
+}
+
+.montec-panel-light .cockpit-shortcuts-bar button[class*="bg-zinc-800"] {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+.montec-panel-light .cockpit-shortcuts-bar button:hover:not([class*="bg-[#FF5500]"]) {
+  background-color: #18181b !important;
+  color: #ffffff !important;
+}
+
+.montec-panel-light header button[class*="bg-zinc-900"],
+.montec-panel-light .cockpit-header button[class*="bg-zinc-900"] {
+  background-color: #18181b !important;
+  border-color: #3f3f46 !important;
+  color: #e4e4e7 !important;
+}
+
+.montec-panel-light header button[class*="bg-zinc-900"]:hover,
+.montec-panel-light .cockpit-header button[class*="bg-zinc-900"]:hover {
+  background-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+/* Preservar badges de atajos de teclado (F12, F9, F10, F8, F11) */
+.montec-panel-light .cockpit-shortcuts-bar span[class*="bg-zinc-900"] {
+  background-color: #18181b !important;
+  border-color: #3f3f46 !important;
+  color: #a1a1aa !important;
+}
+
+.montec-panel-light .cockpit-shortcuts-bar span[class*="bg-black/"] {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+/* Preservar colores de textos dentro de los encabezados */
 .montec-panel-light header .text-white,
 .montec-panel-light .panel-top-header .text-white,
-.montec-panel-light .admin-tabs-bar .text-white {
+.montec-panel-light .admin-tabs-bar .text-white,
+.montec-panel-light .cockpit-header .text-white,
+.montec-panel-light .cockpit-shortcuts-bar .text-white {
   color: #ffffff !important;
+}
+
+.montec-panel-light header .text-zinc-200,
+.montec-panel-light .panel-top-header .text-zinc-200,
+.montec-panel-light .admin-tabs-bar .text-zinc-200,
+.montec-panel-light .cockpit-header .text-zinc-200,
+.montec-panel-light .cockpit-shortcuts-bar .text-zinc-200 {
+  color: #e4e4e7 !important;
+}
+
+.montec-panel-light header .text-zinc-300,
+.montec-panel-light .panel-top-header .text-zinc-300,
+.montec-panel-light .admin-tabs-bar .text-zinc-300,
+.montec-panel-light .cockpit-header .text-zinc-300,
+.montec-panel-light .cockpit-shortcuts-bar .text-zinc-300 {
+  color: #d4d4d8 !important;
 }
 
 .montec-panel-light header .text-zinc-400,
 .montec-panel-light .panel-top-header .text-zinc-400,
-.montec-panel-light .admin-tabs-bar .text-zinc-400 {
+.montec-panel-light .admin-tabs-bar .text-zinc-400,
+.montec-panel-light .cockpit-header .text-zinc-400,
+.montec-panel-light .cockpit-shortcuts-bar .text-zinc-400 {
   color: #a1a1aa !important;
 }
 
-/* Contenedores y Tarjetas Principales del Panel de Administración y Taller */
-.montec-panel-light div[class*="bg-[#18181b]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#18181c]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#121214]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#121215]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#0d0d10]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#141416]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#141417]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#141418]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#161616]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#161619]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#121212]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#1a1a1e]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#0E0E10]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#0d0d12]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-[#0f0f12]"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-zinc-950"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-zinc-900"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light div[class*="bg-zinc-850"]:not(header):not(.admin-tabs-bar),
-.montec-panel-light section:not(header):not(.admin-tabs-bar),
-.montec-panel-light table,
-.montec-panel-light tbody {
+.montec-panel-light header .text-zinc-500,
+.montec-panel-light .panel-top-header .text-zinc-500,
+.montec-panel-light .admin-tabs-bar .text-zinc-500,
+.montec-panel-light .cockpit-header .text-zinc-500,
+.montec-panel-light .cockpit-shortcuts-bar .text-zinc-500 {
+  color: #71717a !important;
+}
+
+/* Contenedores y Tarjetas Principales del Panel de Administración y Taller (SOLO CUERPO) */
+.montec-panel-light div[class*="bg-[#18181b]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#18181c]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#121214]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#121215]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#0d0d10]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#141416]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#141417]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#141418]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#161616]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#161619]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#121212]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#1a1a1e]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#0E0E10]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#0d0d12]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-[#0f0f12]"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-zinc-950"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-zinc-900"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light div[class*="bg-zinc-850"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light section:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.cockpit-header):not(.cockpit-header *):not(.cockpit-shortcuts-bar):not(.cockpit-shortcuts-bar *),
+.montec-panel-light table:not(header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light tbody:not(header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *) {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
   color: #0f172a !important;
 }
 
-/* Sub-bloques y cajas internas (métricas de proveedores, cajas de estadísticas, etc.) */
-.montec-panel-light [class*="bg-black/"]:not(header):not(.admin-tabs-bar):not(button[class*="bg-[#FF5500]"]),
-.montec-panel-light [class*="bg-zinc-800/"]:not(header *):not(.admin-tabs-bar *):not(button[class*="bg-[#FF5500]"]),
-.montec-panel-light [class*="bg-zinc-900/"]:not(header *):not(.admin-tabs-bar *):not(button[class*="bg-[#FF5500]"]),
-.montec-panel-light [class*="bg-zinc-950/"]:not(header *):not(.admin-tabs-bar *):not(button[class*="bg-[#FF5500]"]) {
+/* Sub-bloques y cajas internas (solo en cuerpo) */
+.montec-panel-light [class*="bg-black/"]:not(header *):not(.admin-tabs-bar *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *):not(button[class*="bg-[#FF5500]"]),
+.montec-panel-light [class*="bg-zinc-800/"]:not(header *):not(.admin-tabs-bar *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *):not(button[class*="bg-[#FF5500]"]),
+.montec-panel-light [class*="bg-zinc-900/"]:not(header *):not(.admin-tabs-bar *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *):not(button[class*="bg-[#FF5500]"]),
+.montec-panel-light [class*="bg-zinc-950/"]:not(header *):not(.admin-tabs-bar *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *):not(button[class*="bg-[#FF5500]"]) {
   background-color: #f8fafc !important;
   border-color: #e2e8f0 !important;
   color: #1e293b !important;
@@ -253,37 +341,37 @@
   color: #0f172a !important;
 }
 
-/* Bordes en General */
-.montec-panel-light [class*="border-zinc-800"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *),
-.montec-panel-light [class*="border-zinc-700"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *),
-.montec-panel-light [class*="border-zinc-850"] {
+/* Bordes en General (solo en cuerpo) */
+.montec-panel-light [class*="border-zinc-800"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light [class*="border-zinc-700"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light [class*="border-zinc-850"]:not(header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *) {
   border-color: #e2e8f0 !important;
 }
 
-.montec-panel-light [class*="divide-zinc-"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *) > :not([hidden]) ~ :not([hidden]) {
+.montec-panel-light [class*="divide-zinc-"]:not(header):not(header *):not(.admin-tabs-bar):not(.admin-tabs-bar *):not(.panel-top-header):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *) > :not([hidden]) ~ :not([hidden]) {
   border-color: #e2e8f0 !important;
 }
 
-/* Botones secundarios oscuros (filtros de proveedor, solo en stock, etc.) */
-.montec-panel-light button[class*="bg-[#121214]"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light button[class*="bg-zinc-850"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light button[class*="bg-zinc-900"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light button[class*="bg-zinc-800"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light button[class*="bg-zinc-700"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light a[class*="bg-zinc-900"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light a[class*="bg-zinc-800"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *) {
+/* Botones secundarios oscuros en cuerpo (filtros de proveedor, solo en stock, etc.) */
+.montec-panel-light button[class*="bg-[#121214]"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light button[class*="bg-zinc-850"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light button[class*="bg-zinc-900"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light button[class*="bg-zinc-800"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light button[class*="bg-zinc-700"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light a[class*="bg-zinc-900"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light a[class*="bg-zinc-800"]:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *) {
   background-color: #f1f5f9 !important;
   border-color: #cbd5e1 !important;
   color: #334155 !important;
 }
 
-.montec-panel-light button[class*="bg-[#121214]"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light button[class*="bg-zinc-850"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light button[class*="bg-zinc-900"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light button[class*="bg-zinc-800"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light button[class*="bg-zinc-700"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light a[class*="bg-zinc-900"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *),
-.montec-panel-light a[class*="bg-zinc-800"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *) {
+.montec-panel-light button[class*="bg-[#121214]"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light button[class*="bg-zinc-850"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light button[class*="bg-zinc-900"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light button[class*="bg-zinc-800"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light button[class*="bg-zinc-700"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light a[class*="bg-zinc-900"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *),
+.montec-panel-light a[class*="bg-zinc-800"]:hover:not([class*="bg-[#FF5500]"]):not(header *):not(.admin-tabs-bar *):not(.panel-top-header *):not(.cockpit-header *):not(.cockpit-shortcuts-bar *) {
   background-color: #e2e8f0 !important;
   color: #0f172a !important;
 }
