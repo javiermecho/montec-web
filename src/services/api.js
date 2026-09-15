@@ -340,6 +340,39 @@ export async function getFullBackup() {
   return null;
 }
 
+/**
+ * Obtiene la configuración comercial, de contacto y de ARCA/AFIP
+ */
+export async function getBusinessConfig() {
+  const res = await request('/business-config', { method: 'GET' });
+  if (res.success && res.data?.config) {
+    return res.data.config;
+  }
+  return null;
+}
+
+/**
+ * Guarda o actualiza la configuración comercial y de AFIP en PostgreSQL
+ */
+export async function saveBusinessConfig(config) {
+  const res = await request('/business-config', {
+    method: 'POST',
+    body: JSON.stringify({ config })
+  });
+  return res;
+}
+
+/**
+ * Prueba la conexión y autenticación con WSAA / WSFE de ARCA (AFIP)
+ */
+export async function testAfipConnection(afipData) {
+  const res = await request('/afip/test-connection', {
+    method: 'POST',
+    body: JSON.stringify(afipData)
+  });
+  return res;
+}
+
 export const api = {
   checkServerHealth,
   getOrdenes,
@@ -358,7 +391,11 @@ export const api = {
   deleteVenta,
   getSetting,
   saveSetting,
-  getFullBackup
+  getFullBackup,
+  getBusinessConfig,
+  saveBusinessConfig,
+  testAfipConnection
 };
 
 export default api;
+

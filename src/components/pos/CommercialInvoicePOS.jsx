@@ -115,7 +115,8 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
     recordSale,
     updateProductStock,
     searchClients,
-    panelTheme
+    panelTheme,
+    businessConfig
   } = useData();
 
   const isLight = panelTheme === 'light';
@@ -1810,10 +1811,20 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
               isLight ? 'bg-slate-50 text-slate-700' : 'bg-black/40 text-zinc-300'
             }`}>
               <div className={`text-center pb-3 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
-                <h2 className={`text-base font-black font-sans ${isLight ? 'text-slate-900' : 'text-white'}`}>MONTEC</h2>
-                <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Servicio Técnico Especializado</p>
-                <p className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>Montes Carballo 943 • Mar del Plata</p>
-                <p className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>Tel / WhatsApp: +54 9 223 542-8827</p>
+                <h2 className={`text-base font-black font-sans ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {businessConfig?.business?.fantasyName || 'MONTEC'}
+                </h2>
+                <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                  {businessConfig?.business?.legalName || 'Servicio Técnico Especializado'}
+                </p>
+                <p className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
+                  {businessConfig?.business?.address || 'Montes Carballo 943'} • {businessConfig?.business?.city || 'Mar del Plata'}
+                  {businessConfig?.business?.cuit ? ` • CUIT: ${businessConfig.business.cuit}` : ''}
+                </p>
+                <p className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
+                  Tel / WhatsApp: {businessConfig?.contact?.technicalWhatsapp || businessConfig?.contact?.supportPhone || '+54 9 223 542-8827'}
+                  {businessConfig?.contact?.billingEmail ? ` • ${businessConfig.contact.billingEmail}` : ''}
+                </p>
                 <div className={`mt-2 inline-block px-3 py-1 rounded border font-bold ${
                   isLight ? 'bg-white border-slate-300 text-slate-900 shadow-2xs' : 'bg-zinc-900 border-zinc-700 text-white'
                 }`}>
@@ -1889,10 +1900,11 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
               {emittedVoucher.customer?.phone && (
                 <a
                   href={`https://wa.me/549${emittedVoucher.customer.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                    `¡Hola ${emittedVoucher.customer.name}! Te enviamos tu comprobante de *montec*:\n` +
+                    `¡Hola ${emittedVoucher.customer.name}! Te enviamos tu comprobante de *${businessConfig?.business?.fantasyName || 'montec'}*:\n` +
                     `📄 *${emittedVoucher.documentNumber}*\n` +
                     `💰 *Total:* $${emittedVoucher.total?.toLocaleString('es-AR')}\n` +
                     `📅 *Fecha:* ${emittedVoucher.formattedDate}\n` +
+                    `📍 ${businessConfig?.business?.address || 'Montes Carballo 943'}, ${businessConfig?.business?.city || 'Mar del Plata'}\n` +
                     `¡Muchas gracias por elegirnos!`
                   )}`}
                   target="_blank"

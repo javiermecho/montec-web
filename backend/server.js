@@ -995,13 +995,152 @@ app.get('/api/backup', async (req, res) => {
       }
     };
 
+// ==============================================================
+// CONFIGURACIÓN DE NEGOCIO & DATOS FISCALES ARCA (AFIP)
+// ==============================================================
+const DEFAULT_BUSINESS_CONFIG = {
+  name: 'montec',
+  businessName: 'montec - Servicio Técnico Especializado',
+  legalName: 'Javier Mecho',
+  cuit: '20-35428827-9',
+  taxCondition: 'Responsable Inscripto',
+  grossIncome: '20-35428827-9',
+  startActivityDate: '2022-01-01',
+  address: 'Montes Carballo 943',
+  city: 'Mar del Plata',
+  state: 'Buenos Aires',
+  postalCode: 'B7600',
+  phone: '+54 9 223 542-8827',
+  technicalWhatsapp: '+54 9 223 542-8827',
+  email: 'contacto@montec.ar',
+  billingEmail: 'facturacion@montec.ar',
+  openingHours: 'Lun a Sáb 9:30 a 19:30 hs',
+  ticketFooter: 'Garantía escrita 30 días. Presupuestos con validez de 7 días corridos.',
+  defaultPointOfSale: 1,
+  afip: {
+    enabled: false,
+    environment: 'homologation', // 'homologation' | 'production'
+    cuit: '20-35428827-9',
+    pointOfSale: 1,
+    certificateName: '',
+    certificateData: '', // base64 o contenido PEM
+    privateKeyData: '', // clave privada
+    hasCertificate: false,
+    hasPrivateKey: false,
+    certificateExpiry: null,
+    lastTested: null,
+    status: 'unconfigured' // 'unconfigured' | 'ready' | 'error'
+  }
+};
+
+// GET /api/business-config
+app.get('/api/business-config', async (req, res) => {
+  try {
+    const dbConnected = await isDbConnected();
+    if (!dbConnected) {
+      return res.json({ success: true, config: DEFAULT_BUSINESS_CONFIG, fromFallback: true });
+    }
+
+    const result = await query("SELECT value FROM app_settings WHERE key = 'business_config'");
+    if (result.rowCount > 0 && result.rows[0].value) {
+      const merged = {
+        ...DEFAULT_BUSINESS_CONFIG,
+        ...result.rows[0].value,
+        afip: {
+          ...DEFAULT_BUSINESS_CONFIG.afip,
+          ...(result.rows[0].value.afip || {})
+        }
+      };
+      return res.json({ success: true, config: merged });
+    }
+
+    res.json({ success: true, config: DEFAULT_BUSINESS_CONFIG });
+  } catch (error) {
+    console.error('❌ Error al obtener business-config:', error);
+    res.json({ success: true, config: DEFAULT_BUSINESS_CONFIG, error: error.message });
+  }
+});
+
+// POST /api/business-config
+app.post('/api/business-config', async (req, res) => {
+  try {
+    const rawConfig = req.body || {};
+    const configToSave = {
+      ...DEFAULT_BUSINESS_CONFIG,
+      ...rawConfig,
+      afip: {
+        ...DEFAULT_BUSINESS_CONFIG.afip,
+        ...(rawConfig.afip || {})
+      },
+      updatedAt: new Date().toISOString()
+    };
+
+    // Calcular flags derivados de afip
+    if (configToSave.afip) {
+      configToSave.afip.hasCertificate = Boolean(configToSave.afip.certificateData && configToSave.afip.certificateData.length > 20);
+      configToSave.afip.hasPrivateKey = Boolean(configToSave.afip.privateKeyData && configToSave.afip.privateKeyData.length > 20);
+    }
+
+    const dbConnected = await isDbConnected();
+    if (dbConnected) {
+      await query(
+        `INSERT INTO app_settings (key, value, updated_at) 
+         VALUES ('business_config', $1, CURRENT_TIMESTAMP) 
+         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = CURRENT_TIMESTAMP`,
+        [JSON.stringify(configToSave)]
+      );
+    }
+
+    res.json({ success: true, config: configToSave });
+  } catch (error) {
+    console.error('❌ Error al guardar business-config:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/afip/test-connection
+app.post('/api/afip/test-connection', async (req, res) => {
+  try {
+    const { afip, cuit } = req.body || {};
+    const testCuit = (afip?.cuit || cuit || '').replace(/[^0-9]/g, '');
+
+    const checks = {
+      cuitValid: testCuit.length === 11,
+      pointOfSaleValid: Number(afip?.pointOfSale || 0) > 0,
+      hasCertificate: Boolean(afip?.certificateData || afip?.hasCertificate),
+      hasPrivateKey: Boolean(afip?.privateKeyData || afip?.hasPrivateKey),
+      environment: afip?.environment || 'homologation'
+    };
+
+    const isReady = checks.cuitValid && checks.pointOfSaleValid && checks.hasCertificate && checks.hasPrivateKey;
+
+    // Diagnóstico detallado
+    let message = '';
+    if (!checks.cuitValid) {
+      message = 'El CUIT debe contener exactamente 11 dígitos numéricos.';
+    } else if (!checks.pointOfSaleValid) {
+      message = 'Debe indicar un Punto de Venta válido autorizado en AFIP/ARCA (mayor a 0).';
+    } else if (!checks.hasCertificate) {
+      message = 'Falta cargar el Certificado Digital X.509 (.crt / .pem).';
+    } else if (!checks.hasPrivateKey) {
+      message = 'Falta cargar la Clave Privada (.key).';
+    } else {
+      message = checks.environment === 'homologation'
+        ? 'Parámetros válidos. Listo para operar en entorno de Homologación (Pruebas AFIP/ARCA).'
+        : 'Parámetros válidos. Listo para emitir Facturas Electrónicas reales en Producción.';
+    }
+
     res.json({
       success: true,
-      backup: backupSnapshot
+      ready: isReady,
+      status: isReady ? 'ready' : 'incomplete',
+      message,
+      checks,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('❌ Error al generar backup:', error);
-    res.status(500).json({ error: 'Error al exportar snapshot del sistema' });
+    console.error('❌ Error en test de conexión AFIP:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

@@ -38,6 +38,7 @@ import DailySalesTab from '../admin/DailySalesTab';
 import PartsSearchTab from '../admin/PartsSearchTab';
 import RepairOrderReceiver from './RepairOrderReceiver';
 import UnifiedDeliveryModal from './UnifiedDeliveryModal';
+import LocalSettingsTab from './LocalSettingsTab';
 
 export default function OperatorCockpit({ onClose }) {
   const { currentUser, role, isAdmin, logout, elevateToAdmin, isTallerSubdomain } = useAuth();
@@ -365,6 +366,19 @@ export default function OperatorCockpit({ onClose }) {
               F11
             </span>
           </button>
+
+          {/* MI LOCAL & FACTURACIÓN ARCA / AFIP */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('local_settings')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0 ${activeTab === 'local_settings'
+                ? 'bg-zinc-800 text-white border border-[#FF5500]/50 shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent'
+              }`}
+          >
+            <Store className="w-4 h-4 text-orange-400" />
+            <span>Mi Local & AFIP</span>
+          </button>
         </div>
 
         {/* Acceso Rápido: Entrega de Orden con Saldo */}
@@ -430,6 +444,11 @@ export default function OperatorCockpit({ onClose }) {
 
             <PartsSearchTab />
           </div>
+        )}
+
+        {/* PESTAÑA: CONFIGURACIÓN DEL LOCAL & ARCA (AFIP) */}
+        {activeTab === 'local_settings' && (
+          <LocalSettingsTab />
         )}
 
       </main>

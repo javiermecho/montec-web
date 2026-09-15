@@ -28,7 +28,7 @@ import {
 import { useData } from '../../context/DataContext';
 
 export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDelivered }) {
-  const { inventory, recordUnifiedDelivery } = useData();
+  const { inventory, recordUnifiedDelivery, businessConfig } = useData();
 
   if (!isOpen || !order) return null;
 
@@ -191,8 +191,8 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
       qr: 'Mercado Pago QR'
     }[completedSale.paymentMethod] || 'Efectivo';
 
-    let msg = `*COMPROBANTE DE ENTREGA Y PAGO - MONTEC TECH LAB* 🛡️\n`;
-    msg += `📍 Montes Carballo 943, Mar del Plata\n`;
+    let msg = `*COMPROBANTE DE ENTREGA Y PAGO - ${businessConfig?.business?.fantasyName || 'MONTEC TECH LAB'}* 🛡️\n`;
+    msg += `📍 ${businessConfig?.business?.address || 'Montes Carballo 943'}, ${businessConfig?.business?.city || 'Mar del Plata'}\n`;
     msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
     msg += `📄 *Orden:* ${completedSale.orderNumber}\n`;
     msg += `👤 *Cliente:* ${completedSale.clientName}\n`;
@@ -279,9 +279,9 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
             {/* Ticket Térmico en Pantalla */}
             <div className="bg-white text-zinc-900 rounded-2xl p-6 font-mono text-xs shadow-2xl max-w-md mx-auto border border-zinc-300">
               <div className="text-center pb-4 border-b border-dashed border-zinc-300 space-y-1">
-                <div className="font-bold text-base tracking-widest uppercase">MONTEC REPAIR & ACCESSORIES</div>
-                <div className="text-[11px] text-zinc-600">Servicio Técnico Especializado Apple & Multimarca</div>
-                <div className="text-[11px] text-zinc-600">Montes Carballo 943 • Mar del Plata</div>
+                <div className="font-bold text-base tracking-widest uppercase">{businessConfig?.business?.fantasyName || 'MONTEC'} REPAIR & ACCESSORIES</div>
+                <div className="text-[11px] text-zinc-600">{businessConfig?.business?.legalName || 'Servicio Técnico Especializado Apple & Multimarca'}</div>
+                <div className="text-[11px] text-zinc-600">{businessConfig?.business?.address || 'Montes Carballo 943'} • {businessConfig?.business?.city || 'Mar del Plata'}</div>
                 <div className="text-[11px] text-zinc-500">{new Date(completedSale.deliveredAt).toLocaleString('es-AR')}</div>
               </div>
 

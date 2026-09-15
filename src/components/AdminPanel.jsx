@@ -45,6 +45,7 @@ import SalesPOS from './pos/SalesPOS';
 import CommercialInvoicePOS from './pos/CommercialInvoicePOS';
 import InventoryManager from './inventory/InventoryManager';
 import DailySalesTab from './admin/DailySalesTab';
+import LocalSettingsTab from './taller/LocalSettingsTab';
 
 export default function AdminPanel() {
   const {
@@ -475,6 +476,17 @@ export default function AdminPanel() {
         >
           <BarChart3 className="w-4 h-4 text-emerald-400" />
           <span>Google Analytic </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('local_settings')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'local_settings'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+            }`}
+        >
+          <Store className="w-4 h-4 text-orange-400" />
+          <span>Mi Local & AFIP</span>
         </button>
 
         <button
@@ -1400,6 +1412,13 @@ export default function AdminPanel() {
         {/* ============================================================== */}
         {activeTab === 'analytics' && (
           <AnalyticsTab />
+        )}
+
+        {/* ============================================================== */}
+        {/* PESTAÑA: CONFIGURACIÓN DEL LOCAL & ARCA (AFIP)                 */}
+        {/* ============================================================== */}
+        {activeTab === 'local_settings' && (
+          <LocalSettingsTab />
         )}
 
       </div>

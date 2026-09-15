@@ -30,7 +30,42 @@ const STORAGE_KEYS = {
   IPHONE_CONFIGS: 'montec_iphone_configs_v3', // v3: Modalidades condicionales por modelo iPhone (Baterías pre-XS vs post-XS, Pantallas pre-11 vs post-11)
   AUTH: 'montec_admin_auth',
   EMPLOYEE_AUTH: 'montec_employee_auth_v1',
-  ORDERS: 'montec_repair_orders_v1'
+  ORDERS: 'montec_repair_orders_v1',
+  BUSINESS_CONFIG: 'montec_business_config_v1'
+};
+
+export const DEFAULT_BUSINESS_CONFIG = {
+  business: {
+    fantasyName: 'MONTEC',
+    legalName: 'MONTEC SERVICIO TÉCNICO',
+    cuit: '20-38492019-4',
+    iibb: '20-38492019-4',
+    ivaCondition: 'Responsable Inscripto', // Monotributo | Responsable Inscripto | Exento
+    startActivityDate: '2020-01-15',
+    address: 'Montes Carballo 943',
+    city: 'Mar del Plata',
+    state: 'Buenos Aires',
+    zipCode: '7600',
+    country: 'Argentina'
+  },
+  contact: {
+    supportPhone: '+54 9 223 542-8827',
+    technicalWhatsapp: '+54 9 223 542-8827',
+    contactEmail: 'consultas@montec.ar',
+    billingEmail: 'facturacion@montec.ar',
+    website: 'https://montec.ar'
+  },
+  afip: {
+    environment: 'homologacion', // 'homologacion' | 'produccion'
+    cuit: '20-38492019-4',
+    puntoVenta: 1,
+    tipoComprobanteDefault: '11', // Factura C (11), Factura B (6), Factura A (1)
+    certificate: '', // Archivo CRT/PEM
+    privateKey: '', // Archivo KEY
+    tokenExpiration: null,
+    lastTested: null,
+    status: 'configured_offline'
+  }
 };
 
 const DEFAULT_PRICING_RULES = {
@@ -481,6 +516,24 @@ export function DataProvider({ children }) {
           }
         } catch (e) {}
 
+        // 7. Sincronizar Configuración de Negocio y AFIP en PostgreSQL
+        try {
+          const remoteBusinessConfig = await api.getBusinessConfig();
+          if (remoteBusinessConfig && typeof remoteBusinessConfig === 'object') {
+            setBusinessConfig(prev => {
+              const merged = {
+                business: { ...DEFAULT_BUSINESS_CONFIG.business, ...(remoteBusinessConfig.business || {}) },
+                contact: { ...DEFAULT_BUSINESS_CONFIG.contact, ...(remoteBusinessConfig.contact || {}) },
+                afip: { ...DEFAULT_BUSINESS_CONFIG.afip, ...(remoteBusinessConfig.afip || {}) }
+              };
+              try {
+                localStorage.setItem(STORAGE_KEYS.BUSINESS_CONFIG, JSON.stringify(merged));
+              } catch (e) {}
+              return merged;
+            });
+          }
+        } catch (e) {}
+
         return true;
       } else {
         setServerStatus('offline');
@@ -576,6 +629,49 @@ export function DataProvider({ children }) {
       localStorage.setItem(STORAGE_KEYS.IPHONE_CONFIGS, JSON.stringify(defaults));
     } catch (e) {}
     api.saveSetting('iphone_configs', defaults).catch(() => {});
+  };
+
+  // 8.1 Configuración de Local, Facturación y ARCA (AFIP)
+  const [businessConfig, setBusinessConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.BUSINESS_CONFIG);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          business: { ...DEFAULT_BUSINESS_CONFIG.business, ...(parsed.business || {}) },
+          contact: { ...DEFAULT_BUSINESS_CONFIG.contact, ...(parsed.contact || {}) },
+          afip: { ...DEFAULT_BUSINESS_CONFIG.afip, ...(parsed.afip || {}) }
+        };
+      }
+      return DEFAULT_BUSINESS_CONFIG;
+    } catch {
+      return DEFAULT_BUSINESS_CONFIG;
+    }
+  });
+
+  const updateBusinessConfig = (newConfig) => {
+    setBusinessConfig(prev => {
+      const merged = {
+        business: { ...prev.business, ...(newConfig.business || {}) },
+        contact: { ...prev.contact, ...(newConfig.contact || {}) },
+        afip: { ...prev.afip, ...(newConfig.afip || {}) }
+      };
+      try {
+        localStorage.setItem(STORAGE_KEYS.BUSINESS_CONFIG, JSON.stringify(merged));
+      } catch (e) {}
+      api.saveBusinessConfig(merged).catch(err => {
+        console.warn('⚠️ No se pudo sincronizar configuración con el servidor:', err);
+      });
+      return merged;
+    });
+  };
+
+  const resetBusinessConfig = () => {
+    setBusinessConfig(DEFAULT_BUSINESS_CONFIG);
+    try {
+      localStorage.setItem(STORAGE_KEYS.BUSINESS_CONFIG, JSON.stringify(DEFAULT_BUSINESS_CONFIG));
+    } catch (e) {}
+    api.saveBusinessConfig(DEFAULT_BUSINESS_CONFIG).catch(() => {});
   };
 
   // ============================================================================
@@ -1742,7 +1838,8 @@ export function DataProvider({ children }) {
         api.saveSetting('models', models),
         api.saveSetting('issues', issues),
         api.saveSetting('pricing_rules', pricingRules),
-        api.saveSetting('iphone_configs', iphoneConfigs)
+        api.saveSetting('iphone_configs', iphoneConfigs),
+        api.saveBusinessConfig(businessConfig)
       ]);
 
       // 2. Obtener el snapshot completo desde PostgreSQL
@@ -1828,7 +1925,10 @@ export function DataProvider({ children }) {
       api,
       panelTheme,
       togglePanelTheme,
-      setPanelTheme
+      setPanelTheme,
+      businessConfig,
+      updateBusinessConfig,
+      resetBusinessConfig
     }}>
       {children}
     </DataContext.Provider>
