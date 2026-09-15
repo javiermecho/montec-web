@@ -26,19 +26,22 @@ export function getAnalyticsConfig() {
   try {
     const saved = localStorage.getItem(STORAGE_KEYS.CONFIG);
     if (saved) {
-      return JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      if (parsed && parsed.gaId && !parsed.gaId.includes('XXXXX')) {
+        return parsed;
+      }
     }
   } catch (e) {
     console.warn('Error leyendo configuración de analytics de localStorage', e);
   }
 
-  // Fallback a variables de entorno si existen
+  // Fallback a variables de entorno o ID oficial de montec.ar
   const envGa = import.meta.env.VITE_GA_TRACKING_ID;
   const envAds = import.meta.env.VITE_GOOGLE_ADS_ID;
   const envConv = import.meta.env.VITE_GOOGLE_ADS_CONVERSION_ID;
 
   return {
-    gaId: envGa && !envGa.includes('XXXXX') ? envGa : '',
+    gaId: (envGa && !envGa.includes('XXXXX')) ? envGa : 'G-1YEKDXTGEZ',
     adsId: envAds && !envAds.includes('XXXXX') ? envAds : '',
     adsConversionLabel: envConv && !envConv.includes('XXXXX') ? envConv : ''
   };
