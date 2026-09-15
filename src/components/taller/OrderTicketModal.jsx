@@ -1,11 +1,10 @@
 import React from 'react';
 import { X, Printer, MessageSquare, CheckCircle2, ShieldCheck, Smartphone, Clock, Calendar, AlertCircle } from 'lucide-react';
 import { PatternThumbnail } from './PatternLockInput';
-
-const TALLER_PHONE = '5492235000000';
-const TALLER_ADDRESS = 'Montes Carballo 943, Mar del Plata';
+import { useData } from '../../context/DataContext';
 
 export default function OrderTicketModal({ order, onClose }) {
+  const { businessConfig, formatWhatsAppTemplate } = useData();
   if (!order) return null;
 
   const { customer, device, service } = order;
@@ -34,23 +33,35 @@ export default function OrderTicketModal({ order, onClose }) {
       : 'A coordinar';
 
     const warrantyStr = service.warranty || '90 días de garantía escrita';
+    const localName = businessConfig?.business?.fantasyName || 'MONTEC';
+    const address = businessConfig?.business?.address || 'Montes Carballo 943';
+    const city = businessConfig?.business?.city || 'Mar del Plata';
 
-    const text = 
-      `¡Hola ${customer.name || 'Cliente'}! 👋 En *montec* hemos recibido tu equipo para servicio técnico.%0A%0A` +
-      `📋 *ORDEN DE REPARACIÓN:* ${order.orderNumber}%0A` +
-      `📱 *Equipo:* ${device.brand} ${device.model}%0A` +
-      `🛠️ *Trabajo a realizar:* ${service.requestedRepair || 'Diagnóstico y reparación general'}%0A` +
-      `💰 *Total Acordado:* $${(service.budgetTotal || 0).toLocaleString('es-AR')}%0A` +
-      `💵 *Seña Recibida:* ${depositStr}%0A` +
-      `⚖️ *Saldo al Retirar:* ${balanceStr}%0A` +
-      `⏱️ *Plazo estimado:* ${deliveryDateStr}%0A` +
-      `📍 *Taller:* ${TALLER_ADDRESS}%0A` +
-      `🛡️ *Garantía:* ${warrantyStr}%0A%0A` +
-      `Te avisaremos por este medio cuando tu equipo esté en mesa de trabajo o listo para retirar. ¡Gracias por confiar en montec!`;
+    const rawTemplate = businessConfig?.whatsappTemplates?.orderReceived ||
+      '¡Hola {cliente}! 👋 Te contactamos de *{local}*.\n\n📋 *ORDEN DE REPARACIÓN:* {orden}\n📱 *Equipo:* {equipo}\n🛠️ *Trabajo a realizar:* {falla}\n💰 *Total Acordado:* {total}\n💵 *Seña Recibida:* {sena}\n⚖️ *Saldo al Retirar:* {saldo}\n⏱️ *Plazo estimado:* {fecha_entrega}\n📍 *Taller:* {direccion}, {ciudad}\n🛡️ *Garantía:* {garantia}\n\nTe avisaremos por este medio cuando tu equipo esté en mesa de trabajo o listo para retirar. ¡Gracias por confiar en {local}!';
+
+    const vars = {
+      cliente: customer.name || 'Cliente',
+      orden: order.orderNumber,
+      equipo: `${device.brand || ''} ${device.model || ''}`.trim(),
+      falla: service.requestedRepair || service.issueDescription || service.problem || 'Diagnóstico y reparación general',
+      total: `$${(service.budgetTotal || 0).toLocaleString('es-AR')}`,
+      sena: depositStr,
+      saldo: balanceStr,
+      fecha_entrega: deliveryDateStr,
+      direccion: address,
+      ciudad: city,
+      garantia: warrantyStr,
+      local: localName
+    };
+
+    const formattedMessage = typeof formatWhatsAppTemplate === 'function'
+      ? formatWhatsAppTemplate(rawTemplate, vars)
+      : rawTemplate;
 
     const cleanPhone = (customer.phone || '').replace(/[^0-9]/g, '');
     const finalPhone = cleanPhone.startsWith('54') ? cleanPhone : `549${cleanPhone}`;
-    return `https://wa.me/${finalPhone}?text=${text}`;
+    return `https://wa.me/${finalPhone}?text=${encodeURIComponent(formattedMessage)}`;
   };
 
   const formatDate = (isoString) => {
@@ -119,16 +130,16 @@ export default function OrderTicketModal({ order, onClose }) {
           {/* Encabezado Taller */}
           <div className="text-center border-b border-zinc-800 print:border-black pb-3">
             <h2 className="text-lg print:text-base font-black uppercase tracking-wider text-white print:text-black font-heading">
-              MONTEC
+              {businessConfig?.business?.fantasyName || 'MONTEC'}
             </h2>
             <p className="text-[11px] text-zinc-400 print:text-gray-700 font-medium">
-              Servicio Técnico y Laboratorio de Microelectrónica
+              {businessConfig?.business?.legalName || 'Servicio Técnico y Laboratorio de Microelectrónica'}
             </p>
             <p className="text-[10px] text-zinc-500 print:text-gray-600">
-              {TALLER_ADDRESS} • Mar del Plata
+              {businessConfig?.business?.address || 'Montes Carballo 943'} • {businessConfig?.business?.city || 'Mar del Plata'}
             </p>
             <p className="text-[10px] text-zinc-500 print:text-gray-600 font-mono">
-              WhatsApp: +54 9 223 500-0000 • montec.ar
+              WhatsApp: {businessConfig?.contact?.technicalWhatsapp || '+54 9 223 542-8827'} • {businessConfig?.contact?.website?.replace('https://', '') || 'montec.ar'}
             </p>
           </div>
 

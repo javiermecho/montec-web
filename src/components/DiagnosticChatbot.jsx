@@ -42,7 +42,7 @@ const POPULAR_MODELS = {
 };
 
 export default function DiagnosticChatbot() {
-  const { models, issues, calculateCurrentEstimate } = useData();
+  const { models, issues, calculateCurrentEstimate, businessConfig } = useData();
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnreadNotification, setHasUnreadNotification] = useState(true);
   
@@ -711,10 +711,15 @@ export default function DiagnosticChatbot() {
 
   // Link de WhatsApp con el ticket pre-redactado exacto requerido
   const generateWhatsAppLink = () => {
-    if (!diagnosticResult) return `https://wa.me/${WHATSAPP_PHONE}`;
+    const rawPhone = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.technicalWhatsapp || '5492235428827';
+    const targetPhone = rawPhone.replace(/[^0-9]/g, '') || '5492235428827';
+    const localName = businessConfig?.business?.fantasyName || 'MONTEC';
+    const address = businessConfig?.business?.address || 'Montes Carballo 943';
+
+    if (!diagnosticResult) return `https://wa.me/${targetPhone}`;
 
     const text = 
-      `¡Hola Montec! Estuve utilizando el Asistente Técnico Virtual de la web y obtuve el siguiente diagnóstico preliminar:%0A%0A` +
+      `¡Hola ${localName}! Estuve utilizando el Asistente Técnico Virtual de la web y obtuve el siguiente diagnóstico preliminar:%0A%0A` +
       `📱 *Dispositivo:* ${diagnosticResult.device}%0A` +
       `🔍 *Problema:* ${diagnosticResult.problem}%0A` +
       `⚙️ *Tipo de Servicio Recomendado:* ${diagnosticResult.recommendedService}%0A` +
@@ -722,9 +727,9 @@ export default function DiagnosticChatbot() {
       `💰 *Presupuesto Estimado Web:* ${diagnosticResult.priceFormatted}%0A` +
       `⏱️ *Tiempo Estimado:* ${diagnosticResult.timeEstimate}%0A` +
       `🛡️ *Garantía:* ${diagnosticResult.warranty}%0A%0A` +
-      `¿Podría consultar disponibilidad de repuesto o coordinar un turno para acercarlo a Montes Carballo 943?`;
+      `¿Podría consultar disponibilidad de repuesto o coordinar un turno para acercarlo a ${address}?`;
 
-    return `https://wa.me/${WHATSAPP_PHONE}?text=${text}`;
+    return `https://wa.me/${targetPhone}?text=${text}`;
   };
 
   return (
@@ -1220,7 +1225,7 @@ export default function DiagnosticChatbot() {
                   </a>
 
                   <div className="text-center text-[10px] text-zinc-500">
-                    📍 Montes Carballo 943 • Presupuesto físico sin cargo en el local
+                    📍 {businessConfig?.business?.address || 'Montes Carballo 943'} • Presupuesto físico sin cargo en el local
                   </div>
                 </div>
 

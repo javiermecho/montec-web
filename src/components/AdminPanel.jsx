@@ -31,7 +31,8 @@ import {
   Sun,
   Moon,
   Store,
-  Receipt
+  Receipt,
+  MessageSquare
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -46,6 +47,7 @@ import CommercialInvoicePOS from './pos/CommercialInvoicePOS';
 import InventoryManager from './inventory/InventoryManager';
 import DailySalesTab from './admin/DailySalesTab';
 import LocalSettingsTab from './taller/LocalSettingsTab';
+import WhatsAppTemplatesTab from './admin/WhatsAppTemplatesTab';
 import RepairOrderReceiver from './taller/RepairOrderReceiver';
 import UnifiedDeliveryModal from './taller/UnifiedDeliveryModal';
 
@@ -491,6 +493,17 @@ export default function AdminPanel() {
         >
           <Store className="w-4 h-4 text-orange-400" />
           <span>Mi Local & AFIP</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('whatsapp_templates')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'whatsapp_templates'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+            }`}
+        >
+          <MessageSquare className="w-4 h-4 text-emerald-400" />
+          <span>WhatsApp & Plantillas</span>
         </button>
 
         <button
@@ -1451,6 +1464,13 @@ export default function AdminPanel() {
         {/* ============================================================== */}
         {activeTab === 'local_settings' && (
           <LocalSettingsTab />
+        )}
+
+        {/* ============================================================== */}
+        {/* PESTAÑA: WHATSAPP Y PLANTILLAS DE MENSAJES                    */}
+        {/* ============================================================== */}
+        {activeTab === 'whatsapp_templates' && (
+          <WhatsAppTemplatesTab />
         )}
 
       </div>

@@ -148,7 +148,9 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     refreshConnection,
     serverStatus,
     panelTheme,
-    togglePanelTheme
+    togglePanelTheme,
+    businessConfig,
+    formatWhatsAppTemplate
   } = useData();
 
   const isLight = panelTheme === 'light';
@@ -374,53 +376,84 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
       ? `$${order.service.balanceDue.toLocaleString('es-AR')}` 
       : '$0 (Totalmente abonado)';
     const budgetStr = `$${(order.service?.budgetTotal || 0).toLocaleString('es-AR')}`;
+    const depositStr = `$${(order.service?.deposit || 0).toLocaleString('es-AR')}`;
+    const warrantyStr = order.service?.warranty || '90 días escrita';
+    const deliveryDateStr = order.service?.estimatedDeliveryDate || '24 a 48 hs';
+    const issueDesc = order.service?.issueDescription || order.service?.problem || 'Revisión técnica general';
 
-    let msg = '';
+    const localName = businessConfig?.business?.fantasyName || 'MONTEC';
+    const address = businessConfig?.business?.address || 'Montes Carballo 943';
+    const city = businessConfig?.business?.city || 'Mar del Plata';
+
+    // Mapa de variables dinámicas disponibles para las plantillas
+    const vars = {
+      cliente: customerName,
+      equipo: deviceName,
+      orden: orderNum,
+      falla: issueDesc,
+      total: budgetStr,
+      sena: depositStr,
+      saldo: balanceStr,
+      fecha_entrega: deliveryDateStr,
+      informe_tecnico: reportText || order.service?.techReport || 'Diagnóstico realizado en taller',
+      garantia: warrantyStr,
+      direccion: address,
+      ciudad: city,
+      local: localName
+    };
+
+    const templates = businessConfig?.whatsappTemplates || {};
+    let rawTemplate = '';
+
     switch (status) {
       case 'ready':
-        msg = `¡Hola ${customerName}! 🎉 Te informamos desde *montec* que tu equipo *${deviceName}* (Orden *${orderNum}*) ya está *REPARADO* y listo para retirar en nuestro local de Montes Carballo 943.%0A%0A` +
-              `⚖️ *Saldo restante a abonar:* ${balanceStr}%0A` +
-              `📍 *Dirección:* Montes Carballo 943, Mar del Plata%0A` +
-              `⏱️ *Horarios:* Lun a Sáb 9:30 a 19:30 hs%0A%0A` +
-              `¡Te esperamos para entregártelo probado y con su garantía escrita!`;
+      case 'repaired':
+        rawTemplate = templates.orderReady || 
+          '¡Hola {cliente}! 🎉 Te informamos desde *{local}* que tu equipo *{equipo}* (Orden *{orden}*) ya está *REPARADO* y listo para retirar en nuestro local de {direccion}.\n\n⚖️ *Saldo restante a abonar:* {saldo}\n📍 *Dirección:* {direccion}, {ciudad}\n⏱️ *Horarios:* Lun a Sáb 9:30 a 19:30 hs\n\n¡Te esperamos para entregártelo probado y con su garantía escrita!';
         break;
 
       case 'waiting_auth':
-        msg = `¡Hola ${customerName}! 👋 Te contactamos de *montec* por tu equipo *${deviceName}* (Orden *${orderNum}*).%0A%0A` +
-              `🔬 *Diagnóstico técnico realizado:* ${reportText || 'Requiere autorización técnica para avanzar'}.%0A` +
-              `💰 *Presupuesto total estimado:* ${budgetStr}%0A%0A` +
-              `¿Nos confirmás si estás de acuerdo para comenzar la reparación?`;
+        rawTemplate = templates.orderWaitingAuth || 
+          '¡Hola {cliente}! 👋 Te contactamos de *{local}* por tu equipo *{equipo}* (Orden *{orden}*).\n\n🔬 *Diagnóstico técnico realizado:* {informe_tecnico}\n💰 *Presupuesto total estimado:* {total}\n\n¿Nos confirmás si estás de acuerdo para comenzar la reparación?';
         break;
 
       case 'waiting_part':
-        msg = `¡Hola ${customerName}! Te avisamos desde *montec* que tu equipo *${deviceName}* (Orden *${orderNum}*) se encuentra a la espera del ingreso del repuesto correspondiente desde el distribuidor para continuar con la reparación.%0A%0A` +
-              `Apenas ingrese la pieza a mesa de trabajo te mantendremos informado. ¡Muchas gracias por tu paciencia!`;
+        rawTemplate = templates.orderWaitingPart || 
+          '¡Hola {cliente}! Te avisamos desde *{local}* que tu equipo *{equipo}* (Orden *{orden}*) se encuentra a la espera del ingreso del repuesto correspondiente desde el distribuidor para continuar con la reparación.\n\nApenas ingrese la pieza a mesa de trabajo te mantendremos informado. ¡Muchas gracias por tu paciencia!';
         break;
 
       case 'in_progress':
-        msg = `¡Hola ${customerName}! Te avisamos de *montec* que tu equipo *${deviceName}* (Orden *${orderNum}*) ha ingresado a *mesa de trabajo* y nuestro técnico ya está trabajando en su reparación. Te notificaremos apenas esté listo.`;
+        rawTemplate = templates.orderInProgress || 
+          '¡Hola {cliente}! Te avisamos de *{local}* que tu equipo *{equipo}* (Orden *{orden}*) ha ingresado a *mesa de trabajo* y nuestro técnico ya está trabajando en su reparación. Te notificaremos apenas esté listo.';
         break;
 
       case 'no_repair':
-        msg = `¡Hola ${customerName}! Te contactamos de *montec* respecto a tu equipo *${deviceName}* (Orden *${orderNum}*).%0A%0A` +
-              `Te informamos que el equipo ya está disponible para retirar en nuestro local de Montes Carballo 943.%0A` +
-              `📋 *Informe:* ${reportText || 'Equipo listo para devolución'}.%0A` +
-              `📍 *Retiro:* Montes Carballo 943 (Lun a Sáb 9:30 a 19:30 hs).`;
+        rawTemplate = templates.orderNoRepair || 
+          '¡Hola {cliente}! Te contactamos de *{local}* respecto a tu equipo *{equipo}* (Orden *{orden}*).\n\nTe informamos que el equipo ya está disponible para retirar en nuestro local de {direccion}.\n📋 *Informe:* {informe_tecnico}\n📍 *Retiro:* {direccion}, {ciudad} (Lun a Sáb 9:30 a 19:30 hs).';
         break;
 
       case 'delivered':
-        msg = `¡Hola ${customerName}! Te agradecemos por confiar en *montec* para la reparación de tu *${deviceName}* (Orden *${orderNum}*).%0A%0A` +
-              `🛡️ *Garantía escrita activa:* ${order.service?.warranty || '90 días'}.%0A` +
-              `Cualquier consulta estamos a tu entera disposición. ¡Que disfrutes tu equipo!`;
+        rawTemplate = templates.orderDelivered || 
+          '¡Hola {cliente}! Te agradecemos por confiar en *{local}* para la reparación de tu *{equipo}* (Orden *{orden}*).\n\n🛡️ *Garantía escrita activa:* {garantia}.\nCualquier consulta estamos a tu entera disposición. ¡Que disfrutes tu equipo!';
+        break;
+
+      case 'received':
+      case 'pending':
+        rawTemplate = templates.orderReceived || 
+          '¡Hola {cliente}! 👋 Te contactamos de *{local}*.\n\n📋 *ORDEN DE REPARACIÓN:* {orden}\n📱 *Equipo:* {equipo}\n🛠️ *Trabajo a realizar:* {falla}\n💰 *Total Acordado:* {total}\n💵 *Seña Recibida:* {sena}\n⚖️ *Saldo al Retirar:* {saldo}\n⏱️ *Plazo estimado:* {fecha_entrega}\n📍 *Taller:* {direccion}, {ciudad}\n🛡️ *Garantía:* {garantia}\n\nTe avisaremos por este medio cuando tu equipo esté en mesa de trabajo o listo para retirar. ¡Gracias por confiar en {local}!';
         break;
 
       default:
-        msg = `¡Hola ${customerName}! Te contactamos de *montec* respecto a tu orden de reparación *${orderNum}* (${deviceName}).`;
+        rawTemplate = '¡Hola {cliente}! Te contactamos de *{local}* respecto a tu orden de reparación *{orden}* ({equipo}).';
     }
+
+    const formattedMessage = typeof formatWhatsAppTemplate === 'function'
+      ? formatWhatsAppTemplate(rawTemplate, vars)
+      : rawTemplate;
 
     const cleanPhone = (order.customer?.phone || '').replace(/[^0-9]/g, '');
     const finalPhone = cleanPhone.startsWith('54') ? cleanPhone : `549${cleanPhone}`;
-    return `https://wa.me/${finalPhone}?text=${msg}`;
+    return `https://wa.me/${finalPhone}?text=${encodeURIComponent(formattedMessage)}`;
   };
 
   // Procesar cambio de estado formal con informe técnico y checklist

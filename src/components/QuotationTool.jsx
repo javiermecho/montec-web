@@ -28,7 +28,15 @@ import { useData } from '../context/DataContext';
 import { trackCotizacionIniciada, trackClickWhatsappCotizacion } from '../services/analytics';
 
 export default function QuotationTool() {
-  const { models, issues, calculateCurrentEstimate, isQuoteModalOpen, setIsQuoteModalOpen } = useData();
+  const { 
+    models, 
+    issues, 
+    calculateCurrentEstimate, 
+    isQuoteModalOpen, 
+    setIsQuoteModalOpen,
+    businessConfig,
+    formatWhatsAppTemplate
+  } = useData();
 
   // Bloquear scroll de la página de fondo cuando el modal esté abierto
   useEffect(() => {
@@ -249,7 +257,7 @@ export default function QuotationTool() {
     }
   };
 
-  // Mensaje de WhatsApp precargado
+  // Mensaje de WhatsApp dinámico según configuración de plantilla y número receptor
   const issueName = activeIssueObj ? activeIssueObj.name : 'Reparación técnica';
   const priceRangeStr = estimate ? (
     estimate.minPrice === estimate.maxPrice 
@@ -258,16 +266,38 @@ export default function QuotationTool() {
   ) : 'A convenir';
 
   const iphoneModalityText = estimate?.selectedModality ? (
-    `%0A🔬 *Modalidad / Repuesto:* ${estimate.selectedModality.name} (${estimate.selectedModality.iosNotice})`
+    `\n🔬 *Modalidad / Repuesto:* ${estimate.selectedModality.name} (${estimate.selectedModality.iosNotice})`
   ) : '';
-  const qualityText = (!estimate?.isIphoneSpecialized && estimate?.qualityLabel) ? `%0A💎 *Calidad / Servicio:* ${estimate.qualityLabel}` : '';
+  const qualityText = (!estimate?.isIphoneSpecialized && estimate?.qualityLabel) ? `\n💎 *Calidad / Servicio:* ${estimate.qualityLabel}` : '';
 
   const repairTimeLabel = estimate?.repairTime?.label || estimate?.duration || 'De 2 a 3 horas';
   const repairTimeCondition = estimate?.repairTime?.condition || estimate?.timeCondition || 'Express en 45 min con cita previa y seña';
 
-  const whatsappMessage = `¡Hola Montec! Estuve cotizando en la web la reparación de mi ${currentModelName} (${issueName}):%0A%0A📱 *Equipo:* ${currentModelName}%0A🛠️ *Falla:* ${issueName}${iphoneModalityText}${qualityText}%0A💰 *Presupuesto estimativo web:* ${priceRangeStr}%0A⏱️ *Tiempo estimado de trabajo:* ${repairTimeLabel} (${repairTimeCondition})%0A🛡️ *Garantía:* ${estimate?.warranty || '30 días escrita'}%0A%0AQuisiera consultar disponibilidad o coordinar un turno para llevarlo al local de Montes Carballo 943.`;
+  // 1. Número receptor configurado en el panel administrador
+  const quotationPhoneRaw = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.technicalWhatsapp || '5492235428827';
+  const targetPhone = quotationPhoneRaw.replace(/[^0-9]/g, '') || '5492235428827';
 
-  const whatsappLink = `https://wa.me/5492235000000?text=${whatsappMessage}`;
+  // 2. Plantilla de mensaje configurada
+  const templateString = businessConfig?.whatsappTemplates?.quotationWeb || 
+    '¡Hola {local}! Estuve cotizando en la web la reparación de mi {equipo} ({falla}):\n\n📱 *Equipo:* {equipo}\n🛠️ *Falla:* {falla}{detalles_repuesto}\n💰 *Presupuesto estimativo web:* {precio}\n⏱️ *Tiempo estimado de trabajo:* {tiempo}\n🛡️ *Garantía:* {garantia}\n\nQuisiera consultar disponibilidad o coordinar un turno para llevarlo al local de {direccion}.';
+
+  const templateVars = {
+    local: businessConfig?.business?.fantasyName || 'MONTEC',
+    equipo: currentModelName,
+    falla: issueName,
+    detalles_repuesto: iphoneModalityText || qualityText || '',
+    precio: priceRangeStr,
+    tiempo: `${repairTimeLabel} (${repairTimeCondition})`,
+    garantia: estimate?.warranty || '30 días escrita',
+    direccion: businessConfig?.business?.address || 'Montes Carballo 943',
+    ciudad: businessConfig?.business?.city || 'Mar del Plata'
+  };
+
+  const formattedMessage = typeof formatWhatsAppTemplate === 'function'
+    ? formatWhatsAppTemplate(templateString, templateVars)
+    : templateString;
+
+  const whatsappLink = `https://wa.me/${targetPhone}?text=${encodeURIComponent(formattedMessage)}`;
 
   return (
     <>
@@ -872,7 +902,7 @@ export default function QuotationTool() {
               </a>
 
               <p className="text-center text-xs text-zinc-400 mt-3 flex items-center justify-center gap-1">
-                <span>📍 Montes Carballo 943 • Presupuesto sin cargo</span>
+                <span>📍 {businessConfig?.business?.address || 'Montes Carballo 943'} • Presupuesto sin cargo</span>
               </p>
 
             </div>

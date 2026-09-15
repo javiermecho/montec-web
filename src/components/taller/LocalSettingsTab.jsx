@@ -60,6 +60,7 @@ export default function LocalSettingsTab() {
       contact: {
         supportPhone: ct.supportPhone ?? def.contact.supportPhone ?? '+54 9 223 542-8827',
         technicalWhatsapp: ct.technicalWhatsapp ?? def.contact.technicalWhatsapp ?? '+54 9 223 542-8827',
+        quotationWhatsapp: ct.quotationWhatsapp ?? def.contact.quotationWhatsapp ?? '+54 9 223 542-8827',
         contactEmail: ct.contactEmail ?? def.contact.contactEmail ?? 'consultas@montec.ar',
         billingEmail: ct.billingEmail ?? def.contact.billingEmail ?? 'facturacion@montec.ar',
         website: ct.website ?? def.contact.website ?? 'https://montec.ar'
@@ -430,6 +431,25 @@ export default function LocalSettingsTab() {
                   }`}
                 />
                 <span className="text-[11px] text-zinc-500 mt-1 block">Número oficial al que se redirigen los clientes para consultas de soporte técnico.</span>
+              </div>
+
+              <div>
+                <label className={`block mb-1.5 font-semibold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>WhatsApp Receptor del Presupuestador Web</span>
+                </label>
+                <input
+                  type="text"
+                  value={contact.quotationWhatsapp || ''}
+                  onChange={(e) => handleContactChange('quotationWhatsapp', e.target.value)}
+                  placeholder="+54 9 223 542-8827"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-medium transition-colors ${
+                    isLight
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-emerald-500'
+                      : 'bg-zinc-900/90 border-zinc-700 text-emerald-300 focus:border-emerald-500'
+                  }`}
+                />
+                <span className="text-[11px] text-zinc-500 mt-1 block">Número que recibe los presupuestos pedidos desde la web. Podés configurar los textos en la pestaña <strong>WhatsApp & Plantillas</strong>.</span>
               </div>
 
               <div>
