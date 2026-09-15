@@ -46,6 +46,8 @@ import CommercialInvoicePOS from './pos/CommercialInvoicePOS';
 import InventoryManager from './inventory/InventoryManager';
 import DailySalesTab from './admin/DailySalesTab';
 import LocalSettingsTab from './taller/LocalSettingsTab';
+import RepairOrderReceiver from './taller/RepairOrderReceiver';
+import UnifiedDeliveryModal from './taller/UnifiedDeliveryModal';
 
 export default function AdminPanel() {
   const {
@@ -99,6 +101,8 @@ export default function AdminPanel() {
   const [modelSearch, setModelSearch] = useState('');
   const [modelTypeFilter, setModelTypeFilter] = useState('all');
   const [iphoneSearch, setIphoneSearch] = useState('');
+  const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
+  const [deliveryOrder, setDeliveryOrder] = useState(null);
 
   // Formulario local de reglas de márgenes comerciales
   const [rulesForm, setRulesForm] = useState(() => ({
@@ -517,7 +521,9 @@ export default function AdminPanel() {
         {activeTab === 'orders' && (
           <RepairOrdersManager
             isEmbedded={true}
-            onNewOrder={() => setIsTallerOpen(true)}
+            onNewOrder={() => setIsNewOrderOpen(true)}
+            onDeliverOrder={(order) => setDeliveryOrder(order)}
+            onOpenDailyCash={() => setActiveTab('sales')}
             onClose={() => setActiveTab('models')}
           />
         )}
@@ -1623,6 +1629,28 @@ export default function AdminPanel() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: INGRESO DE NUEVA ORDEN DE TALLER DESDE ADMIN            */}
+      {/* ============================================================== */}
+      {isNewOrderOpen && (
+        <RepairOrderReceiver
+          forceOpen={true}
+          onClose={() => setIsNewOrderOpen(false)}
+        />
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: ENTREGA UNIFICADA DESDE ADMIN                           */}
+      {/* ============================================================== */}
+      {deliveryOrder && (
+        <UnifiedDeliveryModal
+          order={deliveryOrder}
+          isOpen={Boolean(deliveryOrder)}
+          onClose={() => setDeliveryOrder(null)}
+          onDelivered={() => setDeliveryOrder(null)}
+        />
       )}
 
     </div>

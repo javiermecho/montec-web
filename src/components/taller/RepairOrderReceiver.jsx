@@ -726,7 +726,7 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
   // 1. PANTALLA DE LOGIN SI NO ESTÁ AUTENTICADO
   if (!isAlreadyAuthenticated) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
+      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in">
         <div className="bg-[#141416] border border-zinc-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-[0_0_50px_rgba(255,85,0,0.3)] relative">
           
           <button
@@ -789,7 +789,7 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
 
   // 2. INTERFAZ PRINCIPAL POS DE RECEPCIÓN (LAYOUT EN 3 COLUMNAS MONTEC DARK)
   return (
-    <div className={`fixed inset-0 z-50 flex flex-col overflow-hidden animate-fade-in ${
+    <div className={`fixed inset-0 z-[70] flex flex-col overflow-hidden animate-fade-in ${
       isLight ? 'montec-panel-light' : 'bg-[#0E0E10] text-zinc-200'
     }`}>
       
