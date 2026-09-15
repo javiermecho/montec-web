@@ -651,10 +651,20 @@ export function DataProvider({ children }) {
 
   const updateBusinessConfig = (newConfig) => {
     setBusinessConfig(prev => {
+      const base = prev || DEFAULT_BUSINESS_CONFIG;
       const merged = {
-        business: { ...prev.business, ...(newConfig.business || {}) },
-        contact: { ...prev.contact, ...(newConfig.contact || {}) },
-        afip: { ...prev.afip, ...(newConfig.afip || {}) }
+        business: {
+          ...(base.business || DEFAULT_BUSINESS_CONFIG.business),
+          ...(newConfig?.business || {})
+        },
+        contact: {
+          ...(base.contact || DEFAULT_BUSINESS_CONFIG.contact),
+          ...(newConfig?.contact || {})
+        },
+        afip: {
+          ...(base.afip || DEFAULT_BUSINESS_CONFIG.afip),
+          ...(newConfig?.afip || {})
+        }
       };
       try {
         localStorage.setItem(STORAGE_KEYS.BUSINESS_CONFIG, JSON.stringify(merged));

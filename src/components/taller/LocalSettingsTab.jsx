@@ -21,7 +21,8 @@ import {
   BadgeCheck,
   Server
 } from 'lucide-react';
-import { useData } from '../../context/DataContext';
+import { useData, DEFAULT_BUSINESS_CONFIG } from '../../context/DataContext';
+import { api } from '../../services/api';
 
 export default function LocalSettingsTab() {
   const {
@@ -29,109 +30,85 @@ export default function LocalSettingsTab() {
     updateBusinessConfig,
     resetBusinessConfig,
     panelTheme,
-    serverStatus,
-    api
+    serverStatus
   } = useData();
 
   const isLight = panelTheme === 'light';
 
-  // Estado local del formulario
-  const [formData, setFormData] = useState(() => ({
-    business: {
-      fantasyName: businessConfig?.business?.fantasyName || 'MONTEC',
-      legalName: businessConfig?.business?.legalName || 'MONTEC SERVICIO TÉCNICO',
-      cuit: businessConfig?.business?.cuit || '20-38492019-4',
-      iibb: businessConfig?.business?.iibb || '20-38492019-4',
-      ivaCondition: businessConfig?.business?.ivaCondition || 'Responsable Inscripto',
-      startActivityDate: businessConfig?.business?.startActivityDate || '2020-01-15',
-      address: businessConfig?.business?.address || 'Montes Carballo 943',
-      city: businessConfig?.business?.city || 'Mar del Plata',
-      state: businessConfig?.business?.state || 'Buenos Aires',
-      zipCode: businessConfig?.business?.zipCode || '7600',
-      country: businessConfig?.business?.country || 'Argentina'
-    },
-    contact: {
-      supportPhone: businessConfig?.contact?.supportPhone || '+54 9 223 542-8827',
-      technicalWhatsapp: businessConfig?.contact?.technicalWhatsapp || '+54 9 223 542-8827',
-      contactEmail: businessConfig?.contact?.contactEmail || 'consultas@montec.ar',
-      billingEmail: businessConfig?.contact?.billingEmail || 'facturacion@montec.ar',
-      website: businessConfig?.contact?.website || 'https://montec.ar'
-    },
-    afip: {
-      environment: businessConfig?.afip?.environment || 'homologacion',
-      cuit: businessConfig?.afip?.cuit || '20-38492019-4',
-      puntoVenta: businessConfig?.afip?.puntoVenta || 1,
-      tipoComprobanteDefault: businessConfig?.afip?.tipoComprobanteDefault || '11',
-      certificate: businessConfig?.afip?.certificate || '',
-      privateKey: businessConfig?.afip?.privateKey || '',
-      tokenExpiration: businessConfig?.afip?.tokenExpiration || null,
-      lastTested: businessConfig?.afip?.lastTested || null,
-      status: businessConfig?.afip?.status || 'configured_offline'
-    }
-  }));
+  // Helper para asegurar que la estructura esté 100% poblada sin riesgo de undefined
+  const buildCleanState = (config) => {
+    const c = config || {};
+    const b = c.business || {};
+    const ct = c.contact || {};
+    const a = c.afip || {};
+    const def = DEFAULT_BUSINESS_CONFIG || { business: {}, contact: {}, afip: {} };
 
-  // Sincronizar formulario si cambia businessConfig externamente
-  useEffect(() => {
-    if (businessConfig) {
-      setFormData({
-        business: {
-          fantasyName: businessConfig.business?.fantasyName || 'MONTEC',
-          legalName: businessConfig.business?.legalName || 'MONTEC SERVICIO TÉCNICO',
-          cuit: businessConfig.business?.cuit || '20-38492019-4',
-          iibb: businessConfig.business?.iibb || '20-38492019-4',
-          ivaCondition: businessConfig.business?.ivaCondition || 'Responsable Inscripto',
-          startActivityDate: businessConfig.business?.startActivityDate || '2020-01-15',
-          address: businessConfig.business?.address || 'Montes Carballo 943',
-          city: businessConfig.business?.city || 'Mar del Plata',
-          state: businessConfig.business?.state || 'Buenos Aires',
-          zipCode: businessConfig.business?.zipCode || '7600',
-          country: businessConfig.business?.country || 'Argentina'
-        },
-        contact: {
-          supportPhone: businessConfig.contact?.supportPhone || '+54 9 223 542-8827',
-          technicalWhatsapp: businessConfig.contact?.technicalWhatsapp || '+54 9 223 542-8827',
-          contactEmail: businessConfig.contact?.contactEmail || 'consultas@montec.ar',
-          billingEmail: businessConfig.contact?.billingEmail || 'facturacion@montec.ar',
-          website: businessConfig.contact?.website || 'https://montec.ar'
-        },
-        afip: {
-          environment: businessConfig.afip?.environment || 'homologacion',
-          cuit: businessConfig.afip?.cuit || '20-38492019-4',
-          puntoVenta: businessConfig.afip?.puntoVenta || 1,
-          tipoComprobanteDefault: businessConfig.afip?.tipoComprobanteDefault || '11',
-          certificate: businessConfig.afip?.certificate || '',
-          privateKey: businessConfig.afip?.privateKey || '',
-          tokenExpiration: businessConfig.afip?.tokenExpiration || null,
-          lastTested: businessConfig.afip?.lastTested || null,
-          status: businessConfig.afip?.status || 'configured_offline'
-        }
-      });
-    }
-  }, [businessConfig]);
+    return {
+      business: {
+        fantasyName: b.fantasyName ?? def.business.fantasyName ?? 'MONTEC',
+        legalName: b.legalName ?? def.business.legalName ?? 'MONTEC SERVICIO TÉCNICO',
+        cuit: b.cuit ?? def.business.cuit ?? '20-38492019-4',
+        iibb: b.iibb ?? def.business.iibb ?? '20-38492019-4',
+        ivaCondition: b.ivaCondition ?? def.business.ivaCondition ?? 'Responsable Inscripto',
+        startActivityDate: b.startActivityDate ?? def.business.startActivityDate ?? '2020-01-15',
+        address: b.address ?? def.business.address ?? 'Montes Carballo 943',
+        city: b.city ?? def.business.city ?? 'Mar del Plata',
+        state: b.state ?? def.business.state ?? 'Buenos Aires',
+        zipCode: b.zipCode ?? def.business.zipCode ?? '7600',
+        country: b.country ?? def.business.country ?? 'Argentina'
+      },
+      contact: {
+        supportPhone: ct.supportPhone ?? def.contact.supportPhone ?? '+54 9 223 542-8827',
+        technicalWhatsapp: ct.technicalWhatsapp ?? def.contact.technicalWhatsapp ?? '+54 9 223 542-8827',
+        contactEmail: ct.contactEmail ?? def.contact.contactEmail ?? 'consultas@montec.ar',
+        billingEmail: ct.billingEmail ?? def.contact.billingEmail ?? 'facturacion@montec.ar',
+        website: ct.website ?? def.contact.website ?? 'https://montec.ar'
+      },
+      afip: {
+        environment: a.environment ?? def.afip.environment ?? 'homologacion',
+        cuit: a.cuit ?? def.afip.cuit ?? '20-38492019-4',
+        puntoVenta: a.puntoVenta ?? def.afip.puntoVenta ?? 1,
+        tipoComprobanteDefault: a.tipoComprobanteDefault ?? def.afip.tipoComprobanteDefault ?? '11',
+        certificate: a.certificate ?? '',
+        privateKey: a.privateKey ?? '',
+        tokenExpiration: a.tokenExpiration ?? null,
+        lastTested: a.lastTested ?? null,
+        status: a.status ?? 'configured_offline'
+      }
+    };
+  };
 
+  const [formData, setFormData] = useState(() => buildCleanState(businessConfig));
   const [savingStatus, setSavingStatus] = useState(null); // null | 'saving' | 'saved' | 'error'
   const [testingAfip, setTestingAfip] = useState(false);
   const [afipTestResult, setAfipTestResult] = useState(null);
 
-  // Manejador de cambios generales
+  // Sincronizar formulario si cambia businessConfig externamente
+  useEffect(() => {
+    if (businessConfig) {
+      setFormData(buildCleanState(businessConfig));
+    }
+  }, [businessConfig]);
+
+  // Manejadores seguros de cambio
   const handleBusinessChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      business: { ...prev.business, [field]: value }
+      business: { ...(prev?.business || {}), [field]: value }
     }));
   };
 
   const handleContactChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      contact: { ...prev.contact, [field]: value }
+      contact: { ...(prev?.contact || {}), [field]: value }
     }));
   };
 
   const handleAfipChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      afip: { ...prev.afip, [field]: value }
+      afip: { ...(prev?.afip || {}), [field]: value }
     }));
   };
 
@@ -155,7 +132,9 @@ export default function LocalSettingsTab() {
     if (e) e.preventDefault();
     setSavingStatus('saving');
     try {
-      await updateBusinessConfig(formData);
+      if (typeof updateBusinessConfig === 'function') {
+        await updateBusinessConfig(formData);
+      }
       setSavingStatus('saved');
       setTimeout(() => setSavingStatus(null), 3500);
     } catch (err) {
@@ -179,14 +158,14 @@ export default function LocalSettingsTab() {
       };
 
       const res = await api.testAfipConnection(payload);
-      if (res.success && res.data) {
+      if (res && res.success && res.data) {
         setAfipTestResult(res.data);
         handleAfipChange('lastTested', new Date().toISOString());
         handleAfipChange('status', 'connected');
       } else {
         setAfipTestResult({
           success: false,
-          message: res.error || 'No se pudo establecer comunicación con los servidores de ARCA (AFIP).'
+          message: res?.error || res?.data?.message || 'No se pudo establecer comunicación con el servidor central de ARCA (AFIP).'
         });
       }
     } catch (err) {
@@ -198,6 +177,11 @@ export default function LocalSettingsTab() {
       setTestingAfip(false);
     }
   };
+
+  // Variables seguras para el render (nunca undefined)
+  const business = formData?.business || DEFAULT_BUSINESS_CONFIG.business;
+  const contact = formData?.contact || DEFAULT_BUSINESS_CONFIG.contact;
+  const afip = formData?.afip || DEFAULT_BUSINESS_CONFIG.afip;
 
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
@@ -229,7 +213,7 @@ export default function LocalSettingsTab() {
                 </span>
               </div>
               <p className={`text-xs sm:text-sm mt-1 ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-                Personaliza la identidad de tu negocio, los datos fiscales en tickets de mostrador, el WhatsApp técnico y las credenciales electrónicas de ARCA (ex-AFIP).
+                Personalizá la identidad de tu negocio, los datos fiscales en tickets de mostrador, el WhatsApp técnico y las credenciales electrónicas de ARCA (ex-AFIP).
               </p>
             </div>
           </div>
@@ -238,8 +222,9 @@ export default function LocalSettingsTab() {
             <button
               type="button"
               onClick={() => {
-                if (window.confirm('¿Deseas restaurar la configuración del local y AFIP a los valores iniciales de Montec?')) {
-                  resetBusinessConfig();
+                if (window.confirm('¿Deseas restaurar la configuración del local y AFIP a los valores predeterminados?')) {
+                  if (typeof resetBusinessConfig === 'function') resetBusinessConfig();
+                  setFormData(buildCleanState(DEFAULT_BUSINESS_CONFIG));
                 }
               }}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer border ${
@@ -304,7 +289,7 @@ export default function LocalSettingsTab() {
                   </label>
                   <input
                     type="text"
-                    value={formData.business.fantasyName}
+                    value={business.fantasyName || ''}
                     onChange={(e) => handleBusinessChange('fantasyName', e.target.value)}
                     placeholder="Ej. MONTEC"
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
@@ -322,7 +307,7 @@ export default function LocalSettingsTab() {
                   </label>
                   <input
                     type="text"
-                    value={formData.business.legalName}
+                    value={business.legalName || ''}
                     onChange={(e) => handleBusinessChange('legalName', e.target.value)}
                     placeholder="Ej. MONTEC SERVICIO TÉCNICO"
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
@@ -341,7 +326,7 @@ export default function LocalSettingsTab() {
                 </label>
                 <input
                   type="text"
-                  value={formData.business.address}
+                  value={business.address || ''}
                   onChange={(e) => handleBusinessChange('address', e.target.value)}
                   placeholder="Ej. Montes Carballo 943"
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
@@ -359,7 +344,7 @@ export default function LocalSettingsTab() {
                   </label>
                   <input
                     type="text"
-                    value={formData.business.city}
+                    value={business.city || ''}
                     onChange={(e) => handleBusinessChange('city', e.target.value)}
                     placeholder="Mar del Plata"
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
@@ -376,7 +361,7 @@ export default function LocalSettingsTab() {
                   </label>
                   <input
                     type="text"
-                    value={formData.business.state}
+                    value={business.state || ''}
                     onChange={(e) => handleBusinessChange('state', e.target.value)}
                     placeholder="Buenos Aires"
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
@@ -393,7 +378,7 @@ export default function LocalSettingsTab() {
                   </label>
                   <input
                     type="text"
-                    value={formData.business.zipCode}
+                    value={business.zipCode || ''}
                     onChange={(e) => handleBusinessChange('zipCode', e.target.value)}
                     placeholder="7600"
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
@@ -435,7 +420,7 @@ export default function LocalSettingsTab() {
                 </label>
                 <input
                   type="text"
-                  value={formData.contact.technicalWhatsapp}
+                  value={contact.technicalWhatsapp || ''}
                   onChange={(e) => handleContactChange('technicalWhatsapp', e.target.value)}
                   placeholder="+54 9 223 542-8827"
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-medium transition-colors ${
@@ -454,7 +439,7 @@ export default function LocalSettingsTab() {
                 </label>
                 <input
                   type="text"
-                  value={formData.contact.supportPhone}
+                  value={contact.supportPhone || ''}
                   onChange={(e) => handleContactChange('supportPhone', e.target.value)}
                   placeholder="+54 9 223 542-8827"
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-medium transition-colors ${
@@ -473,7 +458,7 @@ export default function LocalSettingsTab() {
                   </label>
                   <input
                     type="email"
-                    value={formData.contact.contactEmail}
+                    value={contact.contactEmail || ''}
                     onChange={(e) => handleContactChange('contactEmail', e.target.value)}
                     placeholder="consultas@montec.ar"
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
@@ -491,7 +476,7 @@ export default function LocalSettingsTab() {
                   </label>
                   <input
                     type="email"
-                    value={formData.contact.billingEmail}
+                    value={contact.billingEmail || ''}
                     onChange={(e) => handleContactChange('billingEmail', e.target.value)}
                     placeholder="facturacion@montec.ar"
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
@@ -510,7 +495,7 @@ export default function LocalSettingsTab() {
                 </label>
                 <input
                   type="text"
-                  value={formData.contact.website}
+                  value={contact.website || ''}
                   onChange={(e) => handleContactChange('website', e.target.value)}
                   placeholder="https://montec.ar"
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
@@ -551,7 +536,7 @@ export default function LocalSettingsTab() {
                   </label>
                   <input
                     type="text"
-                    value={formData.business.cuit}
+                    value={business.cuit || ''}
                     onChange={(e) => {
                       handleBusinessChange('cuit', e.target.value);
                       handleAfipChange('cuit', e.target.value);
@@ -572,7 +557,7 @@ export default function LocalSettingsTab() {
                   </label>
                   <input
                     type="text"
-                    value={formData.business.iibb}
+                    value={business.iibb || ''}
                     onChange={(e) => handleBusinessChange('iibb', e.target.value)}
                     placeholder="20-38492019-4"
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-medium transition-colors ${
@@ -590,7 +575,7 @@ export default function LocalSettingsTab() {
                     Condición frente al IVA
                   </label>
                   <select
-                    value={formData.business.ivaCondition}
+                    value={business.ivaCondition || 'Responsable Inscripto'}
                     onChange={(e) => handleBusinessChange('ivaCondition', e.target.value)}
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors cursor-pointer ${
                       isLight
@@ -611,7 +596,7 @@ export default function LocalSettingsTab() {
                   </label>
                   <input
                     type="date"
-                    value={formData.business.startActivityDate}
+                    value={business.startActivityDate || ''}
                     onChange={(e) => handleBusinessChange('startActivityDate', e.target.value)}
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
                       isLight
@@ -645,11 +630,11 @@ export default function LocalSettingsTab() {
                 </h3>
               </div>
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
-                formData.afip.environment === 'produccion'
+                afip.environment === 'produccion'
                   ? 'bg-red-500/20 text-red-400 border border-red-500/40'
                   : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
               }`}>
-                {formData.afip.environment === 'produccion' ? 'PRODUCCIÓN REAL' : 'HOMOLOGACIÓN (TEST)'}
+                {afip.environment === 'produccion' ? 'PRODUCCIÓN REAL' : 'HOMOLOGACIÓN (TEST)'}
               </span>
             </div>
 
@@ -661,7 +646,7 @@ export default function LocalSettingsTab() {
                     Entorno de Facturación
                   </label>
                   <select
-                    value={formData.afip.environment}
+                    value={afip.environment || 'homologacion'}
                     onChange={(e) => handleAfipChange('environment', e.target.value)}
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors cursor-pointer ${
                       isLight
@@ -682,7 +667,7 @@ export default function LocalSettingsTab() {
                     type="number"
                     min="1"
                     max="9999"
-                    value={formData.afip.puntoVenta}
+                    value={afip.puntoVenta || 1}
                     onChange={(e) => handleAfipChange('puntoVenta', parseInt(e.target.value, 10) || 1)}
                     placeholder="Ej. 1 o 5"
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-medium transition-colors ${
@@ -700,7 +685,7 @@ export default function LocalSettingsTab() {
                   Tipo de Comprobante por Defecto
                 </label>
                 <select
-                  value={formData.afip.tipoComprobanteDefault}
+                  value={afip.tipoComprobanteDefault || '11'}
                   onChange={(e) => handleAfipChange('tipoComprobanteDefault', e.target.value)}
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors cursor-pointer ${
                     isLight
@@ -721,9 +706,9 @@ export default function LocalSettingsTab() {
                     <FileCheck className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Certificado Digital X.509 (.crt / .pem)</span>
                   </label>
-                  {formData.afip.certificate ? (
+                  {afip.certificate && typeof afip.certificate === 'string' && afip.certificate.length > 20 ? (
                     <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                      Certificado Cargado ({formData.afip.certificate.length} carácteres)
+                      Certificado Cargado ({afip.certificate.length} carácteres)
                     </span>
                   ) : (
                     <span className="text-[11px] text-zinc-500">Pendiente de carga</span>
@@ -734,7 +719,7 @@ export default function LocalSettingsTab() {
                   <input
                     type="text"
                     readOnly
-                    value={formData.afip.certificate ? '-----BEGIN CERTIFICATE----- [Cargado correctamente]' : ''}
+                    value={afip.certificate && typeof afip.certificate === 'string' && afip.certificate.length > 20 ? '-----BEGIN CERTIFICATE----- [Cargado correctamente]' : ''}
                     placeholder="Selecciona el archivo .crt o pega el certificado"
                     className={`flex-1 px-3.5 py-2 rounded-xl border text-xs font-mono transition-colors ${
                       isLight
@@ -766,7 +751,7 @@ export default function LocalSettingsTab() {
                     <Key className="w-3.5 h-3.5 text-amber-400" />
                     <span>Clave Privada (.key)</span>
                   </label>
-                  {formData.afip.privateKey ? (
+                  {afip.privateKey && typeof afip.privateKey === 'string' && afip.privateKey.length > 20 ? (
                     <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                       Clave Privada Cargada
                     </span>
@@ -779,7 +764,7 @@ export default function LocalSettingsTab() {
                   <input
                     type="password"
                     readOnly
-                    value={formData.afip.privateKey ? '••••••••••••••••••••••••••••••••••••••••' : ''}
+                    value={afip.privateKey && typeof afip.privateKey === 'string' && afip.privateKey.length > 20 ? '••••••••••••••••••••••••••••••••••••••••' : ''}
                     placeholder="Selecciona el archivo .key generado con OpenSSL"
                     className={`flex-1 px-3.5 py-2 rounded-xl border text-xs font-mono transition-colors ${
                       isLight
@@ -859,9 +844,9 @@ export default function LocalSettingsTab() {
           </div>
 
           <div className="mt-5 p-3 rounded-xl bg-zinc-800/40 border border-zinc-700/50 text-[11px] text-zinc-400 flex items-start gap-2">
-            <HelpCircle className="w-4 h-4 shrink-0 text-zinc-400 mt-0.5" />
+            <ShieldCheck className="w-4 h-4 shrink-0 text-zinc-400 mt-0.5" />
             <span>
-              Para obtener tu certificado y clave privada, ingresa al portal de ARCA con Clave Fiscal y delega el servicio Web Service de Facturación Electrónica al computador fiscal correspondiente.
+              Para emitir facturación electrónica oficial, ingresá al portal de ARCA con Clave Fiscal y delegá el servicio "Facturación Electrónica" con tu certificado digital.
             </span>
           </div>
         </div>

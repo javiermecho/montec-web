@@ -1342,7 +1342,33 @@ export default function AdminPanel() {
         {/* PESTAÑA 4: AJUSTES Y RESPALDO */}
         {/* ============================================================== */}
         {activeTab === 'settings' && (
-          <div className="max-w-2xl space-y-6">
+          <div className="max-w-3xl space-y-6">
+            <div className={`border rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
+              isLight ? 'bg-orange-50/60 border-orange-200 shadow-sm' : 'bg-gradient-to-r from-[#FF5500]/15 to-zinc-900 border-[#FF5500]/30 shadow-md'
+            }`}>
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/30 flex items-center justify-center shrink-0 shadow-sm">
+                  <Store className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className={`font-heading font-bold text-sm sm:text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    Datos del Local, WhatsApp y Facturación ARCA (AFIP)
+                  </h4>
+                  <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
+                    Personalizá la dirección del taller, WhatsApp técnico, datos fiscales (CUIT, IVA) y certificados de facturación electrónica.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('local_settings')}
+                className="px-4 py-2.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold shrink-0 shadow-[0_0_15px_rgba(255,85,0,0.35)] transition-all cursor-pointer"
+              >
+                Configurar Local & AFIP
+              </button>
+            </div>
+
             <div>
               <h2 className={`text-xl sm:text-2xl font-heading font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 Copia de Seguridad y Configuración
