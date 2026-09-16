@@ -11,15 +11,18 @@ import {
   Save,
   Trash2,
   Cpu,
-  Calendar,
   Building2,
-  FileText
+  Receipt,
+  Check,
+  Calendar,
+  Sparkles
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { activateAfipRobot, deactivateAfip } from '../../services/api';
 
 export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmbedded = false }) {
-  const { businessConfig, updateBusinessConfig } = useData();
+  const { businessConfig, updateBusinessConfig, panelTheme } = useData();
+  const isLight = panelTheme === 'light';
 
   const business = businessConfig?.business || {};
   const afip = businessConfig?.afip || {};
@@ -44,6 +47,7 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
   const [robotProgressText, setRobotProgressText] = useState('');
   const [toast, setToast] = useState(null); // { type: 'success'|'error', text: '' }
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
     if (businessConfig) {
@@ -82,12 +86,13 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
   // Guardar configuración general
   const handleSaveAll = async () => {
     try {
+      const cleanCuit = cuit.replace('CUIT:', '').trim();
       const updated = {
         business: {
           ...(businessConfig?.business || {}),
           legalName: companyName,
           fantasyName: companyName.split(' ')[0] || companyName,
-          cuit: cuit.trim(),
+          cuit: cleanCuit,
           iibb: iibb.trim(),
           startActivityDate: startActivityDate,
           ivaCondition: ivaCondition
@@ -96,13 +101,15 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
           ...(businessConfig?.afip || {}),
           status: status,
           certificateExpiration: certificateExpiration,
-          cuit: cuit.trim(),
+          cuit: cleanCuit,
           claveFiscalCuit: claveFiscalCuit.trim(),
           claveFiscalPassword: claveFiscalPassword
         }
       };
 
       await updateBusinessConfig(updated);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
       showToastMsg('success', '✅ Configuración fiscal guardada correctamente.');
     } catch (err) {
       showToastMsg('error', 'Error al guardar configuración: ' + err.message);
@@ -111,8 +118,9 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
 
   // Ejecutar Robot de Activación / Renovación de ARCA
   const handleRunRobot = async () => {
-    if (!claveFiscalCuit.replace(/[^0-9]/g, '')) {
-      showToastMsg('error', 'Por favor ingresá un CUIT/CUIL válido.');
+    const cleanNum = claveFiscalCuit.replace(/[^0-9]/g, '');
+    if (!cleanNum || cleanNum.length !== 11) {
+      showToastMsg('error', 'Por favor ingresá un CUIT/CUIL válido de 11 dígitos.');
       return;
     }
     if (!claveFiscalPassword || claveFiscalPassword.trim().length < 4) {
@@ -141,11 +149,10 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
           setCertificateExpiration(res.certificateExpiration);
         }
 
-        // Actualizar en contexto
         updateBusinessConfig({
           business: {
             ...(businessConfig?.business || {}),
-            cuit: cuit.trim(),
+            cuit: cuit.replace('CUIT:', '').trim(),
             iibb: iibb.trim(),
             legalName: companyName
           },
@@ -199,28 +206,45 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
   if (!isOpen) return null;
 
   const content = (
-    <div className="w-full max-w-4xl mx-auto rounded-xl border border-[#3b1257] shadow-[0_15px_50px_rgba(0,0,0,0.8)] overflow-hidden font-sans text-white"
-         style={{ backgroundColor: '#18022a' }}>
+    <div className={`w-full max-w-5xl mx-auto rounded-2xl border shadow-2xl overflow-hidden transition-all ${
+      isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#101014] border-zinc-800 text-zinc-100'
+    }`}>
       
       {/* BARRA SUPERIOR DE LA VENTANA */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[#290547] border-b border-[#3e1363] select-none">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-full bg-fuchsia-500/30 flex items-center justify-center border border-fuchsia-400/50">
-            <div className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse" />
+      <div className={`flex items-center justify-between px-6 py-4 border-b select-none ${
+        isLight ? 'bg-slate-50/80 border-slate-200' : 'bg-zinc-900/80 border-zinc-800'
+      }`}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#FF5500]/15 text-[#FF5500] border border-[#FF5500]/30 flex items-center justify-center shadow-md">
+            <Receipt className="w-5 h-5" />
           </div>
-          <span className="font-bold text-sm tracking-wide text-zinc-100 font-mono">
-            SistroFix / Montec - Facturacion Electronica (ARCA & ARBA)
-          </span>
+          <div>
+            <h3 className={`font-heading font-bold text-base flex items-center gap-2 ${
+              isLight ? 'text-slate-900' : 'text-white'
+            }`}>
+              <span>Facturación Electrónica & Datos Fiscales</span>
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-sans font-semibold">
+                ARCA & ARBA
+              </span>
+            </h3>
+            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+              Configuración de emisor fiscal y vinculación automática para emisión de comprobantes oficiales
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setShowHelpModal(true)}
-            className="text-xs px-2.5 py-1 rounded bg-[#3b1257] hover:bg-[#4d1970] text-zinc-200 border border-[#521b7a] font-mono flex items-center gap-1 transition-colors cursor-pointer"
+            className={`text-xs px-3 py-1.5 rounded-xl border font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
+              isLight 
+                ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300' 
+                : 'bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
+            }`}
             title="Presione F1 para Ayuda"
           >
-            <HelpCircle className="w-3.5 h-3.5 text-amber-300" />
+            <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
             <span>[F1] Ayuda</span>
           </button>
 
@@ -228,7 +252,11 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
             <button
               type="button"
               onClick={onClose}
-              className="p-1 rounded hover:bg-red-500/20 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                isLight
+                  ? 'hover:bg-slate-200 text-slate-500 border-slate-200'
+                  : 'hover:bg-zinc-800 text-zinc-400 hover:text-white border-zinc-800'
+              }`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -238,91 +266,127 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
 
       {/* TOAST FLOTANTE */}
       {toast && (
-        <div className={`mx-4 mt-3 px-4 py-2.5 rounded-lg border text-xs font-semibold flex items-center gap-2 animate-fadeIn ${
+        <div className={`mx-6 mt-4 px-4 py-3 rounded-xl border text-xs font-semibold flex items-center gap-2.5 animate-fadeIn ${
           toast.type === 'success'
-            ? 'bg-emerald-950/80 border-emerald-500 text-emerald-200'
-            : 'bg-red-950/80 border-red-500 text-red-200'
+            ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-200'
+            : 'bg-rose-950/60 border-rose-500/40 text-rose-200'
         }`}>
-          {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" /> : <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />}
+          {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" /> : <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />}
           <span>{toast.text}</span>
         </div>
       )}
 
       {/* CUERPO EN 2 COLUMNAS (MARCO IZQUIERDO Y MARCO DERECHO) */}
-      <div className="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* ============================================================== */}
         {/* COLUMNA 1: DATOS FACTURACIÓN ELECTRÓNICA & ARBA                */}
         {/* ============================================================== */}
-        <div className="p-4 rounded-lg border border-[#4a186d] bg-[#1f0436]/90 flex flex-col justify-between space-y-4">
+        <div className={`lg:col-span-6 p-5 sm:p-6 rounded-2xl border flex flex-col justify-between space-y-5 ${
+          isLight ? 'bg-slate-50/70 border-slate-200' : 'bg-[#15151b] border-zinc-800/90'
+        }`}>
           <div>
-            <div className="border-b border-[#4a186d] pb-2 mb-3">
-              <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider font-mono">
-                Datos Facturación Electronica
+            <div className="flex items-center gap-2 pb-3 mb-4 border-b border-zinc-800/60">
+              <Building2 className="w-4 h-4 text-[#FF5500]" />
+              <span className={`text-xs font-bold uppercase tracking-wider ${
+                isLight ? 'text-slate-700' : 'text-zinc-300'
+              }`}>
+                Datos Facturación Electrónica & ARBA
               </span>
             </div>
 
-            <div className="space-y-3.5 text-xs">
+            <div className="space-y-4 text-xs sm:text-sm">
               {/* Nombre de Empresa */}
               <div>
-                <label className="block mb-1 text-zinc-300 font-medium">Nombre de Empresa:</label>
+                <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  Nombre de Empresa / Razón Social:
+                </label>
                 <input
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="01tec"
-                  className="w-full bg-white text-zinc-900 px-3 py-2 rounded text-xs font-bold outline-none border border-zinc-400 focus:ring-2 focus:ring-fuchsia-400"
+                  placeholder="MONTEC SERVICIO TÉCNICO"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-semibold transition-colors outline-none ${
+                    isLight 
+                      ? 'bg-white border-slate-300 text-slate-900 focus:border-[#FF5500]' 
+                      : 'bg-zinc-950/80 border-zinc-700/80 text-white focus:border-[#FF5500]'
+                  }`}
                 />
               </div>
 
               {/* ID Fiscal / CUIT */}
               <div>
-                <label className="block mb-1 text-zinc-300 font-medium">ID Fiscal:</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={cuit.startsWith('CUIT:') ? cuit : `CUIT: ${cuit}`}
-                    onChange={(e) => {
-                      const val = e.target.value.replace('CUIT:', '').trim();
-                      setCuit(val);
-                      setClaveFiscalCuit(val);
-                    }}
-                    placeholder="CUIT: 30717561712"
-                    className="w-full bg-white text-zinc-900 px-3 py-2 rounded text-xs font-bold font-mono outline-none border border-zinc-400 focus:ring-2 focus:ring-fuchsia-400"
-                  />
-                </div>
+                <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  ID Fiscal (CUIT):
+                </label>
+                <input
+                  type="text"
+                  value={cuit.startsWith('CUIT:') ? cuit : `CUIT: ${cuit}`}
+                  onChange={(e) => {
+                    const val = e.target.value.replace('CUIT:', '').trim();
+                    setCuit(val);
+                    setClaveFiscalCuit(val);
+                  }}
+                  placeholder="CUIT: 20-38492019-4"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-bold transition-colors outline-none ${
+                    isLight 
+                      ? 'bg-white border-slate-300 text-slate-900 focus:border-[#FF5500]' 
+                      : 'bg-zinc-950/80 border-zinc-700/80 text-white focus:border-[#FF5500]'
+                  }`}
+                />
               </div>
 
               {/* Numero Ingresos Brutos (ARBA) */}
               <div>
-                <label className="block mb-1 text-zinc-300 font-medium">Numero Ingresos Brutos (ARBA):</label>
+                <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  Número Ingresos Brutos (ARBA / IIBB):
+                </label>
                 <input
                   type="text"
                   value={iibb}
                   onChange={(e) => setIibb(e.target.value)}
-                  placeholder="30717561712"
-                  className="w-full bg-white text-zinc-900 px-3 py-2 rounded text-xs font-bold font-mono outline-none border border-zinc-400 focus:ring-2 focus:ring-fuchsia-400"
+                  placeholder="20-38492019-4"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-bold transition-colors outline-none ${
+                    isLight 
+                      ? 'bg-white border-slate-300 text-slate-900 focus:border-[#FF5500]' 
+                      : 'bg-zinc-950/80 border-zinc-700/80 text-white focus:border-[#FF5500]'
+                  }`}
                 />
+                <span className={`text-[11px] block mt-1 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                  Inscripción en ARBA (Provincia de Buenos Aires).
+                </span>
               </div>
 
               {/* Fecha Inicio Actividades */}
               <div>
-                <label className="block mb-1 text-zinc-300 font-medium">Fecha Inicio Actividades:</label>
+                <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  Fecha Inicio Actividades:
+                </label>
                 <input
                   type="date"
                   value={startActivityDate}
                   onChange={(e) => setStartActivityDate(e.target.value)}
-                  className="w-full bg-white text-zinc-900 px-3 py-2 rounded text-xs font-bold outline-none border border-zinc-400 focus:ring-2 focus:ring-fuchsia-400"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-semibold transition-colors outline-none ${
+                    isLight 
+                      ? 'bg-white border-slate-300 text-slate-900 focus:border-[#FF5500]' 
+                      : 'bg-zinc-950/80 border-zinc-700/80 text-white focus:border-[#FF5500]'
+                  }`}
                 />
               </div>
 
               {/* Responsabilidad ante el IVA */}
               <div>
-                <label className="block mb-1 text-zinc-300 font-medium">Responsabilidad ante el IVA:</label>
+                <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  Responsabilidad ante el IVA:
+                </label>
                 <select
                   value={ivaCondition}
                   onChange={(e) => setIvaCondition(e.target.value)}
-                  className="w-full bg-white text-zinc-900 px-3 py-2 rounded text-xs font-bold outline-none border border-zinc-400 cursor-pointer focus:ring-2 focus:ring-fuchsia-400"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-semibold transition-colors cursor-pointer outline-none ${
+                    isLight 
+                      ? 'bg-white border-slate-300 text-slate-900 focus:border-[#FF5500]' 
+                      : 'bg-zinc-950 border-zinc-700/80 text-white focus:border-[#FF5500]'
+                  }`}
                 >
                   <option value="Responsable Inscripto">Responsable Inscripto</option>
                   <option value="Monotributo">Monotributo</option>
@@ -333,8 +397,10 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
             </div>
           </div>
 
-          <div className="pt-2 text-[10px] text-zinc-400 border-t border-[#4a186d]/60 flex items-center justify-between">
-            <span>Jurisdicción: <strong>Buenos Aires (ARBA)</strong></span>
+          <div className={`pt-3 text-[11px] border-t flex items-center justify-between ${
+            isLight ? 'border-slate-200 text-slate-500' : 'border-zinc-800/80 text-zinc-500'
+          }`}>
+            <span>Jurisdicción: <strong className={isLight ? 'text-slate-700' : 'text-zinc-300'}>Buenos Aires (ARBA)</strong></span>
             <span>Mar del Plata</span>
           </div>
         </div>
@@ -342,74 +408,100 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
         {/* ============================================================== */}
         {/* COLUMNA 2: FACTURACIÓN ELECTRÓNICA & ROBOT ARCA                */}
         {/* ============================================================== */}
-        <div className="p-4 rounded-lg border border-[#4a186d] bg-[#1f0436]/90 flex flex-col justify-between space-y-4">
+        <div className={`lg:col-span-6 p-5 sm:p-6 rounded-2xl border flex flex-col justify-between space-y-5 ${
+          isLight ? 'bg-slate-50/70 border-slate-200' : 'bg-[#15151b] border-zinc-800/90'
+        }`}>
           <div>
-            <div className="flex items-center justify-between border-b border-[#4a186d] pb-2 mb-3">
-              <span className="text-xs font-bold text-zinc-200 uppercase tracking-wider font-mono">
-                Facturación Electronica
-              </span>
-              <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-zinc-800/60">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span className={`text-xs font-bold uppercase tracking-wider ${
+                  isLight ? 'text-slate-700' : 'text-zinc-300'
+                }`}>
+                  Facturación Electrónica
+                </span>
+              </div>
+              <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                 status === 'active'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                  ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
               }`}>
-                {status === 'active' ? 'ARCA Oficial' : 'Inactiva'}
+                {status === 'active' ? 'Activada' : 'Inactiva'}
               </span>
             </div>
 
             {/* ESTADO Y FECHA DE VENCIMIENTO */}
-            <div className="mb-3">
-              <div className={`text-2xl font-extrabold tracking-tight ${
+            <div className="mb-4">
+              <div className={`text-2xl sm:text-3xl font-heading font-black tracking-tight ${
                 status === 'active' ? 'text-emerald-400' : 'text-zinc-400'
               }`}>
                 {status === 'active' ? 'Activada' : 'Desactivada'}
               </div>
-              <div className="text-xs text-zinc-300 mt-0.5 font-medium">
+              <div className={`text-xs mt-1 font-medium ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
                 {status === 'active' ? (
-                  <>El certificado vence el: <strong className="text-white font-mono">{certificateExpiration}</strong></>
+                  <>El certificado vence el: <strong className={isLight ? 'text-slate-900 font-mono' : 'text-white font-mono'}>{certificateExpiration}</strong></>
                 ) : (
-                  <span className="text-amber-300">Pendiente de vincular certificado con ARCA</span>
+                  <span className="text-amber-400">Pendiente de vincular certificado con ARCA</span>
                 )}
               </div>
             </div>
 
-            {/* TEXTO EXPLICATIVO DEL ROBOT (IDÉNTICO AL SISTROFIX) */}
-            <div className="p-2.5 rounded bg-[#130121] border border-[#3b1257] text-[11px] text-zinc-300 leading-relaxed space-y-1.5 mb-3.5">
+            {/* TEXTO EXPLICATIVO DEL ROBOT */}
+            <div className={`p-4 rounded-xl border text-xs leading-relaxed space-y-2 mb-4 ${
+              isLight 
+                ? 'bg-white border-slate-200 text-slate-600' 
+                : 'bg-zinc-950/60 border-zinc-800/80 text-zinc-300'
+            }`}>
               <p>
-                Las procedimientos de Facturación Electronica se hacen de forma 100% automatizada, con un robot automatico que realiza los movimientos dentro de tu cuenta de ARCA necesarios para activar la Facturación Electronica, si este metodo no funciona nos pondremos en contacto en las proximas 48 horas para continuar con la instalacion, una vez instalada la Facturacion Electronica ya podrás empezar a emitir comprobantes oficiales de ARCA.
+                Los procedimientos de Facturación Electrónica se hacen de forma 100% automatizada con un robot que realiza los movimientos dentro de tu cuenta de ARCA necesarios para activar la Facturación Electrónica. Una vez instalada ya podrás empezar a emitir comprobantes oficiales de ARCA.
               </p>
-              <p className="text-amber-300/90 font-medium">
-                El robot puede tardar hasta 5 minutos haciendo la instalacion por favor espere.
+              <p className="text-amber-400 font-medium text-[11px] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                <span>El robot puede tardar hasta 5 minutos haciendo la instalación. Por favor espere.</span>
               </p>
             </div>
 
             {/* INPUTS DE CLAVE FISCAL */}
-            <div className="space-y-2.5 text-xs">
+            <div className="space-y-3.5 text-xs sm:text-sm">
               <div>
-                <label className="block mb-1 text-zinc-300 font-medium">CUIT / CUIL clave fiscal:</label>
+                <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  CUIT / CUIL clave fiscal:
+                </label>
                 <input
                   type="text"
                   value={claveFiscalCuit}
                   onChange={(e) => setClaveFiscalCuit(e.target.value)}
-                  placeholder="30717561712"
-                  className="w-full bg-white text-zinc-900 px-3 py-2 rounded text-xs font-bold font-mono outline-none border border-zinc-400 focus:ring-2 focus:ring-fuchsia-400"
+                  placeholder="20384920194"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-bold transition-colors outline-none ${
+                    isLight 
+                      ? 'bg-white border-slate-300 text-slate-900 focus:border-[#FF5500]' 
+                      : 'bg-zinc-950/80 border-zinc-700/80 text-white focus:border-[#FF5500]'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block mb-1 text-zinc-300 font-medium">Contraseña ARCA:</label>
+                <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  Contraseña ARCA:
+                </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={claveFiscalPassword}
                     onChange={(e) => setClaveFiscalPassword(e.target.value)}
                     placeholder="Ingresá tu Clave Fiscal..."
-                    className="w-full bg-white text-zinc-900 px-3 py-2 rounded text-xs font-bold font-mono outline-none border border-zinc-400 pr-9 focus:ring-2 focus:ring-fuchsia-400"
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-bold transition-colors outline-none pr-10 ${
+                      isLight 
+                        ? 'bg-white border-slate-300 text-slate-900 focus:border-[#FF5500]' 
+                        : 'bg-zinc-950/80 border-zinc-700/80 text-white focus:border-[#FF5500]'
+                    }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-900 transition-colors"
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${
+                      isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-500 hover:text-zinc-200'
+                    }`}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -419,9 +511,9 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
           </div>
 
           {/* BOTONES DE ACCIÓN DE LA COLUMNA DERECHA */}
-          <div className="space-y-2 pt-2">
+          <div className="space-y-2.5 pt-2">
             {isRunningRobot && (
-              <div className="p-2 rounded bg-blue-950/80 border border-blue-500 text-blue-200 text-xs flex items-center gap-2 animate-pulse font-mono">
+              <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-300 text-xs flex items-center gap-2.5 animate-pulse font-mono">
                 <RefreshCw className="w-4 h-4 animate-spin text-blue-400 shrink-0" />
                 <span>{robotProgressText}</span>
               </div>
@@ -431,19 +523,19 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
               type="button"
               onClick={handleDeactivate}
               disabled={isRunningRobot}
-              className="w-full py-2.5 px-4 rounded font-bold text-xs bg-[#8b0000] hover:bg-[#a00000] text-white transition-colors cursor-pointer border border-red-900 flex items-center justify-center gap-2 shadow-sm"
+              className="w-full py-3 px-4 rounded-xl font-bold text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-colors cursor-pointer border border-rose-500/30 flex items-center justify-center gap-2 shadow-sm"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Eliminar Facturación Electronica</span>
+              <Trash2 className="w-4 h-4" />
+              <span>Eliminar Facturación Electrónica</span>
             </button>
 
             <button
               type="button"
               onClick={handleRunRobot}
               disabled={isRunningRobot}
-              className="w-full py-2.5 px-4 rounded font-bold text-xs bg-[#2575a7] hover:bg-[#2b86be] text-white transition-colors cursor-pointer border border-blue-400/40 flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+              className="w-full py-3 px-4 rounded-xl font-bold text-xs bg-blue-600 hover:bg-blue-500 text-white transition-all cursor-pointer border border-blue-500/40 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 hover:shadow-blue-600/35 disabled:opacity-50"
             >
-              <Cpu className="w-3.5 h-3.5" />
+              <Cpu className="w-4 h-4" />
               <span>Renovar certificados de ARCA</span>
             </button>
           </div>
@@ -452,11 +544,17 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
       </div>
 
       {/* BOTONES DE PIE: SALIR [ESC] Y GUARDAR */}
-      <div className="px-4 py-3 bg-[#130121] border-t border-[#3b1257] flex items-center justify-between">
+      <div className={`px-6 py-4 border-t flex items-center justify-between ${
+        isLight ? 'bg-slate-50 border-slate-200' : 'bg-zinc-900/60 border-zinc-800'
+      }`}>
         <button
           type="button"
           onClick={onClose}
-          className="px-5 py-2 rounded bg-[#cc0000] hover:bg-[#e60000] text-white font-bold text-xs transition-colors cursor-pointer border border-red-800 flex items-center gap-1.5 shadow-sm"
+          className={`px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-colors cursor-pointer border flex items-center gap-2 ${
+            isLight
+              ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'
+              : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border-zinc-700'
+          }`}
         >
           <span>Salir [Esc]</span>
         </button>
@@ -464,19 +562,34 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
         <button
           type="button"
           onClick={handleSaveAll}
-          className="px-6 py-2 rounded bg-[#008080] hover:bg-[#009999] text-white font-bold text-xs transition-colors cursor-pointer border border-teal-600 flex items-center gap-1.5 shadow-md"
+          className={`px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-2 shadow-lg ${
+            savedSuccess
+              ? 'bg-emerald-600 text-white shadow-emerald-600/30'
+              : 'bg-[#FF5500] hover:bg-[#FF6600] text-white shadow-[0_0_20px_rgba(255,85,0,0.4)] hover:shadow-[0_0_30px_rgba(255,85,0,0.6)] hover:-translate-y-0.5'
+          }`}
         >
-          <Save className="w-3.5 h-3.5" />
-          <span>Guardar</span>
+          {savedSuccess ? (
+            <>
+              <Check className="w-4 h-4" />
+              <span>¡Guardado!</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              <span>Guardar Cambios</span>
+            </>
+          )}
         </button>
       </div>
 
       {/* MODAL DE AYUDA F1 */}
       {showHelpModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[#1f0436] border border-[#521b7a] rounded-xl p-6 max-w-lg w-full text-white shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#521b7a] pb-3">
-              <h4 className="font-bold text-sm text-amber-300 flex items-center gap-2">
+          <div className={`border rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 ${
+            isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#15151b] border-zinc-800 text-white'
+          }`}>
+            <div className="flex items-center justify-between border-b pb-3 border-zinc-800">
+              <h4 className="font-bold text-sm text-amber-400 flex items-center gap-2">
                 <HelpCircle className="w-4 h-4" />
                 Guía de Activación - Facturación Electrónica ARCA
               </h4>
@@ -489,7 +602,7 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
               </button>
             </div>
 
-            <div className="text-xs text-zinc-300 space-y-2.5 leading-relaxed">
+            <div className={`text-xs space-y-3 leading-relaxed ${isLight ? 'text-slate-600' : 'text-zinc-300'}`}>
               <p>
                 <strong>1. ¿Qué hace el robot automático?</strong><br />
                 Ingresa con tu CUIT y Clave Fiscal al portal oficial de ARCA (ex-AFIP), genera un computador fiscal seguro para Montec y suscribe el servicio de Web Services de Facturación Electrónica (WSFE).
@@ -508,7 +621,7 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
               <button
                 type="button"
                 onClick={() => setShowHelpModal(false)}
-                className="px-4 py-1.5 rounded bg-fuchsia-800 hover:bg-fuchsia-700 text-white font-bold text-xs"
+                className="px-5 py-2 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white font-bold text-xs shadow-md"
               >
                 Entendido
               </button>
