@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, 
   Eye, 
@@ -49,8 +49,12 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
+  // Evitar que useEffect sobreescriba lo que el usuario está tipeando
+  const isInitialized = useRef(false);
+
   useEffect(() => {
-    if (businessConfig) {
+    if (businessConfig && !isInitialized.current) {
+      isInitialized.current = true;
       setCompanyName(businessConfig.business?.legalName || businessConfig.business?.fantasyName || 'MONTEC SERVICIO TÉCNICO');
       setCuit(businessConfig.business?.cuit || '20-38492019-4');
       setIibb(businessConfig.business?.iibb || '20-38492019-4');
@@ -86,7 +90,7 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
   // Guardar configuración general
   const handleSaveAll = async () => {
     try {
-      const cleanCuit = cuit.replace('CUIT:', '').trim();
+      const cleanCuit = cuit.trim();
       const updated = {
         business: {
           ...(businessConfig?.business || {}),
@@ -152,7 +156,7 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
         updateBusinessConfig({
           business: {
             ...(businessConfig?.business || {}),
-            cuit: cuit.replace('CUIT:', '').trim(),
+            cuit: cuit.trim(),
             iibb: iibb.trim(),
             legalName: companyName
           },
@@ -321,13 +325,13 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
                 </label>
                 <input
                   type="text"
-                  value={cuit.startsWith('CUIT:') ? cuit : `CUIT: ${cuit}`}
-                  onChange={(e) => {
-                    const val = e.target.value.replace('CUIT:', '').trim();
-                    setCuit(val);
-                    setClaveFiscalCuit(val);
-                  }}
-                  placeholder="CUIT: 20-38492019-4"
+                  name="fiscal_cuit"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck="false"
+                  value={cuit}
+                  onChange={(e) => setCuit(e.target.value)}
+                  placeholder="20-38492019-4"
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-bold transition-colors outline-none ${
                     isLight 
                       ? 'bg-white border-slate-300 text-slate-900 focus:border-[#FF5500]' 
@@ -343,6 +347,10 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
                 </label>
                 <input
                   type="text"
+                  name="fiscal_iibb"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck="false"
                   value={iibb}
                   onChange={(e) => setIibb(e.target.value)}
                   placeholder="20-38492019-4"
@@ -469,6 +477,10 @@ export default function FiscalBillingConfigModal({ isOpen = true, onClose, isEmb
                 </label>
                 <input
                   type="text"
+                  name="fiscal_afip_cuit"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck="false"
                   value={claveFiscalCuit}
                   onChange={(e) => setClaveFiscalCuit(e.target.value)}
                   placeholder="20384920194"
