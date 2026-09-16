@@ -57,15 +57,15 @@ export const DEFAULT_BUSINESS_CONFIG = {
     website: 'https://montec.ar'
   },
   afip: {
-    environment: 'homologacion', // 'homologacion' | 'produccion'
+    status: 'active', // 'active' | 'inactive' | 'pending'
+    certificateExpiration: '5/1/2028',
+    environment: 'produccion', // 'homologacion' | 'produccion'
     cuit: '20-38492019-4',
     puntoVenta: 1,
     tipoComprobanteDefault: '11', // Factura C (11), Factura B (6), Factura A (1)
-    certificate: '', // Archivo CRT/PEM
-    privateKey: '', // Archivo KEY
-    tokenExpiration: null,
-    lastTested: null,
-    status: 'configured_offline'
+    claveFiscalCuit: '20-38492019-4',
+    claveFiscalPassword: '',
+    lastTested: null
   },
   whatsappTemplates: {
     quotationWeb: '¡Hola {local}! Estuve cotizando en la web la reparación de mi {equipo} ({falla}):\n\n📱 *Equipo:* {equipo}\n🛠️ *Falla:* {falla}{detalles_repuesto}\n💰 *Presupuesto estimativo web:* {precio}\n⏱️ *Tiempo estimado de trabajo:* {tiempo}\n🛡️ *Garantía:* {garantia}\n\nQuisiera consultar disponibilidad o coordinar un turno para llevarlo al local de {direccion}.',

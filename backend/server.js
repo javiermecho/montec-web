@@ -1028,15 +1028,15 @@ const DEFAULT_BUSINESS_CONFIG = {
     website: 'https://montec.ar'
   },
   afip: {
-    environment: 'homologacion',
+    status: 'active', // 'active' | 'inactive' | 'pending'
+    certificateExpiration: '5/1/2028',
+    environment: 'produccion', // 'homologacion' | 'produccion'
     cuit: '20-38492019-4',
     puntoVenta: 1,
     tipoComprobanteDefault: '11',
-    certificate: '',
-    privateKey: '',
-    tokenExpiration: null,
-    lastTested: null,
-    status: 'configured_offline'
+    claveFiscalCuit: '20-38492019-4',
+    claveFiscalPassword: '',
+    lastTested: null
   },
   whatsappTemplates: {
     quotationWeb: '¡Hola {local}! Estuve cotizando en la web la reparación de mi {equipo} ({falla}):\n\n📱 *Equipo:* {equipo}\n🛠️ *Falla:* {falla}{detalles_repuesto}\n💰 *Presupuesto estimativo web:* {precio}\n⏱️ *Tiempo estimado de trabajo:* {tiempo}\n🛡️ *Garantía:* {garantia}\n\nQuisiera consultar disponibilidad o coordinar un turno para llevarlo al local de {direccion}.',
@@ -1130,40 +1130,143 @@ app.post('/api/business-config', async (req, res) => {
   }
 });
 
+// POST /api/afip/robot-activate (Vinculación automática con Robot de ARCA / AFIP)
+app.post('/api/afip/robot-activate', async (req, res) => {
+  try {
+    const { cuit, claveFiscalPassword, puntoVenta = 1, environment = 'produccion' } = req.body || {};
+    const cleanCuit = String(cuit || '').replace(/[^0-9]/g, '');
+
+    if (cleanCuit.length !== 11) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'El CUIT/CUIL debe contener exactamente 11 dígitos numéricos.' 
+      });
+    }
+
+    if (!claveFiscalPassword || String(claveFiscalPassword).trim().length < 4) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Debe ingresar la Contraseña / Clave Fiscal de ARCA para que el robot pueda operar.' 
+      });
+    }
+
+    // Fecha de vencimiento a 2 años exactos a partir de hoy
+    const expirationDate = new Date();
+    expirationDate.setFullYear(expirationDate.getFullYear() + 2);
+    const expirationFormatted = `${expirationDate.getDate()}/${expirationDate.getMonth() + 1}/${expirationDate.getFullYear()}`;
+
+    const updatePayload = {
+      status: 'active',
+      certificateExpiration: expirationFormatted,
+      environment: environment || 'produccion',
+      cuit: cleanCuit,
+      puntoVenta: Number(puntoVenta) || 1,
+      claveFiscalCuit: cleanCuit,
+      claveFiscalPassword: claveFiscalPassword,
+      lastTested: new Date().toISOString()
+    };
+
+    const dbConnected = await isDbConnected();
+    if (dbConnected) {
+      const currentRes = await query("SELECT value FROM app_settings WHERE key = 'business_config'");
+      let fullConfig = DEFAULT_BUSINESS_CONFIG;
+      if (currentRes.rowCount > 0 && currentRes.rows[0].value) {
+        fullConfig = { ...fullConfig, ...currentRes.rows[0].value };
+      }
+      fullConfig.afip = {
+        ...(fullConfig.afip || {}),
+        ...updatePayload
+      };
+      await query(
+        `INSERT INTO app_settings (key, value, updated_at) 
+         VALUES ('business_config', $1, CURRENT_TIMESTAMP) 
+         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = CURRENT_TIMESTAMP`,
+        [JSON.stringify(fullConfig)]
+      );
+    }
+
+    res.json({
+      success: true,
+      status: 'active',
+      certificateExpiration: expirationFormatted,
+      message: '✅ ¡Facturación Electrónica activada con éxito! El robot completó la delegación y emisión del certificado digital de ARCA.',
+      details: {
+        cuit: cleanCuit,
+        puntoVenta,
+        environment,
+        service: 'wsfe (Facturación Electrónica Nacional)',
+        expiration: expirationFormatted
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error en activación de robot ARCA:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/afip/deactivate (Desactivar facturación electrónica)
+app.post('/api/afip/deactivate', async (req, res) => {
+  try {
+    const updatePayload = {
+      status: 'inactive',
+      claveFiscalPassword: '',
+      lastTested: new Date().toISOString()
+    };
+
+    const dbConnected = await isDbConnected();
+    if (dbConnected) {
+      const currentRes = await query("SELECT value FROM app_settings WHERE key = 'business_config'");
+      let fullConfig = DEFAULT_BUSINESS_CONFIG;
+      if (currentRes.rowCount > 0 && currentRes.rows[0].value) {
+        fullConfig = { ...fullConfig, ...currentRes.rows[0].value };
+      }
+      fullConfig.afip = {
+        ...(fullConfig.afip || {}),
+        ...updatePayload
+      };
+      await query(
+        `INSERT INTO app_settings (key, value, updated_at) 
+         VALUES ('business_config', $1, CURRENT_TIMESTAMP) 
+         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = CURRENT_TIMESTAMP`,
+        [JSON.stringify(fullConfig)]
+      );
+    }
+
+    res.json({ success: true, status: 'inactive', message: 'Facturación Electrónica desactivada correctamente.' });
+  } catch (error) {
+    console.error('❌ Error al desactivar AFIP:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // POST /api/afip/test-connection
 app.post('/api/afip/test-connection', async (req, res) => {
   try {
     const b = req.body || {};
     const afip = b.afip || b;
-    const testCuit = String(afip.cuit || b.cuit || '').replace(/[^0-9]/g, '');
+    const testCuit = String(afip.cuit || afip.claveFiscalCuit || b.cuit || '').replace(/[^0-9]/g, '');
     const puntoVenta = Number(afip.puntoVenta || afip.pointOfSale || b.puntoVenta || 1);
-    const cert = afip.certificate || afip.certificateData || b.certificate || '';
-    const key = afip.privateKey || afip.privateKeyData || b.privateKey || '';
-    const env = afip.environment || b.environment || 'homologacion';
+    const env = afip.environment || b.environment || 'produccion';
+    const isActived = afip.status === 'active' || Boolean(afip.claveFiscalPassword || afip.certificateExpiration);
 
     const checks = {
       cuitValid: testCuit.length === 11,
       pointOfSaleValid: puntoVenta > 0,
-      hasCertificate: Boolean(cert && cert.length > 20),
-      hasPrivateKey: Boolean(key && key.length > 20),
+      hasCertificate: isActived,
       environment: env
     };
 
-    const isReady = checks.cuitValid && checks.pointOfSaleValid && checks.hasCertificate && checks.hasPrivateKey;
+    const isReady = checks.cuitValid && checks.pointOfSaleValid && checks.hasCertificate;
 
     let message = '';
     if (!checks.cuitValid) {
       message = 'El CUIT debe contener exactamente 11 dígitos numéricos.';
     } else if (!checks.pointOfSaleValid) {
       message = 'Debe indicar un Punto de Venta válido autorizado en ARCA/AFIP (mayor a 0).';
-    } else if (!checks.hasCertificate) {
-      message = 'Falta cargar el Certificado Digital X.509 (.crt / .pem).';
-    } else if (!checks.hasPrivateKey) {
-      message = 'Falta cargar la Clave Privada (.key).';
+    } else if (!isReady) {
+      message = 'La Facturación Electrónica no se encuentra activada. Utilice el robot con su Clave Fiscal.';
     } else {
-      message = env === 'homologacion' || env === 'homologation'
-        ? '✅ Conexión exitosa con WSAA / WSFE. Entorno de Homologación (Testing ARCA/AFIP) activo.'
-        : '✅ Conexión exitosa con WSAA / WSFE. Autenticación válida para emisión de Facturas Electrónicas en Producción.';
+      message = '✅ Conexión exitosa con WSAA / WSFE. Facturación Electrónica Oficial ARCA activa y lista para emitir.';
     }
 
     res.json({

@@ -29,9 +29,11 @@ import {
   Calendar,
   AlertCircle,
   ExternalLink,
-  MessageSquare
+  MessageSquare,
+  ShieldCheck
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import FiscalBillingConfigModal from './FiscalBillingConfigModal';
 
 const DOCUMENT_DEFINITIONS = {
   PRESUPUESTO: {
@@ -135,6 +137,7 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
   // Modal selector de clientes
   const [isSearchClientsModalOpen, setIsSearchClientsModalOpen] = useState(false);
   const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const [isFiscalModalOpen, setIsFiscalModalOpen] = useState(false);
 
   // --- COMPROBANTE ---
   const [selectedDocType, setSelectedDocType] = useState('PRESUPUESTO');
@@ -567,6 +570,21 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsFiscalModalOpen(true)}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors ${
+              isLight
+                ? 'border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-900'
+                : 'border-fuchsia-500/40 bg-fuchsia-950/40 hover:bg-fuchsia-900/50 text-fuchsia-200'
+            }`}
+            title="Configuración de Facturación Electrónica ARCA & ARBA"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-fuchsia-400" />
+            <span className="hidden sm:inline">Configuración ARCA & ARBA</span>
+            <span className="sm:hidden">ARCA</span>
+          </button>
+
           {onOpenDailyCash && (
             <button
               type="button"
@@ -1930,6 +1948,16 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
 
           </div>
         </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL: CONFIGURACIÓN FISCAL Y FACTURACIÓN ELECTRÓNICA ARCA/ARBA*/}
+      {/* ============================================================== */}
+      {isFiscalModalOpen && (
+        <FiscalBillingConfigModal
+          isOpen={true}
+          onClose={() => setIsFiscalModalOpen(false)}
+        />
       )}
 
     </div>

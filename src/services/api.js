@@ -373,6 +373,28 @@ export async function testAfipConnection(afipData) {
   return res;
 }
 
+/**
+ * Activa o renueva los certificados de ARCA con el Robot automático
+ */
+export async function activateAfipRobot(data) {
+  const res = await request('/afip/robot-activate', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+  return res;
+}
+
+/**
+ * Desactiva la Facturación Electrónica de ARCA
+ */
+export async function deactivateAfip() {
+  const res = await request('/afip/deactivate', {
+    method: 'POST',
+    body: JSON.stringify({})
+  });
+  return res;
+}
+
 export const api = {
   checkServerHealth,
   getOrdenes,
