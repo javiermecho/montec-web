@@ -1288,6 +1288,8 @@ app.post('/api/afip/test-connection', async (req, res) => {
     console.error('❌ Error en test de conexión AFIP:', error);
     res.status(500).json({ success: false, error: error.message });
   }
+});
+
 // Algoritmo oficial de Módulo 11 de AFIP para validación y cálculo de CUIL/CUIT
 function calculateCuilMod11(dni, preferredGender = 'M') {
   const cleanDni = String(dni || '').replace(/[^0-9]/g, '').padStart(8, '0');
