@@ -270,7 +270,7 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
 
             setCustomerLookupFeedback({
               type: 'success',
-              text: `✅ Datos fiscales de "${c.name.toUpperCase()}" cargados.`
+              text: `✅ Datos fiscales de "${c.name.toUpperCase()}" cargados ${res.source?.includes('afip') ? 'desde AFIP/ARCA' : 'desde padrón'}.`
             });
           } else {
             // Cliente nuevo deducido
@@ -287,8 +287,8 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
             setCustomerLookupFeedback({
               type: 'info',
               text: cleanDoc.length === 11 
-                ? '🏢 CUIT identificado. Ingresá Razón Social para Factura A/B.'
-                : '👤 DNI identificado (Consumidor Final). Ingresá el Nombre.'
+                ? '🏢 CUIT identificado. Ingresá Razón Social y Dirección para Factura A/B.'
+                : `👤 DNI identificado (CUIL: ${c.cuit || cleanDoc}). Ingresá el Nombre y Dirección (se guardarán en tu padrón).`
             });
           }
         }
@@ -297,7 +297,7 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
       console.warn('Error al consultar datos de cliente:', err);
     } finally {
       setIsLookingUpCustomer(false);
-      setTimeout(() => setCustomerLookupFeedback(null), 5000);
+      setTimeout(() => setCustomerLookupFeedback(null), 6000);
     }
   };
 
