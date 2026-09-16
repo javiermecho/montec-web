@@ -111,18 +111,31 @@ export default function MonthlyBalanceTab() {
     return getMonthlyFinancialSummary(selectedMonth, selectedYear);
   }, [getMonthlyFinancialSummary, selectedMonth, selectedYear]);
 
-  // Lista de gastos filtrados para la tabla
+  // Lista de gastos filtrados para la tabla (con desduplicación inteligente)
   const filteredExpenses = useMemo(() => {
-    return (expenses || []).filter(item => {
-      if (!item) return false;
+    const seen = new Set();
+    const cleanList = [];
+
+    (expenses || []).forEach(item => {
+      if (!item) return;
       const d = item.fecha ? new Date(item.fecha) : (item.creado_en ? new Date(item.creado_en) : null);
-      if (!d || isNaN(d.getTime())) return false;
+      if (!d || isNaN(d.getTime())) return;
 
       const matchesPeriod = (d.getMonth() + 1) === selectedMonth && d.getFullYear() === selectedYear;
-      if (!matchesPeriod) return false;
+      if (!matchesPeriod) return;
 
-      if (filterCategory !== 'all' && item.categoria !== filterCategory) return false;
-      if (filterPaymentMethod !== 'all' && item.metodo_pago !== filterPaymentMethod) return false;
+      const minStr = d.toISOString().slice(0, 16);
+      const idKey = String(item.id);
+      const contentKey = `${(item.concepto || item.descripcion || '').toLowerCase().trim()}_${Number(item.monto)}_${item.categoria}_${minStr}`;
+
+      if (seen.has(idKey) || seen.has(contentKey)) {
+        return;
+      }
+      seen.add(idKey);
+      seen.add(contentKey);
+
+      if (filterCategory !== 'all' && item.categoria !== filterCategory) return;
+      if (filterPaymentMethod !== 'all' && item.metodo_pago !== filterPaymentMethod) return;
 
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
@@ -130,11 +143,13 @@ export default function MonthlyBalanceTab() {
         const matchesNotes = (item.notas || '').toLowerCase().includes(query);
         const matchesCategory = (item.categoria || '').toLowerCase().includes(query);
         const matchesAmount = String(item.monto || '').includes(query);
-        return matchesConcept || matchesNotes || matchesCategory || matchesAmount;
+        if (!matchesConcept && !matchesNotes && !matchesCategory && !matchesAmount) return;
       }
 
-      return true;
-    }).sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+      cleanList.push(item);
+    });
+
+    return cleanList.sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
   }, [expenses, selectedMonth, selectedYear, filterCategory, filterPaymentMethod, searchQuery]);
 
   // Años disponibles para selector (desde 2024 hasta año actual + 1)

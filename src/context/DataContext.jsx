@@ -505,19 +505,59 @@ export function DataProvider({ children }) {
         // 2.c Sincronizar Gastos Operativos desde PostgreSQL
         try {
           const remoteGastos = await api.getGastos({ limit: 1000 });
-          if (Array.isArray(remoteGastos) && remoteGastos.length > 0) {
+          if (Array.isArray(remoteGastos)) {
             setExpenses(prev => {
+              // PostgreSQL es la fuente oficial. Guardar en mapa por ID
               const map = new Map();
-              prev.forEach(g => map.set(String(g.id), g));
               remoteGastos.forEach(g => {
-                const key = String(g.id);
-                map.set(key, { ...(map.get(key) || {}), ...g });
+                map.set(String(g.id), g);
               });
-              const merged = Array.from(map.values()).sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+
+              // Solo conservar de prev gastos offline pendientes (exp-) que AÚN NO existan en Postgres
+              prev.forEach(localG => {
+                const isTemp = String(localG.id).startsWith('exp-');
+                if (isTemp) {
+                  const alreadySaved = remoteGastos.some(rg => 
+                    rg.concepto?.toLowerCase() === localG.concepto?.toLowerCase() &&
+                    Math.abs(Number(rg.monto) - Number(localG.monto)) < 0.01 &&
+                    Math.abs(new Date(rg.fecha || 0).getTime() - new Date(localG.fecha || 0).getTime()) < 300000
+                  );
+                  if (!alreadySaved) {
+                    map.set(String(localG.id), localG);
+                  }
+                }
+              });
+
+              // Limpieza de duplicados accidentales (mismo concepto, monto y minuto)
+              const rawList = Array.from(map.values());
+              const uniqueList = [];
+              const seenContent = new Set();
+
+              for (const item of rawList) {
+                const dateKey = item.fecha ? new Date(item.fecha).toISOString().slice(0, 16) : '';
+                const fingerprint = `${(item.concepto || '').toLowerCase().trim()}_${Number(item.monto)}_${item.categoria}_${dateKey}`;
+                
+                if (seenContent.has(fingerprint)) {
+                  // Si ya existe pero el actual tiene ID numérico y el previo era exp-, reemplazar
+                  const existingIdx = uniqueList.findIndex(u => {
+                    const uDate = u.fecha ? new Date(u.fecha).toISOString().slice(0, 16) : '';
+                    return `${(u.concepto || '').toLowerCase().trim()}_${Number(u.monto)}_${u.categoria}_${uDate}` === fingerprint;
+                  });
+                  if (existingIdx !== -1 && String(uniqueList[existingIdx].id).startsWith('exp-') && !String(item.id).startsWith('exp-')) {
+                    uniqueList[existingIdx] = item;
+                  }
+                  continue;
+                }
+
+                seenContent.add(fingerprint);
+                uniqueList.push(item);
+              }
+
+              uniqueList.sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
               try {
-                localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(merged));
+                localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(uniqueList));
               } catch (e) {}
-              return merged;
+              return uniqueList;
             });
           }
         } catch (e) {
@@ -1765,37 +1805,64 @@ export function DataProvider({ children }) {
   const addExpense = async (expenseData) => {
     const rawConcepto = (expenseData.concepto || expenseData.descripcion || '').trim();
     const rawMonto = Number(expenseData.monto) || 0;
-    const expenseId = expenseData.id || `exp-${Date.now()}`;
     const dateStr = expenseData.fecha ? new Date(expenseData.fecha).toISOString() : new Date().toISOString();
 
-    const newExpense = {
-      id: expenseId,
+    const payload = {
       concepto: rawConcepto || 'Gasto General',
       descripcion: rawConcepto || 'Gasto General',
       monto: rawMonto,
       categoria: expenseData.categoria || 'Varios',
       metodo_pago: expenseData.metodo_pago || 'Efectivo',
       fecha: dateStr,
-      formattedDate: new Date(dateStr).toLocaleString('es-AR'),
       comprobante_url: expenseData.comprobante_url || null,
-      notas: expenseData.notas || '',
+      notas: expenseData.notas || ''
+    };
+
+    // 1. Intentar registrar en PostgreSQL directamente para tener el ID real del servidor
+    try {
+      const res = await api.createGasto(payload);
+      if (res?.success && res.gasto) {
+        const serverGasto = res.gasto;
+        setExpenses(prev => {
+          // Filtrar cualquier gasto duplicado previo con el mismo ID o concepto+monto similar
+          const filtered = prev.filter(e => {
+            if (String(e.id) === String(serverGasto.id)) return false;
+            if (String(e.id).startsWith('exp-') && 
+                e.concepto?.toLowerCase() === serverGasto.concepto?.toLowerCase() && 
+                Math.abs(Number(e.monto) - Number(serverGasto.monto)) < 0.01) {
+              return false;
+            }
+            return true;
+          });
+          const updated = [serverGasto, ...filtered];
+          try {
+            localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        });
+        return serverGasto;
+      }
+    } catch (e) {
+      console.warn('⚠️ No se pudo registrar gasto en PostgreSQL (modo offline):', e.message);
+    }
+
+    // 2. Fallback offline: se guarda localmente con ID temporal solo si falló la API
+    const offlineExpense = {
+      id: `exp-${Date.now()}`,
+      ...payload,
+      formattedDate: new Date(dateStr).toLocaleString('es-AR'),
       creado_en: new Date().toISOString()
     };
 
-    setExpenses(prev => [newExpense, ...prev]);
+    setExpenses(prev => {
+      const updated = [offlineExpense, ...prev];
+      try {
+        localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
 
-    // Sincronizar con PostgreSQL (Railway)
-    try {
-      const res = await api.createGasto(newExpense);
-      if (res?.success && res.gasto) {
-        setExpenses(prev => prev.map(e => e.id === newExpense.id ? { ...newExpense, id: res.gasto.id } : e));
-        return res.gasto;
-      }
-    } catch (e) {
-      console.warn('⚠️ No se pudo registrar gasto en PostgreSQL:', e.message);
-    }
-
-    return newExpense;
+    return offlineExpense;
   };
 
   const updateExpense = (id, updatedFields) => {
@@ -1905,19 +1972,31 @@ export function DataProvider({ children }) {
       });
     });
 
-    // 3. Filtrar gastos del mes
+    // 3. Filtrar gastos del mes (con desduplicación inteligente)
     let expensesTotal = 0;
     let expensesCash = 0;
     let expensesBank = 0;
     let expensesCard = 0;
     let expensesCount = 0;
     const categoryTotals = {};
+    const seenExpenseKeys = new Set();
 
     (expenses || []).forEach(e => {
       if (!e) return;
       const eDate = e.fecha ? new Date(e.fecha) : (e.creado_en ? new Date(e.creado_en) : null);
       if (!eDate || isNaN(eDate.getTime())) return;
       if ((eDate.getMonth() + 1) === month && eDate.getFullYear() === year) {
+        // Desduplicar si viene duplicado por ID o por contenido idéntico en el mismo minuto
+        const idKey = String(e.id);
+        const minStr = eDate.toISOString().slice(0, 16);
+        const contentKey = `${(e.concepto || '').toLowerCase().trim()}_${Number(e.monto)}_${e.categoria}_${minStr}`;
+
+        if (seenExpenseKeys.has(idKey) || seenExpenseKeys.has(contentKey)) {
+          return;
+        }
+        seenExpenseKeys.add(idKey);
+        seenExpenseKeys.add(contentKey);
+
         const amt = Number(e.monto || 0);
         expensesTotal += amt;
         expensesCount++;

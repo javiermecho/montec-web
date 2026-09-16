@@ -979,6 +979,26 @@ app.post('/api/gastos', async (req, res) => {
     const finalCategoria = categoria || 'Varios';
     const finalMetodo = metodo_pago || 'Efectivo';
 
+    // Protección contra doble click / envío duplicado en menos de 10 segundos
+    const duplicateCheck = await query(`
+      SELECT * FROM gastos 
+      WHERE LOWER(concepto) = LOWER($1) 
+        AND monto = $2 
+        AND categoria = $3 
+        AND metodo_pago = $4 
+        AND creado_en >= CURRENT_TIMESTAMP - INTERVAL '10 seconds'
+      ORDER BY id DESC LIMIT 1;
+    `, [rawConcepto, rawMonto, finalCategoria, finalMetodo]);
+
+    if (duplicateCheck.rowCount > 0) {
+      console.log(`⚠️ Gasto duplicado detectado (doble click evitado): [${finalCategoria}] ${rawConcepto}`);
+      return res.status(200).json({
+        success: true,
+        message: 'Gasto ya registrado',
+        gasto: mapDbGastoToFrontend(duplicateCheck.rows[0])
+      });
+    }
+
     const insertSql = `
       INSERT INTO gastos (concepto, monto, categoria, metodo_pago, fecha, comprobante_url, notas)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
