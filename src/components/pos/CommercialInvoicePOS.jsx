@@ -33,6 +33,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import { api } from '../../services/api';
 import FiscalBillingConfigModal from './FiscalBillingConfigModal';
 import OfficialFiscalInvoice from './OfficialFiscalInvoice';
 
@@ -118,6 +119,7 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
     recordSale,
     updateProductStock,
     searchClients,
+    lookupClientByDoc,
     panelTheme,
     businessConfig
   } = useData();
@@ -134,6 +136,8 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
   const [clientAddress, setClientAddress] = useState('');
   const [clientInternalNotes, setClientInternalNotes] = useState('');
   const [isClientNotesModalOpen, setIsClientNotesModalOpen] = useState(false);
+  const [isLookingUpCustomer, setIsLookingUpCustomer] = useState(false);
+  const [customerLookupFeedback, setCustomerLookupFeedback] = useState(null); // { type: 'success' | 'info', text: '' }
 
   // Modal selector de clientes
   const [isSearchClientsModalOpen, setIsSearchClientsModalOpen] = useState(false);
@@ -234,26 +238,65 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [items, selectedDocType, advancePayment, paymentMethod, isSearchProductsModalOpen, isSearchClientsModalOpen, isCustomItemModalOpen, isAddDiscountModalOpen, isClientNotesModalOpen, isHelpModalOpen, emittedVoucher]);
 
-  // Autocompletar cliente por DNI/CUIT si coincide con alguno existente
-  const handleDocNumberBlur = () => {
-    if (!docNumber.trim()) return;
-    const cleanDoc = docNumber.trim().toLowerCase();
-    
-    // Buscar en órdenes previas
-    const foundOrder = orders.find(o => {
-      const c = o.customer || {};
-      return (c.docNumber && c.docNumber.trim().toLowerCase() === cleanDoc) ||
-             (c.phone && c.phone.trim().toLowerCase() === cleanDoc);
-    });
+  // Búsqueda inteligente de datos fiscales por DNI o CUIT
+  const handleLookupCustomer = async (explicitDoc) => {
+    const raw = String(explicitDoc || docNumber || '').trim();
+    const cleanDoc = raw.replace(/[^0-9]/g, '');
+    if (!cleanDoc || cleanDoc.length < 6) return;
 
-    if (foundOrder && foundOrder.customer) {
-      const c = foundOrder.customer;
-      if (c.name) setClientName(c.name.toUpperCase());
-      if (c.phone) setClientPhone(c.phone);
-      if (c.email) setClientEmail(c.email);
-      if (c.address) setClientAddress(c.address);
-      if (c.taxCondition) setTaxCondition(c.taxCondition);
-      if (c.notes) setClientInternalNotes(c.notes);
+    setIsLookingUpCustomer(true);
+    try {
+      if (typeof lookupClientByDoc === 'function') {
+        const res = await lookupClientByDoc(cleanDoc);
+        if (res && res.client) {
+          const c = res.client;
+          if (c.name && c.name.trim()) {
+            setClientName(c.name.toUpperCase());
+            if (c.phone) setClientPhone(c.phone);
+            if (c.email) setClientEmail(c.email);
+            if (c.address) setClientAddress(c.address);
+            if (c.taxCondition) {
+              setTaxCondition(c.taxCondition);
+              const upperTax = c.taxCondition.toUpperCase();
+              if (upperTax.includes('INSCRIPTO')) {
+                setSelectedDocType('FACTURA_A');
+              } else if (selectedDocType === 'PRESUPUESTO') {
+                setSelectedDocType('FACTURA_B');
+              }
+            }
+            if (c.docType) setDocType(c.docType);
+            if (c.docNumber) setDocNumber(c.docNumber);
+
+            setCustomerLookupFeedback({
+              type: 'success',
+              text: `✅ Datos fiscales de "${c.name.toUpperCase()}" cargados.`
+            });
+          } else {
+            // Cliente nuevo deducido
+            if (c.docType) setDocType(c.docType);
+            if (c.taxCondition) {
+              setTaxCondition(c.taxCondition);
+              if (c.taxCondition.toUpperCase().includes('INSCRIPTO')) {
+                setSelectedDocType('FACTURA_A');
+              }
+            }
+            if (c.suggestedInvoiceType && selectedDocType === 'PRESUPUESTO') {
+              setSelectedDocType(c.suggestedInvoiceType);
+            }
+            setCustomerLookupFeedback({
+              type: 'info',
+              text: cleanDoc.length === 11 
+                ? '🏢 CUIT identificado. Ingresá Razón Social para Factura A/B.'
+                : '👤 DNI identificado (Consumidor Final). Ingresá el Nombre.'
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Error al consultar datos de cliente:', err);
+    } finally {
+      setIsLookingUpCustomer(false);
+      setTimeout(() => setCustomerLookupFeedback(null), 5000);
     }
   };
 
@@ -263,12 +306,24 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
     if (client.docType) setDocType(client.docType);
     if (client.docNumber) setDocNumber(client.docNumber);
     if (client.name) setClientName(client.name.toUpperCase());
-    if (client.taxCondition) setTaxCondition(client.taxCondition);
+    if (client.taxCondition) {
+      setTaxCondition(client.taxCondition);
+      if (client.taxCondition.toUpperCase().includes('INSCRIPTO')) {
+        setSelectedDocType('FACTURA_A');
+      } else if (selectedDocType === 'PRESUPUESTO') {
+        setSelectedDocType('FACTURA_B');
+      }
+    }
     if (client.email) setClientEmail(client.email);
     if (client.phone) setClientPhone(client.phone);
     if (client.address) setClientAddress(client.address);
     if (client.notes) setClientInternalNotes(client.notes);
     setIsSearchClientsModalOpen(false);
+    setCustomerLookupFeedback({
+      type: 'success',
+      text: `✅ Cliente "${(client.name || '').toUpperCase()}" seleccionado.`
+    });
+    setTimeout(() => setCustomerLookupFeedback(null), 4000);
   };
 
   // Agregar ítem desde inventario por SKU
@@ -518,6 +573,21 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
       recordSale(newSale);
     }
 
+    // Persistir cliente en padrón fiscal local si tiene DNI o CUIT
+    if (docNumber && docNumber.trim() && clientName && clientName !== 'CONSUMIDOR FINAL') {
+      if (api && typeof api.savePadronClient === 'function') {
+        api.savePadronClient({
+          name: clientName,
+          docType,
+          docNumber: docNumber.trim(),
+          taxCondition,
+          phone: clientPhone,
+          email: clientEmail,
+          address: clientAddress
+        }).catch(() => null);
+      }
+    }
+
     // Mostrar modal de confirmación / impresión
     setEmittedVoucher(newSale);
 
@@ -693,20 +763,40 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
                     ref={docNumberInputRef}
                     type="text"
                     value={docNumber}
-                    onChange={(e) => setDocNumber(e.target.value)}
-                    onBlur={handleDocNumberBlur}
-                    placeholder="Número [F11]..."
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDocNumber(val);
+                      const clean = val.replace(/[^0-9]/g, '');
+                      if (clean.length === 8 || clean.length === 11) {
+                        handleLookupCustomer(clean);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleLookupCustomer(docNumber);
+                      }
+                    }}
+                    onBlur={() => handleLookupCustomer(docNumber)}
+                    placeholder="DNI / CUIT [F11]..."
                     className={`w-full px-2.5 py-1.5 rounded-lg border text-xs font-mono outline-none focus:border-[#FF5500] ${
                       isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-zinc-100'
                     }`}
                   />
                   <button
                     type="button"
-                    onClick={handleDocNumberBlur}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
-                    title="Buscar por documento"
+                    onClick={() => handleLookupCustomer(docNumber)}
+                    disabled={isLookingUpCustomer}
+                    className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded transition-colors cursor-pointer ${
+                      isLookingUpCustomer ? 'text-[#FF5500]' : 'text-zinc-400 hover:text-white'
+                    }`}
+                    title="Buscar datos fiscales por DNI/CUIT"
                   >
-                    <Search className="w-3 h-3" />
+                    {isLookingUpCustomer ? (
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Search className="w-3 h-3" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -793,6 +883,27 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
               </div>
 
             </div>
+
+            {/* Feedback de consulta de padrón AFIP / Clientes */}
+            {customerLookupFeedback && (
+              <div className={`mt-2.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold flex items-center justify-between gap-2 border animate-fadeIn ${
+                customerLookupFeedback.type === 'success'
+                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                  : 'bg-blue-500/15 text-blue-300 border-blue-500/30'
+              }`}>
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                  <span>{customerLookupFeedback.text}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCustomerLookupFeedback(null)}
+                  className="p-0.5 text-zinc-400 hover:text-white cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* BLOQUE COMPROBANTE (5 cols) */}

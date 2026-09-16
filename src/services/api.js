@@ -395,6 +395,30 @@ export async function deactivateAfip() {
   return res;
 }
 
+/**
+ * Consulta el padrón fiscal o clientes históricos por DNI o CUIT
+ */
+export async function lookupPadron(docNumber) {
+  const clean = String(docNumber || '').replace(/[^0-9]/g, '');
+  if (!clean || clean.length < 6) return null;
+  const res = await request(`/afip/padron/${encodeURIComponent(clean)}`, { method: 'GET' });
+  if (res.success && res.data) {
+    return res.data;
+  }
+  return null;
+}
+
+/**
+ * Guarda o actualiza un cliente con sus datos fiscales en el padrón
+ */
+export async function savePadronClient(clientData) {
+  const res = await request('/afip/padron/save-client', {
+    method: 'POST',
+    body: JSON.stringify(clientData)
+  });
+  return res;
+}
+
 export const api = {
   checkServerHealth,
   getOrdenes,
@@ -416,7 +440,9 @@ export const api = {
   getFullBackup,
   getBusinessConfig,
   saveBusinessConfig,
-  testAfipConnection
+  testAfipConnection,
+  lookupPadron,
+  savePadronClient
 };
 
 export default api;

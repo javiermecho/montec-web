@@ -1288,6 +1288,206 @@ app.post('/api/afip/test-connection', async (req, res) => {
     console.error('❌ Error en test de conexión AFIP:', error);
     res.status(500).json({ success: false, error: error.message });
   }
+// Algoritmo oficial de Módulo 11 de AFIP para validación y cálculo de CUIL/CUIT
+function calculateCuilMod11(dni, preferredGender = 'M') {
+  const cleanDni = String(dni || '').replace(/[^0-9]/g, '').padStart(8, '0');
+  if (cleanDni.length !== 8) return null;
+
+  const prefix = preferredGender === 'F' ? '27' : (preferredGender === 'empresa' ? '30' : '20');
+  const base = `${prefix}${cleanDni}`;
+  const multipliers = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+
+  let sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(base[i], 10) * multipliers[i];
+  }
+
+  const mod = sum % 11;
+  let verif = 11 - mod;
+  if (verif === 11) verif = 0;
+  else if (verif === 10) {
+    if (prefix === '20') return calculateCuilMod11(dni, 'empresa');
+    verif = 9;
+  }
+
+  return `${prefix}-${cleanDni}-${verif}`;
+}
+
+// GET /api/afip/padron/:doc (Consulta inteligente de Padrón y Clientes por DNI/CUIT)
+app.get('/api/afip/padron/:doc', async (req, res) => {
+  const { doc } = req.params;
+  const cleanDoc = String(doc || '').replace(/[^0-9]/g, '');
+
+  if (!cleanDoc || cleanDoc.length < 6) {
+    return res.status(400).json({ success: false, error: 'Documento o CUIT inválido (mínimo 6 dígitos)' });
+  }
+
+  try {
+    const dbConnected = await isDbConnected();
+
+    // 1. Buscar en PostgreSQL si ya existe este cliente (en sales o repair_orders)
+    if (dbConnected) {
+      // Buscar en app_settings si fue guardado en padrón
+      const cachedRes = await query("SELECT value FROM app_settings WHERE key = $1", [`client_${cleanDoc}`]);
+      if (cachedRes.rowCount > 0 && cachedRes.rows[0].value) {
+        return res.json({
+          success: true,
+          found: true,
+          source: 'local_padron',
+          client: cachedRes.rows[0].value
+        });
+      }
+
+      // Buscar en repair_orders
+      const orderQuery = `
+        SELECT client_name, client_phone, client_data, updated_at
+        FROM repair_orders
+        WHERE (client_data->>'docNumber' = $1 OR client_phone = $1 OR client_data->>'cuit' = $1 OR regexp_replace(client_data->>'cuit', '[^0-9]', '', 'g') = $1)
+        ORDER BY updated_at DESC LIMIT 1;
+      `;
+      const orderRes = await query(orderQuery, [cleanDoc]);
+
+      if (orderRes.rowCount > 0) {
+        const row = orderRes.rows[0];
+        const cd = row.client_data || {};
+        return res.json({
+          success: true,
+          found: true,
+          source: 'local_orders',
+          client: {
+            name: row.client_name || cd.name || '',
+            phone: row.client_phone || cd.phone || '',
+            email: cd.email || '',
+            address: cd.address || '',
+            docType: cd.docType || (cleanDoc.length === 11 ? 'CUIT' : 'DNI'),
+            docNumber: cd.docNumber || cleanDoc,
+            cuit: cd.cuit || (cleanDoc.length === 11 ? cleanDoc : calculateCuilMod11(cleanDoc)),
+            taxCondition: cd.taxCondition || (cleanDoc.length === 11 && (cleanDoc.startsWith('30') || cleanDoc.startsWith('33')) ? 'Responsable Inscripto' : 'Consumidor Final')
+          }
+        });
+      }
+
+      // Buscar en sales
+      const salesQuery = `
+        SELECT customer_data, created_at
+        FROM sales
+        WHERE (customer_data->>'docNumber' = $1 OR customer_data->>'cuit' = $1 OR customer_data->>'phone' = $1 OR regexp_replace(customer_data->>'cuit', '[^0-9]', '', 'g') = $1)
+        ORDER BY created_at DESC LIMIT 1;
+      `;
+      const salesRes = await query(salesQuery, [cleanDoc]);
+
+      if (salesRes.rowCount > 0) {
+        const row = salesRes.rows[0];
+        const cust = row.customer_data || {};
+        return res.json({
+          success: true,
+          found: true,
+          source: 'local_sales',
+          client: {
+            name: cust.name || '',
+            phone: cust.phone || '',
+            email: cust.email || '',
+            address: cust.address || '',
+            docType: cust.docType || (cleanDoc.length === 11 ? 'CUIT' : 'DNI'),
+            docNumber: cust.docNumber || cleanDoc,
+            cuit: cust.cuit || (cleanDoc.length === 11 ? cleanDoc : calculateCuilMod11(cleanDoc)),
+            taxCondition: cust.taxCondition || (cleanDoc.length === 11 && (cleanDoc.startsWith('30') || cleanDoc.startsWith('33')) ? 'Responsable Inscripto' : 'Consumidor Final')
+          }
+        });
+      }
+    }
+
+    // 2. Si no está en la base local, deducir y calcular según DNI o CUIT
+    const isCuit = cleanDoc.length === 11;
+    const isDni = cleanDoc.length >= 7 && cleanDoc.length <= 8;
+
+    if (isDni) {
+      const calculatedCuil = calculateCuilMod11(cleanDoc);
+      return res.json({
+        success: true,
+        found: false,
+        isNewClient: true,
+        client: {
+          name: '',
+          docType: 'DNI',
+          docNumber: cleanDoc,
+          cuit: calculatedCuil,
+          taxCondition: 'Consumidor Final',
+          suggestedInvoiceType: 'FACTURA_B'
+        }
+      });
+    }
+
+    if (isCuit) {
+      const isCompany = cleanDoc.startsWith('30') || cleanDoc.startsWith('33');
+      return res.json({
+        success: true,
+        found: false,
+        isNewClient: true,
+        client: {
+          name: '',
+          docType: 'CUIT',
+          docNumber: cleanDoc,
+          cuit: `${cleanDoc.slice(0, 2)}-${cleanDoc.slice(2, 10)}-${cleanDoc.slice(10)}`,
+          taxCondition: isCompany ? 'Responsable Inscripto' : 'Consumidor Final',
+          suggestedInvoiceType: isCompany ? 'FACTURA_A' : 'FACTURA_B'
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      found: false,
+      isNewClient: true,
+      client: {
+        docType: 'DNI',
+        docNumber: cleanDoc,
+        taxCondition: 'Consumidor Final',
+        suggestedInvoiceType: 'FACTURA_B'
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error en lookup de padrón:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/afip/padron/save-client (Guardar o actualizar cliente en padrón local)
+app.post('/api/afip/padron/save-client', async (req, res) => {
+  try {
+    const { name, docType = 'DNI', docNumber, cuit, taxCondition = 'Consumidor Final', phone = '', email = '', address = '' } = req.body || {};
+    if (!docNumber && !cuit) {
+      return res.status(400).json({ success: false, error: 'Debe indicar al menos DNI o CUIT' });
+    }
+
+    const cleanDoc = String(docNumber || cuit).replace(/[^0-9]/g, '');
+    const clientRecord = {
+      name: name ? name.toUpperCase() : 'CONSUMIDOR FINAL',
+      docType,
+      docNumber: cleanDoc,
+      cuit: cuit || (docType === 'DNI' ? calculateCuilMod11(cleanDoc) : cleanDoc),
+      taxCondition,
+      phone,
+      email,
+      address,
+      updatedAt: new Date().toISOString()
+    };
+
+    const dbConnected = await isDbConnected();
+    if (dbConnected) {
+      await query(
+        `INSERT INTO app_settings (key, value, updated_at)
+         VALUES ($1, $2, CURRENT_TIMESTAMP)
+         ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP`,
+        [`client_${cleanDoc}`, JSON.stringify(clientRecord)]
+      );
+    }
+
+    res.json({ success: true, client: clientRecord });
+  } catch (error) {
+    console.error('❌ Error al guardar cliente en padrón:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // Inicio del servidor

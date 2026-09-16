@@ -1070,20 +1070,46 @@ export function DataProvider({ children }) {
     });
   };
 
-  // Búsqueda rápida de clientes históricos
+  // Búsqueda rápida de clientes históricos (en órdenes de taller y ventas)
   const searchClients = (query) => {
     if (!query || query.trim().length < 2) return [];
     const q = query.toLowerCase().trim();
+    const cleanQ = q.replace(/[^0-9]/g, '');
     const clientMap = new Map();
 
+    // 1. Buscar en órdenes de reparación
     orders.forEach(o => {
       const c = o.customer;
       if (!c) return;
       const key = `${c.docNumber || ''}_${c.name || ''}_${c.phone || ''}`;
+      const cDocClean = String(c.docNumber || '').replace(/[^0-9]/g, '');
+      const cPhoneClean = String(c.phone || '').replace(/[^0-9]/g, '');
       if (
         (c.name && c.name.toLowerCase().includes(q)) ||
         (c.docNumber && c.docNumber.includes(q)) ||
-        (c.phone && c.phone.includes(q))
+        (cleanQ && cDocClean.includes(cleanQ)) ||
+        (c.phone && c.phone.includes(q)) ||
+        (cleanQ && cPhoneClean.includes(cleanQ))
+      ) {
+        if (!clientMap.has(key)) {
+          clientMap.set(key, c);
+        }
+      }
+    });
+
+    // 2. Buscar en ventas y comprobantes históricos
+    sales.forEach(s => {
+      const c = s.customer;
+      if (!c) return;
+      const key = `${c.docNumber || ''}_${c.name || ''}_${c.phone || ''}`;
+      const cDocClean = String(c.docNumber || '').replace(/[^0-9]/g, '');
+      const cPhoneClean = String(c.phone || '').replace(/[^0-9]/g, '');
+      if (
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.docNumber && c.docNumber.includes(q)) ||
+        (cleanQ && cDocClean.includes(cleanQ)) ||
+        (c.phone && c.phone.includes(q)) ||
+        (cleanQ && cPhoneClean.includes(cleanQ))
       ) {
         if (!clientMap.has(key)) {
           clientMap.set(key, c);
@@ -1092,6 +1118,107 @@ export function DataProvider({ children }) {
     });
 
     return Array.from(clientMap.values());
+  };
+
+  // Consulta fiscal inteligente por DNI o CUIT (base local + padrón fiscal)
+  const lookupClientByDoc = async (docInput) => {
+    if (!docInput) return null;
+    const clean = String(docInput).replace(/[^0-9]/g, '');
+    if (!clean || clean.length < 6) return null;
+
+    // 1. Buscar en clientes de órdenes de taller
+    for (const o of orders) {
+      const c = o.customer;
+      if (!c) continue;
+      const cDoc = String(c.docNumber || c.cuit || '').replace(/[^0-9]/g, '');
+      if (cDoc === clean && c.name) {
+        return {
+          found: true,
+          source: 'orders',
+          client: {
+            name: c.name.toUpperCase(),
+            phone: c.phone || '',
+            email: c.email || '',
+            address: c.address || '',
+            docType: c.docType || (clean.length === 11 ? 'CUIT' : 'DNI'),
+            docNumber: c.docNumber || clean,
+            cuit: c.cuit || clean,
+            taxCondition: c.taxCondition || 'Consumidor Final'
+          }
+        };
+      }
+    }
+
+    // 2. Buscar en clientes de ventas previas
+    for (const s of sales) {
+      const c = s.customer;
+      if (!c) continue;
+      const cDoc = String(c.docNumber || c.cuit || '').replace(/[^0-9]/g, '');
+      if (cDoc === clean && c.name) {
+        return {
+          found: true,
+          source: 'sales',
+          client: {
+            name: c.name.toUpperCase(),
+            phone: c.phone || '',
+            email: c.email || '',
+            address: c.address || '',
+            docType: c.docType || (clean.length === 11 ? 'CUIT' : 'DNI'),
+            docNumber: c.docNumber || clean,
+            cuit: c.cuit || clean,
+            taxCondition: c.taxCondition || 'Consumidor Final'
+          }
+        };
+      }
+    }
+
+    // 3. Consultar al endpoint backend de padrón de AFIP / clientes
+    try {
+      if (typeof api.lookupPadron === 'function') {
+        const res = await api.lookupPadron(clean);
+        if (res && res.client) {
+          return {
+            found: Boolean(res.found),
+            source: res.source || 'padron',
+            client: res.client
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('Lookup padrón warning:', e.message);
+    }
+
+    // 4. Fallback si no fue hallado aún pero es DNI o CUIT válido
+    if (clean.length >= 7 && clean.length <= 8) {
+      return {
+        found: false,
+        isNewClient: true,
+        client: {
+          name: '',
+          docType: 'DNI',
+          docNumber: clean,
+          taxCondition: 'Consumidor Final',
+          suggestedInvoiceType: 'FACTURA_B'
+        }
+      };
+    }
+
+    if (clean.length === 11) {
+      const isCompany = clean.startsWith('30') || clean.startsWith('33');
+      return {
+        found: false,
+        isNewClient: true,
+        client: {
+          name: '',
+          docType: 'CUIT',
+          docNumber: clean,
+          taxCondition: isCompany ? 'Responsable Inscripto' : 'Consumidor Final',
+          suggestedInvoiceType: isCompany ? 'FACTURA_A' : 'FACTURA_B'
+        }
+      };
+    }
+
+    return null;
   };
 
   // 9. Tema visual de paneles (Claro / Oscuro)
@@ -1954,6 +2081,7 @@ export function DataProvider({ children }) {
       recordOrderPayment,
       deleteRepairOrder,
       searchClients,
+      lookupClientByDoc,
       serverStatus,
       serverHealth,
       refreshConnection: syncWithServer,
