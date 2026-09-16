@@ -30,7 +30,8 @@ import {
   AlertCircle,
   ExternalLink,
   MessageSquare,
-  ShieldCheck
+  ShieldCheck,
+  RefreshCw
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { api } from '../../services/api';
