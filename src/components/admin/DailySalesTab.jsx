@@ -25,6 +25,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import OfficialFiscalInvoice from '../pos/OfficialFiscalInvoice';
 
 // Opciones de tipos de documentos comerciales
 export const DOCUMENT_TYPES = [
@@ -53,7 +54,7 @@ export const PAYMENT_METHODS = [
 ];
 
 export default function DailySalesTab() {
-  const { sales = [], recordSale, updateSale, deleteSale, panelTheme } = useData();
+  const { sales = [], recordSale, updateSale, deleteSale, panelTheme, businessConfig } = useData();
   const isLight = panelTheme === 'light';
 
   // Filtros de fecha
@@ -1191,115 +1192,17 @@ export default function DailySalesTab() {
         </div>
       )}
 
-      {/* MODAL 3: VISTA E IMPRESIÓN DE COMPROBANTE */}
+      {/* MODAL 3: VISTA E IMPRESIÓN DE COMPROBANTE OFICIAL AFIP / ARCA */}
       {viewingReceipt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn print:p-0 print:bg-white">
-          <div className="bg-white text-zinc-900 border border-zinc-300 rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative font-sans print:shadow-none print:border-none print:max-w-none print:w-full">
-            <button
-              type="button"
-              onClick={() => setViewingReceipt(null)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-900 p-1 rounded-lg hover:bg-zinc-100 print:hidden"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Encabezado del comprobante */}
-            <div className="text-center pb-4 border-b border-zinc-200">
-              <h2 className="text-xl font-heading font-black tracking-wider text-black">
-                MONTEC
-              </h2>
-              <p className="text-xs text-zinc-600">Servicio Técnico Especializado en Celulares, iPhone & PC</p>
-              <p className="text-[11px] text-zinc-500 mt-0.5">Montes Carballo 943 • Mar del Plata</p>
-              <p className="text-[11px] text-zinc-500">Tel / WhatsApp: +54 9 223 542-8827</p>
-
-              <div className="mt-3 inline-block px-3 py-1 bg-zinc-100 rounded-lg border border-zinc-300 text-xs font-mono font-bold uppercase">
-                {DOCUMENT_TYPES.find(d => d.id === viewingReceipt.documentType)?.label || 'COMPROBANTE'}
-              </div>
-              <div className="text-xs font-mono font-bold text-zinc-700 mt-1">
-                N°: {viewingReceipt.documentNumber || viewingReceipt.ticketNumber}
-              </div>
-            </div>
-
-            {/* Datos del comprobante y cliente */}
-            <div className="py-3 border-b border-zinc-200 text-xs space-y-1">
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Fecha:</span>
-                <span className="font-semibold">{new Date(viewingReceipt.createdAt).toLocaleString('es-AR')}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Cliente:</span>
-                <span className="font-semibold">{viewingReceipt.customer?.name || 'Consumidor Final'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Condición IVA:</span>
-                <span>{viewingReceipt.customer?.taxCondition || 'Consumidor Final'}</span>
-              </div>
-              {viewingReceipt.customer?.docNumber && (
-                <div className="flex justify-between">
-                  <span className="text-zinc-500">{viewingReceipt.customer.docType || 'DNI'}:</span>
-                  <span className="font-mono">{viewingReceipt.customer.docNumber}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Ítems */}
-            <div className="py-3 border-b border-zinc-200">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-zinc-200 text-zinc-500 uppercase font-mono text-[10px]">
-                    <th className="text-left py-1">Cant</th>
-                    <th className="text-left py-1">Detalle</th>
-                    <th className="text-right py-1">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {Array.isArray(viewingReceipt.items) && viewingReceipt.items.length > 0 ? (
-                    viewingReceipt.items.map((it, idx) => (
-                      <tr key={idx}>
-                        <td className="py-1.5 font-bold">{it.quantity || 1}</td>
-                        <td className="py-1.5 pr-2">{it.name}</td>
-                        <td className="py-1.5 text-right font-mono font-bold">${Number(it.price * (it.quantity || 1)).toLocaleString('es-AR')}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={3} className="py-1 text-zinc-500">Venta de mostrador</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Totales y Pago */}
-            <div className="pt-3 text-xs space-y-1">
-              <div className="flex justify-between text-base font-bold text-black border-t border-zinc-300 pt-2">
-                <span>TOTAL ABONADO:</span>
-                <span className="font-mono text-emerald-600">${Number(viewingReceipt.total || 0).toLocaleString('es-AR')}</span>
-              </div>
-              <div className="flex justify-between text-zinc-600 pt-1">
-                <span>Medio de Pago:</span>
-                <span className="font-semibold">{viewingReceipt.paymentMethod || 'Efectivo'}</span>
-              </div>
-              {viewingReceipt.notes && (
-                <div className="text-[11px] text-zinc-500 italic mt-2">
-                  Obs: {viewingReceipt.notes}
-                </div>
-              )}
-            </div>
-
-            {/* Botón Imprimir */}
-            <div className="mt-6 flex gap-2 print:hidden">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="flex-1 py-2.5 rounded-xl bg-black hover:bg-zinc-800 text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Imprimir Comprobante</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        <OfficialFiscalInvoice
+          voucher={viewingReceipt}
+          businessConfig={businessConfig}
+          onClose={() => setViewingReceipt(null)}
+          onNewSale={() => {
+            setViewingReceipt(null);
+            setIsNewSaleModalOpen(true);
+          }}
+        />
       )}
 
     </div>

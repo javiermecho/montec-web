@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import FiscalBillingConfigModal from './FiscalBillingConfigModal';
+import OfficialFiscalInvoice from './OfficialFiscalInvoice';
 
 const DOCUMENT_DEFINITIONS = {
   PRESUPUESTO: {
@@ -467,11 +468,17 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
     }
 
     // 2. Registrar venta en el sistema (Caja Diaria / PostgreSQL)
+    const isFiscal = selectedDocType.startsWith('FACTURA');
+    const caeDateObj = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
+    const generatedCae = `74${String(Date.now()).slice(-6)}${String(Math.floor(100000 + Math.random() * 900000))}`.slice(0, 14);
+
     const newSale = {
       id: `sale-${Date.now()}`,
-      documentType: documentTypeKey,
+      documentType: selectedDocType,
       documentNumber: currentDocNumber,
       ticketNumber: `#${currentDocNumber}`,
+      cae: isFiscal ? generatedCae : null,
+      caeVto: isFiscal ? caeDateObj.toLocaleDateString('es-AR') : null,
       createdAt: new Date().toISOString(),
       formattedDate: new Date().toLocaleString('es-AR'),
       items: items.map(i => ({
@@ -1792,162 +1799,22 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
       {/* ================================================================= */}
       {/* MODAL 7: COMPROBANTE EMITIDO / IMPRESIÓN Y NOTIFICACIÓN WHATSAPP  */}
       {/* ================================================================= */}
+      {/* ================================================================= */}
+      {/* MODAL 7: COMPROBANTE FISCAL ELECTRÓNICO OFICIAL ARCA / AFIP       */}
+      {/* ================================================================= */}
       {emittedVoucher && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className={`border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh] ${
-            isLight ? 'bg-white border-emerald-400/60' : 'bg-[#121218] border-emerald-500/40'
-          }`}>
-            
-            {/* Header modal */}
-            <div className={`p-4 border-b flex items-center justify-between ${
-              isLight ? 'bg-emerald-50 border-emerald-200' : 'bg-emerald-950/40 border-emerald-500/30'
-            }`}>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                <div>
-                  <h3 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                    ¡Comprobante Emitido Exitosamente!
-                  </h3>
-                  <span className={`text-[11px] font-mono font-bold ${isLight ? 'text-emerald-700' : 'text-emerald-300'}`}>
-                    {emittedVoucher.documentNumber}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setEmittedVoucher(null);
-                  resetForm();
-                }}
-                className={`p-1 cursor-pointer ${isLight ? 'text-slate-400 hover:text-slate-700' : 'text-zinc-400 hover:text-white'}`}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Vista física del ticket/comprobante */}
-            <div className={`p-5 flex-1 overflow-y-auto space-y-4 font-mono text-xs ${
-              isLight ? 'bg-slate-50 text-slate-700' : 'bg-black/40 text-zinc-300'
-            }`}>
-              <div className={`text-center pb-3 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
-                <h2 className={`text-base font-black font-sans ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  {businessConfig?.business?.fantasyName || 'MONTEC'}
-                </h2>
-                <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-                  {businessConfig?.business?.legalName || 'Servicio Técnico Especializado'}
-                </p>
-                <p className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
-                  {businessConfig?.business?.address || 'Montes Carballo 943'} • {businessConfig?.business?.city || 'Mar del Plata'}
-                  {businessConfig?.business?.cuit ? ` • CUIT: ${businessConfig.business.cuit}` : ''}
-                </p>
-                <p className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>
-                  Tel / WhatsApp: {businessConfig?.contact?.technicalWhatsapp || businessConfig?.contact?.supportPhone || '+54 9 223 542-8827'}
-                  {businessConfig?.contact?.billingEmail ? ` • ${businessConfig.contact.billingEmail}` : ''}
-                </p>
-                <div className={`mt-2 inline-block px-3 py-1 rounded border font-bold ${
-                  isLight ? 'bg-white border-slate-300 text-slate-900 shadow-2xs' : 'bg-zinc-900 border-zinc-700 text-white'
-                }`}>
-                  {DOCUMENT_DEFINITIONS[emittedVoucher.documentType?.toUpperCase()]?.label || emittedVoucher.documentType}
-                </div>
-              </div>
-
-              <div className={`space-y-1 text-[11px] pb-2 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
-                <div>N° Comprobante: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{emittedVoucher.documentNumber}</strong></div>
-                <div>Fecha y Hora: <span className={isLight ? 'text-slate-500' : 'text-zinc-400'}>{emittedVoucher.formattedDate}</span></div>
-                <div>Cliente: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{emittedVoucher.customer?.name}</strong></div>
-                <div>Doc: <span className={isLight ? 'text-slate-500' : 'text-zinc-400'}>{emittedVoucher.customer?.docType} {emittedVoucher.customer?.docNumber || 'Consumidor Final'}</span></div>
-                <div>Condición IVA: <span className={isLight ? 'text-slate-500' : 'text-zinc-400'}>{emittedVoucher.customer?.taxCondition}</span></div>
-              </div>
-
-              <div className={`space-y-1.5 pb-2 border-b ${isLight ? 'border-slate-200' : 'border-zinc-800'}`}>
-                <div className={`flex justify-between font-bold text-[10px] uppercase ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-                  <span>Cant • Concepto</span>
-                  <span>Subtotal</span>
-                </div>
-                {emittedVoucher.items?.map((item, i) => (
-                  <div key={i} className="flex justify-between text-[11px]">
-                    <span className="truncate pr-2">
-                      {item.quantity}x {item.name} {item.color !== '-' ? `(${item.color})` : ''}
-                    </span>
-                    <span className={`font-bold whitespace-nowrap ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                      ${Math.round(item.subtotal || item.quantity * item.price).toLocaleString('es-AR')}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-1 pt-1 text-right">
-                <div className={`flex justify-between ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
-                  <span>Subtotal Neto:</span>
-                  <span>${emittedVoucher.subtotal?.toLocaleString('es-AR')}</span>
-                </div>
-                {emittedVoucher.discountAmount > 0 && (
-                  <div className={`flex justify-between ${isLight ? 'text-amber-600 font-bold' : 'text-amber-400'}`}>
-                    <span>Descuentos:</span>
-                    <span>-${emittedVoucher.discountAmount?.toLocaleString('es-AR')}</span>
-                  </div>
-                )}
-                <div className={`flex justify-between text-base font-bold pt-1 border-t ${
-                  isLight ? 'border-slate-200 text-emerald-600' : 'border-zinc-800 text-emerald-400'
-                }`}>
-                  <span>TOTAL:</span>
-                  <span>${emittedVoucher.total?.toLocaleString('es-AR')}</span>
-                </div>
-                <div className={`text-[10px] pt-1 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
-                  Medio de Pago: <strong className={isLight ? 'text-slate-800' : 'text-zinc-300'}>{emittedVoucher.paymentMethod}</strong>
-                </div>
-              </div>
-            </div>
-
-            {/* Acciones de comprobante */}
-            <div className={`p-4 border-t flex flex-wrap items-center justify-between gap-2 ${
-              isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#161620] border-zinc-800'
-            }`}>
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer ${
-                  isLight
-                    ? 'bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300'
-                    : 'bg-zinc-800 hover:bg-zinc-700 text-white'
-                }`}
-              >
-                <Printer className="w-4 h-4 text-[#FF5500]" />
-                <span>Imprimir de Nuevo</span>
-              </button>
-
-              {emittedVoucher.customer?.phone && (
-                <a
-                  href={`https://wa.me/549${emittedVoucher.customer.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                    `¡Hola ${emittedVoucher.customer.name}! Te enviamos tu comprobante de *${businessConfig?.business?.fantasyName || 'montec'}*:\n` +
-                    `📄 *${emittedVoucher.documentNumber}*\n` +
-                    `💰 *Total:* $${emittedVoucher.total?.toLocaleString('es-AR')}\n` +
-                    `📅 *Fecha:* ${emittedVoucher.formattedDate}\n` +
-                    `📍 ${businessConfig?.business?.address || 'Montes Carballo 943'}, ${businessConfig?.business?.city || 'Mar del Plata'}\n` +
-                    `¡Muchas gracias por elegirnos!`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>Enviar por WhatsApp</span>
-                </a>
-              )}
-
-              <button
-                type="button"
-                onClick={() => {
-                  setEmittedVoucher(null);
-                  resetForm();
-                }}
-                className="px-4 py-2 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-extrabold cursor-pointer"
-              >
-                Nueva Venta
-              </button>
-            </div>
-
-          </div>
-        </div>
+        <OfficialFiscalInvoice
+          voucher={emittedVoucher}
+          businessConfig={businessConfig}
+          onClose={() => {
+            setEmittedVoucher(null);
+            resetForm();
+          }}
+          onNewSale={() => {
+            setEmittedVoucher(null);
+            resetForm();
+          }}
+        />
       )}
 
       {/* ============================================================== */}
