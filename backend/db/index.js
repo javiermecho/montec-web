@@ -155,6 +155,22 @@ export const initDatabaseSchema = async () => {
         value JSONB NOT NULL,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
+
+    -- Tabla de Gestión de Gastos y Egresos Operativos
+    CREATE TABLE IF NOT EXISTS gastos (
+        id SERIAL PRIMARY KEY,
+        concepto VARCHAR(255) NOT NULL,
+        monto NUMERIC(12, 2) NOT NULL,
+        categoria VARCHAR(60) NOT NULL, -- 'Alquiler', 'Servicios', 'Insumos/Taller', 'Repuestos', 'Sueldos/Retiros', 'Varios'
+        metodo_pago VARCHAR(60) NOT NULL, -- 'Efectivo', 'Transferencia / Alias', 'Tarjeta Débito/Crédito'
+        fecha TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        comprobante_url TEXT,
+        notas TEXT,
+        creado_en TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_gastos_fecha ON gastos(fecha);
+    CREATE INDEX IF NOT EXISTS idx_gastos_categoria ON gastos(categoria);
   `;
 
   try {

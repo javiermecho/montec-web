@@ -419,6 +419,80 @@ export async function savePadronClient(clientData) {
   return res;
 }
 
+// ============================================================================
+// 8. GESTIÓN DE GASTOS Y BALANCE MENSUAL
+// ============================================================================
+
+/**
+ * Obtiene la lista de gastos filtrados por mes, año, categoría, etc.
+ */
+export async function getGastos(params = {}) {
+  const query = new URLSearchParams();
+  if (params.month) query.append('month', params.month);
+  if (params.year) query.append('year', params.year);
+  if (params.categoria && params.categoria !== 'Todas') query.append('categoria', params.categoria);
+  if (params.metodo_pago && params.metodo_pago !== 'Todos') query.append('metodo_pago', params.metodo_pago);
+  if (params.search) query.append('search', params.search);
+  if (params.limit) query.append('limit', params.limit);
+
+  const qs = query.toString();
+  const endpoint = `/gastos${qs ? `?${qs}` : ''}`;
+  const res = await request(endpoint, { method: 'GET' });
+  if (res.success && res.data) {
+    return res.data.gastos || [];
+  }
+  return [];
+}
+
+/**
+ * Registra un nuevo gasto
+ */
+export async function createGasto(gastoData) {
+  const res = await request('/gastos', {
+    method: 'POST',
+    body: JSON.stringify(gastoData)
+  });
+  return res;
+}
+
+/**
+ * Actualiza un gasto existente
+ */
+export async function updateGasto(id, gastoData) {
+  const res = await request(`/gastos/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(gastoData)
+  });
+  return res;
+}
+
+/**
+ * Elimina un gasto
+ */
+export async function deleteGasto(id) {
+  const res = await request(`/gastos/${id}`, {
+    method: 'DELETE'
+  });
+  return res;
+}
+
+/**
+ * Obtiene el balance y cierre mensual consolidado
+ */
+export async function getMonthlyBalance(month, year) {
+  const query = new URLSearchParams();
+  if (month) query.append('month', month);
+  if (year) query.append('year', year);
+
+  const qs = query.toString();
+  const endpoint = `/finances/monthly-balance${qs ? `?${qs}` : ''}`;
+  const res = await request(endpoint, { method: 'GET' });
+  if (res.success && res.data) {
+    return res.data;
+  }
+  return null;
+}
+
 export const api = {
   checkServerHealth,
   getOrdenes,
@@ -442,7 +516,12 @@ export const api = {
   saveBusinessConfig,
   testAfipConnection,
   lookupPadron,
-  savePadronClient
+  savePadronClient,
+  getGastos,
+  createGasto,
+  updateGasto,
+  deleteGasto,
+  getMonthlyBalance
 };
 
 export default api;

@@ -69,6 +69,21 @@ const mapDbProductToFrontend = (row) => ({
   badge: row.badge
 });
 
+// Helper para formatear gastos
+const mapDbGastoToFrontend = (row) => ({
+  id: row.id,
+  concepto: row.concepto,
+  descripcion: row.concepto,
+  monto: parseFloat(row.monto || 0),
+  categoria: row.categoria,
+  metodo_pago: row.metodo_pago || 'Efectivo',
+  fecha: row.fecha,
+  comprobante_url: row.comprobante_url || null,
+  notas: row.notas || '',
+  creado_en: row.creado_en,
+  formattedDate: new Date(row.fecha).toLocaleString('es-AR')
+});
+
 // 1. Healthcheck para Railway y monitoreo
 app.get('/api/health', async (req, res) => {
   const dbConnected = await isDbConnected();
@@ -883,6 +898,373 @@ app.delete('/api/sales/:id', async (req, res) => {
   }
 });
 
+// ==========================================
+// 5. ENDPOINTS DE GASTOS Y BALANCE MENSUAL
+// ==========================================
+
+// Listar gastos con filtros opcionales (mes, año, categoría, método de pago, búsqueda)
+app.get('/api/gastos', async (req, res) => {
+  const { month, year, categoria, metodo_pago, search, limit = 500 } = req.query;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.json({ success: true, gastos: [], source: 'offline_memory' });
+  }
+
+  try {
+    let sql = 'SELECT * FROM gastos WHERE 1=1';
+    const params = [];
+    let counter = 1;
+
+    if (month) {
+      sql += ` AND EXTRACT(MONTH FROM fecha) = $${counter++}`;
+      params.push(parseInt(month, 10));
+    }
+    if (year) {
+      sql += ` AND EXTRACT(YEAR FROM fecha) = $${counter++}`;
+      params.push(parseInt(year, 10));
+    }
+    if (categoria && categoria !== 'Todas' && categoria !== 'all') {
+      sql += ` AND LOWER(categoria) = LOWER($${counter++})`;
+      params.push(categoria);
+    }
+    if (metodo_pago && metodo_pago !== 'Todos' && metodo_pago !== 'all') {
+      sql += ` AND LOWER(metodo_pago) = LOWER($${counter++})`;
+      params.push(metodo_pago);
+    }
+    if (search) {
+      sql += ` AND (LOWER(concepto) LIKE LOWER($${counter}) OR LOWER(COALESCE(notas, '')) LIKE LOWER($${counter}))`;
+      params.push(`%${search}%`);
+      counter++;
+    }
+
+    sql += ` ORDER BY fecha DESC, id DESC LIMIT $${counter}`;
+    params.push(parseInt(limit, 10) || 500);
+
+    const result = await query(sql, params);
+    const gastos = result.rows.map(mapDbGastoToFrontend);
+
+    res.json({
+      success: true,
+      count: gastos.length,
+      gastos
+    });
+  } catch (error) {
+    console.error('❌ Error al consultar gastos en PostgreSQL:', error);
+    res.status(500).json({ error: 'Error al consultar gastos', details: error.message });
+  }
+});
+
+// Registrar nuevo gasto
+app.post('/api/gastos', async (req, res) => {
+  const { concepto, descripcion, monto, categoria, metodo_pago, fecha, comprobante_url, notas } = req.body;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  const rawConcepto = (concepto || descripcion || '').trim();
+  const rawMonto = parseFloat(monto);
+
+  if (!rawConcepto) {
+    return res.status(400).json({ error: 'El concepto o descripción del gasto es obligatorio' });
+  }
+  if (isNaN(rawMonto) || rawMonto <= 0) {
+    return res.status(400).json({ error: 'El monto debe ser un número positivo mayor a cero' });
+  }
+
+  try {
+    const validFecha = fecha ? new Date(fecha).toISOString() : new Date().toISOString();
+    const finalCategoria = categoria || 'Varios';
+    const finalMetodo = metodo_pago || 'Efectivo';
+
+    const insertSql = `
+      INSERT INTO gastos (concepto, monto, categoria, metodo_pago, fecha, comprobante_url, notas)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *;
+    `;
+    const result = await query(insertSql, [
+      rawConcepto,
+      rawMonto,
+      finalCategoria,
+      finalMetodo,
+      validFecha,
+      comprobante_url || null,
+      notas || ''
+    ]);
+
+    const createdGasto = mapDbGastoToFrontend(result.rows[0]);
+    console.log(`💸 Gasto registrado: [${createdGasto.categoria}] ${createdGasto.concepto} - $${createdGasto.monto}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'Gasto registrado exitosamente',
+      gasto: createdGasto
+    });
+  } catch (error) {
+    console.error('❌ Error al registrar gasto en PostgreSQL:', error);
+    res.status(500).json({ error: 'Error al registrar gasto', details: error.message });
+  }
+});
+
+// Actualizar gasto
+const handleUpdateGasto = async (req, res) => {
+  const { id } = req.params;
+  const { concepto, descripcion, monto, categoria, metodo_pago, fecha, comprobante_url, notas } = req.body;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    const fields = [];
+    const params = [];
+    let counter = 1;
+
+    if (concepto !== undefined || descripcion !== undefined) {
+      fields.push(`concepto = $${counter++}`);
+      params.push((concepto || descripcion || '').trim());
+    }
+    if (monto !== undefined) {
+      const parsedMonto = parseFloat(monto);
+      if (isNaN(parsedMonto) || parsedMonto <= 0) {
+        return res.status(400).json({ error: 'El monto debe ser un número positivo' });
+      }
+      fields.push(`monto = $${counter++}`);
+      params.push(parsedMonto);
+    }
+    if (categoria !== undefined) {
+      fields.push(`categoria = $${counter++}`);
+      params.push(categoria);
+    }
+    if (metodo_pago !== undefined) {
+      fields.push(`metodo_pago = $${counter++}`);
+      params.push(metodo_pago);
+    }
+    if (fecha !== undefined) {
+      fields.push(`fecha = $${counter++}`);
+      params.push(new Date(fecha).toISOString());
+    }
+    if (comprobante_url !== undefined) {
+      fields.push(`comprobante_url = $${counter++}`);
+      params.push(comprobante_url);
+    }
+    if (notas !== undefined) {
+      fields.push(`notas = $${counter++}`);
+      params.push(notas);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: 'No se enviaron campos a actualizar' });
+    }
+
+    params.push(parseInt(id, 10));
+    const sql = `UPDATE gastos SET ${fields.join(', ')} WHERE id = $${counter} RETURNING *;`;
+    const result = await query(sql, params);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Gasto no encontrado' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Gasto actualizado exitosamente',
+      gasto: mapDbGastoToFrontend(result.rows[0])
+    });
+  } catch (error) {
+    console.error('❌ Error al actualizar gasto:', error);
+    res.status(500).json({ error: 'Error al actualizar gasto', details: error.message });
+  }
+};
+
+app.put('/api/gastos/:id', handleUpdateGasto);
+app.patch('/api/gastos/:id', handleUpdateGasto);
+
+// Eliminar gasto
+app.delete('/api/gastos/:id', async (req, res) => {
+  const { id } = req.params;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    const result = await query('DELETE FROM gastos WHERE id = $1 RETURNING *;', [parseInt(id, 10)]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Gasto no encontrado' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Gasto eliminado exitosamente',
+      deletedGasto: mapDbGastoToFrontend(result.rows[0])
+    });
+  } catch (error) {
+    console.error('❌ Error al eliminar gasto:', error);
+    res.status(500).json({ error: 'Error al eliminar gasto' });
+  }
+});
+
+// Balance y Cierre Mensual consolidado
+app.get('/api/finances/monthly-balance', async (req, res) => {
+  const dbConnected = await isDbConnected();
+  const currentDate = new Date();
+  const month = parseInt(req.query.month || (currentDate.getMonth() + 1), 10);
+  const year = parseInt(req.query.year || currentDate.getFullYear(), 10);
+
+  if (!dbConnected) {
+    return res.json({
+      success: true,
+      period: { month, year },
+      income: { sales: 0, repairs: 0, total: 0, cash: 0, bank: 0, card: 0 },
+      expenses: { total: 0, cash: 0, bank: 0, card: 0, byCategory: [] },
+      netBalance: 0,
+      cashOnHand: 0,
+      bankBalance: 0,
+      source: 'offline_default'
+    });
+  }
+
+  try {
+    // 1. Total y desglose de Ventas del mes
+    const salesRes = await query(`
+      SELECT 
+        COALESCE(SUM(total), 0) AS total_ventas,
+        COALESCE(SUM(CASE WHEN LOWER(payment_method) LIKE '%efectivo%' THEN total ELSE 0 END), 0) AS ventas_efectivo,
+        COALESCE(SUM(CASE WHEN LOWER(payment_method) LIKE '%transf%' OR LOWER(payment_method) LIKE '%banco%' OR LOWER(payment_method) LIKE '%mp%' OR LOWER(payment_method) LIKE '%mercado%' THEN total ELSE 0 END), 0) AS ventas_transferencia,
+        COALESCE(SUM(CASE WHEN LOWER(payment_method) LIKE '%tarjet%' OR LOWER(payment_method) LIKE '%debito%' OR LOWER(payment_method) LIKE '%credito%' THEN total ELSE 0 END), 0) AS ventas_tarjeta,
+        COUNT(*) AS count_ventas
+      FROM sales
+      WHERE EXTRACT(MONTH FROM created_at) = $1 AND EXTRACT(YEAR FROM created_at) = $2;
+    `, [month, year]);
+    const salesRow = salesRes.rows[0] || {};
+    const salesTotal = parseFloat(salesRow.total_ventas || 0);
+    const salesCash = parseFloat(salesRow.ventas_efectivo || 0);
+    const salesBank = parseFloat(salesRow.ventas_transferencia || 0);
+    const salesCard = parseFloat(salesRow.ventas_tarjeta || 0);
+
+    // 2. Pagos de órdenes de taller del mes
+    const ordersRes = await query(`
+      SELECT id, order_number, payments, created_at, updated_at
+      FROM repair_orders
+      WHERE payments IS NOT NULL AND jsonb_array_length(payments) > 0;
+    `);
+
+    let repairsTotal = 0;
+    let repairsCash = 0;
+    let repairsBank = 0;
+    let repairsCard = 0;
+    let repairsCount = 0;
+
+    for (const ord of (ordersRes.rows || [])) {
+      const pList = Array.isArray(ord.payments) ? ord.payments : [];
+      for (const p of pList) {
+        if (!p || !p.amount) continue;
+        const pDate = p.timestamp ? new Date(p.timestamp) : (ord.created_at ? new Date(ord.created_at) : null);
+        if (!pDate || isNaN(pDate.getTime())) continue;
+
+        if ((pDate.getMonth() + 1) === month && pDate.getFullYear() === year) {
+          const amt = parseFloat(p.amount || 0);
+          const method = String(p.method || '').toLowerCase();
+          repairsTotal += amt;
+          repairsCount++;
+
+          if (method.includes('efectivo') || method === 'cash') {
+            repairsCash += amt;
+          } else if (method.includes('transf') || method.includes('banco') || method.includes('mp') || method.includes('mercado')) {
+            repairsBank += amt;
+          } else if (method.includes('tarjet') || method.includes('debito') || method.includes('credito')) {
+            repairsCard += amt;
+          } else {
+            repairsCash += amt;
+          }
+        }
+      }
+    }
+
+    // 3. Gastos del mes y desglose
+    const gastosRes = await query(`
+      SELECT 
+        COALESCE(SUM(monto), 0) AS total_gastos,
+        COALESCE(SUM(CASE WHEN LOWER(metodo_pago) LIKE '%efectivo%' THEN monto ELSE 0 END), 0) AS gastos_efectivo,
+        COALESCE(SUM(CASE WHEN LOWER(metodo_pago) LIKE '%transf%' OR LOWER(metodo_pago) LIKE '%banco%' OR LOWER(metodo_pago) LIKE '%mp%' OR LOWER(metodo_pago) LIKE '%mercado%' THEN monto ELSE 0 END), 0) AS gastos_transferencia,
+        COALESCE(SUM(CASE WHEN LOWER(metodo_pago) LIKE '%tarjet%' OR LOWER(metodo_pago) LIKE '%debito%' OR LOWER(metodo_pago) LIKE '%credito%' THEN monto ELSE 0 END), 0) AS gastos_tarjeta,
+        COUNT(*) AS count_gastos
+      FROM gastos
+      WHERE EXTRACT(MONTH FROM fecha) = $1 AND EXTRACT(YEAR FROM fecha) = $2;
+    `, [month, year]);
+    const gastosRow = gastosRes.rows[0] || {};
+    const gastosTotal = parseFloat(gastosRow.total_gastos || 0);
+    const gastosCash = parseFloat(gastosRow.gastos_efectivo || 0);
+    const gastosBank = parseFloat(gastosRow.gastos_transferencia || 0);
+    const gastosCard = parseFloat(gastosRow.gastos_tarjeta || 0);
+
+    // 4. Gastos por categoría
+    const catRes = await query(`
+      SELECT 
+        categoria,
+        COALESCE(SUM(monto), 0) AS total,
+        COUNT(*) AS count
+      FROM gastos
+      WHERE EXTRACT(MONTH FROM fecha) = $1 AND EXTRACT(YEAR FROM fecha) = $2
+      GROUP BY categoria
+      ORDER BY total DESC;
+    `, [month, year]);
+
+    const byCategory = catRes.rows.map(r => ({
+      categoria: r.categoria,
+      total: parseFloat(r.total || 0),
+      count: parseInt(r.count || 0, 10),
+      percentage: gastosTotal > 0 ? ((parseFloat(r.total || 0) / gastosTotal) * 100).toFixed(1) : 0
+    }));
+
+    // Cálculos consolidados finales
+    const totalIncome = salesTotal + repairsTotal;
+    const netBalance = totalIncome - gastosTotal;
+    const cashOnHand = (salesCash + repairsCash) - gastosCash;
+    const bankBalance = (salesBank + repairsBank) - gastosBank;
+
+    res.json({
+      success: true,
+      period: { month, year },
+      income: {
+        total: totalIncome,
+        sales: salesTotal,
+        repairs: repairsTotal,
+        cash: salesCash + repairsCash,
+        bank: salesBank + repairsBank,
+        card: salesCard + repairsCard,
+        salesCount: parseInt(salesRow.count_ventas || 0, 10),
+        repairsCount
+      },
+      expenses: {
+        total: gastosTotal,
+        cash: gastosCash,
+        bank: gastosBank,
+        card: gastosCard,
+        count: parseInt(gastosRow.count_gastos || 0, 10),
+        byCategory
+      },
+      netBalance,
+      cashBreakdown: {
+        cashOnHand,
+        incomeCash: salesCash + repairsCash,
+        expenseCash: gastosCash,
+        bankBalance,
+        incomeBank: salesBank + repairsBank,
+        expenseBank: gastosBank,
+        cardBalance: (salesCard + repairsCard) - gastosCard
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error al calcular balance mensual:', error);
+    res.status(500).json({ error: 'Error al calcular balance mensual', details: error.message });
+  }
+});
+
 // Endpoint para auto-inicializar o verificar esquema en Railway
 app.get('/api/db/init', async (req, res) => {
   const result = await initDatabaseSchema();
@@ -893,7 +1275,7 @@ app.get('/api/db/init', async (req, res) => {
 });
 
 // ==========================================
-// 5. ENDPOINTS DE CONFIGURACIONES & BACKUP
+// 6. ENDPOINTS DE CONFIGURACIONES & BACKUP
 // ==========================================
 
 // Obtener configuración (modelos, fallas/precios, márgenes, configs de iphone)

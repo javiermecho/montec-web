@@ -46,6 +46,7 @@ import SalesPOS from './pos/SalesPOS';
 import CommercialInvoicePOS from './pos/CommercialInvoicePOS';
 import InventoryManager from './inventory/InventoryManager';
 import DailySalesTab from './admin/DailySalesTab';
+import MonthlyBalanceTab from './admin/MonthlyBalanceTab';
 import LocalSettingsTab from './taller/LocalSettingsTab';
 import WhatsAppTemplatesTab from './admin/WhatsAppTemplatesTab';
 import RepairOrderReceiver from './taller/RepairOrderReceiver';
@@ -57,6 +58,7 @@ export default function AdminPanel() {
     issues,
     accessories,
     inventory,
+    expenses,
     isAdminAuthenticated,
     isAdminOpen,
     setIsAdminOpen,
@@ -474,6 +476,17 @@ export default function AdminPanel() {
         </button>
 
         <button
+          onClick={() => setActiveTab('expenses')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'expenses'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+            }`}
+        >
+          <DollarSign className="w-4 h-4 text-amber-400" />
+          <span>Gastos & Cierre de Mes ({expenses?.length || 0})</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('analytics')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors ${activeTab === 'analytics'
               ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
@@ -526,6 +539,13 @@ export default function AdminPanel() {
         {/* ============================================================== */}
         {activeTab === 'sales' && (
           <DailySalesTab />
+        )}
+
+        {/* ============================================================== */}
+        {/* PESTAÑA: GESTIÓN DE GASTOS Y CIERRE DE MES (BALANCE MENSUAL)  */}
+        {/* ============================================================== */}
+        {activeTab === 'expenses' && (
+          <MonthlyBalanceTab />
         )}
 
         {/* ============================================================== */}

@@ -31,7 +31,8 @@ const STORAGE_KEYS = {
   AUTH: 'montec_admin_auth',
   EMPLOYEE_AUTH: 'montec_employee_auth_v1',
   ORDERS: 'montec_repair_orders_v1',
-  BUSINESS_CONFIG: 'montec_business_config_v1'
+  BUSINESS_CONFIG: 'montec_business_config_v1',
+  EXPENSES: 'montec_expenses_v1'
 };
 
 export const DEFAULT_BUSINESS_CONFIG = {
@@ -206,6 +207,28 @@ export function DataProvider({ children }) {
       console.error('Error guardando ventas en localStorage:', e);
     }
   }, [sales]);
+
+  // 3.2 Gastos operativos y egresos del taller
+  const [expenses, setExpenses] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.EXPENSES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(expenses));
+    } catch (e) {
+      console.error('Error guardando gastos en localStorage:', e);
+    }
+  }, [expenses]);
 
   // 4. Estado de autenticación del administrador
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
@@ -477,6 +500,28 @@ export function DataProvider({ children }) {
           }
         } catch (e) {
           console.warn('⚠️ No se pudo sincronizar ventas de PostgreSQL:', e);
+        }
+
+        // 2.c Sincronizar Gastos Operativos desde PostgreSQL
+        try {
+          const remoteGastos = await api.getGastos({ limit: 1000 });
+          if (Array.isArray(remoteGastos) && remoteGastos.length > 0) {
+            setExpenses(prev => {
+              const map = new Map();
+              prev.forEach(g => map.set(String(g.id), g));
+              remoteGastos.forEach(g => {
+                const key = String(g.id);
+                map.set(key, { ...(map.get(key) || {}), ...g });
+              });
+              const merged = Array.from(map.values()).sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+              try {
+                localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(merged));
+              } catch (e) {}
+              return merged;
+            });
+          }
+        } catch (e) {
+          console.warn('⚠️ No se pudo sincronizar gastos de PostgreSQL:', e);
         }
 
         // 3. Sincronizar y Respaldar Modelos Soportados en PostgreSQL
@@ -1716,6 +1761,226 @@ export function DataProvider({ children }) {
     return true;
   };
 
+  // --- Operaciones de Gastos Operativos y Cierre Mensual ---
+  const addExpense = async (expenseData) => {
+    const rawConcepto = (expenseData.concepto || expenseData.descripcion || '').trim();
+    const rawMonto = Number(expenseData.monto) || 0;
+    const expenseId = expenseData.id || `exp-${Date.now()}`;
+    const dateStr = expenseData.fecha ? new Date(expenseData.fecha).toISOString() : new Date().toISOString();
+
+    const newExpense = {
+      id: expenseId,
+      concepto: rawConcepto || 'Gasto General',
+      descripcion: rawConcepto || 'Gasto General',
+      monto: rawMonto,
+      categoria: expenseData.categoria || 'Varios',
+      metodo_pago: expenseData.metodo_pago || 'Efectivo',
+      fecha: dateStr,
+      formattedDate: new Date(dateStr).toLocaleString('es-AR'),
+      comprobante_url: expenseData.comprobante_url || null,
+      notas: expenseData.notas || '',
+      creado_en: new Date().toISOString()
+    };
+
+    setExpenses(prev => [newExpense, ...prev]);
+
+    // Sincronizar con PostgreSQL (Railway)
+    try {
+      const res = await api.createGasto(newExpense);
+      if (res?.success && res.gasto) {
+        setExpenses(prev => prev.map(e => e.id === newExpense.id ? { ...newExpense, id: res.gasto.id } : e));
+        return res.gasto;
+      }
+    } catch (e) {
+      console.warn('⚠️ No se pudo registrar gasto en PostgreSQL:', e.message);
+    }
+
+    return newExpense;
+  };
+
+  const updateExpense = (id, updatedFields) => {
+    setExpenses(prev => {
+      const updated = prev.map(e => {
+        if (String(e.id) !== String(id)) return e;
+        const finalFecha = updatedFields.fecha ? new Date(updatedFields.fecha).toISOString() : e.fecha;
+        return {
+          ...e,
+          ...updatedFields,
+          monto: updatedFields.monto !== undefined ? Number(updatedFields.monto) : e.monto,
+          fecha: finalFecha,
+          formattedDate: new Date(finalFecha).toLocaleString('es-AR'),
+          updatedAt: new Date().toISOString()
+        };
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(updated));
+      } catch (err) {}
+      return updated;
+    });
+
+    api.updateGasto(id, updatedFields).catch(e => {
+      console.warn('⚠️ No se pudo actualizar gasto en PostgreSQL:', e.message);
+    });
+  };
+
+  const deleteExpense = (id) => {
+    setExpenses(prev => {
+      const updated = prev.filter(e => String(e.id) !== String(id));
+      try {
+        localStorage.setItem(STORAGE_KEYS.EXPENSES, JSON.stringify(updated));
+      } catch (err) {}
+      return updated;
+    });
+
+    api.deleteGasto(id).catch(e => {
+      console.warn('⚠️ No se pudo eliminar gasto en PostgreSQL:', e.message);
+    });
+  };
+
+  /**
+   * Calcula el balance financiero y cierre de mes consolidando Ventas + Taller - Gastos
+   */
+  const getMonthlyFinancialSummary = (targetMonth, targetYear) => {
+    const now = new Date();
+    const month = targetMonth !== undefined ? parseInt(targetMonth, 10) : (now.getMonth() + 1);
+    const year = targetYear !== undefined ? parseInt(targetYear, 10) : now.getFullYear();
+
+    // 1. Filtrar ventas del mes
+    let salesTotal = 0;
+    let salesCash = 0;
+    let salesBank = 0;
+    let salesCard = 0;
+    let salesCount = 0;
+
+    (sales || []).forEach(s => {
+      if (!s) return;
+      const sDate = s.createdAt ? new Date(s.createdAt) : null;
+      if (!sDate || isNaN(sDate.getTime())) return;
+      if ((sDate.getMonth() + 1) === month && sDate.getFullYear() === year) {
+        const amt = Number(s.total || 0);
+        salesTotal += amt;
+        salesCount++;
+        const method = String(s.paymentMethod || '').toLowerCase();
+        if (method.includes('efectivo') || method === 'cash') {
+          salesCash += amt;
+        } else if (method.includes('transf') || method.includes('banco') || method.includes('mp') || method.includes('mercado')) {
+          salesBank += amt;
+        } else if (method.includes('tarjet') || method.includes('debito') || method.includes('credito')) {
+          salesCard += amt;
+        } else {
+          salesCash += amt;
+        }
+      }
+    });
+
+    // 2. Filtrar pagos de órdenes de reparación del mes
+    let repairsTotal = 0;
+    let repairsCash = 0;
+    let repairsBank = 0;
+    let repairsCard = 0;
+    let repairsCount = 0;
+
+    (orders || []).forEach(o => {
+      if (!o) return;
+      const pList = Array.isArray(o.payments) ? o.payments : [];
+      pList.forEach(p => {
+        if (!p || !p.amount) return;
+        const pDate = p.timestamp ? new Date(p.timestamp) : (o.createdAt ? new Date(o.createdAt) : null);
+        if (!pDate || isNaN(pDate.getTime())) return;
+        if ((pDate.getMonth() + 1) === month && pDate.getFullYear() === year) {
+          const amt = Number(p.amount || 0);
+          repairsTotal += amt;
+          repairsCount++;
+          const method = String(p.method || '').toLowerCase();
+          if (method.includes('efectivo') || method === 'cash') {
+            repairsCash += amt;
+          } else if (method.includes('transf') || method.includes('banco') || method.includes('mp') || method.includes('mercado')) {
+            repairsBank += amt;
+          } else if (method.includes('tarjet') || method.includes('debito') || method.includes('credito')) {
+            repairsCard += amt;
+          } else {
+            repairsCash += amt;
+          }
+        }
+      });
+    });
+
+    // 3. Filtrar gastos del mes
+    let expensesTotal = 0;
+    let expensesCash = 0;
+    let expensesBank = 0;
+    let expensesCard = 0;
+    let expensesCount = 0;
+    const categoryTotals = {};
+
+    (expenses || []).forEach(e => {
+      if (!e) return;
+      const eDate = e.fecha ? new Date(e.fecha) : (e.creado_en ? new Date(e.creado_en) : null);
+      if (!eDate || isNaN(eDate.getTime())) return;
+      if ((eDate.getMonth() + 1) === month && eDate.getFullYear() === year) {
+        const amt = Number(e.monto || 0);
+        expensesTotal += amt;
+        expensesCount++;
+        const method = String(e.metodo_pago || '').toLowerCase();
+        if (method.includes('efectivo') || method === 'cash') {
+          expensesCash += amt;
+        } else if (method.includes('transf') || method.includes('banco') || method.includes('mp') || method.includes('mercado')) {
+          expensesBank += amt;
+        } else if (method.includes('tarjet') || method.includes('debito') || method.includes('credito')) {
+          expensesCard += amt;
+        } else {
+          expensesCash += amt;
+        }
+
+        const cat = e.categoria || 'Varios';
+        categoryTotals[cat] = (categoryTotals[cat] || 0) + amt;
+      }
+    });
+
+    const byCategory = Object.entries(categoryTotals).map(([categoria, total]) => ({
+      categoria,
+      total,
+      percentage: expensesTotal > 0 ? ((total / expensesTotal) * 100).toFixed(1) : 0
+    })).sort((a, b) => b.total - a.total);
+
+    const totalIncome = salesTotal + repairsTotal;
+    const netBalance = totalIncome - expensesTotal;
+    const cashOnHand = (salesCash + repairsCash) - expensesCash;
+    const bankBalance = (salesBank + repairsBank) - expensesBank;
+
+    return {
+      period: { month, year },
+      income: {
+        total: totalIncome,
+        sales: salesTotal,
+        repairs: repairsTotal,
+        cash: salesCash + repairsCash,
+        bank: salesBank + repairsBank,
+        card: salesCard + repairsCard,
+        salesCount,
+        repairsCount
+      },
+      expenses: {
+        total: expensesTotal,
+        cash: expensesCash,
+        bank: expensesBank,
+        card: expensesCard,
+        count: expensesCount,
+        byCategory
+      },
+      netBalance,
+      cashBreakdown: {
+        cashOnHand,
+        incomeCash: salesCash + repairsCash,
+        expenseCash: expensesCash,
+        bankBalance,
+        incomeBank: salesBank + repairsBank,
+        expenseBank: expensesBank,
+        cardBalance: (salesCard + repairsCard) - expensesCard
+      }
+    };
+  };
+
   // --- Restaurar valores de fábrica ---
   const resetToDefaults = () => {
     setModels(MODELS_DATABASE);
@@ -2076,6 +2341,11 @@ export function DataProvider({ children }) {
       updateSale,
       recordUnifiedDelivery,
       deleteSale,
+      expenses,
+      addExpense,
+      updateExpense,
+      deleteExpense,
+      getMonthlyFinancialSummary,
       dolarRate,
       dolarInfo,
       refreshDolarRate: updateDolar,
