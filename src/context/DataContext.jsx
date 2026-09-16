@@ -764,8 +764,35 @@ export function DataProvider({ children }) {
     localStorage.removeItem(STORAGE_KEYS.EMPLOYEE_AUTH);
   };
 
+  // Helper para persistir clientes en el padrón / base de datos general de clientes
+  const saveClientToPadron = (customer) => {
+    if (!customer) return;
+    const name = (customer.name || '').trim();
+    if (!name || name.toUpperCase() === 'CONSUMIDOR FINAL') return;
+
+    const docClean = String(customer.docNumber || customer.cuit || '').replace(/[^0-9]/g, '');
+    const phoneClean = String(customer.phone || '').replace(/[^0-9]/g, '');
+    const targetDoc = docClean || phoneClean;
+    if (!targetDoc) return;
+
+    if (api && typeof api.savePadronClient === 'function') {
+      api.savePadronClient({
+        name: name.toUpperCase(),
+        docType: customer.docType || (docClean.length === 11 ? 'CUIT' : 'DNI'),
+        docNumber: targetDoc,
+        taxCondition: customer.taxCondition || 'Consumidor Final',
+        phone: customer.phone || '',
+        email: customer.email || '',
+        address: customer.address || ''
+      }).catch(() => null);
+    }
+  };
+
   // --- Operaciones de Órdenes de Reparación ---
   const createRepairOrder = async (orderData) => {
+    // Registrar automáticamente cliente en padrón general
+    saveClientToPadron(orderData.customer || orderData.client);
+
     // 1. Intentar registrar en PostgreSQL mediante Railway si la API está accesible
     try {
       const response = await api.createOrden({
@@ -884,6 +911,9 @@ export function DataProvider({ children }) {
   };
 
   const updateRepairOrder = (orderId, updatedFields) => {
+    if (updatedFields.customer) {
+      saveClientToPadron(updatedFields.customer);
+    }
     setOrders(prev => {
       const updated = prev.map(o => {
         if (o.id !== orderId && o.orderNumber !== orderId) return o;
@@ -1460,8 +1490,9 @@ export function DataProvider({ children }) {
       });
     }
 
-    // 2. Registrar venta en el historial local
+    // 2. Registrar venta en el historial local y en padrón de clientes
     setSales(prev => [newSale, ...prev]);
+    saveClientToPadron(newSale.customer);
 
     // 3. Sincronizar venta y descuento atómico de stock en PostgreSQL (Railway)
     api.createVenta({
@@ -1482,6 +1513,9 @@ export function DataProvider({ children }) {
   };
 
   const updateSale = (saleId, updatedFields) => {
+    if (updatedFields.customer) {
+      saveClientToPadron(updatedFields.customer);
+    }
     setSales(prev => {
       const updated = prev.map(s => {
         if (s.id !== saleId && s.ticketNumber !== saleId) return s;
@@ -1676,6 +1710,7 @@ export function DataProvider({ children }) {
       };
 
       setSales(prev => [newSale, ...prev]);
+      saveClientToPadron({ name: clientName, phone: clientPhone });
     }
 
     return true;

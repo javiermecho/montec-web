@@ -1458,31 +1458,45 @@ app.get('/api/afip/padron/:doc', async (req, res) => {
 app.post('/api/afip/padron/save-client', async (req, res) => {
   try {
     const { name, docType = 'DNI', docNumber, cuit, taxCondition = 'Consumidor Final', phone = '', email = '', address = '' } = req.body || {};
-    if (!docNumber && !cuit) {
-      return res.status(400).json({ success: false, error: 'Debe indicar al menos DNI o CUIT' });
+    const cleanDoc = String(docNumber || cuit || '').replace(/[^0-9]/g, '');
+    const cleanPhone = String(phone || '').replace(/[^0-9]/g, '');
+    const primaryKey = cleanDoc || cleanPhone;
+
+    if (!primaryKey) {
+      return res.status(400).json({ success: false, error: 'Debe indicar al menos DNI, CUIT o Teléfono' });
     }
 
-    const cleanDoc = String(docNumber || cuit).replace(/[^0-9]/g, '');
     const clientRecord = {
       name: name ? name.toUpperCase() : 'CONSUMIDOR FINAL',
-      docType,
-      docNumber: cleanDoc,
-      cuit: cuit || (docType === 'DNI' ? calculateCuilMod11(cleanDoc) : cleanDoc),
-      taxCondition,
-      phone,
-      email,
-      address,
+      docType: cleanDoc.length === 11 ? 'CUIT' : (docType || 'DNI'),
+      docNumber: cleanDoc || cleanPhone,
+      cuit: cuit || (cleanDoc.length === 8 ? calculateCuilMod11(cleanDoc) : (cleanDoc || cleanPhone)),
+      taxCondition: taxCondition || 'Consumidor Final',
+      phone: phone || '',
+      email: email || '',
+      address: address || '',
       updatedAt: new Date().toISOString()
     };
 
     const dbConnected = await isDbConnected();
     if (dbConnected) {
+      // Guardar por identificador principal
       await query(
         `INSERT INTO app_settings (key, value, updated_at)
          VALUES ($1, $2, CURRENT_TIMESTAMP)
          ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP`,
-        [`client_${cleanDoc}`, JSON.stringify(clientRecord)]
+        [`client_${primaryKey}`, JSON.stringify(clientRecord)]
       );
+
+      // Si tiene además teléfono diferente al DNI, guardar acceso rápido por teléfono
+      if (cleanPhone && cleanDoc && cleanPhone !== cleanDoc) {
+        await query(
+          `INSERT INTO app_settings (key, value, updated_at)
+           VALUES ($1, $2, CURRENT_TIMESTAMP)
+           ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP`,
+          [`client_${cleanPhone}`, JSON.stringify(clientRecord)]
+        ).catch(() => null);
+      }
     }
 
     res.json({ success: true, client: clientRecord });

@@ -146,7 +146,8 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
   const [isFiscalModalOpen, setIsFiscalModalOpen] = useState(false);
 
   // --- COMPROBANTE ---
-  const [selectedDocType, setSelectedDocType] = useState('PRESUPUESTO');
+  // Por defecto inicializar en FACTURA B (Consumidor Final) para emitir directamente sin pasos extras
+  const [selectedDocType, setSelectedDocType] = useState('FACTURA_B');
   const [docNumberCustom, setDocNumberCustom] = useState('');
   const [optionPrint, setOptionPrint] = useState(true);
   const [optionSendEmail, setOptionSendEmail] = useState(true);
@@ -600,7 +601,7 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
     }
   };
 
-  // Limpiar comprobante para uno nuevo
+  // Limpiar comprobante para uno nuevo (vuelve a Consumidor Final y Factura B por defecto)
   const resetForm = () => {
     setItems([]);
     setDiscountsList([]);
@@ -608,12 +609,14 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
     setVoucherNotes('');
     setDocNumberCustom('');
     setDocNumber('');
+    setDocType('DNI');
     setClientName('CONSUMIDOR FINAL');
     setTaxCondition('CONSUMIDOR FINAL');
     setClientEmail('');
     setClientPhone('');
     setClientAddress('');
     setClientInternalNotes('');
+    setSelectedDocType('FACTURA_B');
     setEmittedVoucher(null);
   };
 
