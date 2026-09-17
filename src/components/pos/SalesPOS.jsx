@@ -38,7 +38,7 @@ const PAYMENT_METHODS = [
 
 const MONTEC_ALIAS = 'MONTEC.MDQ';
 const MONTEC_ADDRESS = 'Montes Carballo 943, Mar del Plata';
-const MONTEC_PHONE = '5492235000000';
+const MONTEC_PHONE = '5492235444991';
 
 export default function SalesPOS() {
   const { inventory, recordStock, recordSale, refreshConnection, panelTheme } = useData();

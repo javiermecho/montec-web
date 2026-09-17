@@ -139,7 +139,7 @@ export default function OrderTicketModal({ order, onClose }) {
               {businessConfig?.business?.address || 'Montes Carballo 943'} • {businessConfig?.business?.city || 'Mar del Plata'}
             </p>
             <p className="text-[10px] text-zinc-500 print:text-gray-600 font-mono">
-              WhatsApp: {businessConfig?.contact?.technicalWhatsapp || '+54 9 223 542-8827'} • {businessConfig?.contact?.website?.replace('https://', '') || 'montec.ar'}
+              WhatsApp: {businessConfig?.contact?.technicalWhatsapp || '+54 9 223 544-4991'} • {businessConfig?.contact?.website?.replace('https://', '') || 'montec.ar'}
             </p>
           </div>
 

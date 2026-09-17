@@ -50,9 +50,9 @@ export const DEFAULT_BUSINESS_CONFIG = {
     country: 'Argentina'
   },
   contact: {
-    supportPhone: '+54 9 223 542-8827',
-    technicalWhatsapp: '+54 9 223 542-8827',
-    quotationWhatsapp: '+54 9 223 542-8827',
+    supportPhone: '+54 9 223 544-4991',
+    technicalWhatsapp: '+54 9 223 544-4991',
+    quotationWhatsapp: '+54 9 223 544-4991',
     contactEmail: 'consultas@montec.ar',
     billingEmail: 'facturacion@montec.ar',
     website: 'https://montec.ar'

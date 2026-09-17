@@ -373,7 +373,7 @@ export default function OfficialFiscalInvoice({
                       <strong>Domicilio Comercial:</strong> {address} - {city} ({state})
                     </p>
                     <p className="text-[11px] text-slate-600">
-                      <strong>Teléfono:</strong> {contact.technicalWhatsapp || contact.supportPhone || '+54 9 223 542-8827'}
+                      <strong>Teléfono:</strong> {contact.technicalWhatsapp || contact.supportPhone || '+54 9 223 544-4991'}
                     </p>
                   </div>
 

@@ -14,8 +14,11 @@ import { useData } from '../context/DataContext';
 import { trackConsultaAccesorio } from '../services/analytics';
 
 export default function Accessories() {
-  const { accessories } = useData();
+  const { accessories, businessConfig } = useData();
   const [selectedCategory, setSelectedCategory] = useState('Todos');
+
+  const rawWhatsapp = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.supportPhone || '5492235444991';
+  const targetWhatsapp = rawWhatsapp.replace(/[^0-9]/g, '') || '5492235444991';
 
   const filteredItems = selectedCategory === 'Todos'
     ? accessories
@@ -80,7 +83,7 @@ export default function Accessories() {
               ? `¡Hola montec! Quisiera consultar cuándo vuelve a ingresar stock del accesorio: "${item.name}" para retirar en Montes Carballo 943.`
               : `¡Hola montec! Quisiera consultar stock y disponibilidad del accesorio: "${item.name}" ($${Number(item.price).toLocaleString('es-AR')}) para retirar en Montes Carballo 943.`;
 
-            const itemWhatsappUrl = `https://wa.me/5492235000000?text=${encodeURIComponent(itemWhatsappMsg)}`;
+            const itemWhatsappUrl = `https://wa.me/${targetWhatsapp}?text=${encodeURIComponent(itemWhatsappMsg)}`;
             const featuresList = Array.isArray(item.features) ? item.features : [];
 
             return (
@@ -200,7 +203,7 @@ export default function Accessories() {
             </div>
           </div>
           <a
-            href="https://wa.me/5492235000000?text=Hola%20montec!%20Quiero%20colocar%20hidrogel%20en%20mi%20equipo.%20%C2%BFTienen%20para%20mi%20modelo?"
+            href={`https://wa.me/${targetWhatsapp}?text=${encodeURIComponent('¡Hola montec! Quiero colocar hidrogel en mi equipo. ¿Tienen para mi modelo?')}`}
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 px-6 py-3 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-lg"

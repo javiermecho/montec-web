@@ -20,7 +20,7 @@ export default function WhatsAppTemplatesTab() {
 
   // Número receptor del presupuestador
   const [quotationWhatsapp, setQuotationWhatsapp] = useState(() => {
-    return businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.technicalWhatsapp || '+54 9 223 542-8827';
+    return businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.technicalWhatsapp || '+54 9 223 544-4991';
   });
 
   // Plantillas cargadas localmente
@@ -329,13 +329,13 @@ export default function WhatsAppTemplatesTab() {
                 type="text"
                 value={quotationWhatsapp}
                 onChange={(e) => setQuotationWhatsapp(e.target.value)}
-                placeholder="+54 9 223 542-8827"
+                placeholder="+54 9 223 544-4991"
                 className="w-full bg-zinc-950/80 border border-zinc-700/80 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-mono"
               />
               <span className="absolute right-3 top-3 text-xs text-zinc-500">E.164</span>
             </div>
             <p className="text-[11px] text-zinc-500 mt-1.5">
-              Ejemplo para Argentina: <span className="font-mono text-zinc-400">+54 9 223 542-8827</span> (se limpiarán espacios automáticamente para el enlace).
+              Ejemplo para Argentina: <span className="font-mono text-zinc-400">+54 9 223 544-4991</span> (se limpiarán espacios automáticamente para el enlace).
             </p>
           </div>
 

@@ -274,8 +274,8 @@ export default function QuotationTool() {
   const repairTimeCondition = estimate?.repairTime?.condition || estimate?.timeCondition || 'Express en 45 min con cita previa y seña';
 
   // 1. Número receptor configurado en el panel administrador
-  const quotationPhoneRaw = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.technicalWhatsapp || '5492235428827';
-  const targetPhone = quotationPhoneRaw.replace(/[^0-9]/g, '') || '5492235428827';
+  const quotationPhoneRaw = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.technicalWhatsapp || '5492235444991';
+  const targetPhone = quotationPhoneRaw.replace(/[^0-9]/g, '') || '5492235444991';
 
   // 2. Plantilla de mensaje configurada
   const templateString = businessConfig?.whatsappTemplates?.quotationWeb || 

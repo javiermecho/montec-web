@@ -1,9 +1,14 @@
 import React from 'react';
 import { MessageCircle, Instagram, MapPin, ShieldCheck, ArrowUp } from 'lucide-react';
 import MontecLogo from './MontecLogo';
+import { useData } from '../context/DataContext';
 import { trackClickLlamadaOMapa } from '../services/analytics';
 
 export default function Footer() {
+  const { businessConfig } = useData();
+  const rawWhatsapp = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.supportPhone || '5492235444991';
+  const whatsappNumber = rawWhatsapp.replace(/[^0-9]/g, '') || '5492235444991';
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('¡Hola montec! Quisiera hacer una consulta sobre servicio técnico.')}`;
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -25,10 +30,10 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a
-                href="https://wa.me/5492235000000"
+                href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackClickLlamadaOMapa({ type: 'whatsapp_footer', label: 'WhatsApp Footer', url: 'https://wa.me/5492235000000' })}
+                onClick={() => trackClickLlamadaOMapa({ type: 'whatsapp_footer', label: 'WhatsApp Footer', url: whatsappUrl })}
                 className="p-2.5 rounded-xl bg-zinc-900 hover:bg-[#FF5500] text-zinc-300 hover:text-white transition-colors border border-zinc-800"
                 aria-label="WhatsApp"
               >

@@ -30,7 +30,7 @@ import { trackEvent } from '../services/analytics';
 import { useData } from '../context/DataContext';
 import { getMinimumRepairPrice } from '../data/repairData';
 
-const WHATSAPP_PHONE = '5492235000000';
+const WHATSAPP_PHONE = '5492235444991';
 
 // Sugerencias de modelos populares para agilizar la interacción
 const POPULAR_MODELS = {
@@ -711,8 +711,8 @@ export default function DiagnosticChatbot() {
 
   // Link de WhatsApp con el ticket pre-redactado exacto requerido
   const generateWhatsAppLink = () => {
-    const rawPhone = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.technicalWhatsapp || '5492235428827';
-    const targetPhone = rawPhone.replace(/[^0-9]/g, '') || '5492235428827';
+    const rawPhone = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.technicalWhatsapp || '5492235444991';
+    const targetPhone = rawPhone.replace(/[^0-9]/g, '') || '5492235444991';
     const localName = businessConfig?.business?.fantasyName || 'MONTEC';
     const address = businessConfig?.business?.address || 'Montes Carballo 943';
 

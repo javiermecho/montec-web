@@ -59,9 +59,9 @@ export default function LocalSettingsTab() {
         country: b.country ?? def.business.country ?? 'Argentina'
       },
       contact: {
-        supportPhone: ct.supportPhone ?? def.contact.supportPhone ?? '+54 9 223 542-8827',
-        technicalWhatsapp: ct.technicalWhatsapp ?? def.contact.technicalWhatsapp ?? '+54 9 223 542-8827',
-        quotationWhatsapp: ct.quotationWhatsapp ?? def.contact.quotationWhatsapp ?? '+54 9 223 542-8827',
+        supportPhone: ct.supportPhone ?? def.contact.supportPhone ?? '+54 9 223 544-4991',
+        technicalWhatsapp: ct.technicalWhatsapp ?? def.contact.technicalWhatsapp ?? '+54 9 223 544-4991',
+        quotationWhatsapp: ct.quotationWhatsapp ?? def.contact.quotationWhatsapp ?? '+54 9 223 544-4991',
         contactEmail: ct.contactEmail ?? def.contact.contactEmail ?? 'consultas@montec.ar',
         billingEmail: ct.billingEmail ?? def.contact.billingEmail ?? 'facturacion@montec.ar',
         website: ct.website ?? def.contact.website ?? 'https://montec.ar'
@@ -424,7 +424,7 @@ export default function LocalSettingsTab() {
                   type="text"
                   value={contact.technicalWhatsapp || ''}
                   onChange={(e) => handleContactChange('technicalWhatsapp', e.target.value)}
-                  placeholder="+54 9 223 542-8827"
+                  placeholder="+54 9 223 544-4991"
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-medium transition-colors ${
                     isLight
                       ? 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-emerald-500'
@@ -443,7 +443,7 @@ export default function LocalSettingsTab() {
                   type="text"
                   value={contact.quotationWhatsapp || ''}
                   onChange={(e) => handleContactChange('quotationWhatsapp', e.target.value)}
-                  placeholder="+54 9 223 542-8827"
+                  placeholder="+54 9 223 544-4991"
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-medium transition-colors ${
                     isLight
                       ? 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-emerald-500'
@@ -462,7 +462,7 @@ export default function LocalSettingsTab() {
                   type="text"
                   value={contact.supportPhone || ''}
                   onChange={(e) => handleContactChange('supportPhone', e.target.value)}
-                  placeholder="+54 9 223 542-8827"
+                  placeholder="+54 9 223 544-4991"
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-mono font-medium transition-colors ${
                     isLight
                       ? 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-sky-500'

@@ -5,7 +5,7 @@ import { useData } from '../context/DataContext';
 import { trackClickLlamadaOMapa } from '../services/analytics';
 
 export default function Navbar() {
-  const { setIsQuoteModalOpen } = useData();
+  const { setIsQuoteModalOpen, businessConfig } = useData();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isOpenNow, setIsOpenNow] = useState(true);
@@ -42,7 +42,8 @@ export default function Navbar() {
     { name: 'Ubicación', href: '#ubicacion' },
   ];
 
-  const whatsappNumber = '5492235000000';
+  const rawWhatsapp = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.supportPhone || '5492235444991';
+  const whatsappNumber = rawWhatsapp.replace(/[^0-9]/g, '') || '5492235444991';
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('¡Hola montec! Quisiera hacer una consulta técnica sobre mi equipo.')}`;
 
   return (
