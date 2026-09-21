@@ -1,6 +1,31 @@
 <!doctype html>
 <html lang="es" class="dark scroll-smooth">
   <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18464752657"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'AW-18464752657');
+      gtag('config', 'G-1YEKDXTGEZ', {
+        send_page_view: true
+      });
+
+      // Soporte dinámico para Google Ads o medición personalizada desde el panel
+      try {
+        var storedADS = localStorage.getItem('montec_ads_id');
+        if (storedADS && !storedADS.includes('XXXXX') && storedADS !== 'AW-18464752657') {
+          gtag('config', storedADS);
+        }
+        var customGA = localStorage.getItem('montec_ga_id');
+        if (customGA && customGA !== 'G-1YEKDXTGEZ' && customGA.startsWith('G-')) {
+          gtag('config', customGA);
+        }
+      } catch (e) {}
+    </script>
+
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -48,7 +73,7 @@
       "image": "https://montec.ar/logo.png",
       "@id": "https://montec.ar",
       "url": "https://montec.ar",
-      "telephone": "+54 9 223 500-0000",
+      "telephone": "+54 9 223 544-4991",
       "priceRange": "$$",
       "address": {
         "@type": "PostalAddress",
@@ -81,30 +106,6 @@
         "https://www.instagram.com/montec.arg"
       ]
     }
-    </script>
-
-    <!-- Google tag (gtag.js) - Google Analytics 4 (montec.ar) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1YEKDXTGEZ"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-1YEKDXTGEZ', {
-        send_page_view: true
-      });
-
-      // Soporte dinámico para Google Ads o medición personalizada desde el panel
-      try {
-        var storedADS = localStorage.getItem('montec_ads_id');
-        if (storedADS && !storedADS.includes('XXXXX')) {
-          gtag('config', storedADS);
-        }
-        var customGA = localStorage.getItem('montec_ga_id');
-        if (customGA && customGA !== 'G-1YEKDXTGEZ' && customGA.startsWith('G-')) {
-          gtag('config', customGA);
-        }
-      } catch (e) {}
     </script>
     
     <!-- Google Fonts: Inter & Montserrat -->

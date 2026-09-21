@@ -42,7 +42,7 @@ export function getAnalyticsConfig() {
 
   return {
     gaId: (envGa && !envGa.includes('XXXXX')) ? envGa : 'G-1YEKDXTGEZ',
-    adsId: envAds && !envAds.includes('XXXXX') ? envAds : '',
+    adsId: (envAds && !envAds.includes('XXXXX')) ? envAds : 'AW-18464752657',
     adsConversionLabel: envConv && !envConv.includes('XXXXX') ? envConv : ''
   };
 }
