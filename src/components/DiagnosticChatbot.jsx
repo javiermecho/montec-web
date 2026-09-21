@@ -26,7 +26,7 @@ import {
   Layers,
   Settings
 } from 'lucide-react';
-import { trackEvent } from '../services/analytics';
+import { trackEvent, trackWhatsAppClick } from '../services/analytics';
 import { useData } from '../context/DataContext';
 import { getMinimumRepairPrice } from '../data/repairData';
 
@@ -1212,6 +1212,13 @@ export default function DiagnosticChatbot() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => {
+                      trackWhatsAppClick({
+                        source: 'chatbot_diagnostico',
+                        deviceType: diagnosticResult.device,
+                        issueName: diagnosticResult.problem,
+                        estimatedPrice: diagnosticResult.priceRaw || 0,
+                        whatsappUrl: generateWhatsAppLink()
+                      });
                       trackEvent('chatbot_whatsapp_click', {
                         device: diagnosticResult.device,
                         diagnostic: diagnosticResult.diagnostic,

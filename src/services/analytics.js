@@ -175,7 +175,7 @@ export function getAnalyticsSummary() {
 
   events.forEach(e => {
     if (e.eventName === 'cotizacion_iniciada') cotizaciones++;
-    else if (e.eventName === 'click_whatsapp_cotizacion') conversionesWhatsapp++;
+    else if (e.eventName === 'click_whatsapp_cotizacion' || e.eventName === 'whatsapp_click' || e.eventName === 'generate_lead') conversionesWhatsapp++;
     else if (e.eventName === 'click_llamada_o_mapa') clicksContacto++;
     else if (e.eventName === 'consulta_accesorio') accesoriosConsultados++;
   });
@@ -223,6 +223,67 @@ export function trackEvent(eventName, params = {}) {
 }
 
 /**
+ * Evento Principal de WhatsApp: Registra cada vez que alguien envía un mensaje o abre WhatsApp desde la web.
+ * Dispara eventos a Google Ads (conversión) y a Google Analytics 4 (generate_lead, contact y whatsapp_click).
+ */
+export function trackWhatsAppClick({
+  source = 'general',
+  deviceType = '',
+  modelName = '',
+  issueName = '',
+  estimatedPrice = 0,
+  whatsappUrl = ''
+} = {}) {
+  const config = getAnalyticsConfig();
+  const adsId = config.adsId || 'AW-18464752657';
+  const sendTo = (config.adsConversionLabel && !config.adsConversionLabel.includes('YYYYY'))
+    ? config.adsConversionLabel
+    : adsId;
+
+  const eventParams = {
+    event_category: 'WhatsApp',
+    event_label: `WhatsApp [${source}]${modelName ? ' - ' + modelName : ''}`,
+    source: source,
+    method: 'whatsapp',
+    value: estimatedPrice ? Number(estimatedPrice) : undefined,
+    currency: 'ARS',
+    device_type: deviceType || undefined,
+    model_name: modelName || undefined,
+    issue_name: issueName || undefined,
+    whatsapp_url: whatsappUrl || undefined,
+    send_to: sendTo
+  };
+
+  // 1. Evento personalizado para panel local y GA4
+  trackEvent('whatsapp_click', eventParams);
+
+  // 2. Evento estándar de GA4 y Google Ads para Conversión de Cliente Potencial (Lead)
+  trackEvent('generate_lead', {
+    ...eventParams,
+    lead_type: 'whatsapp'
+  });
+
+  // 3. Evento estándar de contacto
+  trackEvent('contact', {
+    method: 'whatsapp',
+    content: source
+  });
+
+  // 4. Disparo directo a Google Ads si está cargado gtag
+  if (typeof window !== 'undefined' && typeof window.gtag === 'function' && sendTo) {
+    try {
+      window.gtag('event', 'conversion', {
+        send_to: sendTo,
+        value: estimatedPrice ? Number(estimatedPrice) : 1.0,
+        currency: 'ARS'
+      });
+    } catch (e) {
+      console.warn('Error enviando conversión a Google Ads:', e);
+    }
+  }
+}
+
+/**
  * Enviar un evento de prueba manual desde el AdminPanel para verificar en Google Analytics en tiempo real
  */
 export function sendTestEvent() {
@@ -253,6 +314,11 @@ export function trackCotizacionIniciada({ deviceType, modelName, issueName, esti
  */
 export function trackClickWhatsappCotizacion({ deviceType, modelName, issueName, estimatedPrice, whatsappUrl }) {
   const config = getAnalyticsConfig();
+  const adsId = config.adsId || 'AW-18464752657';
+  const sendTo = (config.adsConversionLabel && !config.adsConversionLabel.includes('YYYYY'))
+    ? config.adsConversionLabel
+    : adsId;
+
   trackEvent('click_whatsapp_cotizacion', {
     event_category: 'Conversion',
     event_label: `${deviceType} - ${modelName} - ${issueName}`,
@@ -261,7 +327,16 @@ export function trackClickWhatsappCotizacion({ deviceType, modelName, issueName,
     issue_name: issueName,
     value: estimatedPrice || 0,
     currency: 'ARS',
-    send_to: config.adsConversionLabel || import.meta.env.VITE_GOOGLE_ADS_CONVERSION_ID || undefined
+    send_to: sendTo
+  });
+
+  trackWhatsAppClick({
+    source: 'cotizador',
+    deviceType,
+    modelName,
+    issueName,
+    estimatedPrice,
+    whatsappUrl
   });
 }
 
@@ -306,6 +381,7 @@ export default {
   trackEvent,
   trackCotizacionIniciada,
   trackClickWhatsappCotizacion,
+  trackWhatsAppClick,
   trackClickLlamadaOMapa,
   trackConsultaAccesorio
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MessageCircle, Menu, X, Shield, Lock } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
-import { trackClickLlamadaOMapa } from '../services/analytics';
+import { trackClickLlamadaOMapa, trackWhatsAppClick } from '../services/analytics';
 
 export default function Navbar() {
   const { setIsQuoteModalOpen, businessConfig } = useData();
@@ -112,7 +112,10 @@ export default function Navbar() {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackClickLlamadaOMapa('whatsapp_navbar_desktop', whatsappUrl)}
+              onClick={() => {
+                trackWhatsAppClick({ source: 'navbar_desktop', whatsappUrl });
+                trackClickLlamadaOMapa({ type: 'whatsapp_navbar_desktop', label: 'WhatsApp Navbar Desktop', url: whatsappUrl });
+              }}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#FF5500] hover:bg-[#FF6600] rounded-xl shadow-[0_0_15px_rgba(255,85,0,0.4)] hover:shadow-[0_0_22px_rgba(255,85,0,0.65)] transition-all duration-300 transform active:scale-95"
             >
               <MessageCircle className="w-4 h-4 fill-white text-transparent" />
@@ -126,7 +129,10 @@ export default function Navbar() {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackClickLlamadaOMapa('whatsapp_navbar_mobile', whatsappUrl)}
+              onClick={() => {
+                trackWhatsAppClick({ source: 'navbar_mobile', whatsappUrl });
+                trackClickLlamadaOMapa({ type: 'whatsapp_navbar_mobile', label: 'WhatsApp Navbar Mobile', url: whatsappUrl });
+              }}
               className="p-2 text-white bg-[#FF5500] rounded-lg shadow-sm"
               aria-label="Contactar por WhatsApp"
             >

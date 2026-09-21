@@ -2,7 +2,7 @@ import React from 'react';
 import { MessageCircle, Instagram, MapPin, ShieldCheck, ArrowUp } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
-import { trackClickLlamadaOMapa } from '../services/analytics';
+import { trackClickLlamadaOMapa, trackWhatsAppClick } from '../services/analytics';
 
 export default function Footer() {
   const { businessConfig } = useData();
@@ -33,7 +33,10 @@ export default function Footer() {
                 href={whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackClickLlamadaOMapa({ type: 'whatsapp_footer', label: 'WhatsApp Footer', url: whatsappUrl })}
+                onClick={() => {
+                  trackWhatsAppClick({ source: 'footer', whatsappUrl });
+                  trackClickLlamadaOMapa({ type: 'whatsapp_footer', label: 'WhatsApp Footer', url: whatsappUrl });
+                }}
                 className="p-2.5 rounded-xl bg-zinc-900 hover:bg-[#FF5500] text-zinc-300 hover:text-white transition-colors border border-zinc-800"
                 aria-label="WhatsApp"
               >

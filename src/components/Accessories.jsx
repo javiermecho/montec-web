@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { ACCESSORIES_CATEGORIES } from '../data/accessoriesData';
 import { useData } from '../context/DataContext';
-import { trackConsultaAccesorio } from '../services/analytics';
+import { trackConsultaAccesorio, trackWhatsAppClick } from '../services/analytics';
 
 export default function Accessories() {
   const { accessories, businessConfig } = useData();
@@ -166,11 +166,19 @@ export default function Accessories() {
                     href={itemWhatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => trackConsultaAccesorio({
-                      accessoryName: item.name,
-                      category: item.category,
-                      price: item.price
-                    })}
+                    onClick={() => {
+                      trackWhatsAppClick({
+                        source: 'catalogo_accesorios',
+                        issueName: item.name,
+                        estimatedPrice: item.price,
+                        whatsappUrl: itemWhatsappUrl
+                      });
+                      trackConsultaAccesorio({
+                        accessoryName: item.name,
+                        category: item.category,
+                        price: item.price
+                      });
+                    }}
                     className={`w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 border shadow-sm ${
                       isOutOfStock
                         ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
@@ -206,6 +214,13 @@ export default function Accessories() {
             href={`https://wa.me/${targetWhatsapp}?text=${encodeURIComponent('¡Hola montec! Quiero colocar hidrogel en mi equipo. ¿Tienen para mi modelo?')}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => {
+              trackWhatsAppClick({
+                source: 'banner_hidrogel',
+                issueName: 'Lámina de Hidrogel a medida',
+                whatsappUrl: `https://wa.me/${targetWhatsapp}?text=${encodeURIComponent('¡Hola montec! Quiero colocar hidrogel en mi equipo. ¿Tienen para mi modelo?')}`
+              });
+            }}
             className="shrink-0 px-6 py-3 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-lg"
           >
             Consultar mi modelo
