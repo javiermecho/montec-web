@@ -106,7 +106,7 @@ export const ISSUE_TYPES = [
   },
   {
     id: 'battery',
-    name: 'Cambio de Batería Original/Premium',
+    name: 'Cambio de Batería Calidad Premium / Grado OEM',
     description: 'Se descarga rápido, se apaga de golpe o batería hinchada con riesgo.',
     duration: 'De 2 a 3 horas en Android / 24 hs hábiles en iPhone',
     warranty: '30 días de garantía escrita',
@@ -136,8 +136,8 @@ export const ISSUE_TYPES = [
   },
   {
     id: 'software',
-    name: 'Reparación de Software / Sistema',
-    description: 'Flasheo, recuperación de booteo o reinicios en logo, reinstalación de sistema operativo, desbrickeo y optimización.',
+    name: 'Reinstalación y Optimización de Sistema',
+    description: 'Reinstalación limpia de sistema operativo para PC/Mac, solución de bucles de arranque y restauración ante errores de actualización de software.',
     duration: 'De 2 a 3 horas',
     warranty: 'Garantía de funcionamiento y estabilidad',
     badge: 'Soporte Especializado',
@@ -182,7 +182,7 @@ export const ISSUE_TYPES = [
   {
     id: 'back-glass',
     name: 'Cambio de Tapa Trasera de Vidrio (Láser / Proceso Térmico)',
-    description: 'Tapa trasera trizada o rota. En iPhone remoción con láser preservando chasis y MagSafe; en Android cambio de tapa original o carcasa.',
+    description: 'Tapa trasera trizada o rota. En iPhone remoción con láser preservando chasis y MagSafe; en Android reemplazo de tapa de vidrio o carcasa.',
     duration: '24 horas hábiles en iPhone / De 2 a 3 hs en Android',
     warranty: '30 días escrita',
     badge: 'Láser & Precisión',

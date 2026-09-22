@@ -42,7 +42,7 @@ export default function Hero() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF5500]"></span>
           </span>
           <span className="text-xs sm:text-sm font-semibold text-zinc-200">
-            Laboratorio Especializado
+            Servicio Técnico Independiente • Taller Multimarca
           </span>
         </div>
 
@@ -59,7 +59,7 @@ export default function Hero() {
 
         {/* Subtítulo descriptivo */}
         <p className="max-w-2xl mx-auto text-base sm:text-lg lg:text-xl text-zinc-400 font-normal leading-relaxed mb-8">
-          Reparación profesional de celulares <strong className="text-zinc-200">iPhone</strong>, <strong className="text-zinc-200">Android</strong> y <strong className="text-zinc-200">Notebooks</strong> con repuestos seleccionados, instrumental de precisión y entrega en el día en Montes Carballo 943.
+          Reparación profesional de hardware para celulares <strong className="text-zinc-200">iPhone</strong>, <strong className="text-zinc-200">Android</strong> y <strong className="text-zinc-200">Notebooks</strong> con repuestos seleccionados de calidad premium, instrumental de precisión y entrega en el día en Montes Carballo 943 (a metros de ex Sobremonte • estacionamiento libre en la puerta).
         </p>
 
         {/* Botones de Acción (CTAs) */}

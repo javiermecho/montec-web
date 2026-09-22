@@ -582,7 +582,7 @@ export default function DiagnosticChatbot() {
     if (optionKey === 'premium_100') {
       addUserMessage('Opción 1: Batería Premium con 100% de Condición');
       generateFinalDiagnostic({
-        diagnosticText: 'Batería degradada por ciclos de carga. Reemplazo con celda nueva de alta capacidad preservando el flex BMS original soldado y calibrado en laboratorio para mostrar 100% de salud activa en Ajustes.',
+        diagnosticText: 'Batería degradada por ciclos de carga. Reemplazo con celda nueva de alta capacidad preservando el flex BMS de fábrica soldado y calibrado en laboratorio para mostrar 100% de salud activa en Ajustes.',
         recommendedServiceText: 'Cambio de Batería Premium con 100% de Condición',
         symptomText: 'Condición debajo del 80% (Opción 100% de Condición)',
         timeEstimate: '24 horas hábiles (o en el día antes de las 12 hs)',
@@ -593,7 +593,7 @@ export default function DiagnosticChatbot() {
     } else {
       addUserMessage('Opción 2: Batería Estándar (Sin visualización de condición)');
       generateFinalDiagnostic({
-        diagnosticText: 'Misma autonomía y duración real que una original (Smart Supply / Calidad Original). En modelos iPhone XS en adelante mostrará aviso de "Pieza cambiada / Servicio", siendo la opción más económica y conveniente.',
+        diagnosticText: 'Misma autonomía y duración real de alto rendimiento (Calidad Premium / Grado OEM). En modelos compatibles mostrará aviso informativo de servicio sin afectar en absoluto el rendimiento.',
         recommendedServiceText: 'Cambio de Batería Estándar Certificada (Económica)',
         symptomText: 'Condición debajo del 80% (Opción Estándar Económica)',
         timeEstimate: 'De 2 a 3 horas (en el día)',
@@ -1082,7 +1082,7 @@ export default function DiagnosticChatbot() {
                       </span>
                     </div>
                     <p className="text-[11px] text-zinc-400 group-hover:text-zinc-300 leading-snug">
-                      Traspaso de Flex BMS original soldado en microscopio y calibración de ciclos en laboratorio (o celda autoprogramable). Conserva el 100% en Ajustes y todos los datos.
+                      Traspaso de Flex BMS de fábrica soldado en microscopio y calibración de ciclos en laboratorio (o celda autoprogramable). Conserva el 100% en Ajustes y todos los datos.
                     </p>
                   </button>
 
@@ -1101,7 +1101,7 @@ export default function DiagnosticChatbot() {
                       </span>
                     </div>
                     <p className="text-[11px] text-zinc-400 group-hover:text-zinc-300 leading-snug">
-                      Misma autonomía y duración real (Smart Supply / Calidad Original). En iOS mostrará aviso informativo de servicio sin afectar en absoluto el rendimiento.
+                      Misma autonomía y duración real (Repuesto Calidad Premium / Grado OEM). En iOS mostrará aviso informativo de servicio sin afectar en absoluto el rendimiento.
                     </p>
                   </button>
 
@@ -1212,6 +1212,9 @@ export default function DiagnosticChatbot() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => {
+                      if (typeof window.gtag === 'function') {
+                        window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                      }
                       trackWhatsAppClick({
                         source: 'chatbot_diagnostico',
                         deviceType: diagnosticResult.device,

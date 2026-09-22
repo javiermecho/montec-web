@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Instagram, MapPin, ShieldCheck, ArrowUp } from 'lucide-react';
+import { MessageCircle, Instagram, MapPin, ShieldCheck, ArrowUp, Clock, Phone, Car } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
 import { trackClickLlamadaOMapa, trackWhatsAppClick } from '../services/analytics';
@@ -26,7 +26,7 @@ export default function Footer() {
               <MontecLogo size="lg" />
             </a>
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed max-w-sm">
-              Servicio Técnico de Alta Precisión y Laboratorio de Microelectrónica en Mar del Plata. Reparación honesta de iPhone, Smartphones Android y Notebooks.
+              Servicio Técnico Independiente y Laboratorio Multimarca en Mar del Plata. Especialistas en reparación de hardware físico de celulares, iPhone y notebooks con repuestos de calidad y garantía escrita.
             </p>
             <div className="flex items-center gap-3 pt-2">
               <a
@@ -34,6 +34,9 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => {
+                  if (typeof window.gtag === 'function') {
+                    window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                  }
                   trackWhatsAppClick({ source: 'footer', whatsappUrl });
                   trackClickLlamadaOMapa({ type: 'whatsapp_footer', label: 'WhatsApp Footer', url: whatsappUrl });
                 }}
@@ -61,42 +64,87 @@ export default function Footer() {
               Navegación
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm">
-              <li><a href="#inicio" className="hover:text-[#FF5500] transition-colors">Inicio</a></li>
-              <li><a href="#cotizador" className="hover:text-[#FF5500] transition-colors">Cotizador Online</a></li>
-              <li><a href="#laboratorio" className="hover:text-[#FF5500] transition-colors">Laboratorio Técnico</a></li>
-              <li><a href="#accesorios" className="hover:text-[#FF5500] transition-colors">Catálogo de Accesorios</a></li>
-              <li><a href="#ubicacion" className="hover:text-[#FF5500] transition-colors">Ubicación y Horarios</a></li>
+              <li>
+                <a href="#inicio" className="hover:text-white transition-colors">Inicio</a>
+              </li>
+              <li>
+                <a href="#cotizador" className="hover:text-[#FF5500] transition-colors">Cotizador de Reparación</a>
+              </li>
+              <li>
+                <a href="#laboratorio" className="hover:text-white transition-colors">Laboratorio Propio</a>
+              </li>
+              <li>
+                <a href="#accesorios" className="hover:text-white transition-colors">Catálogo de Accesorios</a>
+              </li>
+              <li>
+                <a href="#ubicacion" className="hover:text-white transition-colors">Ubicación y Contacto</a>
+              </li>
             </ul>
           </div>
 
-          {/* Col 4: Servicios Principales */}
+          {/* Col 4: Servicios Físicos de Hardware */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4 font-heading">
-              Servicios
+              Servicios de Hardware
             </h4>
-            <ul className="space-y-2 text-xs sm:text-sm text-zinc-400">
-              <li>Cambio de Módulos y Displays</li>
-              <li>Reemplazo de Baterías 100%</li>
+            <ul className="space-y-2 text-xs text-zinc-400">
+              <li>Cambio de Módulo y Pantalla</li>
+              <li>Baterías Calidad Premium / OEM</li>
               <li>Reparación Pines de Carga</li>
-              <li>Microelectrónica y Placas</li>
-              <li>Mantenimiento Térmico PC/Mac</li>
-              <li>Corte Láser de Hidrogel HD</li>
+              <li>Microsoldadura en Placa Madre</li>
+              <li>Mantenimiento Térmico PC/Notebook</li>
+              <li>Actualización Memoria y SSD</li>
             </ul>
           </div>
 
-          {/* Col 5: Local, Garantía & Acceso Admin */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-4 font-heading">
-              Garantía & Local
+          {/* Col 5: Local, Contacto Directo & Horarios */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-white mb-3 font-heading">
+              Local & Contacto Directo
             </h4>
-            <div className="space-y-3 text-xs mb-4">
+            <div className="space-y-2.5 text-xs">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-[#FF5500] shrink-0 mt-0.5" />
-                <span>Montes Carballo 943, Mar del Plata</span>
+                <span className="text-zinc-300 leading-tight">
+                  <strong className="text-white block">Montes Carballo 943</strong>
+                  Mar del Plata (Constitución, a metros de ex Sobremonte)
+                </span>
               </div>
               <div className="flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                <span>30 días de garantía formal escrita en todas las reparaciones</span>
+                <Car className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <span className="text-emerald-300 text-[11px] font-medium leading-tight">
+                  Estacionamiento libre y gratuito en la puerta
+                </span>
+              </div>
+              <div className="flex items-start gap-2">
+                <Clock className="w-4 h-4 text-[#FF5500] shrink-0 mt-0.5" />
+                <span className="text-zinc-300 text-[11px]">
+                  Lun a Vie: 09:30 a 19:00 hs<br />
+                  Sábados: 10:00 a 14:00 hs
+                </span>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <Phone className="w-4 h-4 text-[#FF5500] shrink-0" />
+                <a href="tel:+5492235444991" className="text-white hover:text-[#FF5500] font-mono font-semibold">
+                  +54 9 223 544-4991
+                </a>
+              </div>
+              <div className="pt-2">
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    if (typeof window.gtag === 'function') {
+                      window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                    }
+                    trackWhatsAppClick({ source: 'footer_cta', whatsappUrl });
+                  }}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                  <span>Pedir Turno por WhatsApp</span>
+                </a>
               </div>
             </div>
           </div>
@@ -104,25 +152,28 @@ export default function Footer() {
         </div>
 
         {/* Bloque Obligatorio de Compliance para Google Ads & Descargo de Responsabilidad Legal */}
-        <div className="my-8 p-4 sm:p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 text-[11px] sm:text-xs text-zinc-400 leading-relaxed space-y-1.5">
-          <p className="font-bold text-zinc-300 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#FF5500]"></span>
+        <div className="my-8 p-5 sm:p-6 rounded-2xl bg-zinc-950 border border-zinc-850 text-xs text-zinc-400 leading-relaxed space-y-2">
+          <p className="font-bold text-zinc-200 text-xs sm:text-sm flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#FF5500]"></span>
             <span>Aviso Legal y Descargo de Responsabilidad:</span>
           </p>
-          <p>
-            <strong className="text-zinc-300">montec</strong> es un servicio técnico y laboratorio de microelectrónica multimarca independiente. No somos un servicio técnico oficial autorizado por Apple Inc., Samsung Electronics, Motorola Mobility LLC, Xiaomi Inc., ni ninguna otra marca mencionada. Todos los nombres de productos, logotipos, marcas comerciales y marcas registradas son propiedad de sus respectivos dueños y se utilizan en este sitio web únicamente con fines descriptivos y de compatibilidad para informar sobre nuestros servicios de reparación fuera de garantía y venta de accesorios.
+          <p className="text-zinc-300">
+            Montec es un taller de reparación electrónica y servicio técnico independiente y multimarca ubicado en Montes Carballo 943, Mar del Plata, Argentina. No somos servicio técnico oficial ni poseemos afiliación, patrocinio, certificación ni vinculación comercial directa con Apple Inc., Samsung Electronics Co., Ltd., Motorola Mobility LLC, Xiaomi Inc., ni con ninguna de las marcas comerciales mencionadas.
+          </p>
+          <p className="text-zinc-400">
+            Los nombres de marcas, marcas registradas, logotipos y modelos se citan única y exclusivamente a título informativo y descriptivo para indicar la compatibilidad técnica de nuestros servicios de reparación de hardware y repuestos ofrecidos.
           </p>
         </div>
 
         {/* Barra Inferior */}
         <div className="pt-6 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
           <div>
-            © {new Date().getFullYear()} <strong className="text-zinc-300">montec</strong>. Todos los derechos reservados. Mar del Plata, Argentina.
+            © {new Date().getFullYear()} <strong className="text-zinc-300">montec</strong>. Taller multimarca independiente de hardware. Montes Carballo 943, Mar del Plata, Argentina.
           </div>
           
           <button
             onClick={scrollToTop}
-            className="flex items-center gap-1 text-zinc-400 hover:text-white transition-colors"
+            className="flex items-center gap-1 text-zinc-400 hover:text-white transition-colors cursor-pointer"
           >
             <span>Volver arriba</span>
             <ArrowUp className="w-3.5 h-3.5" />

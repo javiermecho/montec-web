@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Menu, X, Shield, Lock } from 'lucide-react';
+import { MessageCircle, Menu, X, Shield, Lock, MapPin, Phone } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
 import { trackClickLlamadaOMapa, trackWhatsAppClick } from '../services/analytics';
@@ -23,9 +23,11 @@ export default function Navbar() {
     const minutes = now.getMinutes();
     const timeInMinutes = hours * 60 + minutes;
 
+    // Lun a Vie: 9:30 a 19:00 hs (1 a 5)
     if (day >= 1 && day <= 5) {
       setIsOpenNow(timeInMinutes >= 9 * 60 + 30 && timeInMinutes <= 19 * 60);
     } else if (day === 6) {
+      // Sáb: 10:00 a 14:00 hs
       setIsOpenNow(timeInMinutes >= 10 * 60 && timeInMinutes <= 14 * 60);
     } else {
       setIsOpenNow(false);
@@ -47,7 +49,28 @@ export default function Navbar() {
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('¡Hola montec! Quisiera hacer una consulta técnica sobre mi equipo.')}`;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300 px-4 sm:px-6 lg:px-8 pt-3 sm:pt-4 w-full max-w-full">
+    <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300 px-3 sm:px-6 lg:px-8 pt-2 sm:pt-3 w-full max-w-full">
+      {/* Top Banner de Transparencia Comercial & Políticas de Google Ads */}
+      <div className="max-w-7xl mx-auto mb-1.5 px-3 py-1 rounded-xl bg-zinc-950/90 border border-zinc-800/80 text-[10px] sm:text-[11px] text-zinc-300 flex items-center justify-between gap-2 shadow-xs backdrop-blur-md">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <span className="flex items-center gap-1 text-zinc-200 font-medium">
+            <MapPin className="w-3 h-3 text-[#FF5500] shrink-0" />
+            <span>Montes Carballo 943 (Constitución, a metros de ex Sobremonte)</span>
+          </span>
+          <span className="hidden md:inline text-zinc-600">•</span>
+          <span className="hidden md:inline text-emerald-400 font-medium">🚗 Estacionamiento libre en la puerta</span>
+        </div>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <span className="hidden sm:inline text-zinc-400">Lun a Vie 09:30-19:00 | Sáb 10:00-14:00</span>
+          <a
+            href="tel:+5492235444991"
+            className="text-white hover:text-[#FF5500] font-mono font-bold flex items-center gap-1"
+          >
+            <Phone className="w-3 h-3 text-[#FF5500]" />
+            <span>223 544-4991</span>
+          </a>
+        </div>
+      </div>
       <nav 
         className={`max-w-7xl mx-auto rounded-2xl transition-all duration-300 border ${
           scrolled 
@@ -113,6 +136,9 @@ export default function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
+                if (typeof window.gtag === 'function') {
+                  window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                }
                 trackWhatsAppClick({ source: 'navbar_desktop', whatsappUrl });
                 trackClickLlamadaOMapa({ type: 'whatsapp_navbar_desktop', label: 'WhatsApp Navbar Desktop', url: whatsappUrl });
               }}
@@ -130,6 +156,9 @@ export default function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
+                if (typeof window.gtag === 'function') {
+                  window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                }
                 trackWhatsAppClick({ source: 'navbar_mobile', whatsappUrl });
                 trackClickLlamadaOMapa({ type: 'whatsapp_navbar_mobile', label: 'WhatsApp Navbar Mobile', url: whatsappUrl });
               }}

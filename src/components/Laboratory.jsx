@@ -32,7 +32,7 @@ export default function Laboratory() {
   const tools = [
     { name: 'Microscopio Triocular de Alta Definición', desc: 'Soldadura de pistas BGA y microcomponentes' },
     { name: 'Estaciones de Soldado JBC y Aire Caliente', desc: 'Control de perfil térmico exacto sin dañar la placa' },
-    { name: 'Reprogramadores EEPROM & TrueTone', desc: 'Conservación de funciones originales y calibración' },
+    { name: 'Reprogramadores EEPROM & TrueTone', desc: 'Calibración de pantalla y conservación de funciones de brillo y color' },
     { name: 'Fuentes de Laboratorio Reguladas de 4 Dígitos', desc: 'Detección inmediata de cortos y fugas de consumo' }
   ];
 

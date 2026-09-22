@@ -167,6 +167,9 @@ export default function Accessories() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => {
+                      if (typeof window.gtag === 'function') {
+                        window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                      }
                       trackWhatsAppClick({
                         source: 'catalogo_accesorios',
                         issueName: item.name,
@@ -215,6 +218,9 @@ export default function Accessories() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => {
+              if (typeof window.gtag === 'function') {
+                window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+              }
               trackWhatsAppClick({
                 source: 'banner_hidrogel',
                 issueName: 'Lámina de Hidrogel a medida',

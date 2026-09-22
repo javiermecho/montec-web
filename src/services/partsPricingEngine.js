@@ -123,7 +123,7 @@ export function calculatePartPrice(part, dolarRate = DEFAULT_FALLBACK_RATE, cust
  */
 function detectQualityType(name) {
   const upper = name.toUpperCase();
-  if (upper.includes('ORIGINAL') || upper.includes('SERVICE PACK')) return 'Original de Fábrica';
+  if (upper.includes('ORIGINAL') || upper.includes('SERVICE PACK')) return 'Calidad Premium / Grado OEM';
   if (upper.includes('AMOLED')) return 'Super AMOLED';
   if (upper.includes('OLED')) return 'OLED Premium';
   if (upper.includes('PREMIUM')) return 'Calidad Premium';
@@ -229,7 +229,7 @@ export function calculateModuleEstimate(modelName, brand, dolarRate = DEFAULT_FA
     duration: 'De 2 a 3 horas (Express en 45 min con cita previa y seña)',
     warranty: '30 días de garantía escrita',
     qualityLabel: (minOption.qualityType && /original|oled|service pack/i.test(minOption.qualityType))
-      ? 'Calidad Original (Conserva todas las funciones de fábrica)'
+      ? 'Calidad Premium / Grado OEM (Máxima fidelidad de brillo, color y respuesta táctil)'
       : 'Calidad Premium (Excelente brillo, color y respuesta táctil)',
     badge: 'Repuesto Seleccionado'
   };

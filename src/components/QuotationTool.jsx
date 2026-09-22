@@ -677,8 +677,8 @@ export default function QuotationTool() {
                 <p className="text-xs text-zinc-400">
                   {estimate.modalities.length > 1 ? (
                     selectedIssue === 'screen'
-                      ? 'Podés elegir entre Calidad Premium (excelente brillo, color y respuesta táctil) o Calidad Original con reprogramación para conservar todas las funciones de fábrica.'
-                      : 'Podés elegir entre Batería Nueva de alto rendimiento (rápida y económica) o servicio con reprogramación y flex original para indicar 100% de salud en Ajustes.'
+                      ? 'Podés elegir entre Calidad Premium (excelente brillo, color y respuesta táctil) o Repuesto Grado OEM con reprogramación para conservar todas las funciones de fábrica.'
+                      : 'Podés elegir entre Batería Nueva de alto rendimiento (rápida y económica) o servicio con reprogramación y flex de fábrica para indicar 100% de salud en Ajustes.'
                   ) : (
                     selectedIssue === 'screen'
                       ? 'La pantalla incluye calibración y reprogramación de fábrica para conservar True Tone y brillo automático.'
@@ -887,6 +887,9 @@ export default function QuotationTool() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => {
+                  if (typeof window.gtag === 'function') {
+                    window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                  }
                   trackClickWhatsappCotizacion({
                     deviceType: selectedDevice,
                     modelName: currentModelName,

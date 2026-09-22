@@ -198,10 +198,10 @@ export const IPHONE_SCREEN_MODALITIES_POST_11 = [
   },
   {
     key: 'ic_transplant',
-    name: 'Calidad Original (Conserva todas las funciones de fábrica)',
+    name: 'Repuesto Calidad Premium Grado OEM (Conserva funciones de fábrica)',
     badge: 'Laboratorio Sin Avisos',
-    iosNotice: 'Sin avisos en Ajustes (Conserva funciones originales al 100%)',
-    description: 'Servicio de laboratorio de microelectrónica: se trasplanta el microchip integrado de tu pantalla original para evitar avisos en iOS.',
+    iosNotice: 'Sin avisos en Ajustes (Conserva funciones de pantalla al 100%)',
+    description: 'Servicio de laboratorio de microelectrónica: se trasplanta el microchip integrado de tu pantalla de fábrica para evitar avisos en iOS.',
     defaultLabor: 55000
   }
 ];
@@ -232,10 +232,10 @@ export const IPHONE_BATTERY_MODALITIES_POST_XS = [
   },
   {
     key: 'bms_transplant',
-    name: 'Batería con Traspaso de Flex Original & Reprogramación 100%',
+    name: 'Batería con Traspaso de Flex de Fábrica & Reprogramación 100%',
     badge: 'Servicio de Laboratorio',
-    iosNotice: 'Conserva flex original Apple y muestra 100% de salud en Ajustes',
-    description: 'Servicio de laboratorio: conserva el flex original, se coloca celda nueva y se reprograma la condición al 100% sin aviso de pieza.',
+    iosNotice: 'Conserva flex BMS de fábrica y muestra 100% de salud en Ajustes',
+    description: 'Servicio de laboratorio: conserva el flex de fábrica, se coloca celda nueva y se reprograma la condición al 100% sin aviso de pieza.',
     defaultLabor: 48000
   }
 ];

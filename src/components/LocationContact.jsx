@@ -10,11 +10,15 @@ import {
   CheckCircle, 
   Banknote, 
   QrCode,
-  Sparkles
+  Sparkles,
+  Car,
+  MessageCircle
 } from 'lucide-react';
-import { trackClickLlamadaOMapa } from '../services/analytics';
+import { trackClickLlamadaOMapa, trackWhatsAppClick } from '../services/analytics';
+import { useData } from '../context/DataContext';
 
 export default function LocationContact() {
+  const { businessConfig } = useData();
   const paymentMethods = [
     { name: 'Efectivo', icon: Banknote, desc: '10% de descuento en reparaciones' },
     { name: 'Transferencia', icon: QrCode, desc: 'Alias / CBU inmediato' },
@@ -25,6 +29,9 @@ export default function LocationContact() {
   const address = 'Montes Carballo 943, B7600 Mar del Plata, Provincia de Buenos Aires';
   const googleMapsDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
   const instagramUrl = 'https://instagram.com/montec.arg';
+  const rawWhatsapp = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.supportPhone || '5492235444991';
+  const whatsappNumber = rawWhatsapp.replace(/[^0-9]/g, '') || '5492235444991';
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('¡Hola montec! Quisiera hacer una consulta técnica sobre mi equipo.')}`;
 
   return (
     <section id="ubicacion" className="py-20 px-4 sm:px-6 lg:px-8 relative bg-zinc-950/80 border-t border-zinc-900 w-full max-w-full overflow-hidden">
@@ -38,13 +45,13 @@ export default function LocationContact() {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF5500]/10 border border-[#FF5500]/30 text-[#FF5500] text-xs font-bold uppercase tracking-wider mb-4">
             <MapPin className="w-3.5 h-3.5" />
-            <span>Punto de Atención y Laboratorio</span>
+            <span>Punto de Atención y Laboratorio Multimarca</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-heading font-extrabold text-white tracking-tight mb-4">
             Vení a nuestro taller en <span className="text-[#FF5500]">Mar del Plata</span>
           </h2>
           <p className="text-zinc-400 text-base sm:text-lg">
-            Estamos ubicados en Zona Norte / Constitución. Te esperamos para revisar tu celular o computadora en persona y brindarte un diagnóstico sin cargo.
+            Estamos ubicados en Zona Norte / Constitución, a metros del ex Sobremonte. Te esperamos para revisar tu celular o computadora en persona y brindarte un diagnóstico sin cargo.
           </p>
         </div>
 
@@ -53,33 +60,67 @@ export default function LocationContact() {
           {/* Columna Izquierda: Información de Contacto, Horarios y Pagos (5 cols) */}
           <div className="lg:col-span-5 space-y-6 flex flex-col justify-between">
             
-            {/* Card Dirección */}
-            <div className="bg-[#121212] border border-zinc-800 rounded-2xl p-6 shadow-xl">
+            {/* Card Dirección y Referencia */}
+            <div className="bg-[#121212] border border-zinc-800 rounded-2xl p-6 shadow-xl space-y-4">
               <div className="flex items-start gap-4">
                 <div className="p-3 rounded-xl bg-[#FF5500]/15 text-[#FF5500] shrink-0">
                   <MapPin className="w-6 h-6" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <div className="text-xs font-bold uppercase tracking-wider text-[#FF5500]">
-                    Dirección Física
+                    Dirección Física y Punto de Referencia
                   </div>
                   <h3 className="text-lg font-heading font-bold text-white mt-0.5">
                     Montes Carballo 943
                   </h3>
-                  <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+                  <p className="text-xs sm:text-sm text-zinc-300 mt-1">
                     Mar del Plata (Zona Norte / Constitución), Bs. As.
                   </p>
+                  <p className="text-xs text-orange-400 font-medium mt-0.5">
+                    📍 Punto de referencia: <strong>A metros del ex Sobremonte</strong>
+                  </p>
                   
-                  <a
-                    href={googleMapsDirectionsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => trackClickLlamadaOMapa({ type: 'mapa_como_llegar', label: 'Cómo llegar con Google Maps', url: googleMapsDirectionsUrl })}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#FF5500] hover:text-[#FF6600] mt-3 group"
-                  >
-                    <span>¿Cómo llegar con Google Maps?</span>
-                    <Navigation className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </a>
+                  <div className="mt-2.5 flex items-center gap-2 text-emerald-400 text-xs font-semibold bg-emerald-950/40 border border-emerald-500/30 px-3 py-1.5 rounded-xl">
+                    <Car className="w-4 h-4 shrink-0" />
+                    <span>Estacionamiento libre y gratuito en la puerta</span>
+                  </div>
+
+                  <div className="mt-3 flex items-center gap-2 text-xs text-zinc-300">
+                    <Phone className="w-4 h-4 text-[#FF5500] shrink-0" />
+                    <span>Teléfono directo:</span>
+                    <a href="tel:+5492235444991" className="text-white hover:text-[#FF5500] font-mono font-bold">
+                      +54 9 223 544-4991
+                    </a>
+                  </div>
+
+                  <div className="mt-4 flex flex-col sm:flex-row gap-2.5">
+                    <a
+                      href={whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => {
+                        if (typeof window.gtag === 'function') {
+                          window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                        }
+                        trackWhatsAppClick({ source: 'contacto_ubicacion', whatsappUrl });
+                      }}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                    >
+                      <MessageCircle className="w-4 h-4 fill-current" />
+                      <span>WhatsApp Directo</span>
+                    </a>
+
+                    <a
+                      href={googleMapsDirectionsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackClickLlamadaOMapa({ type: 'mapa_como_llegar', label: 'Cómo llegar con Google Maps', url: googleMapsDirectionsUrl })}
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-bold text-zinc-200 hover:text-white transition-all cursor-pointer"
+                    >
+                      <span>Abrir en Maps</span>
+                      <Navigation className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
