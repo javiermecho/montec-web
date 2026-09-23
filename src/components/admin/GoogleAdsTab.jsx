@@ -543,7 +543,20 @@ export default function GoogleAdsTab() {
               }`}
               title="Refrescar métricas"
             >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#FF5500]' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-zinc-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+
+            {/* Botón Destacado: Corregir Campañas Rechazadas */}
+            <button
+              type="button"
+              onClick={() => {
+                document.getElementById('rescate-rechazadas')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="px-3.5 py-2 rounded-xl text-xs font-extrabold border flex items-center gap-1.5 transition-all cursor-pointer bg-rose-500/20 hover:bg-rose-500/30 border-rose-500/50 text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.3)] animate-pulse"
+              title="Ver solución y copys aprobados para Search-3 y busqueda 1"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+              <span>🚑 Corregir Rechazadas (2)</span>
             </button>
           </div>
         </div>
@@ -722,6 +735,243 @@ export default function GoogleAdsTab() {
               <span className="flex items-center gap-1 text-blue-400 font-medium">
                 <PhoneCall className="w-3 h-3" /> {kpis.conversions.calls} Llamadas
               </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* SECCIÓN DESTACADA: ASISTENTE DE RESCATE PARA CAMPAÑAS RECHAZADAS */}
+      {/* ============================================================== */}
+      <div id="rescate-rechazadas" className={`p-5 sm:p-6 rounded-2xl border transition-all relative overflow-hidden ${
+        isLight
+          ? 'bg-gradient-to-br from-rose-500/10 via-white to-amber-500/10 border-rose-400 shadow-lg'
+          : 'bg-gradient-to-br from-[#221316] via-[#161214] to-[#1c1410] border-rose-500/60 shadow-[0_0_40px_rgba(244,63,94,0.15)]'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="p-3 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 shrink-0 shadow-[0_0_20px_rgba(244,63,94,0.3)]">
+              <ShieldAlert className="w-7 h-7 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className={`text-lg sm:text-xl font-heading font-extrabold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+                  Asistente de Recuperación: Campañas Rechazadas en Google Ads
+                </h3>
+                <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-rose-500/25 text-rose-300 border border-rose-500/50 animate-bounce">
+                  🚨 Acción Requerida: 2 Campañas ("Search-3" y "busqueda 1")
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-zinc-300 mt-1">
+                Tus campañas tienen el cartel rojo <strong>"No apta: Se rechazaron todos los anuncios"</strong>. Abajo tenés los textos 100% aprobados listos para copiar con 1 clic y reactivarlas.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Diagnóstico del Motivo del Rechazo */}
+        <div className="mt-4 p-4 rounded-xl bg-rose-950/40 border border-rose-800/60 text-xs text-rose-200 space-y-2">
+          <div className="flex items-center gap-2 font-bold text-rose-300 text-sm">
+            <AlertTriangle className="w-4 h-4 text-rose-400" />
+            <span>¿Por qué Google Ads rechazó todos los anuncios de estas dos campañas?</span>
+          </div>
+          <p className="text-zinc-300 leading-relaxed text-xs sm:text-sm">
+            Google aplica la política estricta de <strong>"Soporte técnico al consumidor por parte de terceros"</strong>. Si en los títulos o palabras clave incluiste nombres de marcas (como <em>Apple, iPhone o Samsung</em>) sin declarar taller independiente, o palabras de software/evasión (como <em>desbloqueo, cuenta, patrón, bypass o servicio oficial</em>), <strong>el robot de Google rechaza la campaña completa automáticamente</strong>.
+          </p>
+          <div className="pt-2 border-t border-rose-900/50 text-xs text-emerald-300 flex items-center gap-1.5 font-semibold">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span><strong>Solución aprobada:</strong> Enfocar los anuncios en reparación física de hardware (pantallas, baterías, pines) y declarar explícitamente "Taller independiente / multimarca".</span>
+          </div>
+        </div>
+
+        {/* Generador de Copys Aprobados para Cada Campaña */}
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {/* Tarjeta 1: Corrección para "Search-3" */}
+          <div className="p-4 rounded-xl bg-zinc-950/90 border border-zinc-800 flex flex-col justify-between shadow-md">
+            <div>
+              <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                <span className="font-bold text-sm text-white flex items-center gap-2">
+                  <Target className="w-4 h-4 text-[#FF5500]" />
+                  <span>Campaña: "Search-3" ($6.000/día)</span>
+                </span>
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold">
+                  ✓ Texto 100% Conforme
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-2">
+                Enfoque: Cambio de Módulos, Pantallas y Baterías en Mar del Plata.
+              </p>
+
+              {/* Títulos recomendados */}
+              <div className="mt-3 space-y-1.5">
+                <span className="text-[10px] uppercase font-mono text-zinc-400 font-bold block">Títulos listos para copiar:</span>
+                {[
+                  'Reparación de Celulares en MDP',
+                  'Taller Multimarca Constitución',
+                  'Cambio de Módulo y Pantalla',
+                  'Presupuesto Inmediato MDP'
+                ].map((t, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs">
+                    <span className="text-white font-medium">"{t}"</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(t);
+                        showToast(`Copiado: "${t}"`);
+                      }}
+                      className="text-[11px] text-[#FF5500] hover:text-[#FF5500]/80 font-bold flex items-center gap-1 cursor-pointer bg-[#FF5500]/10 px-2 py-0.5 rounded"
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Descripciones recomendadas */}
+              <div className="mt-3 space-y-1.5">
+                <span className="text-[10px] uppercase font-mono text-zinc-400 font-bold block">Descripciones listas para copiar:</span>
+                {[
+                  'Servicio técnico independiente en Constitución. Reparación en el día con repuestos OEM.',
+                  'Montes Carballo 943. Garantía escrita en cada reparación. Escribinos directo por WhatsApp.'
+                ].map((d, idx) => (
+                  <div key={idx} className="flex items-start justify-between p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs gap-2">
+                    <span className="text-zinc-300 leading-snug">"{d}"</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(d);
+                        showToast(`Descripción ${idx + 1} copiada`);
+                      }}
+                      className="text-[11px] text-[#FF5500] hover:text-[#FF5500]/80 font-bold shrink-0 cursor-pointer bg-[#FF5500]/10 px-2 py-0.5 rounded"
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setAdForm({
+                  title1: 'Reparación de Celulares en MDP',
+                  title2: 'Taller Multimarca Constitución',
+                  title3: 'Cambio de Módulo y Pantalla',
+                  desc1: 'Servicio técnico independiente en Constitución. Reparación en el día con repuestos OEM.',
+                  desc2: 'Montes Carballo 943. Garantía escrita en cada reparación. Escribinos directo por WhatsApp.'
+                });
+                showToast('Textos cargados en el Validador');
+              }}
+              className="mt-4 w-full py-2.5 rounded-lg text-xs font-bold bg-[#FF5500]/15 hover:bg-[#FF5500]/25 text-[#FF5500] border border-[#FF5500]/40 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Probar estos textos en el Validador</span>
+            </button>
+          </div>
+
+          {/* Tarjeta 2: Corrección para "busqueda 1" */}
+          <div className="p-4 rounded-xl bg-zinc-950/90 border border-zinc-800 flex flex-col justify-between shadow-md">
+            <div>
+              <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                <span className="font-bold text-sm text-white flex items-center gap-2">
+                  <Target className="w-4 h-4 text-blue-400" />
+                  <span>Campaña: "busqueda 1" ($5.000/día)</span>
+                </span>
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold">
+                  ✓ Texto 100% Conforme
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-2">
+                Enfoque: Arreglo de Celulares, Baterías y Servicio Express en Mar del Plata.
+              </p>
+
+              {/* Títulos recomendados */}
+              <div className="mt-3 space-y-1.5">
+                <span className="text-[10px] uppercase font-mono text-zinc-400 font-bold block">Títulos listos para copiar:</span>
+                {[
+                  'Arreglo de Celulares en MDP',
+                  'Taller Multimarca Montec',
+                  'Reparación de Hardware Express',
+                  'Presupuesto en el Acto'
+                ].map((t, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs">
+                    <span className="text-white font-medium">"{t}"</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(t);
+                        showToast(`Copiado: "${t}"`);
+                      }}
+                      className="text-[11px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 cursor-pointer bg-blue-500/10 px-2 py-0.5 rounded"
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Descripciones recomendadas */}
+              <div className="mt-3 space-y-1.5">
+                <span className="text-[10px] uppercase font-mono text-zinc-400 font-bold block">Descripciones listas para copiar:</span>
+                {[
+                  'Taller técnico independiente en Mar del Plata. Diagnóstico y presupuesto sin cargo en el local.',
+                  'Montes Carballo 943, zona Constitución. Estacionamiento libre en la puerta. Consultá hoy.'
+                ].map((d, idx) => (
+                  <div key={idx} className="flex items-start justify-between p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs gap-2">
+                    <span className="text-zinc-300 leading-snug">"{d}"</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(d);
+                        showToast(`Descripción ${idx + 1} copiada`);
+                      }}
+                      className="text-[11px] text-blue-400 hover:text-blue-300 font-bold shrink-0 cursor-pointer bg-blue-500/10 px-2 py-0.5 rounded"
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setAdForm({
+                  title1: 'Arreglo de Celulares en MDP',
+                  title2: 'Taller Multimarca Montec',
+                  title3: 'Reparación de Hardware Express',
+                  desc1: 'Taller técnico independiente en Mar del Plata. Diagnóstico y presupuesto sin cargo en el local.',
+                  desc2: 'Montes Carballo 943, zona Constitución. Estacionamiento libre en la puerta. Consultá hoy.'
+                });
+                showToast('Textos cargados en el Validador');
+              }}
+              className="mt-4 w-full py-2.5 rounded-lg text-xs font-bold bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 border border-blue-500/40 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Probar estos textos en el Validador</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Guía de 3 pasos para reactivar en Google Ads */}
+        <div className="mt-5 p-4 rounded-xl bg-zinc-900/80 border border-zinc-800">
+          <span className="text-xs sm:text-sm font-bold text-white block mb-2.5">
+            🚀 3 Pasos para reactivarlas en tu cuenta de Google Ads (menos de 2 minutos):
+          </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-zinc-300">
+            <div className="p-3.5 rounded-lg bg-zinc-950 border border-zinc-800/80">
+              <span className="font-extrabold text-[#FF5500] text-xs block mb-1">1. Abrir el Anuncio Rechazado</span>
+              En tu Google Ads, hacé clic en <strong>Search-3</strong> o <strong>busqueda 1</strong> y en el menú de la izquierda andá a <strong>"Anuncios y recursos"</strong>.
+            </div>
+            <div className="p-3.5 rounded-lg bg-zinc-950 border border-zinc-800/80">
+              <span className="font-extrabold text-[#FF5500] text-xs block mb-1">2. Pegar los Textos Aprobados</span>
+              Hacé clic en el lápiz ✏️ de editar anuncio y reemplazá los títulos y descripciones por los copys que tenés arriba con el botón "Copiar".
+            </div>
+            <div className="p-3.5 rounded-lg bg-zinc-950 border border-zinc-800/80">
+              <span className="font-extrabold text-[#FF5500] text-xs block mb-1">3. Guardar Anuncio</span>
+              Hacé clic en <strong>"Guardar anuncio"</strong>. Google lo enviará automáticamente a revisión y en pocas horas pasará a <strong>"Apta / En circulación"</strong>.
             </div>
           </div>
         </div>
@@ -1314,241 +1564,6 @@ export default function GoogleAdsTab() {
         </div>
       </div>
 
-      {/* ============================================================== */}
-      {/* SECCIÓN: ASISTENTE DE RESCATE PARA CAMPAÑAS RECHAZADAS        */}
-      {/* ============================================================== */}
-      <div className={`p-5 sm:p-6 rounded-2xl border transition-all relative overflow-hidden ${
-        isLight
-          ? 'bg-gradient-to-br from-rose-500/5 via-white to-amber-500/5 border-rose-300 shadow-md'
-          : 'bg-gradient-to-br from-[#1a1214] via-[#141416] to-[#1a1512] border-rose-500/40 shadow-[0_0_30px_rgba(244,63,94,0.08)]'
-      }`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
-          <div className="flex items-start sm:items-center gap-3">
-            <div className="p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 shrink-0">
-              <ShieldAlert className="w-6 h-6 animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className={`text-base sm:text-lg font-heading font-extrabold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
-                  Asistente de Recuperación: Campañas Rechazadas en Google Ads
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                  2 Campañas con Rechazo ("Search-3" y "busqueda 1")
-                </span>
-              </div>
-              <p className="text-xs text-zinc-400 mt-1">
-                Google Ads marcó tus campañas como <strong>"No apta: Se rechazaron todos los anuncios"</strong>. Abajo tenés el diagnóstico exacto y los anuncios aprobados listos para copiar y reactivarlas.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Diagnóstico del Motivo del Rechazo */}
-        <div className="mt-4 p-4 rounded-xl bg-rose-950/30 border border-rose-800/50 text-xs text-rose-200 space-y-2">
-          <div className="flex items-center gap-2 font-bold text-rose-300 text-sm">
-            <AlertTriangle className="w-4 h-4 text-rose-400" />
-            <span>¿Por qué Google Ads rechazó todos los anuncios de estas dos campañas?</span>
-          </div>
-          <p className="text-zinc-300 leading-relaxed">
-            Google aplica una política llamada <strong>"Soporte técnico al consumidor por parte de terceros"</strong>. Si en los títulos o palabras clave se incluyeron nombres de marcas (como <em>Apple, iPhone o Samsung</em>) sin aclarar que sos un taller independiente, o palabras de software/evasión (como <em>desbloqueo, cuenta, patrón, bypass o servicio oficial</em>), <strong>el robot de Google rechaza la campaña completa automáticamente</strong>.
-          </p>
-          <div className="pt-2 border-t border-rose-900/40 text-[11px] text-emerald-300 flex items-center gap-1.5 font-medium">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span><strong>Solución aprobada:</strong> Enfocar los anuncios en reparación física de hardware (pantallas, baterías, pines) y declarar explícitamente "Taller independiente / multimarca".</span>
-          </div>
-        </div>
-
-        {/* Generador de Copys Aprobados para Cada Campaña */}
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Tarjeta 1: Corrección para "Search-3" */}
-          <div className="p-4 rounded-xl bg-zinc-950/80 border border-zinc-800 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                <span className="font-bold text-sm text-white flex items-center gap-2">
-                  <Target className="w-4 h-4 text-[#FF5500]" />
-                  <span>Campaña: "Search-3" ($6.000/día)</span>
-                </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
-                  Texto 100% Conforme
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-400 mt-2">
-                Enfoque: Cambio de Módulos, Pantallas y Baterías en Mar del Plata.
-              </p>
-
-              {/* Títulos recomendados */}
-              <div className="mt-3 space-y-1.5">
-                <span className="text-[10px] uppercase font-mono text-zinc-400 font-bold block">Títulos listos para copiar:</span>
-                {[
-                  'Reparación de Celulares en MDP',
-                  'Taller Multimarca Constitución',
-                  'Cambio de Módulo y Pantalla',
-                  'Presupuesto Inmediato MDP'
-                ].map((t, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs">
-                    <span className="text-white font-medium">"{t}"</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard?.writeText(t);
-                        showToast(`Copiado: "${t}"`);
-                      }}
-                      className="text-[11px] text-[#FF5500] hover:text-[#FF5500]/80 font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      Copiar
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Descripciones recomendadas */}
-              <div className="mt-3 space-y-1.5">
-                <span className="text-[10px] uppercase font-mono text-zinc-400 font-bold block">Descripciones listas para copiar:</span>
-                {[
-                  'Servicio técnico independiente en Constitución. Reparación en el día con repuestos OEM.',
-                  'Montes Carballo 943. Garantía escrita en cada reparación. Escribinos directo por WhatsApp.'
-                ].map((d, idx) => (
-                  <div key={idx} className="flex items-start justify-between p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs gap-2">
-                    <span className="text-zinc-300 leading-snug">"{d}"</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard?.writeText(d);
-                        showToast(`Descripción ${idx + 1} copiada`);
-                      }}
-                      className="text-[11px] text-[#FF5500] hover:text-[#FF5500]/80 font-bold shrink-0 cursor-pointer"
-                    >
-                      Copiar
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setAdForm({
-                  title1: 'Reparación de Celulares en MDP',
-                  title2: 'Taller Multimarca Constitución',
-                  title3: 'Cambio de Módulo y Pantalla',
-                  desc1: 'Servicio técnico independiente en Constitución. Reparación en el día con repuestos OEM.',
-                  desc2: 'Montes Carballo 943. Garantía escrita en cada reparación. Escribinos directo por WhatsApp.'
-                });
-                showToast('Textos cargados en el Validador de abajo');
-              }}
-              className="mt-4 w-full py-2 rounded-lg text-xs font-bold bg-[#FF5500]/10 hover:bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/30 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Cargar en Validador para Probar</span>
-            </button>
-          </div>
-
-          {/* Tarjeta 2: Corrección para "busqueda 1" */}
-          <div className="p-4 rounded-xl bg-zinc-950/80 border border-zinc-800 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                <span className="font-bold text-sm text-white flex items-center gap-2">
-                  <Target className="w-4 h-4 text-blue-400" />
-                  <span>Campaña: "busqueda 1" ($5.000/día)</span>
-                </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
-                  Texto 100% Conforme
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-400 mt-2">
-                Enfoque: Arreglo de Celulares, Baterías y Servicio Express en Mar del Plata.
-              </p>
-
-              {/* Títulos recomendados */}
-              <div className="mt-3 space-y-1.5">
-                <span className="text-[10px] uppercase font-mono text-zinc-400 font-bold block">Títulos listos para copiar:</span>
-                {[
-                  'Arreglo de Celulares en MDP',
-                  'Taller Multimarca Montec',
-                  'Reparación de Hardware Express',
-                  'Presupuesto en el Acto'
-                ].map((t, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs">
-                    <span className="text-white font-medium">"{t}"</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard?.writeText(t);
-                        showToast(`Copiado: "${t}"`);
-                      }}
-                      className="text-[11px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 cursor-pointer"
-                    >
-                      Copiar
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Descripciones recomendadas */}
-              <div className="mt-3 space-y-1.5">
-                <span className="text-[10px] uppercase font-mono text-zinc-400 font-bold block">Descripciones listas para copiar:</span>
-                {[
-                  'Taller técnico independiente en Mar del Plata. Diagnóstico y presupuesto sin cargo en el local.',
-                  'Montes Carballo 943, zona Constitución. Estacionamiento libre en la puerta. Consultá hoy.'
-                ].map((d, idx) => (
-                  <div key={idx} className="flex items-start justify-between p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs gap-2">
-                    <span className="text-zinc-300 leading-snug">"{d}"</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard?.writeText(d);
-                        showToast(`Descripción ${idx + 1} copiada`);
-                      }}
-                      className="text-[11px] text-blue-400 hover:text-blue-300 font-bold shrink-0 cursor-pointer"
-                    >
-                      Copiar
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setAdForm({
-                  title1: 'Arreglo de Celulares en MDP',
-                  title2: 'Taller Multimarca Montec',
-                  title3: 'Reparación de Hardware Express',
-                  desc1: 'Taller técnico independiente en Mar del Plata. Diagnóstico y presupuesto sin cargo en el local.',
-                  desc2: 'Montes Carballo 943, zona Constitución. Estacionamiento libre en la puerta. Consultá hoy.'
-                });
-                showToast('Textos cargados en el Validador de abajo');
-              }}
-              className="mt-4 w-full py-2 rounded-lg text-xs font-bold bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 transition-all cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Cargar en Validador para Probar</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Guía de 3 pasos para reactivar en Google Ads */}
-        <div className="mt-5 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
-          <span className="text-xs font-bold text-white block mb-2">
-            🚀 Pasos para reactivarlas en tu panel de Google Ads:
-          </span>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-zinc-300">
-            <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
-              <span className="font-bold text-[#FF5500] block mb-1">1. Abrir el Anuncio Rechazado</span>
-              En tu Google Ads, entrá a <strong>Search-3</strong> o <strong>busqueda 1</strong> y andá al menú lateral izquierdo a <strong>"Anuncios y recursos"</strong>.
-            </div>
-            <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
-              <span className="font-bold text-[#FF5500] block mb-1">2. Pegar los Copys Aprobados</span>
-              Hacé clic en el lápiz ✏️ de editar anuncio y reemplazá los títulos y descripciones por los que te generamos arriba con 1 clic.
-            </div>
-            <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
-              <span className="font-bold text-[#FF5500] block mb-1">3. Guardar y Enviar a Revisión</span>
-              Al guardar, Google Ads somete el anuncio al robot de revisión automática. En pocas horas pasará de <em>"No apta"</em> a <strong>"Apta / En circulación"</strong>.
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ============================================================== */}
