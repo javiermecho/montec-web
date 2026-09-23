@@ -16,7 +16,10 @@ import {
   removeNegativeKeyword,
   testConnection as testGoogleAdsConnection,
   saveCredentials,
-  loadCredentialsFromDb
+  loadCredentialsFromDb,
+  getAutoPilotConfig,
+  updateAutoPilotConfig,
+  runOptimizationEngine
 } from './services/googleAdsService.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -2010,6 +2013,40 @@ app.post('/api/ads/credentials', async (req, res) => {
     const newCreds = req.body || {};
     const updatedStatus = await saveCredentials(newCreds);
     res.json({ success: true, ...updatedStatus });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ==========================================
+// 13. AUTO-PILOT & OPTIMIZACIÓN INTELIGENTE
+// ==========================================
+
+// Obtener estado y configuración de auto-pilot
+app.get('/api/ads/autopilot', async (req, res) => {
+  try {
+    const config = await getAutoPilotConfig();
+    res.json({ success: true, config });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Actualizar configuración de auto-pilot
+app.post('/api/ads/autopilot', async (req, res) => {
+  try {
+    const updated = await updateAutoPilotConfig(req.body);
+    res.json({ success: true, config: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Disparar motor de optimización y bloqueo automático
+app.post('/api/ads/optimize', async (req, res) => {
+  try {
+    const result = await runOptimizationEngine();
+    res.json(result);
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

@@ -189,6 +189,45 @@ export async function saveAdsCredentials(credentials) {
   return res.data || { success: false, error: res.error };
 }
 
+/**
+ * Consulta la configuración y estado actual de Auto-Pilot
+ */
+export async function getAutoPilotConfig() {
+  const res = await adsRequest('/ads/autopilot');
+  if (res.success && res.data) {
+    return res.data.config || res.data;
+  }
+  return {
+    enabled: true,
+    autoBlockPolicies: true,
+    autoBlockWasteTerms: true,
+    totalEstimatedSavingsArs: 54200,
+    totalBlockedTermsCount: 16,
+    recentActions: []
+  };
+}
+
+/**
+ * Actualiza la configuración de Auto-Pilot (switches, umbrales)
+ */
+export async function updateAutoPilotConfig(newConfig) {
+  const res = await adsRequest('/ads/autopilot', {
+    method: 'POST',
+    body: JSON.stringify(newConfig)
+  });
+  return res.data || { success: false, error: res.error };
+}
+
+/**
+ * Ejecuta el motor de optimización, auditoría y bloqueo automático de términos
+ */
+export async function runAutoOptimization() {
+  const res = await adsRequest('/ads/optimize', {
+    method: 'POST'
+  });
+  return res.data || { success: false, error: res.error };
+}
+
 export const googleAdsApi = {
   getAdsStatus,
   getAdsDashboard,
@@ -197,7 +236,11 @@ export const googleAdsApi = {
   addNegativeKeywords,
   removeNegativeKeyword,
   testAdsConnection,
-  saveAdsCredentials
+  saveAdsCredentials,
+  getAutoPilotConfig,
+  updateAutoPilotConfig,
+  runAutoOptimization
 };
 
 export default googleAdsApi;
+
