@@ -13,4 +13,4 @@ cmds = [
 ]
 
 [start]
-cmd = "node backend/server.js"
+cmd = "node run-server.js"

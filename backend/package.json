@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
+    "start": "node run-server.js",
     "dev": "node --watch server.js",
     "scrape": "node scraper/index.js",
     "db:init": "node db/init.js"
