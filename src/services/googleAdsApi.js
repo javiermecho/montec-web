@@ -178,6 +178,17 @@ export async function testAdsConnection() {
   return res.data || { success: false, error: res.error };
 }
 
+/**
+ * Guarda o actualiza credenciales de Google Ads en el backend
+ */
+export async function saveAdsCredentials(credentials) {
+  const res = await adsRequest('/ads/credentials', {
+    method: 'POST',
+    body: JSON.stringify(credentials)
+  });
+  return res.data || { success: false, error: res.error };
+}
+
 export const googleAdsApi = {
   getAdsStatus,
   getAdsDashboard,
@@ -185,7 +196,8 @@ export const googleAdsApi = {
   getNegativeKeywords,
   addNegativeKeywords,
   removeNegativeKeyword,
-  testAdsConnection
+  testAdsConnection,
+  saveAdsCredentials
 };
 
 export default googleAdsApi;

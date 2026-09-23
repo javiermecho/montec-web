@@ -13,7 +13,9 @@ import {
   getNegativeKeywords,
   addNegativeKeywords,
   removeNegativeKeyword,
-  testConnection as testGoogleAdsConnection
+  testConnection as testGoogleAdsConnection,
+  saveCredentials,
+  loadCredentialsFromDb
 } from './services/googleAdsService.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -2001,6 +2003,17 @@ app.post('/api/ads/test-connection', async (req, res) => {
   }
 });
 
+// Guardar y sincronizar credenciales recibidas desde formulario o archivo JSON
+app.post('/api/ads/credentials', async (req, res) => {
+  try {
+    const newCreds = req.body || {};
+    const updatedStatus = await saveCredentials(newCreds);
+    res.json({ success: true, ...updatedStatus });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Inicio del servidor
 app.listen(PORT, async () => {
   console.log(`
@@ -2015,6 +2028,7 @@ app.listen(PORT, async () => {
   // Auto-verificación de tablas e índices en PostgreSQL
   try {
     await initDatabaseSchema();
+    await loadCredentialsFromDb();
   } catch (e) {
     console.warn('⚠️ No se pudo auto-inicializar esquema al arranque:', e.message);
   }

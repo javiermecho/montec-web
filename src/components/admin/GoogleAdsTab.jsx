@@ -22,7 +22,14 @@ import {
   MessageCircle,
   ArrowUpRight,
   Filter,
-  Check
+  Check,
+  Upload,
+  FileCode,
+  Key,
+  X,
+  XCircle,
+  HelpCircle,
+  FileText
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { googleAdsApi } from '../../services/googleAdsApi';
@@ -75,6 +82,19 @@ export default function GoogleAdsTab() {
   const [isSubmittingNegatives, setIsSubmittingNegatives] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
 
+  // Estados del modal de configuración y diagnóstico de credenciales
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [credsForm, setCredsForm] = useState({
+    clientId: '',
+    clientSecret: '',
+    refreshToken: '',
+    customerId: '18464752657',
+    developerToken: ''
+  });
+  const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [isSavingCreds, setIsSavingCreds] = useState(false);
+  const [diagResult, setDiagResult] = useState(null);
+
   // Notificación toast rápida
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -114,8 +134,10 @@ export default function GoogleAdsTab() {
   // Probar conexión en vivo
   const handleTestConnection = async () => {
     setTestingConnection(true);
+    setDiagResult(null);
     try {
       const res = await googleAdsApi.testAdsConnection();
+      setDiagResult(res);
       if (res.success) {
         showToast('✅ Conexión con Google Ads exitosa (' + (res.customer?.name || 'Montec') + ')');
       } else {
@@ -126,6 +148,62 @@ export default function GoogleAdsTab() {
       showToast('Error al probar conexión: ' + e.message);
     } finally {
       setTestingConnection(false);
+    }
+  };
+
+  // Procesar archivo JSON de credenciales descargado de Google Console
+  const handleJsonFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result);
+        const root = parsed.web || parsed.installed || parsed;
+        const cId = root.client_id || parsed.client_id || root.clientId || '';
+        const cSec = root.client_secret || parsed.client_secret || root.clientSecret || '';
+        const rTok = root.refresh_token || parsed.refresh_token || root.refreshToken || '';
+        const dTok = root.developer_token || parsed.developer_token || root.developerToken || '';
+        const custId = root.customer_id || parsed.customer_id || root.customerId || '';
+
+        setCredsForm(prev => ({
+          ...prev,
+          clientId: cId || prev.clientId,
+          clientSecret: cSec || prev.clientSecret,
+          refreshToken: rTok || prev.refreshToken,
+          developerToken: dTok || prev.developerToken,
+          customerId: custId ? custId.replace(/[^0-9]/g, '') : prev.customerId
+        }));
+
+        setUploadSuccess(`Archivo JSON "${file.name}" cargado exitosamente. Datos extraídos.`);
+        showToast('✅ Credenciales extraídas del JSON correctamente.');
+      } catch (err) {
+        alert('El archivo seleccionado no es un formato JSON válido.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Guardar credenciales en el backend
+  const handleSaveCredentials = async (e) => {
+    if (e) e.preventDefault();
+    setIsSavingCreds(true);
+    try {
+      const res = await googleAdsApi.saveAdsCredentials(credsForm);
+      if (res.success) {
+        showToast('✅ Credenciales guardadas en el servidor.');
+        // Ejecutar prueba de conexión automática
+        const testRes = await googleAdsApi.testAdsConnection();
+        setDiagResult(testRes);
+        await loadData(false);
+      } else {
+        showToast('Error al guardar credenciales: ' + (res.error || ''));
+      }
+    } catch (err) {
+      showToast('Error: ' + err.message);
+    } finally {
+      setIsSavingCreds(false);
     }
   };
 
@@ -359,6 +437,25 @@ export default function GoogleAdsTab() {
               </button>
             </div>
 
+            {/* Botón Adjuntar JSON / Configurar */}
+            <button
+              type="button"
+              onClick={() => {
+                setUploadSuccess(null);
+                setDiagResult(null);
+                setIsConfigModalOpen(true);
+              }}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-all cursor-pointer ${
+                isLight
+                  ? 'bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-900'
+                  : 'bg-[#FF5500]/15 hover:bg-[#FF5500]/25 border-[#FF5500]/40 text-[#FF5500]'
+              }`}
+              title="Adjuntar JSON de Google Cloud o configurar credenciales"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Adjuntar JSON / Credenciales</span>
+            </button>
+
             {/* Botón Test Conexión */}
             <button
               type="button"
@@ -393,12 +490,47 @@ export default function GoogleAdsTab() {
 
         {/* Diagnóstico si faltan credenciales o hay aviso */}
         {status && !status.isConfigured && (
-          <div className="mt-4 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs flex items-start gap-2.5">
-            <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
-            <div>
-              <span className="font-bold">Aviso de Configuración:</span> Faltan variables en el archivo <code className="bg-zinc-900 px-1 py-0.5 rounded text-amber-200">.env</code>: {status.missingVariables?.join(', ')}.
-              El panel está operando con métricas de demostración representativas de Montec. Para enlazar con tu cuenta real en Google, completa las credenciales OAuth2 y Developer Token.
+          <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+              <div>
+                <span className="font-bold text-amber-300">Diagnóstico de Configuración:</span> El panel está operando con métricas de demostración representativas de Montec. Para enlazar con tu cuenta real en Google, faltan las siguientes credenciales:
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-mono border ${
+                    status.hasClientId ? 'bg-emerald-950/60 text-emerald-300 border-emerald-700/60' : 'bg-rose-950/60 text-rose-300 border-rose-700/60'
+                  }`}>
+                    {status.hasClientId ? '✅ Client ID' : '❌ Client ID (Falta)'}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-mono border ${
+                    status.hasClientSecret ? 'bg-emerald-950/60 text-emerald-300 border-emerald-700/60' : 'bg-rose-950/60 text-rose-300 border-rose-700/60'
+                  }`}>
+                    {status.hasClientSecret ? '✅ Client Secret' : '❌ Client Secret (Falta)'}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-mono border ${
+                    status.hasRefreshToken ? 'bg-emerald-950/60 text-emerald-300 border-emerald-700/60' : 'bg-rose-950/80 text-rose-300 border-rose-600 font-bold'
+                  }`}>
+                    {status.hasRefreshToken ? '✅ Refresh Token' : '❌ Refresh Token (FALTA)'}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-mono border ${
+                    status.hasDeveloperToken ? 'bg-emerald-950/60 text-emerald-300 border-emerald-700/60' : 'bg-rose-950/80 text-rose-300 border-rose-600 font-bold'
+                  }`}>
+                    {status.hasDeveloperToken ? '✅ Developer Token' : '❌ Developer Token (FALTA)'}
+                  </span>
+                </div>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                setUploadSuccess(null);
+                setDiagResult(null);
+                setIsConfigModalOpen(true);
+              }}
+              className="px-3.5 py-2 rounded-xl bg-[#FF5500] hover:bg-[#FF5500]/90 text-white font-bold text-xs shrink-0 transition-all shadow-md flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Adjuntar JSON o Completar</span>
+            </button>
           </div>
         )}
       </div>
@@ -1042,6 +1174,230 @@ export default function GoogleAdsTab() {
           </div>
         </div>
       </div>
+
+      {/* ============================================================== */}
+      {/* MODAL: ADJUNTAR JSON Y CONFIGURACIÓN DE CREDENCIALES           */}
+      {/* ============================================================== */}
+      {isConfigModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className={`border rounded-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-6 shadow-2xl ${
+            isLight ? 'bg-white border-zinc-300 text-zinc-800' : 'bg-[#151518] border-zinc-700 text-zinc-100'
+          }`}>
+            {/* Header del Modal */}
+            <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-[#FF5500]/10 border border-[#FF5500]/30 text-[#FF5500]">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-heading font-bold text-white">
+                    Configuración de Credenciales Google Ads
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    Adjunta tu archivo JSON de Google Cloud o ingresa los tokens faltantes.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsConfigModalOpen(false)}
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* SECCIÓN 1: ADJUNTAR ARCHIVO JSON */}
+            <div className="mt-5 p-4 rounded-xl bg-zinc-900/80 border border-dashed border-zinc-700 hover:border-[#FF5500]/60 transition-colors text-center">
+              <Upload className="w-8 h-8 text-[#FF5500] mx-auto mb-2" />
+              <h4 className="text-sm font-bold text-white mb-1">
+                Subir archivo JSON descargado de Google Console
+              </h4>
+              <p className="text-xs text-zinc-400 mb-3 max-w-md mx-auto">
+                Selecciona el archivo <code className="text-amber-300">client_secret_xxxx.json</code> descargado de Google Cloud Console. El sistema extraerá automáticamente el Client ID y Client Secret.
+              </p>
+
+              <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF5500] hover:bg-[#FF5500]/90 text-white text-xs font-bold transition-all shadow-md cursor-pointer">
+                <FileCode className="w-4 h-4" />
+                <span>Seleccionar Archivo JSON</span>
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={handleJsonFileUpload}
+                  className="hidden"
+                />
+              </label>
+
+              {uploadSuccess && (
+                <div className="mt-3 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-medium flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>{uploadSuccess}</span>
+                </div>
+              )}
+            </div>
+
+            {/* SECCIÓN 2: FORMULARIO DE LAS 5 VARIABLES CLAVE */}
+            <form onSubmit={handleSaveCredentials} className="mt-5 space-y-3.5">
+              <h4 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold">
+                Estado y Valores de Conexión
+              </h4>
+
+              {/* 1. Client ID */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <label className="font-semibold text-zinc-300 flex items-center gap-1.5">
+                    1. Google Ads Client ID (OAuth2)
+                    {credsForm.clientId ? (
+                      <span className="text-[10px] text-emerald-400 font-bold">✅ Cargado</span>
+                    ) : (
+                      <span className="text-[10px] text-zinc-500">❌ Vacío</span>
+                    )}
+                  </label>
+                </div>
+                <input
+                  type="text"
+                  placeholder="ej: 123456789-ejemplo.apps.googleusercontent.com"
+                  value={credsForm.clientId}
+                  onChange={(e) => setCredsForm({ ...credsForm, clientId: e.target.value })}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-zinc-700 bg-zinc-950 text-white font-mono placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#FF5500]"
+                />
+              </div>
+
+              {/* 2. Client Secret */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <label className="font-semibold text-zinc-300 flex items-center gap-1.5">
+                    2. Google Ads Client Secret (OAuth2)
+                    {credsForm.clientSecret ? (
+                      <span className="text-[10px] text-emerald-400 font-bold">✅ Cargado</span>
+                    ) : (
+                      <span className="text-[10px] text-zinc-500">❌ Vacío</span>
+                    )}
+                  </label>
+                </div>
+                <input
+                  type="password"
+                  placeholder="ej: GOCSPX-clave_secreta_ejemplo"
+                  value={credsForm.clientSecret}
+                  onChange={(e) => setCredsForm({ ...credsForm, clientSecret: e.target.value })}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-zinc-700 bg-zinc-950 text-white font-mono placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#FF5500]"
+                />
+              </div>
+
+              {/* 3. Customer ID */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <label className="font-semibold text-zinc-300 flex items-center gap-1.5">
+                    3. Customer ID (ID de Cuenta Google Ads de Montec)
+                    <span className="text-[10px] text-emerald-400 font-bold">✅ 18464752657</span>
+                  </label>
+                </div>
+                <input
+                  type="text"
+                  placeholder="18464752657 (sin guiones)"
+                  value={credsForm.customerId}
+                  onChange={(e) => setCredsForm({ ...credsForm, customerId: e.target.value })}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-zinc-700 bg-zinc-950 text-white font-mono placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#FF5500]"
+                />
+              </div>
+
+              {/* 4. Developer Token */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <label className="font-semibold text-zinc-300 flex items-center gap-1.5">
+                    4. Developer Token de Google Ads
+                    {credsForm.developerToken ? (
+                      <span className="text-[10px] text-emerald-400 font-bold">✅ Cargado</span>
+                    ) : (
+                      <span className="text-[10px] text-rose-400 font-bold">❌ Pendiente</span>
+                    )}
+                  </label>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Pega aquí el Developer Token emitido por Google Ads Manager"
+                  value={credsForm.developerToken}
+                  onChange={(e) => setCredsForm({ ...credsForm, developerToken: e.target.value })}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-zinc-700 bg-zinc-950 text-white font-mono placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#FF5500]"
+                />
+                <p className="text-[11px] text-zinc-400 mt-1">
+                  💡 <em>¿Dónde se obtiene?</em> En tu cuenta de Google Ads &gt; <strong>Herramientas y Configuración &gt; Configuración &gt; Centro de la API</strong>.
+                </p>
+              </div>
+
+              {/* 5. Refresh Token */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <label className="font-semibold text-zinc-300 flex items-center gap-1.5">
+                    5. Refresh Token OAuth2
+                    {credsForm.refreshToken ? (
+                      <span className="text-[10px] text-emerald-400 font-bold">✅ Cargado</span>
+                    ) : (
+                      <span className="text-[10px] text-rose-400 font-bold">❌ Pendiente</span>
+                    )}
+                  </label>
+                </div>
+                <input
+                  type="password"
+                  placeholder="1//04xxxx... Token permanente de autorización"
+                  value={credsForm.refreshToken}
+                  onChange={(e) => setCredsForm({ ...credsForm, refreshToken: e.target.value })}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-zinc-700 bg-zinc-950 text-white font-mono placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#FF5500]"
+                />
+                <p className="text-[11px] text-zinc-400 mt-1">
+                  💡 <em>¿Cómo se genera?</em> Ejecuta en la terminal del proyecto: <code className="bg-zinc-900 px-1 py-0.5 rounded text-amber-300">node get_refresh_token.cjs</code>, abre el link en el navegador y autoriza la cuenta de Montec.
+                </p>
+              </div>
+
+              {/* Resultado del Diagnóstico si se probó */}
+              {diagResult && (
+                <div className={`p-4 rounded-xl text-xs border ${
+                  diagResult.success
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+                    : 'bg-rose-500/10 border-rose-500/30 text-rose-200'
+                }`}>
+                  <div className="flex items-center gap-2 font-bold mb-1">
+                    {diagResult.success ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-rose-400" />
+                    )}
+                    <span>Resultado de la Conexión con Google:</span>
+                  </div>
+                  <p>{diagResult.message || diagResult.error}</p>
+                  {diagResult.customer && (
+                    <p className="mt-1 font-mono text-[11px] text-emerald-300">
+                      Cuenta: {diagResult.customer.name} | Moneda: {diagResult.customer.currency}
+                    </p>
+                  )}
+                  {diagResult.note && (
+                    <p className="mt-1 text-zinc-400 italic text-[11px]">{diagResult.note}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Botones de acción */}
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setIsConfigModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
+                >
+                  Cerrar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingCreds}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#FF5500] hover:bg-[#FF5500]/90 text-white transition-all shadow-[0_0_20px_rgba(255,85,0,0.35)] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Key className="w-3.5 h-3.5" />
+                  <span>{isSavingCreds ? 'Guardando y Verificando...' : 'Guardar y Probar Conexión'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

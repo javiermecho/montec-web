@@ -3,10 +3,12 @@
  * montec.ar • Servicio Técnico & Marketing
  */
 
+import fs from 'fs';
 import { GoogleAdsApi, enums } from 'google-ads-api';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { query, isDbConnected } from '../db/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,14 +53,43 @@ function getCredentials() {
  */
 export function checkConnectionStatus() {
   const creds = getCredentials();
-  const missing = [];
+  
+  const isPlaceholder = (val) => !val || val.includes('tu_') || val.includes('TU_') || val.trim() === '';
 
-  if (!creds.clientId) missing.push('GOOGLE_ADS_CLIENT_ID');
-  if (!creds.clientSecret) missing.push('GOOGLE_ADS_CLIENT_SECRET');
-  if (!creds.refreshToken) missing.push('GOOGLE_ADS_REFRESH_TOKEN');
-  if (!creds.customerId) missing.push('GOOGLE_ADS_CUSTOMER_ID');
-  if (!creds.developerToken) missing.push('GOOGLE_ADS_DEVELOPER_TOKEN');
+  const variablesDetail = [
+    {
+      key: 'GOOGLE_ADS_CLIENT_ID',
+      label: 'Client ID OAuth2',
+      configured: !isPlaceholder(creds.clientId),
+      valuePreview: creds.clientId && !isPlaceholder(creds.clientId) ? `${creds.clientId.slice(0, 15)}...apps.googleusercontent.com` : 'No configurado (Vacío)'
+    },
+    {
+      key: 'GOOGLE_ADS_CLIENT_SECRET',
+      label: 'Client Secret OAuth2',
+      configured: !isPlaceholder(creds.clientSecret),
+      valuePreview: creds.clientSecret && !isPlaceholder(creds.clientSecret) ? 'GOCSPX-••••••••••••' : 'No configurado (Vacío)'
+    },
+    {
+      key: 'GOOGLE_ADS_REFRESH_TOKEN',
+      label: 'Refresh Token OAuth2',
+      configured: !isPlaceholder(creds.refreshToken),
+      valuePreview: creds.refreshToken && !isPlaceholder(creds.refreshToken) ? `${creds.refreshToken.slice(0, 7)}••••••••` : 'No configurado (Vacío)'
+    },
+    {
+      key: 'GOOGLE_ADS_CUSTOMER_ID',
+      label: 'Customer ID (ID Cuenta)',
+      configured: !isPlaceholder(creds.customerId) && creds.customerId.length >= 10,
+      valuePreview: creds.customerId ? `${creds.customerId.slice(0, 3)}-${creds.customerId.slice(3, 6)}-${creds.customerId.slice(6)}` : 'No configurado (Vacío)'
+    },
+    {
+      key: 'GOOGLE_ADS_DEVELOPER_TOKEN',
+      label: 'Developer Token de Google Ads',
+      configured: !isPlaceholder(creds.developerToken),
+      valuePreview: creds.developerToken && !isPlaceholder(creds.developerToken) ? `${creds.developerToken.slice(0, 4)}••••••••` : 'No configurado (Vacío)'
+    }
+  ];
 
+  const missing = variablesDetail.filter(v => !v.configured).map(v => v.key);
   const isConfigured = missing.length === 0;
 
   return {
@@ -66,11 +97,12 @@ export function checkConnectionStatus() {
     status: isConfigured ? 'ready' : 'incomplete_credentials',
     customerId: creds.customerId,
     formattedCustomerId: creds.customerId ? `${creds.customerId.slice(0, 3)}-${creds.customerId.slice(3, 6)}-${creds.customerId.slice(6)}` : '',
-    hasClientId: Boolean(creds.clientId),
-    hasClientSecret: Boolean(creds.clientSecret),
-    hasRefreshToken: Boolean(creds.refreshToken),
-    hasDeveloperToken: Boolean(creds.developerToken),
+    hasClientId: !isPlaceholder(creds.clientId),
+    hasClientSecret: !isPlaceholder(creds.clientSecret),
+    hasRefreshToken: !isPlaceholder(creds.refreshToken),
+    hasDeveloperToken: !isPlaceholder(creds.developerToken),
     missingVariables: missing,
+    variablesDetail,
     timestamp: new Date().toISOString()
   };
 }
@@ -666,6 +698,95 @@ export async function testConnection() {
   }
 }
 
+/**
+ * Carga credenciales guardadas previamente en la base de datos PostgreSQL
+ */
+export async function loadCredentialsFromDb() {
+  try {
+    const dbOk = await isDbConnected();
+    if (dbOk) {
+      const res = await query(`SELECT value FROM app_settings WHERE key = 'google_ads_credentials' LIMIT 1`);
+      if (res.rows && res.rows.length > 0) {
+        const stored = typeof res.rows[0].value === 'string' ? JSON.parse(res.rows[0].value) : res.rows[0].value;
+        if (stored.clientId) process.env.GOOGLE_ADS_CLIENT_ID = stored.clientId;
+        if (stored.clientSecret) process.env.GOOGLE_ADS_CLIENT_SECRET = stored.clientSecret;
+        if (stored.refreshToken) process.env.GOOGLE_ADS_REFRESH_TOKEN = stored.refreshToken;
+        if (stored.customerId) process.env.GOOGLE_ADS_CUSTOMER_ID = stored.customerId;
+        if (stored.developerToken) process.env.GOOGLE_ADS_DEVELOPER_TOKEN = stored.developerToken;
+        console.log('✅ Credenciales de Google Ads recuperadas desde app_settings (PostgreSQL).');
+      }
+    }
+  } catch (e) {
+    // Silencioso si la DB está offline
+  }
+}
+
+/**
+ * Guarda y actualiza credenciales recibidas desde el frontend o archivo JSON
+ */
+export async function saveCredentials(newCreds = {}) {
+  if (newCreds.clientId) process.env.GOOGLE_ADS_CLIENT_ID = newCreds.clientId.trim();
+  if (newCreds.clientSecret) process.env.GOOGLE_ADS_CLIENT_SECRET = newCreds.clientSecret.trim();
+  if (newCreds.refreshToken) process.env.GOOGLE_ADS_REFRESH_TOKEN = newCreds.refreshToken.trim();
+  if (newCreds.customerId) process.env.GOOGLE_ADS_CUSTOMER_ID = newCreds.customerId.replace(/[^0-9]/g, '');
+  if (newCreds.developerToken) process.env.GOOGLE_ADS_DEVELOPER_TOKEN = newCreds.developerToken.trim();
+
+  // 1. Guardar en PostgreSQL si está disponible
+  try {
+    const dbOk = await isDbConnected();
+    if (dbOk) {
+      const payload = JSON.stringify({
+        clientId: process.env.GOOGLE_ADS_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_ADS_CLIENT_SECRET,
+        refreshToken: process.env.GOOGLE_ADS_REFRESH_TOKEN,
+        customerId: process.env.GOOGLE_ADS_CUSTOMER_ID,
+        developerToken: process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
+        updatedAt: new Date().toISOString()
+      });
+      await query(
+        `INSERT INTO app_settings (key, value, updated_at)
+         VALUES ($1, $2, CURRENT_TIMESTAMP)
+         ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP`,
+        ['google_ads_credentials', payload]
+      );
+    }
+  } catch (dbErr) {
+    console.warn('⚠️ No se pudo guardar credenciales en app_settings:', dbErr.message);
+  }
+
+  // 2. Intentar actualizar archivo .env local si existe
+  try {
+    const envPaths = [
+      path.resolve(__dirname, '../.env'),
+      path.resolve(__dirname, '../../.env')
+    ];
+    for (const p of envPaths) {
+      if (fs.existsSync(p)) {
+        let content = fs.readFileSync(p, 'utf8');
+        const updateKey = (key, val) => {
+          if (!val) return;
+          const regex = new RegExp(`^${key}=.*$`, 'm');
+          if (regex.test(content)) {
+            content = content.replace(regex, `${key}=${val}`);
+          } else {
+            content += `\n${key}=${val}`;
+          }
+        };
+        updateKey('GOOGLE_ADS_CLIENT_ID', process.env.GOOGLE_ADS_CLIENT_ID);
+        updateKey('GOOGLE_ADS_CLIENT_SECRET', process.env.GOOGLE_ADS_CLIENT_SECRET);
+        updateKey('GOOGLE_ADS_REFRESH_TOKEN', process.env.GOOGLE_ADS_REFRESH_TOKEN);
+        updateKey('GOOGLE_ADS_CUSTOMER_ID', process.env.GOOGLE_ADS_CUSTOMER_ID);
+        updateKey('GOOGLE_ADS_DEVELOPER_TOKEN', process.env.GOOGLE_ADS_DEVELOPER_TOKEN);
+        fs.writeFileSync(p, content, 'utf8');
+      }
+    }
+  } catch (fsErr) {
+    // Si el filesystem no permite escritura directa, continúa
+  }
+
+  return checkConnectionStatus();
+}
+
 export default {
   checkConnectionStatus,
   getDashboardMetrics,
@@ -673,5 +794,7 @@ export default {
   getNegativeKeywords,
   addNegativeKeywords,
   removeNegativeKeyword,
-  testConnection
+  testConnection,
+  saveCredentials,
+  loadCredentialsFromDb
 };
