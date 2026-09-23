@@ -1049,18 +1049,25 @@ export default function GoogleAdsTab() {
             <div className="flex items-center gap-2">
               <Layers className="w-5 h-5 text-[#FF5500]" />
               <h3 className={`text-base sm:text-lg font-heading font-bold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
-                Campañas Activas en Google Ads ({dashboard?.campaigns?.length || 0})
+                Campañas en Google Ads ({dashboard?.campaigns?.length || 0})
               </h3>
             </div>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Campañas de búsqueda publicitaria operando en Mar del Plata.
+              Historial de campañas y rendimiento en Mar del Plata.
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Google Search Network Activo</span>
-            </span>
+            {dashboard?.campaigns?.some(c => c.status === 'ENABLED') ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Google Search Activo</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-400 border border-zinc-700">
+                <span className="w-2 h-2 rounded-full bg-zinc-500" />
+                <span>Sin Campañas Activas (Histórico)</span>
+              </span>
+            )}
           </div>
         </div>
 
@@ -1090,18 +1097,35 @@ export default function GoogleAdsTab() {
                       <h4 className={`text-sm font-bold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
                         {camp.name}
                       </h4>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span>{camp.status === 'ENABLED' ? 'Activa / En Circulación' : camp.status}</span>
-                      </span>
+                      {camp.status === 'REMOVED' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                          <XCircle className="w-3 h-3 text-rose-400" />
+                          <span>Eliminada en Google Ads (Datos Históricos)</span>
+                        </span>
+                      ) : camp.status === 'PAUSED' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                          <AlertCircle className="w-3 h-3 text-amber-400" />
+                          <span>Pausada</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Activa / En Circulación</span>
+                        </span>
+                      )}
                       <span className="px-2 py-0.5 rounded text-[10px] font-mono text-zinc-400 bg-zinc-800/60">
-                        Mar del Plata & Alrededores
+                        ID: {camp.id}
                       </span>
                     </div>
+                    {camp.status === 'REMOVED' && (
+                      <p className="text-[11px] text-zinc-400 mt-1 italic">
+                        ⚠️ Esta campaña ya fue borrada en Google Ads. Las métricas reflejan el tráfico histórico acumulado antes de su eliminación.
+                      </p>
+                    )}
                     <div className="mt-1 flex items-center gap-3 text-xs text-zinc-400 flex-wrap">
                       <span>Tipo: <strong className="text-zinc-300 font-medium">Búsqueda (Search)</strong></span>
                       <span>•</span>
-                      <span>Presupuesto diario: <strong className="text-zinc-300 font-medium">${(camp.dailyBudgetArs || kpis.dailyBudgetArs || 2069).toLocaleString('es-AR')}/día</strong></span>
+                      <span>Presupuesto: <strong className="text-zinc-300 font-medium">${(camp.dailyBudgetArs || kpis.dailyBudgetArs || 2069).toLocaleString('es-AR')}/día</strong></span>
                       <span>•</span>
                       <span>Moneda: <strong className="text-zinc-300 font-medium">ARS ($)</strong></span>
                     </div>

@@ -220,55 +220,39 @@ async function fetchWindsorGoogleAdsData(period = 'last_7_days') {
       label = 'Últimos 30 días';
     }
 
-    const url = `https://connectors.windsor.ai/google_ads?api_key=${apiKey}&date_preset=${preset}&fields=campaign,spend,clicks,impressions,cpc,ctr,conversions&_renderer=json`;
+    const url = `https://connectors.windsor.ai/google_ads?api_key=${apiKey}&date_preset=${preset}&fields=campaign,campaign_id,campaign_status,spend,clicks,impressions,cpc,ctr,conversions&_renderer=json`;
     const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) return null;
 
     const body = await res.json();
     if (!body || !Array.isArray(body.data) || body.data.length === 0) {
       if (period === 'today') {
-        // Fallback a últimos 7 días con ponderación si hoy aún no cerró métricas
-        const weekRes = await fetch(`https://connectors.windsor.ai/google_ads?api_key=${apiKey}&date_preset=last_7d&fields=campaign,spend,clicks,impressions,cpc,ctr,conversions&_renderer=json`, { signal: AbortSignal.timeout(8000) });
-        const weekBody = await weekRes.json();
-        if (weekBody?.data?.length > 0) {
-          const row = weekBody.data[0];
-          const todaySpend = Math.round((Number(row.spend || 0) / 7));
-          const todayClicks = Math.round((Number(row.clicks || 0) / 7));
-          const todayImpr = Math.round((Number(row.impressions || 0) / 7));
-          return {
-            period: 'today',
-            periodLabel: 'Hoy (Estimado del día)',
-            isSimulated: false,
-            isLiveAccountData: true,
-            dataSource: 'Windsor.ai (Google Ads Live)',
-            currency: 'ARS',
-            campaigns: [{
-              id: 'camp-real-1',
-              name: row.campaign || 'Reparación Celulares MDP - Constitucion',
-              status: 'ENABLED',
-              dailyBudgetArs: 15000,
-              clicks: todayClicks,
-              impressions: todayImpr,
-              costArs: todaySpend
-            }],
-            kpis: {
-              dailyBudgetArs: 15000,
-              totalCostArs: todaySpend,
-              budgetConsumedPercent: Math.min(100, Math.round((todaySpend / 15000) * 100)),
-              clicks: todayClicks,
-              impressions: todayImpr,
-              ctrPercent: Number((Number(row.ctr || 0.037) * 100).toFixed(2)),
-              avgCpcArs: Number((Number(row.cpc || 28.2)).toFixed(2)),
-              conversions: {
-                total: Math.max(1, Math.round(todayClicks * 0.12)),
-                whatsapp: Math.max(1, Math.round(todayClicks * 0.09)),
-                calls: Math.max(0, Math.round(todayClicks * 0.03)),
-                costPerConversionArs: Math.round(todaySpend / Math.max(1, Math.round(todayClicks * 0.12))),
-                conversionRatePercent: 12.0
-              }
+        return {
+          period: 'today',
+          periodLabel: 'Hoy',
+          isSimulated: false,
+          isLiveAccountData: true,
+          dataSource: 'Windsor.ai (Google Ads Live)',
+          currency: 'ARS',
+          campaigns: [],
+          kpis: {
+            dailyBudgetArs: 0,
+            totalCostArs: 0,
+            budgetConsumedPercent: 0,
+            clicks: 0,
+            impressions: 0,
+            ctrPercent: 0,
+            avgCpcArs: 0,
+            conversions: {
+              total: 0,
+              whatsapp: 0,
+              calls: 0,
+              costPerConversionArs: 0,
+              conversionRatePercent: 0
             }
-          };
-        }
+          },
+          note: 'No se detectó actividad ni gasto publicitario en el día de hoy.'
+        };
       }
       return null;
     }
@@ -287,10 +271,14 @@ async function fetchWindsorGoogleAdsData(period = 'last_7_days') {
       totalClicks += clicks;
       totalImpressions += impressions;
 
+      const rawStatus = (row.campaign_status || 'ENABLED').toUpperCase();
+      const status = rawStatus === 'REMOVED' ? 'REMOVED' : (rawStatus === 'PAUSED' ? 'PAUSED' : 'ENABLED');
+
       campaigns.push({
-        id: 'real-camp-' + (campaigns.length + 1),
-        name: row.campaign || 'Reparación Celulares MDP - Constitucion',
-        status: 'ENABLED',
+        id: row.campaign_id || ('real-camp-' + (campaigns.length + 1)),
+        name: row.campaign || 'Campaña de Búsqueda',
+        status: status,
+        isRemoved: status === 'REMOVED',
         dailyBudgetArs: Math.round(spend / (period === 'last_30_days' ? 30 : 7)) || 10000,
         clicks,
         impressions,
