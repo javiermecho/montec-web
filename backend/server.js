@@ -2014,8 +2014,8 @@ app.post('/api/ads/credentials', async (req, res) => {
   }
 });
 
-// Inicio del servidor
-app.listen(PORT, async () => {
+// Inicio del servidor en 0.0.0.0 para compatibilidad total con contenedores (Railway, Docker)
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`
   ⚡ ======================================================== ⚡
      montec API Server & Scraper Engine
