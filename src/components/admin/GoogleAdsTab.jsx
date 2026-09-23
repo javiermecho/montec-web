@@ -668,6 +668,111 @@ export default function GoogleAdsTab() {
       </div>
 
       {/* ============================================================== */}
+      {/* SECCIÓN: CAMPAÑAS ACTIVAS DE GOOGLE ADS                        */}
+      {/* ============================================================== */}
+      <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
+        isLight
+          ? 'bg-white border-zinc-200 shadow-sm'
+          : 'bg-[#141416] border-zinc-800'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800/80">
+          <div>
+            <div className="flex items-center gap-2">
+              <Layers className="w-5 h-5 text-[#FF5500]" />
+              <h3 className={`text-base sm:text-lg font-heading font-bold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+                Campañas Activas en Google Ads ({dashboard?.campaigns?.length || 0})
+              </h3>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Campañas de búsqueda publicitaria operando en Mar del Plata.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Google Search Network Activo</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Listado de Campañas */}
+        <div className="mt-4 space-y-3">
+          {(!dashboard?.campaigns || dashboard.campaigns.length === 0) ? (
+            <div className="py-8 text-center text-zinc-500 text-xs">
+              No se detectaron campañas activas para el período seleccionado.
+            </div>
+          ) : (
+            dashboard.campaigns.map((camp, idx) => (
+              <div
+                key={camp.id || idx}
+                className={`p-4 rounded-xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                  isLight
+                    ? 'bg-zinc-50 border-zinc-200 hover:border-zinc-300'
+                    : 'bg-[#18181c] border-zinc-800/80 hover:border-zinc-700'
+                }`}
+              >
+                {/* Info Principal de Campaña */}
+                <div className="flex items-start gap-3">
+                  <div className="p-2.5 rounded-xl bg-[#FF5500]/10 border border-[#FF5500]/20 text-[#FF5500] shrink-0 mt-0.5">
+                    <Target className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className={`text-sm font-bold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+                        {camp.name}
+                      </h4>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>{camp.status === 'ENABLED' ? 'Activa / En Circulación' : camp.status}</span>
+                      </span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono text-zinc-400 bg-zinc-800/60">
+                        Mar del Plata & Alrededores
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-3 text-xs text-zinc-400 flex-wrap">
+                      <span>Tipo: <strong className="text-zinc-300 font-medium">Búsqueda (Search)</strong></span>
+                      <span>•</span>
+                      <span>Presupuesto diario: <strong className="text-zinc-300 font-medium">${(camp.dailyBudgetArs || kpis.dailyBudgetArs || 2069).toLocaleString('es-AR')}/día</strong></span>
+                      <span>•</span>
+                      <span>Moneda: <strong className="text-zinc-300 font-medium">ARS ($)</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Métricas clave de la campaña */}
+                <div className="flex items-center gap-4 sm:gap-6 shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-zinc-800/60">
+                  <div className="text-left md:text-right">
+                    <span className="text-[11px] text-zinc-400 block">Gasto Período</span>
+                    <span className="text-sm font-bold text-amber-400 font-mono">
+                      ${(camp.costArs || kpis.totalCostArs || 0).toLocaleString('es-AR')}
+                    </span>
+                  </div>
+                  <div className="text-left md:text-right">
+                    <span className="text-[11px] text-zinc-400 block">Clics</span>
+                    <span className="text-sm font-bold text-blue-400 font-mono">
+                      {(camp.clicks || kpis.clicks || 0).toLocaleString('es-AR')}
+                    </span>
+                  </div>
+                  <div className="text-left md:text-right">
+                    <span className="text-[11px] text-zinc-400 block">Impresiones</span>
+                    <span className="text-sm font-bold text-zinc-300 font-mono">
+                      {(camp.impressions || kpis.impressions || 0).toLocaleString('es-AR')}
+                    </span>
+                  </div>
+                  <div className="text-left md:text-right">
+                    <span className="text-[11px] text-zinc-400 block">CPC Prom.</span>
+                    <span className="text-sm font-bold text-emerald-400 font-mono">
+                      ${camp.clicks > 0 ? Math.round(camp.costArs / camp.clicks) : kpis.avgCpcArs}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* ============================================================== */}
       {/* SECCIÓN B: TABLA DE TÉRMINOS DE BÚSQUEDA REALES (SEARCH TERMS)  */}
       {/* ============================================================== */}
       <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
