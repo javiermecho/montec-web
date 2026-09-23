@@ -1,0 +1,13 @@
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = [
+  "npm install --no-audit --no-fund"
+]
+
+[phases.build]
+cmds = []
+
+[start]
+cmd = "node run-server.js"
