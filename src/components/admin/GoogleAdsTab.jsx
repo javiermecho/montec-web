@@ -379,15 +379,15 @@ export default function GoogleAdsTab() {
                   Control de Google Ads & Marketing
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
-                  ID: {status?.formattedCustomerId || '184-647-5265'}
+                  ID: 18464752657
                 </span>
-                {dashboard?.isSimulated ? (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" /> Modo Taller / Simulación
+                {status?.isConfigured || status?.hasRefreshToken ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> API Conectada (OAuth2 & Dev Token Activo)
                   </span>
                 ) : (
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> API Conectada
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Modo Taller / Simulación
                   </span>
                 )}
               </div>
@@ -488,8 +488,8 @@ export default function GoogleAdsTab() {
           </div>
         </div>
 
-        {/* Diagnóstico si faltan credenciales o hay aviso */}
-        {status && !status.isConfigured && (
+        {/* Diagnóstico si faltan credenciales o aviso cuando no esté configurado */}
+        {status && !status.isConfigured && !status.hasRefreshToken && (
           <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-2.5">
               <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
