@@ -1,0 +1,1047 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  TrendingUp,
+  Target,
+  DollarSign,
+  MousePointer,
+  Eye,
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
+  RefreshCw,
+  Plus,
+  Trash2,
+  Search,
+  ExternalLink,
+  ShieldCheck,
+  ShieldAlert,
+  Info,
+  Layers,
+  Sparkles,
+  PhoneCall,
+  MessageCircle,
+  ArrowUpRight,
+  Filter,
+  Check
+} from 'lucide-react';
+import { useData } from '../../context/DataContext';
+import { googleAdsApi } from '../../services/googleAdsApi';
+
+// Palabras prohibidas o riesgosas para servicios técnicos independientes
+const RISKY_POLICY_WORDS = [
+  { word: 'oficial', reason: 'Google prohíbe alegar ser servicio oficial si se es técnico independiente.' },
+  { word: 'autorizado', reason: 'Puede provocar suspensión permanente por suplantación de identidad.' },
+  { word: 'apple store', reason: 'Infracción marcaria directa en textos de anuncios.' },
+  { word: 'servicio oficial', reason: 'Violación directa de políticas de soporte de terceros.' },
+  { word: 'servicio autorizado', reason: 'Violación directa de políticas de soporte de terceros.' },
+  { word: 'icloud', reason: 'Término de alto riesgo asociado a evasión de bloqueos de seguridad.' },
+  { word: 'desbloqueo', reason: 'Google Ads prohíbe anuncios de desbloqueo de dispositivos o cuentas.' },
+  { word: 'desbloquear', reason: 'Prohibido por políticas de elusión de sistemas de seguridad.' },
+  { word: 'imei', reason: 'Prohibido explícitamente por Google (servicios de modificación/reparación de IMEI).' },
+  { word: 'by-pass', reason: 'Asociado a software o procedimientos ilícitos de evasión.' },
+  { word: 'bypass', reason: 'Asociado a software o procedimientos ilícitos de evasión.' },
+  { word: 'frp', reason: 'Evasión de bloqueo de restablecimiento de fábrica (Google Lock).' }
+];
+
+export default function GoogleAdsTab() {
+  const { panelTheme } = useData();
+  const isLight = panelTheme === 'light';
+
+  // Estados de control
+  const [period, setPeriod] = useState('last_7_days'); // 'today' | 'last_7_days' | 'last_30_days'
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  // Estados de datos
+  const [status, setStatus] = useState(null);
+  const [dashboard, setDashboard] = useState(null);
+  const [searchTerms, setSearchTerms] = useState([]);
+  const [negativeKeywords, setNegativeKeywords] = useState([]);
+  const [termFilter, setTermFilter] = useState('');
+
+  // Estados del validador de anuncios
+  const [adForm, setAdForm] = useState({
+    title1: 'Reparación de Celulares en MDP',
+    title2: 'Taller Especializado Montec',
+    title3: 'Presupuesto en el Acto',
+    desc1: 'Servicio técnico especializado multimarcas. Pantallas, baterías y pines en Montes Carballo 943.',
+    desc2: 'Garantía escrita en todas las reparaciones. Consultá por WhatsApp ahora mismo.'
+  });
+
+  // Estados para agregar palabras negativas
+  const [newNegativesInput, setNewNegativesInput] = useState('');
+  const [matchType, setMatchType] = useState('PHRASE');
+  const [isSubmittingNegatives, setIsSubmittingNegatives] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
+
+  // Notificación toast rápida
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Carga general de datos
+  const loadData = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
+    else setIsRefreshing(true);
+
+    try {
+      const [statusRes, dashRes, termsRes, negRes] = await Promise.all([
+        googleAdsApi.getAdsStatus(),
+        googleAdsApi.getAdsDashboard(period),
+        googleAdsApi.getAdsSearchTerms(period),
+        googleAdsApi.getNegativeKeywords()
+      ]);
+
+      setStatus(statusRes);
+      setDashboard(dashRes);
+      setSearchTerms(termsRes?.terms || []);
+      setNegativeKeywords(negRes?.negativeKeywords || []);
+    } catch (e) {
+      console.error('Error cargando módulo de Google Ads:', e);
+      showToast('Error al actualizar datos de Google Ads');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData(true);
+  }, [period]);
+
+  // Probar conexión en vivo
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    try {
+      const res = await googleAdsApi.testAdsConnection();
+      if (res.success) {
+        showToast('✅ Conexión con Google Ads exitosa (' + (res.customer?.name || 'Montec') + ')');
+      } else {
+        showToast('⚠️ Estado: ' + (res.message || res.error || 'Credenciales pendientes'));
+      }
+      loadData(false);
+    } catch (e) {
+      showToast('Error al probar conexión: ' + e.message);
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
+  // Acción rápida: Bloquear término de búsqueda como negativo
+  const handleBlockSearchTerm = async (termText) => {
+    try {
+      const clean = termText.trim();
+      const res = await googleAdsApi.addNegativeKeywords([clean], 'PHRASE');
+      if (res.success) {
+        showToast(`🚫 "${clean}" agregada como palabra clave negativa.`);
+        // Marcar en la lista local como bloqueada
+        setSearchTerms(prev =>
+          prev.map(t => (t.term === termText ? { ...t, isBlocked: true } : t))
+        );
+        // Actualizar listado de negativas
+        const updated = await googleAdsApi.getNegativeKeywords();
+        if (updated?.negativeKeywords) setNegativeKeywords(updated.negativeKeywords);
+      } else {
+        showToast('Error al bloquear: ' + (res.error || 'Intente nuevamente'));
+      }
+    } catch (e) {
+      showToast('Error: ' + e.message);
+    }
+  };
+
+  // Agregar palabras negativas masivas o individuales
+  const handleAddNegatives = async (e) => {
+    if (e) e.preventDefault();
+    if (!newNegativesInput.trim()) return;
+
+    setIsSubmittingNegatives(true);
+    try {
+      const words = newNegativesInput
+        .split(/[,\n]/)
+        .map(w => w.trim())
+        .filter(Boolean);
+
+      const res = await googleAdsApi.addNegativeKeywords(words, matchType);
+      if (res.success) {
+        showToast(`✅ Se agregaron ${res.addedCount || words.length} palabras negativas.`);
+        setNewNegativesInput('');
+        const updated = await googleAdsApi.getNegativeKeywords();
+        if (updated?.negativeKeywords) setNegativeKeywords(updated.negativeKeywords);
+      } else {
+        showToast('Error: ' + (res.error || 'No se pudieron agregar'));
+      }
+    } catch (e) {
+      showToast('Error: ' + e.message);
+    } finally {
+      setIsSubmittingNegatives(false);
+    }
+  };
+
+  // Agregar sugerencia predefinida
+  const handleAddQuickNegative = async (word) => {
+    try {
+      const res = await googleAdsApi.addNegativeKeywords([word], 'PHRASE');
+      if (res.success) {
+        showToast(`✅ "${word}" agregada como negativa.`);
+        const updated = await googleAdsApi.getNegativeKeywords();
+        if (updated?.negativeKeywords) setNegativeKeywords(updated.negativeKeywords);
+      }
+    } catch (e) {
+      showToast('Error: ' + e.message);
+    }
+  };
+
+  // Eliminar palabra negativa
+  const handleRemoveNegative = async (item) => {
+    if (!window.confirm(`¿Quitar "${item.text}" de la lista de negativas?`)) return;
+    try {
+      const res = await googleAdsApi.removeNegativeKeyword(item.id || item.text);
+      if (res.success) {
+        showToast(`Palabra "${item.text}" eliminada.`);
+        setNegativeKeywords(prev => prev.filter(k => k.id !== item.id && k.text !== item.text));
+      } else {
+        showToast('Error al eliminar');
+      }
+    } catch (e) {
+      showToast('Error: ' + e.message);
+    }
+  };
+
+  // Análisis de cumplimiento de políticas en el formulario de anuncios
+  const policyAnalysis = useMemo(() => {
+    const fullText = `${adForm.title1} ${adForm.title2} ${adForm.title3} ${adForm.desc1} ${adForm.desc2}`.toLowerCase();
+    const violations = [];
+
+    for (const rule of RISKY_POLICY_WORDS) {
+      // Regex con límites de palabra para evitar falsos positivos
+      const regex = new RegExp(`\\b${rule.word}\\b`, 'i');
+      if (regex.test(fullText)) {
+        violations.push(rule);
+      }
+    }
+
+    const title1Over = adForm.title1.length > 30;
+    const title2Over = adForm.title2.length > 30;
+    const title3Over = adForm.title3.length > 30;
+    const desc1Over = adForm.desc1.length > 90;
+    const desc2Over = adForm.desc2.length > 90;
+
+    const hasLengthError = title1Over || title2Over || title3Over || desc1Over || desc2Over;
+
+    return {
+      violations,
+      hasViolations: violations.length > 0,
+      hasLengthError,
+      isClean: violations.length === 0 && !hasLengthError,
+      lengths: {
+        t1: adForm.title1.length,
+        t2: adForm.title2.length,
+        t3: adForm.title3.length,
+        d1: adForm.desc1.length,
+        d2: adForm.desc2.length
+      }
+    };
+  }, [adForm]);
+
+  // Filtrado de términos de búsqueda
+  const filteredSearchTerms = useMemo(() => {
+    if (!termFilter.trim()) return searchTerms;
+    const q = termFilter.toLowerCase();
+    return searchTerms.filter(t =>
+      t.term.toLowerCase().includes(q) ||
+      t.campaign.toLowerCase().includes(q)
+    );
+  }, [searchTerms, termFilter]);
+
+  const kpis = dashboard?.kpis || {
+    dailyBudgetArs: 18000,
+    totalCostArs: 118400,
+    budgetConsumedPercent: 94,
+    clicks: 168,
+    impressions: 2436,
+    ctrPercent: 6.9,
+    avgCpcArs: 705,
+    conversions: {
+      total: 54,
+      whatsapp: 41,
+      calls: 13,
+      costPerConversionArs: 2192,
+      conversionRatePercent: 32.1
+    }
+  };
+
+  return (
+    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl bg-[#FF5500] text-white text-xs sm:text-sm font-semibold shadow-[0_0_25px_rgba(255,85,0,0.5)] animate-bounce">
+          <Check className="w-4 h-4" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* ENCABEZADO Y BARRA DE ESTADO DE LA CONEXIÓN                    */}
+      {/* ============================================================== */}
+      <div className={`p-5 sm:p-6 rounded-2xl border backdrop-blur-md transition-colors ${
+        isLight
+          ? 'bg-white/80 border-zinc-200 shadow-sm'
+          : 'bg-[#121214] border-zinc-800 shadow-xl'
+      }`}>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="p-3 rounded-2xl bg-[#FF5500]/10 border border-[#FF5500]/25 text-[#FF5500] shadow-[0_0_20px_rgba(255,85,0,0.15)] shrink-0">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className={`text-xl sm:text-2xl font-heading font-extrabold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+                  Control de Google Ads & Marketing
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                  ID: {status?.formattedCustomerId || '184-647-5265'}
+                </span>
+                {dashboard?.isSimulated ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" /> Modo Taller / Simulación
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> API Conectada
+                  </span>
+                )}
+              </div>
+              <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+                Monitoreo en tiempo real del gasto publicitario, términos de búsqueda en Mar del Plata y optimización de conversión.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 sm:self-end lg:self-center">
+            {/* Selector de Período */}
+            <div className={`flex rounded-xl p-1 border ${
+              isLight ? 'bg-zinc-100 border-zinc-200' : 'bg-zinc-900 border-zinc-800'
+            }`}>
+              <button
+                type="button"
+                onClick={() => setPeriod('today')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  period === 'today'
+                    ? 'bg-[#FF5500] text-white shadow-sm'
+                    : isLight ? 'text-zinc-600 hover:text-black' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                Hoy
+              </button>
+              <button
+                type="button"
+                onClick={() => setPeriod('last_7_days')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  period === 'last_7_days'
+                    ? 'bg-[#FF5500] text-white shadow-sm'
+                    : isLight ? 'text-zinc-600 hover:text-black' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                7 días
+              </button>
+              <button
+                type="button"
+                onClick={() => setPeriod('last_30_days')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  period === 'last_30_days'
+                    ? 'bg-[#FF5500] text-white shadow-sm'
+                    : isLight ? 'text-zinc-600 hover:text-black' : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                30 días
+              </button>
+            </div>
+
+            {/* Botón Test Conexión */}
+            <button
+              type="button"
+              onClick={handleTestConnection}
+              disabled={testingConnection}
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-all cursor-pointer ${
+                isLight
+                  ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-300 text-zinc-800'
+                  : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-200'
+              }`}
+            >
+              <Target className={`w-3.5 h-3.5 text-[#FF5500] ${testingConnection ? 'animate-spin' : ''}`} />
+              <span>{testingConnection ? 'Probando...' : 'Test Conexión'}</span>
+            </button>
+
+            {/* Botón Refrescar */}
+            <button
+              type="button"
+              onClick={() => loadData(false)}
+              disabled={isRefreshing}
+              className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center transition-all cursor-pointer ${
+                isLight
+                  ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-300 text-zinc-700'
+                  : 'bg-zinc-900 hover:bg-zinc-800 border-zinc-700 text-zinc-300'
+              }`}
+              title="Refrescar métricas"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#FF5500]' : ''}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Diagnóstico si faltan credenciales o hay aviso */}
+        {status && !status.isConfigured && (
+          <div className="mt-4 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs flex items-start gap-2.5">
+            <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+            <div>
+              <span className="font-bold">Aviso de Configuración:</span> Faltan variables en el archivo <code className="bg-zinc-900 px-1 py-0.5 rounded text-amber-200">.env</code>: {status.missingVariables?.join(', ')}.
+              El panel está operando con métricas de demostración representativas de Montec. Para enlazar con tu cuenta real en Google, completa las credenciales OAuth2 y Developer Token.
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ============================================================== */}
+      {/* SECCIÓN A: TARJETAS DE MÉTRICAS EN TIEMPO REAL (KPIS)           */}
+      {/* ============================================================== */}
+      <div>
+        <div className="flex items-center justify-between mb-3.5">
+          <h3 className={`text-sm sm:text-base font-heading font-bold uppercase tracking-wider ${
+            isLight ? 'text-zinc-700' : 'text-zinc-400'
+          }`}>
+            Métricas de Rendimiento ({dashboard?.periodLabel || 'Período'})
+          </h3>
+          <span className="text-xs text-zinc-500">
+            Valores monetarios expresados en Pesos Argentinos (ARS)
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* TARJETA 1: Gasto y Presupuesto */}
+          <div className={`p-5 rounded-2xl border transition-all ${
+            isLight
+              ? 'bg-white border-zinc-200 shadow-sm'
+              : 'bg-[#141416] border-zinc-800 hover:border-zinc-700'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-400">Gasto Acumulado</span>
+              <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <DollarSign className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className={`text-2xl sm:text-3xl font-heading font-extrabold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+                ${kpis.totalCostArs.toLocaleString('es-AR')}
+              </span>
+              <span className="text-xs font-mono text-zinc-400">ARS</span>
+            </div>
+            <div className="mt-3">
+              <div className="flex justify-between text-xs text-zinc-400 mb-1">
+                <span>Presupuesto diario:</span>
+                <span className="font-semibold text-zinc-300">${kpis.dailyBudgetArs.toLocaleString('es-AR')}/día</span>
+              </div>
+              <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-500 to-[#FF5500] rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, kpis.budgetConsumedPercent)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* TARJETA 2: Clics e Impresiones */}
+          <div className={`p-5 rounded-2xl border transition-all ${
+            isLight
+              ? 'bg-white border-zinc-200 shadow-sm'
+              : 'bg-[#141416] border-zinc-800 hover:border-zinc-700'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-400">Clics Recibidos</span>
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <MousePointer className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className={`text-2xl sm:text-3xl font-heading font-extrabold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+                {kpis.clicks.toLocaleString('es-AR')}
+              </span>
+              <span className="text-xs text-emerald-400 font-semibold flex items-center">
+                CTR {kpis.ctrPercent}%
+              </span>
+            </div>
+            <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
+              <span className="flex items-center gap-1">
+                <Eye className="w-3.5 h-3.5 text-zinc-500" /> Impresiones:
+              </span>
+              <span className="font-semibold text-zinc-300 font-mono">
+                {kpis.impressions.toLocaleString('es-AR')}
+              </span>
+            </div>
+          </div>
+
+          {/* TARJETA 3: Costo Promedio por Clic (CPC) */}
+          <div className={`p-5 rounded-2xl border transition-all ${
+            isLight
+              ? 'bg-white border-zinc-200 shadow-sm'
+              : 'bg-[#141416] border-zinc-800 hover:border-zinc-700'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-400">Costo Promedio (CPC)</span>
+              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                <Target className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className={`text-2xl sm:text-3xl font-heading font-extrabold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+                ${kpis.avgCpcArs.toLocaleString('es-AR')}
+              </span>
+              <span className="text-xs font-mono text-zinc-400">/ clic</span>
+            </div>
+            <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
+              <span>Rubro reparación MDP:</span>
+              <span className="font-semibold text-emerald-400">Óptimo (&lt; $1.200)</span>
+            </div>
+          </div>
+
+          {/* TARJETA 4: Conversiones (WhatsApp y Llamadas) */}
+          <div className={`p-5 rounded-2xl border transition-all ${
+            isLight
+              ? 'bg-white border-zinc-200 shadow-sm'
+              : 'bg-[#141416] border-zinc-800 hover:border-zinc-700'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-zinc-400">Conversiones Directas</span>
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <MessageCircle className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className={`text-2xl sm:text-3xl font-heading font-extrabold text-emerald-400`}>
+                {kpis.conversions.total}
+              </span>
+              <span className="text-xs text-zinc-400">turnos / leads</span>
+            </div>
+            <div className="mt-2.5 flex items-center justify-between text-xs pt-1 border-t border-zinc-800/60">
+              <span className="flex items-center gap-1 text-emerald-400 font-medium">
+                <MessageCircle className="w-3 h-3" /> {kpis.conversions.whatsapp} WhatsApp
+              </span>
+              <span className="flex items-center gap-1 text-blue-400 font-medium">
+                <PhoneCall className="w-3 h-3" /> {kpis.conversions.calls} Llamadas
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* SECCIÓN B: TABLA DE TÉRMINOS DE BÚSQUEDA REALES (SEARCH TERMS)  */}
+      {/* ============================================================== */}
+      <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
+        isLight
+          ? 'bg-white border-zinc-200 shadow-sm'
+          : 'bg-[#141416] border-zinc-800'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
+          <div>
+            <div className="flex items-center gap-2">
+              <Search className="w-5 h-5 text-[#FF5500]" />
+              <h3 className={`text-base sm:text-lg font-heading font-bold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+                Términos de Búsqueda Reales de Clientes
+              </h3>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Exactamente qué escribieron en Google los usuarios en Mar del Plata antes de hacer clic en los anuncios de Montec.
+            </p>
+          </div>
+
+          {/* Filtro de búsqueda rápida */}
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <input
+              type="text"
+              value={termFilter}
+              onChange={(e) => setTermFilter(e.target.value)}
+              placeholder="Buscar término o campaña..."
+              className={`w-full pl-9 pr-4 py-2 text-xs rounded-xl border focus:outline-none focus:ring-1 focus:ring-[#FF5500] ${
+                isLight
+                  ? 'bg-zinc-50 border-zinc-300 text-zinc-800'
+                  : 'bg-zinc-900 border-zinc-700 text-zinc-200 placeholder:text-zinc-500'
+              }`}
+            />
+          </div>
+        </div>
+
+        {/* Tabla */}
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className={`border-b text-zinc-400 uppercase font-mono tracking-wider ${
+                isLight ? 'border-zinc-200 bg-zinc-50' : 'border-zinc-800 bg-zinc-900/60'
+              }`}>
+                <th className="py-3 px-3">Término de Búsqueda Exacto</th>
+                <th className="py-3 px-3">Campaña / Origen</th>
+                <th className="py-3 px-3 text-center">Impr.</th>
+                <th className="py-3 px-3 text-center">Clics</th>
+                <th className="py-3 px-3 text-center">CTR</th>
+                <th className="py-3 px-3 text-right">CPC Prom.</th>
+                <th className="py-3 px-3 text-right">Gasto</th>
+                <th className="py-3 px-3 text-center">Conv.</th>
+                <th className="py-3 px-3 text-right">Acción Rápida</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/40">
+              {filteredSearchTerms.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="py-8 text-center text-zinc-500">
+                    No se encontraron términos de búsqueda con el filtro ingresado.
+                  </td>
+                </tr>
+              ) : (
+                filteredSearchTerms.map((item, idx) => {
+                  const isBlocked = item.isBlocked || negativeKeywords.some(
+                    k => item.term.toLowerCase().includes(k.text.toLowerCase())
+                  );
+
+                  return (
+                    <tr
+                      key={idx}
+                      className={`transition-colors ${
+                        isBlocked
+                          ? 'opacity-60 bg-red-950/10'
+                          : isLight ? 'hover:bg-zinc-50' : 'hover:bg-zinc-900/40'
+                      }`}
+                    >
+                      <td className="py-3 px-3 font-medium">
+                        <div className="flex items-center gap-2">
+                          <span className={`${isLight ? 'text-zinc-800' : 'text-zinc-200'}`}>
+                            "{item.term}"
+                          </span>
+                          {item.recommendedBlock && !isBlocked && (
+                            <span
+                              className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                              title={item.blockReason}
+                            >
+                              Sugerido Bloquear
+                            </span>
+                          )}
+                          {isBlocked && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                              Bloqueada
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3 text-zinc-400 font-mono text-[11px]">
+                        {item.campaign}
+                      </td>
+                      <td className="py-3 px-3 text-center font-mono text-zinc-400">
+                        {item.impressions}
+                      </td>
+                      <td className="py-3 px-3 text-center font-mono font-bold text-white">
+                        {item.clicks}
+                      </td>
+                      <td className="py-3 px-3 text-center font-mono text-zinc-300">
+                        {item.ctr}
+                      </td>
+                      <td className="py-3 px-3 text-right font-mono text-zinc-300">
+                        ${item.cpc}
+                      </td>
+                      <td className="py-3 px-3 text-right font-mono font-medium text-amber-400">
+                        ${item.cost?.toLocaleString('es-AR') || 0}
+                      </td>
+                      <td className="py-3 px-3 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                          item.conversions > 0
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : 'text-zinc-500'
+                        }`}>
+                          {item.conversions}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        {isBlocked ? (
+                          <span className="text-[11px] text-zinc-500 italic">Excluida</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleBlockSearchTerm(item.term)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-950/60 hover:bg-rose-900/90 text-rose-300 border border-rose-800/60 transition-colors cursor-pointer"
+                            title="Excluir este término como palabra clave negativa en la campaña"
+                          >
+                            <Plus className="w-3 h-3 text-rose-400" />
+                            <span>Bloquear como Negativa</span>
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* SECCIÓN C: VALIDADOR DE POLÍTICAS Y TEXTOS (POLICY COMPLIANCE) */}
+      {/* ============================================================== */}
+      <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
+        isLight
+          ? 'bg-white border-zinc-200 shadow-sm'
+          : 'bg-[#141416] border-zinc-800'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
+          <div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              <h3 className={`text-base sm:text-lg font-heading font-bold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+                Validador de Políticas y Textos para Anuncios
+              </h3>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Prueba títulos y descripciones antes de publicarlos en Google Ads. Evita la suspensión permanente de cuenta por políticas de soporte técnico no oficial.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {policyAnalysis.isClean ? (
+              <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" /> Anuncio 100% Conforme a Políticas
+              </span>
+            ) : (
+              <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500/15 text-rose-400 border border-rose-500/40 flex items-center gap-1.5 animate-pulse">
+                <AlertTriangle className="w-4 h-4" /> Alertas de Cumplimiento Detectadas
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Alertas de Políticas si existen violaciones */}
+        {policyAnalysis.hasViolations && (
+          <div className="mt-4 p-4 rounded-xl bg-rose-950/40 border border-rose-800/80 text-rose-200 text-xs space-y-2">
+            <div className="flex items-center gap-2 font-bold text-rose-300">
+              <ShieldAlert className="w-4 h-4 text-rose-400" />
+              <span>¡Atención! Se detectaron términos de alto riesgo para Google Ads:</span>
+            </div>
+            <ul className="list-disc list-inside space-y-1 pl-1 text-rose-200/90">
+              {policyAnalysis.violations.map((v, i) => (
+                <li key={i}>
+                  <strong className="underline decoration-rose-500">"{v.word}"</strong>: {v.reason}
+                </li>
+              ))}
+            </ul>
+            <p className="text-[11px] text-rose-300/80 pt-1 border-t border-rose-900/60">
+              💡 <em>Consejo de Montec:</em> Utiliza en su lugar frases neutras y legales como: <strong>"Taller Especializado Multimarca"</strong>, <strong>"Reparación en el Acto"</strong> o <strong>"Repuestos Calidad Original / Premium"</strong>.
+            </p>
+          </div>
+        )}
+
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Formulario de Redacción */}
+          <div className="lg:col-span-7 space-y-4">
+            <h4 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold">
+              Títulos del Anuncio (Máx. 30 caracteres c/u)
+            </h4>
+
+            {/* Título 1 */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <label className="text-zinc-300 font-medium">Título 1 (Principal)</label>
+                <span className={`font-mono text-xs ${
+                  policyAnalysis.lengths.t1 > 30 ? 'text-rose-400 font-bold' : 'text-zinc-500'
+                }`}>
+                  {policyAnalysis.lengths.t1} / 30
+                </span>
+              </div>
+              <input
+                type="text"
+                value={adForm.title1}
+                onChange={(e) => setAdForm({ ...adForm, title1: e.target.value })}
+                className={`w-full px-3.5 py-2 text-xs rounded-xl border focus:outline-none focus:ring-1 focus:ring-[#FF5500] ${
+                  policyAnalysis.lengths.t1 > 30 ? 'border-rose-500 bg-rose-950/20' : isLight ? 'bg-zinc-50 border-zinc-300' : 'bg-zinc-900 border-zinc-700 text-white'
+                }`}
+              />
+            </div>
+
+            {/* Título 2 */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <label className="text-zinc-300 font-medium">Título 2 (Marca o Local)</label>
+                <span className={`font-mono text-xs ${
+                  policyAnalysis.lengths.t2 > 30 ? 'text-rose-400 font-bold' : 'text-zinc-500'
+                }`}>
+                  {policyAnalysis.lengths.t2} / 30
+                </span>
+              </div>
+              <input
+                type="text"
+                value={adForm.title2}
+                onChange={(e) => setAdForm({ ...adForm, title2: e.target.value })}
+                className={`w-full px-3.5 py-2 text-xs rounded-xl border focus:outline-none focus:ring-1 focus:ring-[#FF5500] ${
+                  policyAnalysis.lengths.t2 > 30 ? 'border-rose-500 bg-rose-950/20' : isLight ? 'bg-zinc-50 border-zinc-300' : 'bg-zinc-900 border-zinc-700 text-white'
+                }`}
+              />
+            </div>
+
+            {/* Título 3 */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <label className="text-zinc-300 font-medium">Título 3 (Llamado a la acción)</label>
+                <span className={`font-mono text-xs ${
+                  policyAnalysis.lengths.t3 > 30 ? 'text-rose-400 font-bold' : 'text-zinc-500'
+                }`}>
+                  {policyAnalysis.lengths.t3} / 30
+                </span>
+              </div>
+              <input
+                type="text"
+                value={adForm.title3}
+                onChange={(e) => setAdForm({ ...adForm, title3: e.target.value })}
+                className={`w-full px-3.5 py-2 text-xs rounded-xl border focus:outline-none focus:ring-1 focus:ring-[#FF5500] ${
+                  policyAnalysis.lengths.t3 > 30 ? 'border-rose-500 bg-rose-950/20' : isLight ? 'bg-zinc-50 border-zinc-300' : 'bg-zinc-900 border-zinc-700 text-white'
+                }`}
+              />
+            </div>
+
+            <h4 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold pt-2">
+              Descripciones del Anuncio (Máx. 90 caracteres c/u)
+            </h4>
+
+            {/* Descripción 1 */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <label className="text-zinc-300 font-medium">Descripción 1 (Propuesta de valor)</label>
+                <span className={`font-mono text-xs ${
+                  policyAnalysis.lengths.d1 > 90 ? 'text-rose-400 font-bold' : 'text-zinc-500'
+                }`}>
+                  {policyAnalysis.lengths.d1} / 90
+                </span>
+              </div>
+              <textarea
+                rows="2"
+                value={adForm.desc1}
+                onChange={(e) => setAdForm({ ...adForm, desc1: e.target.value })}
+                className={`w-full px-3.5 py-2 text-xs rounded-xl border focus:outline-none focus:ring-1 focus:ring-[#FF5500] ${
+                  policyAnalysis.lengths.d1 > 90 ? 'border-rose-500 bg-rose-950/20' : isLight ? 'bg-zinc-50 border-zinc-300' : 'bg-zinc-900 border-zinc-700 text-white'
+                }`}
+              />
+            </div>
+
+            {/* Descripción 2 */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <label className="text-zinc-300 font-medium">Descripción 2 (Garantía y Contacto)</label>
+                <span className={`font-mono text-xs ${
+                  policyAnalysis.lengths.d2 > 90 ? 'text-rose-400 font-bold' : 'text-zinc-500'
+                }`}>
+                  {policyAnalysis.lengths.d2} / 90
+                </span>
+              </div>
+              <textarea
+                rows="2"
+                value={adForm.desc2}
+                onChange={(e) => setAdForm({ ...adForm, desc2: e.target.value })}
+                className={`w-full px-3.5 py-2 text-xs rounded-xl border focus:outline-none focus:ring-1 focus:ring-[#FF5500] ${
+                  policyAnalysis.lengths.d2 > 90 ? 'border-rose-500 bg-rose-950/20' : isLight ? 'bg-zinc-50 border-zinc-300' : 'bg-zinc-900 border-zinc-700 text-white'
+                }`}
+              />
+            </div>
+          </div>
+
+          {/* Vista Previa en Vivo (Google Search Ad Mockup) */}
+          <div className="lg:col-span-5 flex flex-col justify-start">
+            <h4 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold mb-3 flex items-center gap-1.5">
+              <Eye className="w-4 h-4 text-blue-400" />
+              Vista Previa en Google Search
+            </h4>
+
+            <div className="p-5 rounded-2xl bg-white border border-zinc-200 text-zinc-800 shadow-md font-sans">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-[11px] font-bold text-zinc-900 border border-zinc-400 px-1 py-0.2 rounded">
+                  Patrocinado
+                </span>
+                <span className="text-xs text-zinc-600 truncate">
+                  https://montec.ar &gt; taller &gt; mdp
+                </span>
+              </div>
+
+              {/* Títulos en azul estilo Google */}
+              <a
+                href="#preview"
+                onClick={(e) => e.preventDefault()}
+                className="text-base sm:text-lg font-medium text-[#1a0dab] hover:underline leading-snug block"
+              >
+                {adForm.title1 || 'Título 1'} | {adForm.title2 || 'Título 2'} | {adForm.title3 || 'Título 3'}
+              </a>
+
+              {/* Descripciones en gris oscuro */}
+              <p className="text-xs sm:text-sm text-[#4d5156] mt-1.5 leading-relaxed">
+                {adForm.desc1 || 'Descripción 1 del anuncio publicitario de Montec.'}{' '}
+                {adForm.desc2 || 'Descripción 2 con llamado a cotización.'}
+              </p>
+
+              {/* Extensiones de sitio simuladas */}
+              <div className="mt-4 pt-3 border-t border-zinc-100 grid grid-cols-2 gap-2 text-xs text-[#1a0dab]">
+                <div className="p-2 rounded bg-zinc-50 hover:bg-zinc-100">
+                  <div className="font-semibold text-xs">💬 WhatsApp Directo</div>
+                  <div className="text-[10px] text-zinc-500">Respuesta en minutos</div>
+                </div>
+                <div className="p-2 rounded bg-zinc-50 hover:bg-zinc-100">
+                  <div className="font-semibold text-xs">📍 Montes Carballo 943</div>
+                  <div className="text-[10px] text-zinc-500">Mar del Plata</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs">
+              <span className="text-zinc-200 font-bold block mb-1">📌 Regla de Oro de Montec para Google Ads:</span>
+              No coloques precios fijos en los títulos (debido a la inflación y fluctuación del dólar). Enfatiza <strong>"Presupuesto Inmediato"</strong>, <strong>"Repuestos Calidad Original"</strong> y <strong>"Garantía Escrita"</strong>.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* SECCIÓN D: GESTIÓN RÁPIDA DE PALABRAS CLAVE NEGATIVAS           */}
+      {/* ============================================================== */}
+      <div className={`p-5 sm:p-6 rounded-2xl border transition-all ${
+        isLight
+          ? 'bg-white border-zinc-200 shadow-sm'
+          : 'bg-[#141416] border-zinc-800'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
+          <div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-rose-400" />
+              <h3 className={`text-base sm:text-lg font-heading font-bold ${isLight ? 'text-zinc-900' : 'text-white'}`}>
+                Gestión de Palabras Clave Negativas
+              </h3>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Evita clics basura de usuarios que buscan cursos, descargas gratuitas o soporte oficial, protegiendo el presupuesto diario de Montec.
+            </p>
+          </div>
+
+          <span className="px-3 py-1 rounded-xl text-xs font-mono font-semibold bg-rose-950/40 text-rose-300 border border-rose-800/60 self-start sm:self-auto">
+            {negativeKeywords.length} palabras bloqueadas
+          </span>
+        </div>
+
+        {/* Sugerencias Rápidas para Talleres */}
+        <div className="mt-4">
+          <span className="text-xs font-semibold text-zinc-400 block mb-2">
+            Bloqueos recomendados con 1 Clic (rubro servicio técnico):
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {[
+              'gratis',
+              'curso',
+              'tutorial',
+              'oficial',
+              'autorizado',
+              'empleo',
+              'sueldo',
+              'descargar',
+              'pdf',
+              'foro',
+              'opiniones',
+              'by pass',
+              'desbloqueo icloud'
+            ].map((word) => {
+              const alreadyExists = negativeKeywords.some(k => k.text.toLowerCase() === word.toLowerCase());
+              return (
+                <button
+                  key={word}
+                  type="button"
+                  disabled={alreadyExists}
+                  onClick={() => handleAddQuickNegative(word)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold border transition-all ${
+                    alreadyExists
+                      ? 'bg-zinc-800/40 border-zinc-800 text-zinc-500 cursor-not-allowed line-through'
+                      : 'bg-zinc-900 hover:bg-rose-950/60 border-zinc-700 hover:border-rose-700 text-zinc-300 hover:text-rose-200 cursor-pointer'
+                  }`}
+                >
+                  <Plus className="w-3 h-3 text-[#FF5500]" />
+                  <span>"{word}"</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Formulario de Alta Masiva */}
+        <form onSubmit={handleAddNegatives} className="mt-6 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+            <label className="text-xs font-bold text-zinc-300">
+              Agregar Nuevas Palabras Negativas (Masivo o Individual)
+            </label>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-zinc-400">Concordancia:</span>
+              <select
+                value={matchType}
+                onChange={(e) => setMatchType(e.target.value)}
+                className="bg-zinc-800 border border-zinc-700 text-zinc-200 rounded-lg px-2 py-1 text-xs focus:outline-none"
+              >
+                <option value="BROAD">Amplia (Bloquea cualquier variación)</option>
+                <option value="PHRASE">Frase (Recomendado)</option>
+                <option value="EXACT">Exacta [Término preciso]</option>
+              </select>
+            </div>
+          </div>
+
+          <textarea
+            rows="2"
+            value={newNegativesInput}
+            onChange={(e) => setNewNegativesInput(e.target.value)}
+            placeholder="Escribe palabras separadas por comas o saltos de línea (ej: gratis, como reparar, herramientas, mercado libre)..."
+            className="w-full px-3.5 py-2 text-xs rounded-xl border border-zinc-700 bg-zinc-950 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-[#FF5500]"
+          />
+
+          <div className="mt-2.5 flex justify-end">
+            <button
+              type="submit"
+              disabled={isSubmittingNegatives || !newNegativesInput.trim()}
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-[#FF5500] hover:bg-[#FF5500]/90 text-white transition-all shadow-[0_0_15px_rgba(255,85,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{isSubmittingNegatives ? 'Guardando...' : 'Bloquear en Campaña de Montec'}</span>
+            </button>
+          </div>
+        </form>
+
+        {/* Listado de Palabras Negativas Activas */}
+        <div className="mt-6">
+          <h4 className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold mb-3">
+            Palabras Negativas Activas en la Campaña ({negativeKeywords.length})
+          </h4>
+
+          <div className="flex flex-wrap gap-2 max-h-60 overflow-y-auto p-3 rounded-xl bg-zinc-950/50 border border-zinc-800">
+            {negativeKeywords.length === 0 ? (
+              <span className="text-xs text-zinc-500 italic">No hay palabras clave negativas cargadas.</span>
+            ) : (
+              negativeKeywords.map((item) => (
+                <span
+                  key={item.id || item.text}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium bg-zinc-900 border border-zinc-700 text-zinc-200 hover:border-rose-500/60 transition-colors group"
+                >
+                  <span className="text-rose-400 font-mono text-[10px]">[{item.matchType || 'BROAD'}]</span>
+                  <span className="font-semibold">"{item.text}"</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveNegative(item)}
+                    className="text-zinc-500 hover:text-rose-400 transition-colors p-0.5"
+                    title="Eliminar de la lista"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

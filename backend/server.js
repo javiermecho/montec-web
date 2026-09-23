@@ -1,11 +1,26 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { query, isDbConnected, initDatabaseSchema } from './db/index.js';
 import { runScraperSync } from './scraper/index.js';
 import { normalizeModelName } from './scraper/normalizer.js';
+import {
+  checkConnectionStatus,
+  getDashboardMetrics,
+  getSearchTerms,
+  getNegativeKeywords,
+  addNegativeKeywords,
+  removeNegativeKeyword,
+  testConnection as testGoogleAdsConnection
+} from './services/googleAdsService.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -1904,6 +1919,84 @@ app.post('/api/afip/padron/save-client', async (req, res) => {
     res.json({ success: true, client: clientRecord });
   } catch (error) {
     console.error('❌ Error al guardar cliente en padrón:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ==========================================
+// 12. ENDPOINTS DE GOOGLE ADS & MARKETING
+// ==========================================
+
+// Consulta de estado de credenciales y conexión
+app.get('/api/ads/status', async (req, res) => {
+  try {
+    const status = checkConnectionStatus();
+    res.json({ success: true, ...status });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Métricas de rendimiento y KPIs (hoy, 7 días, 30 días)
+app.get('/api/ads/dashboard', async (req, res) => {
+  try {
+    const period = req.query.period || 'last_7_days';
+    const data = await getDashboardMetrics(period);
+    res.json({ success: true, ...data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Términos de búsqueda reales de usuarios
+app.get('/api/ads/search-terms', async (req, res) => {
+  try {
+    const period = req.query.period || 'last_30_days';
+    const data = await getSearchTerms(period);
+    res.json({ success: true, ...data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Listado de palabras clave negativas actuales
+app.get('/api/ads/negative-keywords', async (req, res) => {
+  try {
+    const data = await getNegativeKeywords();
+    res.json({ success: true, ...data });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Agregar palabras clave negativas
+app.post('/api/ads/negative-keywords', async (req, res) => {
+  try {
+    const { keywords, matchType, campaignId } = req.body;
+    const result = await addNegativeKeywords({ keywords, matchType, campaignId });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Eliminar palabra clave negativa
+app.delete('/api/ads/negative-keywords', async (req, res) => {
+  try {
+    const { id, text } = req.body;
+    const result = await removeNegativeKeyword({ id, text });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Probar conexión directa con Google Ads API
+app.post('/api/ads/test-connection', async (req, res) => {
+  try {
+    const result = await testGoogleAdsConnection();
+    res.json(result);
+  } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });

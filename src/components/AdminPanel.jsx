@@ -32,7 +32,8 @@ import {
   Moon,
   Store,
   Receipt,
-  MessageSquare
+  MessageSquare,
+  TrendingUp
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -41,6 +42,7 @@ import { getIphoneGenerationInfo } from '../data/iphonePricingData';
 import MontecLogo from './MontecLogo';
 import PartsSearchTab from './admin/PartsSearchTab';
 import AnalyticsTab from './admin/AnalyticsTab';
+import GoogleAdsTab from './admin/GoogleAdsTab';
 import RepairOrdersManager from './taller/RepairOrdersManager';
 import SalesPOS from './pos/SalesPOS';
 import CommercialInvoicePOS from './pos/CommercialInvoicePOS';
@@ -495,6 +497,17 @@ export default function AdminPanel() {
         >
           <BarChart3 className="w-4 h-4 text-emerald-400" />
           <span>Google Analytic </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('google_ads')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'google_ads'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+            }`}
+        >
+          <TrendingUp className="w-4 h-4 text-amber-400" />
+          <span>Google Ads</span>
         </button>
 
         <button
@@ -1477,6 +1490,13 @@ export default function AdminPanel() {
         {/* ============================================================== */}
         {activeTab === 'analytics' && (
           <AnalyticsTab />
+        )}
+
+        {/* ============================================================== */}
+        {/* PESTAÑA: CONTROL DE GOOGLE ADS & MARKETING                     */}
+        {/* ============================================================== */}
+        {activeTab === 'google_ads' && (
+          <GoogleAdsTab />
         )}
 
         {/* ============================================================== */}
