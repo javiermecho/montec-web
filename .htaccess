@@ -1,20 +1,24 @@
+<IfModule mod_mime.c>
+  AddType application/javascript .js .mjs
+  AddType text/css .css
+</IfModule>
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # 1. Servir la raíz desde dist/index.html
+  # 1. Si piden / o /index.html explícitamente, servir SIEMPRE dist/index.html compilado
   RewriteRule ^$ dist/index.html [L]
+  RewriteRule ^index\.html$ dist/index.html [L]
 
-  # 2. Si el archivo solicitado existe exactamente en la raíz, servirlo
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
+  # 2. Mapear directamente /assets/ hacia dist/assets/
+  RewriteRule ^assets/(.*)$ dist/assets/$1 [L]
 
-  # 3. Si el archivo existe dentro de dist (assets, favicons, etc.), reescribir a dist/
-  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f [OR]
-  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -d
+  # 3. Si el archivo solicitado existe dentro de dist/, servirlo desde allí
+  RewriteCond %{DOCUMENT_ROOT}/dist/$1 -f
   RewriteRule ^(.*)$ dist/$1 [L]
 
-  # 4. Enrutamiento SPA general: redirigir cualquier otra ruta a dist/index.html
+  # 4. Enrutamiento SPA: cualquier otra ruta (ej: ?taller=1, subrutas) servir dist/index.html
+  RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule . dist/index.html [L]
 </IfModule>
