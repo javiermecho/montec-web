@@ -100,7 +100,17 @@ export default function AdminPanel() {
   // Estados de interfaz
   const [pinInput, setPinInput] = useState('');
   const [loginError, setLoginError] = useState(false);
-  const [activeTab, setActiveTab] = useState('models'); // 'models', 'parts_search', 'iphone_lab', 'pricing', 'accessories', 'settings'
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const hash = (window.location.hash || '').toLowerCase();
+      if (params.get('tab') === 'google_ads' || params.get('tab') === 'ads' || hash === '#ads' || hash === '#google_ads') {
+        return 'google_ads';
+      }
+      if (params.get('tab')) return params.get('tab');
+    } catch (e) {}
+    return 'models';
+  });
   const [toastMessage, setToastMessage] = useState(null);
 
   // Estados para filtro y modales
@@ -501,13 +511,17 @@ export default function AdminPanel() {
 
         <button
           onClick={() => setActiveTab('google_ads')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'google_ads'
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer ${activeTab === 'google_ads'
               ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
-              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+              : 'text-amber-300 hover:text-white bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20'
             }`}
         >
           <TrendingUp className="w-4 h-4 text-amber-400" />
           <span>Google Ads</span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-sm flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+            2 Rechazadas
+          </span>
         </button>
 
         <button
