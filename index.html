@@ -27,17 +27,17 @@
     </script>
 
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- PWA Web App Manifest y Metatags de Instalación en Escritorio / Móvil -->
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="theme-color" content="#FF5500" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="montec Taller" />
-    <link rel="apple-touch-icon" href="/logo-mon.png" />
+    <link rel="apple-touch-icon" href="./logo-mon.png" />
     
     <!-- Título Optimizado para Búsquedas Locales -->
     <title>montec | Servicio Técnico Independiente de Celulares, iPhone y Notebooks en Mar del Plata</title>
@@ -112,29 +112,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-dTLN7-X2.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CtD1UaAF.css">
   </head>
   <body class="bg-[#0A0A0A] text-[#FFFFFF] font-sans antialiased selection:bg-[#FF5500] selection:text-white min-h-screen">
-    <!-- Cargador inteligente de Producción / Desarrollo -->
-    <script type="module">
-      if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-        const s = document.createElement('script');
-        s.type = 'module';
-        s.crossOrigin = 'anonymous';
-        s.src = '/assets/index-PC5ARNX4.js';
-        document.head.appendChild(s);
-
-        const l = document.createElement('link');
-        l.rel = 'stylesheet';
-        l.crossOrigin = 'anonymous';
-        l.href = '/assets/index-BLEZd51N.css';
-        document.head.appendChild(l);
-      } else {
-        const s = document.createElement('script');
-        s.type = 'module';
-        s.src = '/src/main.jsx';
-        document.body.appendChild(s);
-      }
-    </script>
+    <div id="root"></div>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
