@@ -7,6 +7,10 @@
   RewriteEngine On
   RewriteBase /
 
+  # 0. Canonical: Redirigir www.montec.ar a https://montec.ar/ (301 permanente)
+  RewriteCond %{HTTP_HOST} ^www\.montec\.ar$ [NC]
+  RewriteRule ^(.*)$ https://montec.ar/$1 [R=301,L,QSA]
+
   # 1. Si piden / o /index.html explícitamente, servir SIEMPRE dist/index.html compilado
   RewriteRule ^$ dist/index.html [L]
   RewriteRule ^index\.html$ dist/index.html [L]

@@ -165,10 +165,26 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Barra Inferior */}
+        {/* Barra Inferior con Enlaces Legales Requeridos por Google Ads */}
         <div className="pt-6 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
           <div>
             © {new Date().getFullYear()} <strong className="text-zinc-300">montec</strong>. Taller multimarca independiente de hardware. Montes Carballo 943, Mar del Plata, Argentina.
+          </div>
+
+          <div className="flex items-center gap-4 text-xs">
+            <a
+              href="/privacidad.html"
+              className="text-zinc-400 hover:text-[#FF5500] underline transition-colors"
+            >
+              Política de Privacidad
+            </a>
+            <span className="text-zinc-700">•</span>
+            <a
+              href="/terminos.html"
+              className="text-zinc-400 hover:text-[#FF5500] underline transition-colors"
+            >
+              Términos del Servicio y Garantías
+            </a>
           </div>
           
           <button

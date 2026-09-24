@@ -6,7 +6,7 @@ import { useData } from '../context/DataContext';
 export default function Hero() {
   const { setIsQuoteModalOpen } = useData();
   const brands = [
-    { name: 'Apple', icon: '', desc: 'iPhone • iPad • Mac' },
+    { name: 'Apple', icon: '', desc: 'iPhone • iPad • Mac' },
     { name: 'Samsung', icon: 'SAMSUNG', desc: 'Galaxy S • A • Z' },
     { name: 'Motorola', icon: 'M', desc: 'Edge • Moto G • E' },
     { name: 'Xiaomi', icon: 'mi', desc: 'Redmi • Poco • Xiaomi' },
