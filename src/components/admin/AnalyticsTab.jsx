@@ -56,13 +56,15 @@ export default function AnalyticsTab() {
 
   useEffect(() => {
     refreshData();
-    googleAdsApi.getDashboardMetrics('last_7_days')
-      .then(res => {
-        if (res && res.success && res.data) {
-          setLiveAdsMetrics(res.data);
-        }
-      })
-      .catch(() => {});
+    if (typeof googleAdsApi?.getAdsDashboard === 'function') {
+      googleAdsApi.getAdsDashboard('last_7_days')
+        .then(res => {
+          if (res && (res.kpis || res.data?.kpis)) {
+            setLiveAdsMetrics(res.kpis ? res : res.data);
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   const handleSave = (e) => {
