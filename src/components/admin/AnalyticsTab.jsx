@@ -188,12 +188,42 @@ export default function AnalyticsTab() {
         </div>
       )}
 
+      {/* Aclaración de Métricas: GA4 vs Local */}
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/40 via-zinc-900 to-zinc-900 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400 shrink-0">
+            <BarChart3 className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm font-bold text-white flex items-center gap-2">
+              <span>Tus visitas reales se miden directamente en Google Analytics</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono">Conectado</span>
+            </div>
+            <p className="text-xs text-zinc-300 mt-1 max-w-2xl leading-relaxed">
+              Google Analytics está recopilando todas las visitas y usuarios reales de tu web (los usuarios activos y eventos que ves en tu cuenta de GA4). 
+              Las tarjetas de abajo registran los eventos de prueba en este navegador particular para verificar que los botones de WhatsApp y cotizador disparen eventos correctamente.
+            </p>
+          </div>
+        </div>
+        <div className="shrink-0 flex items-center gap-2">
+          <a
+            href="https://analytics.google.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-[0_0_15px_rgba(37,99,235,0.3)] cursor-pointer"
+          >
+            <span>Ver Visitas en Tiempo Real</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+
       {/* Grid de Métricas Locales de Conversión */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-[#FF5500]" />
-            <span>Actividad Registrada en esta Sesión / Navegador</span>
+            <span>Verificación de Eventos en este Navegador</span>
           </h3>
           <span className="text-xs text-zinc-500">
             Total eventos locales: {summary.totalEvents}
