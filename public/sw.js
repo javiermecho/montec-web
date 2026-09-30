@@ -1,5 +1,5 @@
 // Service Worker para montec Taller PWA
-const CACHE_NAME = 'montec-taller-pwa-v1';
+const CACHE_NAME = 'montec-taller-pwa-v3';
 
 // Recursos críticos a precachear
 const PRECACHE_ASSETS = [

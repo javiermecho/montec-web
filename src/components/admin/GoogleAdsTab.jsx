@@ -1564,8 +1564,6 @@ export default function GoogleAdsTab() {
         </div>
       </div>
 
-      </div>
-
       {/* ============================================================== */}
       {/* SECCIÓN C: VALIDADOR DE POLÍTICAS Y TEXTOS (POLICY COMPLIANCE) */}
       {/* ============================================================== */}
