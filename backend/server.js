@@ -19,8 +19,11 @@ import {
   loadCredentialsFromDb,
   getAutoPilotConfig,
   updateAutoPilotConfig,
-  runOptimizationEngine
 } from './services/googleAdsService.js';
+import {
+  getSearchPerformance,
+  listVerifiedSites
+} from './services/searchConsoleService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -2047,6 +2050,29 @@ app.post('/api/ads/optimize', async (req, res) => {
   try {
     const result = await runOptimizationEngine();
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ==========================================
+// 14. GOOGLE SEARCH CONSOLE API (SEO & ANALYTICS)
+// ==========================================
+
+app.get('/api/seo/performance', async (req, res) => {
+  try {
+    const days = parseInt(req.query.days || '30', 10);
+    const data = await getSearchPerformance({ days });
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/seo/sites', async (req, res) => {
+  try {
+    const sites = await listVerifiedSites();
+    res.json({ success: true, sites });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

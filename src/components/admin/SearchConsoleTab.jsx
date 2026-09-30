@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { searchConsoleApi } from '../../services/searchConsoleApi';
 import {
   Search,
   MousePointerClick,
@@ -105,30 +106,97 @@ export default function SearchConsoleTab() {
   const [deviceFilter, setDeviceFilter] = useState('all'); // 'all' | 'mobile' | 'desktop'
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncToast, setSyncToast] = useState(null);
+  const [liveData, setLiveData] = useState(null);
+  const [isLoadingLive, setIsLoadingLive] = useState(true);
+
+  const loadLiveSearchData = async (isManual = false) => {
+    if (isManual) setIsSyncing(true);
+    try {
+      const days = dateRange === '7d' ? 7 : dateRange === '90d' ? 90 : 30;
+      const res = await searchConsoleApi.getSearchPerformance(days);
+      if (res && res.success) {
+        setLiveData(res);
+        if (isManual) {
+          setSyncToast(res.hasData 
+            ? 'Datos sincronizados con Google Search Console API' 
+            : 'Conectado a Google Search Console (Esperando primeras métricas)');
+        }
+      }
+    } catch (e) {
+      console.error('Error al cargar Search Console:', e);
+    } finally {
+      setIsLoadingLive(false);
+      if (isManual) {
+        setIsSyncing(false);
+        setTimeout(() => setSyncToast(null), 4000);
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadLiveSearchData(false);
+  }, [dateRange]);
+
+  // Selección de datos: Real si existe y tiene datos, sino datos de referencia (Mock)
+  const activeDailyData = useMemo(() => {
+    if (liveData?.hasData && liveData?.dailyData?.length > 0) {
+      return liveData.dailyData;
+    }
+    return MOCK_DAILY_SEO_DATA;
+  }, [liveData]);
+
+  const activeQueries = useMemo(() => {
+    if (liveData?.hasData && liveData?.queries?.length > 0) {
+      return liveData.queries.map(q => ({
+        keyword: q.query,
+        clicks: q.clicks,
+        impressions: q.impressions,
+        ctr: q.ctr,
+        position: q.position,
+        diff: '0.0'
+      }));
+    }
+    return MOCK_SEARCH_QUERIES;
+  }, [liveData]);
+
+  const activePages = useMemo(() => {
+    if (liveData?.hasData && liveData?.pages?.length > 0) {
+      return liveData.pages;
+    }
+    return MOCK_PAGES;
+  }, [liveData]);
 
   // Cálculos de KPIs consolidados
-  const totalClicks = useMemo(() => MOCK_DAILY_SEO_DATA.reduce((acc, curr) => acc + curr.clicks, 0), []);
-  const totalImpressions = useMemo(() => MOCK_DAILY_SEO_DATA.reduce((acc, curr) => acc + curr.impressions, 0), []);
-  const avgCtr = useMemo(() => ((totalClicks / totalImpressions) * 100).toFixed(2), [totalClicks, totalImpressions]);
+  const totalClicks = useMemo(() => {
+    if (liveData?.hasData && liveData?.summary) return liveData.summary.totalClicks;
+    return activeDailyData.reduce((acc, curr) => acc + curr.clicks, 0);
+  }, [liveData, activeDailyData]);
+
+  const totalImpressions = useMemo(() => {
+    if (liveData?.hasData && liveData?.summary) return liveData.summary.totalImpressions;
+    return activeDailyData.reduce((acc, curr) => acc + curr.impressions, 0);
+  }, [liveData, activeDailyData]);
+
+  const avgCtr = useMemo(() => {
+    if (liveData?.hasData && liveData?.summary) return liveData.summary.avgCtr.toFixed(2);
+    return totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : '0.00';
+  }, [liveData, totalClicks, totalImpressions]);
+
   const avgPosition = useMemo(() => {
-    const sum = MOCK_DAILY_SEO_DATA.reduce((acc, curr) => acc + curr.position, 0);
-    return (sum / MOCK_DAILY_SEO_DATA.length).toFixed(1);
-  }, []);
+    if (liveData?.hasData && liveData?.summary) return liveData.summary.avgPosition.toFixed(1);
+    const sum = activeDailyData.reduce((acc, curr) => acc + curr.position, 0);
+    return activeDailyData.length > 0 ? (sum / activeDailyData.length).toFixed(1) : '0.0';
+  }, [liveData, activeDailyData]);
 
   // Filtrado de queries
   const filteredQueries = useMemo(() => {
-    return MOCK_SEARCH_QUERIES.filter(item =>
+    return activeQueries.filter(item =>
       item.keyword.toLowerCase().includes(searchTerm.toLowerCase().trim())
     );
-  }, [searchTerm]);
+  }, [activeQueries, searchTerm]);
 
   const handleSync = () => {
-    setIsSyncing(true);
-    setTimeout(() => {
-      setIsSyncing(false);
-      setSyncToast('Datos sincronizados con Google Search Console API');
-      setTimeout(() => setSyncToast(null), 4000);
-    }, 900);
+    loadLiveSearchData(true);
   };
 
   const handleExportCSV = () => {
@@ -192,16 +260,23 @@ export default function SearchConsoleTab() {
               <Search className="w-5 h-5" />
             </div>
             <div>
-              <h2 className={`text-xl sm:text-2xl font-heading font-bold flex items-center gap-2 ${
+              <h2 className={`text-xl sm:text-2xl font-heading font-bold flex items-center gap-2 flex-wrap ${
                 isLight ? 'text-slate-900' : 'text-white'
               }`}>
                 Google Search Console
-                <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                  Propiedad Verificada
-                </span>
+                {liveData?.isLive ? (
+                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    API Conectada (OAuth2)
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                    Modo Simulación
+                  </span>
+                )}
               </h2>
               <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
-                Rendimiento de búsqueda orgánica en Google para <strong className="text-zinc-200">montec.com.ar</strong> en Mar del Plata.
+                Rendimiento de búsqueda orgánica en Google para <strong className="text-zinc-200">montec.ar</strong> en Mar del Plata.
               </p>
             </div>
           </div>
@@ -270,6 +345,31 @@ export default function SearchConsoleTab() {
           </button>
         </div>
       </div>
+
+      {/* Banner Informativo de API en Vivo */}
+      {liveData?.isLive && !liveData?.hasData && (
+        <div className="p-4 rounded-2xl bg-blue-950/40 border border-blue-500/30 text-blue-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-blue-400 shrink-0 mt-0.5 sm:mt-0" />
+            <div>
+              <p className="font-bold text-white text-xs sm:text-sm">
+                ¡Conexión en vivo confirmada con Google Search Console! (Propiedad: {liveData?.siteUrl || 'sc-domain:montec.ar'})
+              </p>
+              <p className="text-zinc-300 text-xs mt-0.5">
+                Google verificó tu dominio y procesó el sitemap. Comenzará a registrar tus primeras visitas reales en las próximas 24 a 48 hs. Mientras tanto, tu panel muestra datos de referencia estimados.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="px-3.5 py-1.5 rounded-xl bg-blue-600/30 hover:bg-blue-600/50 border border-blue-500/40 text-white font-bold text-xs shrink-0 transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span>Consultar Ahora</span>
+          </button>
+        </div>
+      )}
 
       {/* ============================================================== */}
       {/* 4 TARJETAS DE KPIS SUPERIORES                                   */}
@@ -439,7 +539,7 @@ export default function SearchConsoleTab() {
         {/* Gráfico Recharts con ResponsiveContainer */}
         <div className="w-full h-72 sm:h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={MOCK_DAILY_SEO_DATA} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <AreaChart data={activeDailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
                 {/* Degradado Clics (Naranja Montec) */}
                 <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
@@ -559,7 +659,7 @@ export default function SearchConsoleTab() {
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                Páginas Principales ({MOCK_PAGES.length})
+                Páginas Principales ({activePages.length})
               </button>
             </div>
           </div>
@@ -677,7 +777,7 @@ export default function SearchConsoleTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/50 text-xs sm:text-sm">
-                {MOCK_PAGES.map((page, idx) => (
+                {activePages.map((page, idx) => (
                   <tr key={idx} className={isLight ? 'hover:bg-slate-50' : 'hover:bg-zinc-800/40'}>
                     <td className="py-3.5 px-4 sm:px-6 font-medium text-white flex items-center gap-2">
                       <ExternalLink className="w-3.5 h-3.5 text-[#FF5500] shrink-0" />
