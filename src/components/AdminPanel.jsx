@@ -33,7 +33,9 @@ import {
   Store,
   Receipt,
   MessageSquare,
-  TrendingUp
+  TrendingUp,
+  BrainCircuit,
+  MousePointerClick
 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
@@ -43,6 +45,8 @@ import MontecLogo from './MontecLogo';
 import PartsSearchTab from './admin/PartsSearchTab';
 import AnalyticsTab from './admin/AnalyticsTab';
 import GoogleAdsTab from './admin/GoogleAdsTab';
+import SearchConsoleTab from './admin/SearchConsoleTab';
+import SmartAlertsTab from './admin/SmartAlertsTab';
 import RepairOrdersManager from './taller/RepairOrdersManager';
 import SalesPOS from './pos/SalesPOS';
 import CommercialInvoicePOS from './pos/CommercialInvoicePOS';
@@ -106,6 +110,12 @@ export default function AdminPanel() {
       const hash = (window.location.hash || '').toLowerCase();
       if (params.get('tab') === 'google_ads' || params.get('tab') === 'ads' || hash === '#ads' || hash === '#google_ads') {
         return 'google_ads';
+      }
+      if (params.get('tab') === 'search_console' || params.get('tab') === 'seo' || hash === '#seo' || hash === '#search_console') {
+        return 'search_console';
+      }
+      if (params.get('tab') === 'smart_alerts' || params.get('tab') === 'alerts' || hash === '#alerts' || hash === '#smart_alerts') {
+        return 'smart_alerts';
       }
       if (params.get('tab')) return params.get('tab');
     } catch (e) {}
@@ -521,6 +531,31 @@ export default function AdminPanel() {
           <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-sm flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
             2 Rechazadas
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('search_console')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer ${activeTab === 'search_console'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+            }`}
+        >
+          <Search className="w-4 h-4 text-sky-400" />
+          <span>SEO / Search Console</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('smart_alerts')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer ${activeTab === 'smart_alerts'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
+              : 'text-purple-300 hover:text-white bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20'
+            }`}
+        >
+          <BrainCircuit className="w-4 h-4 text-purple-400" />
+          <span>Alertas Inteligentes (IA)</span>
+          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            4 Alertas
           </span>
         </button>
 
@@ -1511,6 +1546,20 @@ export default function AdminPanel() {
         {/* ============================================================== */}
         {activeTab === 'google_ads' && (
           <GoogleAdsTab />
+        )}
+
+        {/* ============================================================== */}
+        {/* PESTAÑA: GOOGLE SEARCH CONSOLE & RENDIMIENTO SEO              */}
+        {/* ============================================================== */}
+        {activeTab === 'search_console' && (
+          <SearchConsoleTab />
+        )}
+
+        {/* ============================================================== */}
+        {/* PESTAÑA: ALERTAS INTELIGENTES (IA) & DATA BLENDING             */}
+        {/* ============================================================== */}
+        {activeTab === 'smart_alerts' && (
+          <SmartAlertsTab />
         )}
 
         {/* ============================================================== */}
