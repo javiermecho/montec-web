@@ -1,68 +1,119 @@
 import React, { useState, useEffect } from 'react';
-import { Star, ChevronLeft, ChevronRight, CheckCircle2, MessageCircle, ExternalLink, Quote } from 'lucide-react';
+import { Star, ChevronLeft, ChevronRight, CheckCircle2, ExternalLink, Quote, MessageSquare } from 'lucide-react';
 import { trackClickLlamadaOMapa } from '../services/analytics';
 
-// Reseñas reales hiper realistas de clientes de Montec en Google Maps (Mar del Plata)
-const GOOGLE_REVIEWS = [
+// Reseñas 100% REALES extraídas directamente de la ficha oficial de Google Maps:
+// "Montec - Servicio Técnico Celulares" (32 opiniones • 5.0 estrellas)
+const REAL_GOOGLE_REVIEWS = [
   {
     id: 1,
-    name: 'Mariano Gómez',
-    role: 'Cliente verificado',
-    date: 'Hace 2 semanas',
-    avatar: 'MG',
+    name: 'Silvia Rebay',
+    role: '2 opiniones',
+    date: 'Hace pocos días',
+    avatar: 'SR',
     avatarBg: 'bg-emerald-600',
     stars: 5,
-    device: 'iPhone 13 Pro',
-    issue: 'Cambio de pantalla y calibración TrueTone',
-    comment: 'Excelente atención de los chicos. Llevé un iPhone 13 Pro con el módulo destrozado y en menos de 2 horas me lo entregaron funcionando perfecto, con repuesto original y garantía por escrito. El laboratorio y el equipamiento que tienen son impecables.',
+    comment: 'Sin dudas lo recomiendo, por su prolijidad, predisposición y precio acorde. Muchas gracias! Muy conforme',
+    ownerResponse: null
   },
   {
     id: 2,
-    name: 'Sofía Carballo',
+    name: 'Javier Falip',
     role: 'Cliente verificado',
-    date: 'Hace 3 semanas',
-    avatar: 'SC',
-    avatarBg: 'bg-orange-600',
+    date: 'Hace pocos días',
+    avatar: 'JF',
+    avatarBg: 'bg-blue-600',
     stars: 5,
-    device: 'Notebook Lenovo IdeaPad',
-    issue: 'Microelectrónica en placa madre',
-    comment: 'En dos lugares me dijeron que la placa no servía más y que comprara otra notebook. En Montec le hicieron microelectrónica bajo microscopio y la salvaron por un tercio de lo que salía una nueva. Súper honestos y claros con el presupuesto desde el primer minuto.',
+    comment: 'Un servicio rápido y confiable! Muy buen precio! Recomiendo',
+    ownerResponse: 'Gracias Javi! 💪🏾'
   },
   {
     id: 3,
-    name: 'Gonzalo Peralta',
-    role: 'Cliente verificado',
-    date: 'Hace 1 mes',
-    avatar: 'GP',
-    avatarBg: 'bg-blue-600',
+    name: 'Lean Cler',
+    role: '3 opiniones',
+    date: 'Hace pocos días',
+    avatar: 'LC',
+    avatarBg: 'bg-orange-600',
     stars: 5,
-    device: 'Motorola Edge 40',
-    issue: 'Batería original y pin de carga',
-    comment: 'Cambiaron la batería y el puerto de carga tipo C en el mismo día. Te explican exactamente lo que tiene el teléfono sin vueltas raras. Además pude estacionar el auto en la puerta del taller sobre Montes Carballo sin dar vueltas. 10 de 10.',
+    comment: 'Excelente servicio! Rapidez, compromiso y buen precio. Recomiendo!!',
+    ownerResponse: null
   },
   {
     id: 4,
-    name: 'Valeria Rossi',
-    role: 'Cliente verificado',
-    date: 'Hace 1 mes',
-    avatar: 'VR',
+    name: 'martin baillieau',
+    role: 'Local Guide · 4 opiniones',
+    date: 'Hace pocos días',
+    avatar: 'MB',
     avatarBg: 'bg-purple-600',
     stars: 5,
-    device: 'Samsung Galaxy S22',
-    issue: 'Desulfatado por caída en agua y rescate de datos',
-    comment: 'Se me cayó el celular al agua y se apagó. Lo trataron con baño ultrasónico y recuperaron absolutamente todas las fotos y recuerdos de mi familia que no tenía respaldadas. Eternamente agradecida con el profesionalismo del equipo.',
+    comment: 'Excelente servicio y atencion. Muy buen precio!',
+    ownerResponse: null
   },
   {
     id: 5,
-    name: 'Facundo Medina',
+    name: 'Franco Lamatina',
     role: 'Cliente verificado',
-    date: 'Hace 2 meses',
-    avatar: 'FM',
+    date: 'Hace pocos días',
+    avatar: 'FL',
+    avatarBg: 'bg-cyan-600',
+    stars: 5,
+    comment: 'Excelentes productos, muy buena atención, lo recomiendo.',
+    ownerResponse: null
+  },
+  {
+    id: 6,
+    name: 'marcelo orsini',
+    role: '3 opiniones',
+    date: 'Hace pocos días',
+    avatar: 'MO',
+    avatarBg: 'bg-rose-600',
+    stars: 5,
+    comment: 'Calidad en atención. Exelente calidad en repuestos y celus nuevos!!',
+    ownerResponse: 'Gracias 🫂 Marce!'
+  },
+  {
+    id: 7,
+    name: 'Anyi Romano',
+    role: '5 opiniones',
+    date: 'Hace pocos días',
+    avatar: 'AR',
     avatarBg: 'bg-amber-600',
     stars: 5,
-    device: 'iPhone 11 & MacBook Air',
-    issue: 'Mantenimiento integral y cambio de batería',
-    comment: 'El mejor servicio técnico de Mar del Plata sin dudas. El presupuesto por WhatsApp te lo pasan al toque y no te cobran el diagnóstico. Muy buena vibra, garantía escrita y una prolijidad que no se ve en otros talleres.',
+    comment: 'Excelente atención! Lo recomiendo',
+    ownerResponse: null
+  },
+  {
+    id: 8,
+    name: 'Lautaro Sanchez',
+    role: 'Cliente verificado',
+    date: 'Hace pocos días',
+    avatar: 'LS',
+    avatarBg: 'bg-teal-600',
+    stars: 5,
+    comment: 'Excelente servicio',
+    ownerResponse: null
+  },
+  {
+    id: 9,
+    name: 'Gabriel Mocciaro',
+    role: '2 opiniones',
+    date: 'Hace pocos días',
+    avatar: 'GM',
+    avatarBg: 'bg-indigo-600',
+    stars: 5,
+    comment: 'Excelente servicio ! Muchas gracias',
+    ownerResponse: null
+  },
+  {
+    id: 10,
+    name: 'Ayeray Bonansea',
+    role: 'Local Guide · 39 opiniones',
+    date: 'Hace pocos días',
+    avatar: 'AB',
+    avatarBg: 'bg-pink-600',
+    stars: 5,
+    comment: 'Excelente servicio',
+    ownerResponse: null
   }
 ];
 
@@ -72,25 +123,25 @@ export default function GoogleReviewsCarousel() {
 
   const googleMapsReviewsUrl = 'https://maps.app.goo.gl/83JQkwGBdY3tLGtd7';
 
-  // Autoplay cada 5.5 segundos (se pausa si el usuario hace hover)
+  // Rotación automática cada 5.5s (pausa al poner el mouse encima)
   useEffect(() => {
     if (isPaused) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % GOOGLE_REVIEWS.length);
+      setCurrentIndex((prev) => (prev + 1) % REAL_GOOGLE_REVIEWS.length);
     }, 5500);
 
     return () => clearInterval(interval);
   }, [isPaused]);
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + GOOGLE_REVIEWS.length) % GOOGLE_REVIEWS.length);
+    setCurrentIndex((prev) => (prev - 1 + REAL_GOOGLE_REVIEWS.length) % REAL_GOOGLE_REVIEWS.length);
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % GOOGLE_REVIEWS.length);
+    setCurrentIndex((prev) => (prev + 1) % REAL_GOOGLE_REVIEWS.length);
   };
 
-  const current = GOOGLE_REVIEWS[currentIndex];
+  const current = REAL_GOOGLE_REVIEWS[currentIndex];
 
   return (
     <div
@@ -100,14 +151,14 @@ export default function GoogleReviewsCarousel() {
     >
       <div className="relative rounded-2xl bg-zinc-900/85 border border-zinc-800/90 p-5 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl overflow-hidden transition-all duration-300">
         
-        {/* Glow sutil en la esquina */}
+        {/* Glow sutil ambiental */}
         <div className="absolute top-0 right-0 w-44 h-44 bg-[#FF5500]/10 blur-[80px] pointer-events-none rounded-full" />
         <div className="absolute bottom-0 left-0 w-36 h-36 bg-amber-500/10 blur-[70px] pointer-events-none rounded-full" />
 
         {/* Encabezado del Carrusel: Google Badge */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-zinc-800/80">
           <div className="flex items-center gap-3">
-            {/* Icono de Google estilizado */}
+            {/* Logo oficial de Google */}
             <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-md shrink-0">
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -130,13 +181,13 @@ export default function GoogleReviewsCarousel() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-white tracking-wide">Opiniones en Google</span>
+                <span className="text-sm font-bold text-white tracking-wide">Opiniones Reales en Google Maps</span>
                 <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                  5.0 ★★★★★
+                  5.0 ★★★★★ (32 opiniones)
                 </span>
               </div>
               <p className="text-[11px] text-zinc-400">
-                Experiencias de clientes reales en nuestro local de Mar del Plata
+                Montec - Servicio Técnico Celulares • Montes Carballo 943, Mar del Plata
               </p>
             </div>
           </div>
@@ -148,22 +199,32 @@ export default function GoogleReviewsCarousel() {
             onClick={() => trackClickLlamadaOMapa({ type: 'ver_opiniones_google', label: 'Ver opiniones en Google Maps', url: googleMapsReviewsUrl })}
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#FF5500] hover:text-[#FF7722] hover:underline self-start sm:self-auto transition-colors"
           >
-            <span>Ver todas en Google Maps</span>
+            <span>Ver todas las 32 en Google Maps</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
 
         {/* Tarjeta de la Reseña Activa */}
-        <div className="relative min-h-[140px] sm:min-h-[120px] flex flex-col justify-between">
+        <div className="relative min-h-[140px] flex flex-col justify-between">
           <Quote className="absolute -top-2 -left-2 w-8 h-8 text-zinc-800 pointer-events-none -z-0" />
           
           <div className="relative z-10">
-            {/* Texto del Testimonio */}
-            <p className="text-sm sm:text-base text-zinc-200 font-normal leading-relaxed italic mb-4">
+            {/* Texto del Testimonio Real */}
+            <p className="text-sm sm:text-base text-zinc-100 font-normal leading-relaxed italic mb-4">
               "{current.comment}"
             </p>
 
-            {/* Datos del Cliente y Dispositivo */}
+            {/* Respuesta del Propietario si existe */}
+            {current.ownerResponse && (
+              <div className="mb-4 pl-3 py-1.5 border-l-2 border-[#FF5500] bg-zinc-950/60 rounded-r-lg text-xs text-zinc-300 flex items-start gap-2">
+                <MessageSquare className="w-3.5 h-3.5 text-[#FF5500] shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-semibold text-white">Respuesta de Montec:</span> {current.ownerResponse}
+                </div>
+              </div>
+            )}
+
+            {/* Datos del Cliente */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-zinc-800/60">
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-full ${current.avatarBg} text-white font-bold text-xs flex items-center justify-center shadow-inner shrink-0`}>
@@ -174,11 +235,11 @@ export default function GoogleReviewsCarousel() {
                     <span className="text-sm font-bold text-white">{current.name}</span>
                     <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
                       <CheckCircle2 className="w-3 h-3" />
-                      Google
+                      Google Maps
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-zinc-400 mt-0.5">
-                    <span>{current.device}</span>
+                    <span>{current.role}</span>
                     <span>•</span>
                     <span className="text-zinc-500">{current.date}</span>
                   </div>
@@ -198,13 +259,13 @@ export default function GoogleReviewsCarousel() {
         {/* Controles de Navegación y Puntos (Dots) */}
         <div className="mt-5 pt-3 flex items-center justify-between border-t border-zinc-800/60">
           {/* Indicadores de Puntos */}
-          <div className="flex items-center gap-1.5">
-            {GOOGLE_REVIEWS.map((_, idx) => (
+          <div className="flex items-center gap-1.5 overflow-x-auto max-w-[200px] sm:max-w-none">
+            {REAL_GOOGLE_REVIEWS.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
                 aria-label={`Ver testimonio ${idx + 1}`}
-                className={`transition-all rounded-full ${
+                className={`transition-all rounded-full shrink-0 ${
                   idx === currentIndex
                     ? 'w-6 h-2 bg-[#FF5500]'
                     : 'w-2 h-2 bg-zinc-700 hover:bg-zinc-500'
@@ -214,7 +275,10 @@ export default function GoogleReviewsCarousel() {
           </div>
 
           {/* Flechas Anterior / Siguiente */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-[11px] font-mono text-zinc-500 mr-2 hidden sm:inline">
+              {currentIndex + 1} de {REAL_GOOGLE_REVIEWS.length}
+            </span>
             <button
               onClick={handlePrev}
               aria-label="Opinión anterior"
