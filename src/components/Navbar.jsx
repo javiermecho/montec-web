@@ -50,24 +50,52 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 transition-all duration-300 px-3 sm:px-6 lg:px-8 pt-2 sm:pt-3 w-full max-w-full">
-      {/* Top Banner de Transparencia Comercial & Políticas de Google Ads */}
-      <div className="max-w-7xl mx-auto mb-1.5 px-3 py-1 rounded-xl bg-zinc-950/90 border border-zinc-800/80 text-[10px] sm:text-[11px] text-zinc-300 flex items-center justify-between gap-2 shadow-xs backdrop-blur-md">
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <span className="flex items-center gap-1 text-zinc-200 font-medium">
-            <MapPin className="w-3 h-3 text-[#FF5500] shrink-0" />
-            <span>Montes Carballo 943 (Constitución, a metros de ex Sobremonte)</span>
-          </span>
-          <span className="hidden md:inline text-zinc-600">•</span>
-          <span className="hidden md:inline text-emerald-400 font-medium">🚗 Estacionamiento libre en la puerta</span>
-        </div>
-        <div className="flex items-center gap-2.5 shrink-0">
-          <span className="hidden sm:inline text-zinc-400">Lun a Vie 09:30-19:00 | Sáb 10:00-14:00</span>
+      {/* Barra superior de confianza / Top Announcement Bar */}
+      <div className="max-w-7xl mx-auto mb-1.5 px-3 sm:px-4 py-1.5 rounded-xl bg-zinc-950/95 border border-zinc-800/90 text-[10px] sm:text-[11px] text-zinc-300 flex items-center justify-between gap-2 shadow-xs backdrop-blur-md overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 sm:gap-3 flex-nowrap shrink-0">
           <a
-            href="tel:+5492235444991"
-            className="text-white hover:text-[#FF5500] font-mono font-bold flex items-center gap-1"
+            href="https://maps.google.com/?q=Montes+Carballo+943+Mar+del+Plata"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackClickLlamadaOMapa({ type: 'topbar_google_reviews', label: 'Top Bar Google 5.0', url: 'https://maps.google.com/?q=Montes+Carballo+943+Mar+del+Plata' })}
+            className="flex items-center gap-1.5 text-zinc-200 hover:text-white transition-colors group"
           >
-            <Phone className="w-3 h-3 text-[#FF5500]" />
-            <span>223 544-4991</span>
+            <span className="text-amber-400">⭐</span>
+            <strong className="text-white group-hover:text-amber-300 transition-colors">5.0 en Google</strong>
+            <span className="hidden sm:inline text-zinc-400 group-hover:text-zinc-200">(Ver opiniones y ubicación)</span>
+          </a>
+
+          <span className="text-zinc-700">•</span>
+
+          <a
+            href="https://maps.google.com/?q=Montes+Carballo+943+Mar+del+Plata"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-zinc-300 hover:text-[#FF5500] transition-colors whitespace-nowrap"
+          >
+            <span>📍</span>
+            <span className="font-medium">Montes Carballo 943, Mar del Plata</span>
+          </a>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <span className="hidden lg:inline text-zinc-700">•</span>
+          <span className="hidden lg:inline text-emerald-400 font-medium">🚗 Estacionamiento libre en la puerta</span>
+          
+          <span className="text-zinc-700 hidden sm:inline">•</span>
+
+          <a
+            href="https://instagram.com/montec.arg"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackClickLlamadaOMapa({ type: 'topbar_instagram', label: 'Top Bar Instagram @montec.ar', url: 'https://instagram.com/montec.arg' })}
+            className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/20 text-pink-300 hover:text-white transition-all whitespace-nowrap font-medium"
+            title="Seguinos en Instagram"
+          >
+            <svg className="w-3 h-3 text-pink-400 shrink-0" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+            <span>@montec.ar</span>
           </a>
         </div>
       </div>
