@@ -40,6 +40,7 @@ export default function Navbar() {
     { name: 'Inicio', href: '#inicio' },
     { name: 'Cotizador', href: '#cotizador', badge: 'Online' },
     { name: 'Laboratorio', href: '#laboratorio' },
+    { name: 'Historia', href: '#historia' },
     { name: 'Instagram', href: '#instagram' },
     { name: 'Accesorios', href: '#accesorios' },
     { name: 'Ubicación', href: '#ubicacion' },

@@ -74,6 +74,12 @@ export default function Footer() {
                 <a href="#laboratorio" className="hover:text-white transition-colors">Laboratorio Propio</a>
               </li>
               <li>
+                <a href="#historia" className="hover:text-white transition-colors">Nuestra Historia (12 Años)</a>
+              </li>
+              <li>
+                <a href="#instagram" className="hover:text-white transition-colors">Instagram @montec.arg</a>
+              </li>
+              <li>
                 <a href="#accesorios" className="hover:text-white transition-colors">Catálogo de Accesorios</a>
               </li>
               <li>

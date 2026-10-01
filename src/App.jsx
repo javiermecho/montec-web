@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import QuotationTool from './components/QuotationTool';
 import Laboratory from './components/Laboratory';
+import OurStory from './components/OurStory';
 import Accessories from './components/Accessories';
 import InstagramFeed from './components/InstagramFeed';
 import LocationContact from './components/LocationContact';
@@ -62,6 +63,7 @@ function AppContent() {
         <Hero />
         <QuotationTool />
         <Laboratory />
+        <OurStory />
         <Accessories />
         <InstagramFeed />
         <LocationContact />
