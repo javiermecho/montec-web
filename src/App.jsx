@@ -4,6 +4,7 @@ import Hero from './components/Hero';
 import QuotationTool from './components/QuotationTool';
 import Laboratory from './components/Laboratory';
 import Accessories from './components/Accessories';
+import InstagramFeed from './components/InstagramFeed';
 import LocationContact from './components/LocationContact';
 import Footer from './components/Footer';
 import AdminPanel from './components/AdminPanel';
@@ -62,6 +63,7 @@ function AppContent() {
         <QuotationTool />
         <Laboratory />
         <Accessories />
+        <InstagramFeed />
         <LocationContact />
       </main>
 
