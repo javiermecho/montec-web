@@ -54,21 +54,21 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto mb-1.5 px-3 sm:px-4 py-1.5 rounded-xl bg-zinc-950/95 border border-zinc-800/90 text-[10px] sm:text-[11px] text-zinc-300 flex items-center justify-between gap-2 shadow-xs backdrop-blur-md overflow-x-auto no-scrollbar">
         <div className="flex items-center gap-2 sm:gap-3 flex-nowrap shrink-0">
           <a
-            href="https://maps.google.com/?q=Montes+Carballo+943+Mar+del+Plata"
+            href="https://maps.app.goo.gl/83JQkwGBdY3tLGtd7"
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => trackClickLlamadaOMapa({ type: 'topbar_google_reviews', label: 'Top Bar Google 5.0', url: 'https://maps.google.com/?q=Montes+Carballo+943+Mar+del+Plata' })}
+            onClick={() => trackClickLlamadaOMapa({ type: 'topbar_google_reviews', label: 'Top Bar Google 5.0', url: 'https://maps.app.goo.gl/83JQkwGBdY3tLGtd7' })}
             className="flex items-center gap-1.5 text-zinc-200 hover:text-white transition-colors group"
           >
             <span className="text-amber-400">⭐</span>
             <strong className="text-white group-hover:text-amber-300 transition-colors">5.0 en Google</strong>
-            <span className="hidden sm:inline text-zinc-400 group-hover:text-zinc-200">(Ver opiniones y ubicación)</span>
+            <span className="hidden sm:inline text-zinc-400 group-hover:text-zinc-200">(Montec - Servicio Técnico Celulares)</span>
           </a>
 
           <span className="text-zinc-700">•</span>
 
           <a
-            href="https://maps.google.com/?q=Montes+Carballo+943+Mar+del+Plata"
+            href="https://maps.app.goo.gl/83JQkwGBdY3tLGtd7"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 text-zinc-300 hover:text-[#FF5500] transition-colors whitespace-nowrap"

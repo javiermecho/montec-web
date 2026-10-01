@@ -103,13 +103,19 @@ export default function Footer() {
               Local & Contacto Directo
             </h4>
             <div className="space-y-2.5 text-xs">
-              <div className="flex items-start gap-2">
+              <a
+                href="https://maps.app.goo.gl/83JQkwGBdY3tLGtd7"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-2 hover:text-[#FF5500] transition-colors group"
+                title="Ver ubicación en Google Maps"
+              >
                 <MapPin className="w-4 h-4 text-[#FF5500] shrink-0 mt-0.5" />
-                <span className="text-zinc-300 leading-tight">
-                  <strong className="text-white block">Montes Carballo 943</strong>
-                  Mar del Plata (Constitución, a metros de ex Sobremonte)
+                <span className="text-zinc-300 group-hover:text-white leading-tight transition-colors">
+                  <strong className="text-white block group-hover:text-[#FF5500] transition-colors">Montes Carballo 943</strong>
+                  Mar del Plata (Montec - Servicio Técnico Celulares)
                 </span>
-              </div>
+              </a>
               <div className="flex items-start gap-2">
                 <Car className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                 <span className="text-emerald-300 text-[11px] font-medium leading-tight">

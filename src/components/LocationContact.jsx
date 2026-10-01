@@ -27,8 +27,9 @@ export default function LocationContact() {
   ];
 
   const address = 'Montes Carballo 943, B7600 Mar del Plata, Provincia de Buenos Aires';
-  const googleMapsDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
-  const instagramUrl = 'https://instagram.com/montec.arg';
+  const googleMapsUrl = businessConfig?.business?.googleMapsUrl || 'https://maps.app.goo.gl/83JQkwGBdY3tLGtd7';
+  const googleMapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=Montec+-+Servicio+T%C3%A9cnico+Celulares&destination_place_id=ChIJGcB0g5DZhJURvNzYiqMc-J4';
+  const instagramUrl = businessConfig?.contact?.instagramUrl || 'https://instagram.com/montec.arg';
   const rawWhatsapp = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.supportPhone || '5492235444991';
   const whatsappNumber = rawWhatsapp.replace(/[^0-9]/g, '') || '5492235444991';
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('¡Hola montec! Quisiera hacer una consulta técnica sobre mi equipo.')}`;
@@ -111,14 +112,14 @@ export default function LocationContact() {
                     </a>
 
                     <a
-                      href={googleMapsDirectionsUrl}
+                      href={googleMapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => trackClickLlamadaOMapa({ type: 'mapa_como_llegar', label: 'Cómo llegar con Google Maps', url: googleMapsDirectionsUrl })}
+                      onClick={() => trackClickLlamadaOMapa({ type: 'mapa_como_llegar', label: 'Ver local en Google Maps', url: googleMapsUrl })}
                       className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-bold text-zinc-200 hover:text-white transition-all cursor-pointer"
                     >
-                      <span>Abrir en Maps</span>
-                      <Navigation className="w-3.5 h-3.5" />
+                      <span>Ver en Google Maps</span>
+                      <Navigation className="w-3.5 h-3.5 text-[#FF5500]" />
                     </a>
                   </div>
                 </div>
@@ -197,23 +198,23 @@ export default function LocationContact() {
             <div className="px-5 py-3.5 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-medium text-zinc-300">
                 <span className="w-2 h-2 rounded-full bg-[#FF5500] animate-ping" />
-                <span>Ubicación en Tiempo Real: Montes Carballo 943</span>
+                <span>Montec - Servicio Técnico Celulares (Montes Carballo 943)</span>
               </div>
               <a
-                href={googleMapsDirectionsUrl}
+                href={googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => trackClickLlamadaOMapa({ type: 'mapa_completo', label: 'Abrir Mapa Completo', url: googleMapsDirectionsUrl })}
+                onClick={() => trackClickLlamadaOMapa({ type: 'mapa_completo', label: 'Abrir Ficha de Google Maps', url: googleMapsUrl })}
                 className="text-xs text-[#FF5500] hover:underline flex items-center gap-1 font-semibold"
               >
-                Abrir Mapa Completo
+                Abrir en Google Maps
               </a>
             </div>
 
             <div className="flex-1 w-full h-full min-h-[380px] relative">
               <iframe
-                title="Ubicación montec Mar del Plata"
-                src="https://maps.google.com/maps?q=Montes+Carballo+943,+Mar+del+Plata,+Buenos+Aires&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                title="Ubicación oficial Montec - Servicio Técnico Celulares en Google Maps"
+                src="https://maps.google.com/maps?q=Montec+-+Servicio+T%C3%A9cnico+Celulares&ll=-37.9578329,-57.5701852&z=17&t=&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) contrast(90%)' }}

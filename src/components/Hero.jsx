@@ -40,8 +40,8 @@ export default function Hero() {
   const rawWhatsapp = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.supportPhone || '5492235444991';
   const whatsappNumber = rawWhatsapp.replace(/[^0-9]/g, '') || '5492235444991';
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('¡Hola montec! Quisiera consultar por el diagnóstico/reparación de mi equipo.')}`;
-  const googleMapsUrl = 'https://maps.google.com/?q=Montes+Carballo+943+Mar+del+Plata';
-  const instagramUrl = 'https://instagram.com/montec.arg';
+  const googleMapsUrl = businessConfig?.business?.googleMapsUrl || 'https://maps.app.goo.gl/83JQkwGBdY3tLGtd7';
+  const instagramUrl = businessConfig?.contact?.instagramUrl || 'https://instagram.com/montec.arg';
 
   return (
     <section

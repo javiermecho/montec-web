@@ -70,7 +70,7 @@ export default function GoogleReviewsCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  const googleMapsReviewsUrl = 'https://maps.google.com/?q=Montes+Carballo+943+Mar+del+Plata';
+  const googleMapsReviewsUrl = 'https://maps.app.goo.gl/83JQkwGBdY3tLGtd7';
 
   // Autoplay cada 5.5 segundos (se pausa si el usuario hace hover)
   useEffect(() => {

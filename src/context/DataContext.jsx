@@ -39,6 +39,10 @@ export const DEFAULT_BUSINESS_CONFIG = {
   business: {
     fantasyName: 'MONTEC',
     legalName: 'MONTEC SERVICIO TÉCNICO',
+    googleBusinessName: 'Montec - Servicio Técnico Celulares',
+    googleMapsUrl: 'https://maps.app.goo.gl/83JQkwGBdY3tLGtd7',
+    latitude: -37.9578329,
+    longitude: -57.5701852,
     cuit: '20-38492019-4',
     iibb: '20-38492019-4',
     ivaCondition: 'Responsable Inscripto', // Monotributo | Responsable Inscripto | Exento
@@ -46,13 +50,15 @@ export const DEFAULT_BUSINESS_CONFIG = {
     address: 'Montes Carballo 943',
     city: 'Mar del Plata',
     state: 'Buenos Aires',
-    zipCode: '7600',
+    zipCode: 'B7600',
     country: 'Argentina'
   },
   contact: {
     supportPhone: '+54 9 223 544-4991',
     technicalWhatsapp: '+54 9 223 544-4991',
     quotationWhatsapp: '+54 9 223 544-4991',
+    googleMapsUrl: 'https://maps.app.goo.gl/83JQkwGBdY3tLGtd7',
+    instagramUrl: 'https://instagram.com/montec.arg',
     contactEmail: 'consultas@montec.ar',
     billingEmail: 'facturacion@montec.ar',
     website: 'https://montec.ar'
