@@ -74,7 +74,18 @@ export default function Footer() {
                 <a href="#laboratorio" className="hover:text-white transition-colors">Laboratorio Propio</a>
               </li>
               <li>
-                <a href="#historia" className="hover:text-white transition-colors">Nuestra Historia (12 Años)</a>
+                <a 
+                  href="/historia" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.history.pushState({}, '', '/historia');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="hover:text-white transition-colors cursor-pointer"
+                >
+                  Nuestra Historia (12 Años)
+                </a>
               </li>
               <li>
                 <a href="#instagram" className="hover:text-white transition-colors">Instagram @montec.arg</a>

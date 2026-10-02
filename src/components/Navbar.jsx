@@ -4,7 +4,7 @@ import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
 import { trackClickLlamadaOMapa, trackWhatsAppClick } from '../services/analytics';
 
-export default function Navbar() {
+export default function Navbar({ onNavigateHistory }) {
   const { setIsQuoteModalOpen, businessConfig } = useData();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -40,7 +40,7 @@ export default function Navbar() {
     { name: 'Inicio', href: '#inicio' },
     { name: 'Cotizador', href: '#cotizador', badge: 'Online' },
     { name: 'Laboratorio', href: '#laboratorio' },
-    { name: 'Historia', href: '#historia' },
+    { name: 'Historia', href: '/historia' },
     { name: 'Instagram', href: '#instagram' },
     { name: 'Accesorios', href: '#accesorios' },
     { name: 'Ubicación', href: '#ubicacion' },
@@ -132,6 +132,28 @@ export default function Navbar() {
                       </span>
                     )}
                   </button>
+                );
+              }
+
+              if (link.name === 'Historia') {
+                return (
+                  <a
+                    key={link.name}
+                    href="/historia"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (onNavigateHistory) {
+                        onNavigateHistory();
+                      } else {
+                        window.history.pushState({}, '', '/historia');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                      }
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="relative px-3.5 py-1.5 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-white/5 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>{link.name}</span>
+                  </a>
                 );
               }
 
@@ -229,6 +251,29 @@ export default function Navbar() {
                       </span>
                     )}
                   </button>
+                );
+              }
+
+              if (link.name === 'Historia') {
+                return (
+                  <a
+                    key={link.name}
+                    href="/historia"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMobileMenuOpen(false);
+                      if (onNavigateHistory) {
+                        onNavigateHistory();
+                      } else {
+                        window.history.pushState({}, '', '/historia');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                      }
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="flex items-center justify-between px-3 py-2 text-base font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/60 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <span>{link.name}</span>
+                  </a>
                 );
               }
 
