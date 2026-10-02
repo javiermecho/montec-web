@@ -16,16 +16,19 @@ import {
   AlertCircle,
   Barcode,
   Layers,
-  ArrowUpDown
+  ArrowUpDown,
+  FileSpreadsheet
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { ACCESSORIES_CATEGORIES } from '../../data/accessoriesData';
 import ImageUploadDropzone from '../common/ImageUploadDropzone';
+import BulkImportModal from './BulkImportModal';
 
 export default function InventoryManager() {
   const { 
     inventory, 
     addProduct, 
+    addMultipleProducts,
     updateProduct, 
     updateProductStock, 
     deleteProduct, 
@@ -41,6 +44,7 @@ export default function InventoryManager() {
 
   // --- Estados de Modales ---
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
@@ -227,7 +231,20 @@ export default function InventoryManager() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsBulkImportOpen(true)}
+            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+              isLight 
+                ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300 shadow-xs' 
+                : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white border-zinc-700/80 hover:border-[#FF5500]/50'
+            }`}
+          >
+            <FileSpreadsheet className="w-4 h-4 text-[#FF5500]" />
+            <span>Carga Masiva (Sheets / CSV)</span>
+          </button>
+
           <button
             type="button"
             onClick={handleOpenCreateModal}
@@ -835,6 +852,14 @@ export default function InventoryManager() {
           </div>
         </div>
       )}
+
+      {/* 5. MODAL DE CARGA MASIVA DESDE GOOGLE SHEETS / CSV */}
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        onImportSuccess={addMultipleProducts}
+        panelTheme={panelTheme}
+      />
 
     </div>
   );

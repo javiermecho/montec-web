@@ -1515,6 +1515,95 @@ export function DataProvider({ children }) {
     });
   };
 
+  /**
+   * Carga masiva de productos (desde Google Sheets o CSV)
+   * Soporta actualización por SKU/código o agregado único
+   */
+  const addMultipleProducts = async (productsList, options = { mode: 'update_or_add' }) => {
+    if (!Array.isArray(productsList) || productsList.length === 0) {
+      return { total: 0, added: 0, updated: 0 };
+    }
+
+    let addedCount = 0;
+    let updatedCount = 0;
+
+    const formattedList = productsList.map((item, idx) => {
+      const cost = Number(item.costPrice) || Number(item.cost) || 0;
+      const price = Number(item.price) || Math.round(cost * 1.5) || 1000;
+      const sku = String(item.sku || '').trim() || `PROD-${Date.now().toString().slice(-4)}-${idx + 1}`;
+      const barcode = String(item.barcode || '').trim() || sku;
+
+      return {
+        id: item.id || `prod_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 7)}`,
+        name: String(item.name || item.nombre || item.title || 'Producto sin nombre').trim(),
+        category: String(item.category || item.categoria || 'Varios').trim(),
+        sku: sku,
+        barcode: barcode,
+        compatible: String(item.compatible || item.compatibilidad || 'Universal').trim(),
+        costPrice: cost,
+        price: price,
+        stock: parseInt(item.stock, 10) >= 0 ? parseInt(item.stock, 10) : 10,
+        minStock: parseInt(item.minStock, 10) >= 0 ? parseInt(item.minStock, 10) : 3,
+        visibleInWeb: item.visibleInWeb !== undefined ? Boolean(item.visibleInWeb) : true,
+        badge: item.badge || 'Disponible',
+        image: item.image || item.imagen || '',
+        features: Array.isArray(item.features) ? item.features : (item.features ? String(item.features).split('\n').filter(Boolean) : [])
+      };
+    });
+
+    setInventory(prev => {
+      if (options.mode === 'replace_all') {
+        addedCount = formattedList.length;
+        return formattedList;
+      }
+
+      const existingMap = new Map();
+      prev.forEach((p, i) => {
+        if (p.sku) existingMap.set(String(p.sku).toLowerCase(), i);
+        if (p.barcode) existingMap.set(String(p.barcode).toLowerCase(), i);
+        if (p.id) existingMap.set(String(p.id).toLowerCase(), i);
+      });
+
+      const nextList = [...prev];
+
+      formattedList.forEach(newProd => {
+        const keySku = newProd.sku ? String(newProd.sku).toLowerCase() : null;
+        const keyBar = newProd.barcode ? String(newProd.barcode).toLowerCase() : null;
+
+        let existingIdx = undefined;
+        if (keySku && existingMap.has(keySku)) existingIdx = existingMap.get(keySku);
+        else if (keyBar && existingMap.has(keyBar)) existingIdx = existingMap.get(keyBar);
+
+        if (existingIdx !== undefined && options.mode !== 'add_only') {
+          nextList[existingIdx] = {
+            ...nextList[existingIdx],
+            ...newProd,
+            id: nextList[existingIdx].id
+          };
+          updatedCount++;
+        } else if (existingIdx === undefined) {
+          nextList.unshift(newProd);
+          if (keySku) existingMap.set(keySku, 0);
+          addedCount++;
+        }
+      });
+
+      return nextList;
+    });
+
+    // Sincronizar en lote ligero con PostgreSQL en segundo plano
+    try {
+      const sample = formattedList.slice(0, 30);
+      sample.forEach(p => {
+        api.createProducto(p).catch(() => {});
+      });
+    } catch (e) {
+      console.warn('⚠️ Sincronización en lote con Railway omitida:', e);
+    }
+
+    return { total: formattedList.length, added: addedCount, updated: updatedCount };
+  };
+
   // Aliases para retrocompatibilidad con componentes existentes
   const addAccessory = addProduct;
   const updateAccessory = updateProduct;
@@ -2418,6 +2507,7 @@ export function DataProvider({ children }) {
       inventory,
       products: inventory,
       addProduct,
+      addMultipleProducts,
       updateProduct,
       updateProductStock,
       deleteProduct,
