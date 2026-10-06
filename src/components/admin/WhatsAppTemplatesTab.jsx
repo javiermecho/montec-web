@@ -99,10 +99,10 @@ export default function WhatsAppTemplatesTab() {
     },
     {
       key: 'orderWaitingAuth',
-      title: 'Espera Autorización / Presupuesto',
+      title: 'Presupuestar (Espera Autorización)',
       category: 'Taller',
-      badge: 'Diagnóstico',
-      badgeColor: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      badge: 'Presupuesto',
+      badgeColor: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
       description: 'Mensaje con el diagnóstico técnico y presupuesto para que el cliente confirme la reparación.',
       availableVars: [
         { tag: '{cliente}', label: 'Nombre Cliente', example: 'Lucas Romero' },
@@ -110,6 +110,8 @@ export default function WhatsAppTemplatesTab() {
         { tag: '{equipo}', label: 'Equipo', example: 'Motorola Moto G84' },
         { tag: '{informe_tecnico}', label: 'Informe Técnico', example: 'Se detectó integrado de carga dañado por sobretensión.' },
         { tag: '{total}', label: 'Presupuesto Total', example: '$55.000' },
+        { tag: '{saldo}', label: 'Saldo al Retirar', example: '$55.000' },
+        { tag: '{sena}', label: 'Seña Entregada', example: '$0' },
         { tag: '{local}', label: 'Nombre Local', example: businessConfig?.business?.fantasyName || 'MONTEC' }
       ]
     },

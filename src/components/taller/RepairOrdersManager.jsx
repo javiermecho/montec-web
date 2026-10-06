@@ -63,8 +63,17 @@ export const STATUS_CONFIG = {
     icon: Clock
   },
   waiting_auth: {
-    label: 'Espera Autorización',
-    shortLabel: 'Presupuesto Pendiente',
+    label: 'Presupuestar (Espera Autorización)',
+    shortLabel: 'Presupuestar',
+    color: 'purple',
+    badgeClass: 'bg-purple-950/60 text-purple-200 border-purple-500/40',
+    lightBadgeClass: 'bg-purple-50 text-purple-800 border-purple-200',
+    dotClass: 'bg-purple-400',
+    icon: HelpCircle
+  },
+  quoting: {
+    label: 'Presupuestar (Espera Autorización)',
+    shortLabel: 'Presupuestar',
     color: 'purple',
     badgeClass: 'bg-purple-950/60 text-purple-200 border-purple-500/40',
     lightBadgeClass: 'bg-purple-50 text-purple-800 border-purple-200',
@@ -129,7 +138,7 @@ export const STATUS_CONFIG = {
 
 export const WORKSHOP_TABS = [
   { key: 'received', shortLabel: 'Recibido', config: STATUS_CONFIG.received },
-  { key: 'waiting_auth', shortLabel: 'Presupuesto Pendiente', config: STATUS_CONFIG.waiting_auth },
+  { key: 'waiting_auth', shortLabel: 'Presupuestar', config: STATUS_CONFIG.waiting_auth },
   { key: 'waiting_part', shortLabel: 'Faltante Repuesto', config: STATUS_CONFIG.waiting_part },
   { key: 'in_progress', shortLabel: 'En Mesa', config: STATUS_CONFIG.in_progress },
   { key: 'ready', shortLabel: 'Reparado OK', config: STATUS_CONFIG.ready },
@@ -142,6 +151,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     orders, 
     updateRepairOrder,
     updateRepairOrderStatus, 
+    updateOrderBudget,
     addOrderInternalNote,
     recordOrderPayment,
     deleteRepairOrder,
@@ -169,12 +179,35 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   const [ticketModalOrder, setTicketModalOrder] = useState(null);
   const [isDailyCashModalOpen, setIsDailyCashModalOpen] = useState(false);
 
+  // Modo de apertura de WhatsApp ('web' = directo a web.whatsapp.com, 'desktop' = app Windows, 'link' = wa.me)
+  const [waMode, setWaMode] = useState(() => {
+    try {
+      return localStorage.getItem('montec_wa_mode') || 'web';
+    } catch (e) {
+      return 'web';
+    }
+  });
+
+  const handleSetWaMode = (mode) => {
+    setWaMode(mode);
+    try {
+      localStorage.setItem('montec_wa_mode', mode);
+    } catch (e) {}
+  };
+
   // Estados del Drawer / Detalle de Orden
   const [activeTab, setActiveTab] = useState('summary'); // 'summary', 'technician', 'notes', 'history'
   const [showPatternModal, setShowPatternModal] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
   const [clientHistoryFilter, setClientHistoryFilter] = useState(null);
+
+  // Modal para Asignar / Modificar Presupuesto
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+  const [budgetModalValue, setBudgetModalValue] = useState('');
+  const [budgetModalNote, setBudgetModalNote] = useState('');
+  const [budgetModalSendWhatsApp, setBudgetModalSendWhatsApp] = useState(true);
+  const [budgetModalChangeStatus, setBudgetModalChangeStatus] = useState(true);
 
   // Reprogramar fecha de entrega
   const [isRescheduling, setIsRescheduling] = useState(false);
@@ -193,6 +226,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   const [targetStatus, setTargetStatus] = useState(null); // Estado al que se quiere cambiar
   const [techReport, setTechReport] = useState('');
   const [techInternalNote, setTechInternalNote] = useState('');
+  const [techBudgetValue, setTechBudgetValue] = useState(''); // Presupuesto ingresado en la transición técnica
   const [deliveryResolutionChoice, setDeliveryResolutionChoice] = useState('ready'); // 'ready' | 'no_repair'
   const [exitChecklist, setExitChecklist] = useState({
     turnsOn: true,
@@ -451,12 +485,28 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
       ? formatWhatsAppTemplate(rawTemplate, vars)
       : rawTemplate;
 
-    const cleanPhone = (order.customer?.phone || '').replace(/[^0-9]/g, '');
-    const finalPhone = cleanPhone.startsWith('54') ? cleanPhone : `549${cleanPhone}`;
-    return `https://wa.me/${finalPhone}?text=${encodeURIComponent(formattedMessage)}`;
+    return buildWhatsAppLink(order.customer?.phone, formattedMessage);
   };
 
-  // Procesar cambio de estado formal con informe técnico y checklist
+  // Construye el enlace de WhatsApp según el modo configurado por el usuario
+  const buildWhatsAppLink = (phone, text, mode = waMode) => {
+    const clean = (phone || '').replace(/[^0-9]/g, '');
+    const finalPhone = clean.startsWith('54') ? clean : `549${clean}`;
+    const encoded = encodeURIComponent(text || '');
+
+    if (mode === 'desktop') {
+      // Abre la app de escritorio de WhatsApp en Windows directamente sin abrir Chrome
+      return `whatsapp://send?phone=${finalPhone}&text=${encoded}`;
+    }
+    if (mode === 'web') {
+      // Abre WhatsApp Web directo en el chat sin pasar por la página de confirmación intermedia de wa.me
+      return `https://web.whatsapp.com/send?phone=${finalPhone}&text=${encoded}`;
+    }
+    // Enlace universal estándar (wa.me)
+    return `https://wa.me/${finalPhone}?text=${encoded}`;
+  };
+
+  // Procesar cambio de estado formal con informe técnico, presupuesto y checklist
   const handleProcessOrder = () => {
     if (!selectedOrder || !targetStatus) return;
 
@@ -473,6 +523,12 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
       addOrderInternalNote(selectedOrder.id, techInternalNote.trim(), 'Taller Montec');
     }
 
+    // Si se especificó un presupuesto en la transición técnica
+    let newBudgetNum = undefined;
+    if (techBudgetValue !== '' && !isNaN(parseFloat(techBudgetValue))) {
+      newBudgetNum = parseFloat(techBudgetValue);
+    }
+
     // Datos adicionales a guardar en la orden
     const extraData = {
       technicalReport: techReport,
@@ -482,14 +538,29 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
       exitChecklist: {
         ...(selectedOrder.exitChecklist || {}),
         ...exitChecklist
-      }
+      },
+      budgetTotal: newBudgetNum
     };
 
     updateRepairOrderStatus(selectedOrder.id, targetStatus, note, extraData);
 
+    // Si se especificó presupuesto, asegurar persistencia en BD
+    if (newBudgetNum !== undefined) {
+      updateOrderBudget(selectedOrder.id, newBudgetNum, `Presupuesto asignado al pasar a estado ${statusObj.label}: $${newBudgetNum.toLocaleString('es-AR')}`);
+    }
+
     // Disparar WhatsApp si está seleccionado
     if (sendWhatsAppOnProcess) {
-      const waUrl = generateStatusWhatsAppUrl(selectedOrder, targetStatus, techReport);
+      const orderForWa = newBudgetNum !== undefined ? {
+        ...selectedOrder,
+        service: {
+          ...(selectedOrder.service || {}),
+          budgetTotal: newBudgetNum,
+          balanceDue: Math.max(0, newBudgetNum - (Number(selectedOrder.service?.deposit) || 0))
+        }
+      } : selectedOrder;
+
+      const waUrl = generateStatusWhatsAppUrl(orderForWa, targetStatus, techReport);
       window.open(waUrl, '_blank', 'noopener,noreferrer');
     }
 
@@ -497,6 +568,45 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     setTargetStatus(null);
     setTechReport('');
     setTechInternalNote('');
+    setTechBudgetValue('');
+  };
+
+  // Guardar presupuesto modificado / asignado desde el modal dedicado
+  const handleSaveBudgetSubmit = (e) => {
+    e.preventDefault();
+    if (!selectedOrder) return;
+    const newBudgetNum = parseFloat(budgetModalValue) || 0;
+    
+    // 1. Actualizar el presupuesto en el context y PostgreSQL
+    updateOrderBudget(selectedOrder.id, newBudgetNum, budgetModalNote);
+
+    // 2. Si se eligió cambiar de estado a 'waiting_auth' (Presupuestar)
+    if (budgetModalChangeStatus && selectedOrder.status !== 'waiting_auth') {
+      updateRepairOrderStatus(
+        selectedOrder.id, 
+        'waiting_auth', 
+        `Presupuesto asignado: $${newBudgetNum.toLocaleString('es-AR')}. En espera de aprobación del cliente.`,
+        { budgetTotal: newBudgetNum }
+      );
+    }
+
+    // 3. Si se eligió enviar notificación por WhatsApp
+    if (budgetModalSendWhatsApp) {
+      const updatedOrderForWa = {
+        ...selectedOrder,
+        service: {
+          ...(selectedOrder.service || {}),
+          budgetTotal: newBudgetNum,
+          balanceDue: Math.max(0, newBudgetNum - (Number(selectedOrder.service?.deposit) || 0))
+        }
+      };
+      const waUrl = generateStatusWhatsAppUrl(updatedOrderForWa, 'waiting_auth', budgetModalNote || 'Presupuesto elaborado en taller');
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
+    }
+
+    setIsBudgetModalOpen(false);
+    setBudgetModalValue('');
+    setBudgetModalNote('');
   };
 
   // Guardar reprogramación de fecha
@@ -582,10 +692,34 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
             )}
           </div>
 
-          {/* Contador de pendientes */}
-          <div className="flex items-center gap-1.5 text-xs self-end sm:self-auto">
+          {/* Selector de Canal WhatsApp y Contador de pendientes */}
+          <div className="flex items-center gap-2.5 text-xs self-end sm:self-auto flex-wrap">
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs shadow-xs ${
+              isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-zinc-900 border-zinc-700 text-zinc-300'
+            }`}>
+              <MessageSquare className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              <select
+                value={waMode}
+                onChange={(e) => handleSetWaMode(e.target.value)}
+                className={`bg-transparent text-[11px] font-semibold outline-none cursor-pointer ${
+                  isLight ? 'text-slate-800' : 'text-zinc-200'
+                }`}
+                title="Configuración de salida de notificaciones por WhatsApp"
+              >
+                <option value="web" className={isLight ? 'bg-white text-slate-900' : 'bg-zinc-900 text-white'}>
+                  ⚡ WhatsApp Web (Directo)
+                </option>
+                <option value="desktop" className={isLight ? 'bg-white text-slate-900' : 'bg-zinc-900 text-white'}>
+                  💻 App de Windows (Desktop)
+                </option>
+                <option value="link" className={isLight ? 'bg-white text-slate-900' : 'bg-zinc-900 text-white'}>
+                  🌐 Enlace estándar (wa.me)
+                </option>
+              </select>
+            </div>
+
             <span className={`text-[11px] font-mono ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
-              Pendientes taller: <strong className={isLight ? 'text-amber-600 font-bold' : 'text-amber-400 font-bold'}>{orders.filter(o => o.status !== 'delivered' && o.status !== 'no_repair').length}</strong>
+              Pendientes: <strong className={isLight ? 'text-amber-600 font-bold' : 'text-amber-400 font-bold'}>{orders.filter(o => o.status !== 'delivered' && o.status !== 'no_repair').length}</strong>
             </span>
           </div>
         </div>
@@ -721,14 +855,14 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                         <div className="text-[11px] flex items-center gap-2 mt-0.5">
                           {order.customer?.phone && (
                             <a 
-                              href={`https://wa.me/549${order.customer.phone.replace(/[^0-9]/g, '')}`}
+                              href={buildWhatsAppLink(order.customer.phone, `¡Hola ${order.customer?.name || ''}! Te contactamos de ${businessConfig?.business?.fantasyName || 'MONTEC'} respecto a tu orden de reparación ${order.orderNumber} (${order.device?.brand || ''} ${order.device?.model || ''}).`)}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
                               className={`flex items-center gap-1 font-mono font-semibold ${
                                 isLight ? 'text-emerald-600 hover:text-emerald-700' : 'text-emerald-400 hover:text-emerald-300'
                               }`}
-                              title="Abrir WhatsApp directo"
+                              title={`Abrir chat con ${order.customer?.name || 'cliente'}`}
                             >
                               <MessageSquare className="w-3 h-3" />
                               <span>{order.customer.phone}</span>
@@ -810,7 +944,25 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                           {balance > 0 ? `$${balance.toLocaleString('es-AR')}` : 'Abonado OK'}
                         </div>
                         <div className={`text-[10px] ${isLight ? 'text-slate-500 font-medium' : 'text-zinc-500'}`}>
-                          Total: ${Number(totalBudget).toLocaleString('es-AR')}
+                          {Number(totalBudget) > 0 ? (
+                            `Total: $${Number(totalBudget).toLocaleString('es-AR')}`
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedOrder(order);
+                                setBudgetModalValue('');
+                                setBudgetModalNote('');
+                                setBudgetModalChangeStatus(true);
+                                setIsBudgetModalOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1 text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:text-purple-700 bg-purple-500/10 hover:bg-purple-500/20 px-1.5 py-0.5 rounded border border-purple-500/30 transition-all cursor-pointer"
+                              title="Asignar valor de presupuesto a esta orden"
+                            >
+                              + Presupuestar
+                            </button>
+                          )}
                         </div>
                       </td>
 
@@ -1282,20 +1434,41 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                 <div className={`border rounded-2xl p-5 shadow-xs transition-colors ${
                   isLight ? 'bg-white border-slate-200' : 'bg-[#18181c] border-zinc-800'
                 }`}>
-                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-zinc-700/30">
+                  <div className="flex items-center justify-between mb-4 pb-2 border-b border-zinc-700/30 flex-wrap gap-2">
                     <span className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
                       <DollarSign className="w-4 h-4 text-emerald-500" />
                       Presupuesto y Cobro
                     </span>
 
-                    <button
-                      type="button"
-                      onClick={() => setIsPaymentModalOpen(true)}
-                      className="px-3 py-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
-                    >
-                      <DollarSign className="w-3.5 h-3.5" />
-                      <span>Registrar Pago</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBudgetModalValue(selectedOrder.service?.budgetTotal ? String(selectedOrder.service.budgetTotal) : '');
+                          setBudgetModalNote('');
+                          setBudgetModalChangeStatus(selectedOrder.status === 'received');
+                          setIsBudgetModalOpen(true);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all border ${
+                          Number(selectedOrder.service?.budgetTotal || 0) === 0
+                            ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-500 shadow-sm animate-pulse'
+                            : 'bg-purple-500/15 hover:bg-purple-500/25 text-purple-700 dark:text-purple-300 border-purple-500/30'
+                        }`}
+                        title="Modificar o cargar el valor de la reparación luego de ingresado el equipo"
+                      >
+                        <Wrench className="w-3.5 h-3.5" />
+                        <span>{Number(selectedOrder.service?.budgetTotal || 0) === 0 ? 'Asignar Presupuesto' : 'Modificar Precio'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsPaymentModalOpen(true)}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                      >
+                        <DollarSign className="w-3.5 h-3.5" />
+                        <span>Registrar Pago</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div className={`grid grid-cols-3 gap-3 p-4 rounded-xl mb-4 text-center border ${
@@ -1449,10 +1622,13 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                     </div>
                   </button>
 
-                  {/* 2. Espera de Autorización */}
+                  {/* 2. Presupuestar (Espera de Autorización) */}
                   <button
                     type="button"
-                    onClick={() => setTargetStatus('waiting_auth')}
+                    onClick={() => {
+                      setTargetStatus('waiting_auth');
+                      setTechBudgetValue(selectedOrder.service?.budgetTotal ? String(selectedOrder.service.budgetTotal) : '');
+                    }}
                     className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
                       targetStatus === 'waiting_auth'
                         ? 'bg-purple-500/20 border-purple-500 ring-2 ring-purple-500/40 text-purple-950 dark:text-white font-bold shadow-md'
@@ -1463,8 +1639,8 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                   >
                     <HelpCircle className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
                     <div>
-                      <div className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>Espera de Autorización</div>
-                      <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Presupuesto pendiente de aprobación</div>
+                      <div className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>Presupuestar</div>
+                      <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>Asignar precio y notificar para aprobación</div>
                     </div>
                   </button>
 
@@ -1584,6 +1760,50 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                       }`}
                     />
                   </div>
+
+                  {/* Si el estado seleccionado es Presupuestar, solicitar el valor de la reparación */}
+                  {targetStatus === 'waiting_auth' && (
+                    <div className={`p-4 rounded-xl border space-y-3 ${
+                      isLight ? 'bg-purple-50/80 border-purple-200' : 'bg-purple-950/25 border-purple-500/40'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <label className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-purple-900' : 'text-purple-300'}`}>
+                          <DollarSign className="w-4 h-4 text-purple-500" />
+                          <span>Valor de la Reparación / Presupuesto Total ($):</span>
+                        </label>
+                        <span className="text-[11px] font-mono text-purple-500 dark:text-purple-300">
+                          Se actualizará en la orden y en el WhatsApp del cliente
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex-1">
+                          <DollarSign className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-slate-400' : 'text-zinc-400'}`} />
+                          <input
+                            type="number"
+                            min="0"
+                            step="any"
+                            value={techBudgetValue}
+                            onChange={(e) => setTechBudgetValue(e.target.value)}
+                            placeholder="Ej: 85000"
+                            className={`w-full border rounded-xl pl-9 pr-3 py-2 text-sm font-mono font-bold outline-none focus:border-purple-500 ${
+                              isLight ? 'bg-white border-purple-300 text-slate-900' : 'bg-zinc-900 border-purple-500/50 text-white'
+                            }`}
+                          />
+                        </div>
+
+                        {Number(selectedOrder.service?.deposit) > 0 && (
+                          <div className={`text-xs px-3 py-2 rounded-xl border font-mono ${isLight ? 'bg-white border-purple-200 text-purple-900' : 'bg-zinc-900 border-zinc-700 text-purple-300'}`}>
+                            Seña: ${Number(selectedOrder.service.deposit).toLocaleString('es-AR')} | Saldo:{' '}
+                            <strong className="text-emerald-500 font-bold">
+                              ${Math.max(0, (parseFloat(techBudgetValue) || 0) - Number(selectedOrder.service.deposit)).toLocaleString('es-AR')}
+                            </strong>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Si el estado seleccionado es Entregado, solicitar obligatoriamente la resolución */}
                   {targetStatus === 'delivered' && (
                     <div className={`p-4 rounded-xl border space-y-2.5 ${isLight ? 'bg-amber-50/50 border-amber-200' : 'bg-zinc-900/90 border-zinc-700'}`}>
@@ -2033,6 +2253,173 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     );
   };
 
+  const renderBudgetModal = () => {
+    if (!isBudgetModalOpen || !selectedOrder) return null;
+
+    const currentTotal = Number(selectedOrder.service?.budgetTotal) || 0;
+    const currentDeposit = Number(selectedOrder.service?.deposit) || 0;
+    const inputTotal = parseFloat(budgetModalValue) || 0;
+    const resultingBalance = Math.max(0, inputTotal - currentDeposit);
+
+    return createPortal(
+      <div className="fixed inset-0 z-[115] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fade-in font-sans">
+        <div className={`border rounded-2xl p-6 max-w-md w-full shadow-2xl relative ${
+          isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#161619] border-zinc-800 text-white'
+        }`}>
+          <button
+            type="button"
+            onClick={() => setIsBudgetModalOpen(false)}
+            className={`absolute top-4 right-4 p-1 rounded-lg cursor-pointer transition-colors ${
+              isLight ? 'text-slate-400 hover:text-slate-800 hover:bg-slate-100' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+            }`}
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center justify-center font-bold">
+              <DollarSign className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className={`text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                {currentTotal > 0 ? 'Modificar Presupuesto' : 'Presupuestar Reparación'}
+              </h4>
+              <p className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                Orden {selectedOrder.orderNumber} • {selectedOrder.device?.brand} {selectedOrder.device?.model}
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveBudgetSubmit} className="space-y-4 mt-4">
+            {/* Info del Cliente */}
+            <div className={`p-3 rounded-xl border text-xs flex justify-between items-center ${
+              isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+            }`}>
+              <div>
+                <span className="font-bold block">{selectedOrder.customer?.name || 'Cliente'}</span>
+                <span className="text-[11px] opacity-75 font-mono">{selectedOrder.customer?.phone}</span>
+              </div>
+              <div className="text-right max-w-[50%]">
+                <span className="block text-[10px] uppercase font-bold text-zinc-500">Falla Solicitada</span>
+                <span className="font-semibold line-clamp-1">{selectedOrder.service?.requestedRepair || 'Diagnóstico general'}</span>
+              </div>
+            </div>
+
+            {/* Input del nuevo monto */}
+            <div>
+              <label className={`block text-xs font-bold mb-1.5 ${isLight ? 'text-slate-800' : 'text-zinc-200'}`}>
+                Valor Total de la Reparación ($):
+              </label>
+              <div className="relative">
+                <DollarSign className="w-5 h-5 text-purple-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  autoFocus
+                  required
+                  value={budgetModalValue}
+                  onChange={(e) => setBudgetModalValue(e.target.value)}
+                  placeholder="Ej: 75000"
+                  className={`w-full border rounded-xl pl-9 pr-3 py-2.5 text-base font-mono font-bold outline-none focus:border-purple-500 transition-colors ${
+                    isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-zinc-900 border-zinc-700 text-white'
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Resumen dinámico de Seña y Saldo */}
+            <div className={`grid grid-cols-3 gap-2 p-3 rounded-xl border text-center ${
+              isLight ? 'bg-purple-50/60 border-purple-200' : 'bg-purple-950/25 border-purple-500/30'
+            }`}>
+              <div>
+                <span className="text-[10px] uppercase block font-bold text-zinc-500">Nuevo Total</span>
+                <span className={`text-xs sm:text-sm font-bold font-mono ${isLight ? 'text-purple-900' : 'text-purple-200'}`}>
+                  ${inputTotal.toLocaleString('es-AR')}
+                </span>
+              </div>
+              <div className={`border-x ${isLight ? 'border-purple-200' : 'border-purple-500/30'}`}>
+                <span className="text-[10px] uppercase block font-bold text-zinc-500">Seña Entregada</span>
+                <span className={`text-xs sm:text-sm font-bold font-mono ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  ${currentDeposit.toLocaleString('es-AR')}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase block font-bold text-zinc-500">Saldo a Cobrar</span>
+                <span className="text-xs sm:text-sm font-black font-mono text-emerald-500">
+                  ${resultingBalance.toLocaleString('es-AR')}
+                </span>
+              </div>
+            </div>
+
+            {/* Diagnóstico / Informe Técnico del presupuesto */}
+            <div>
+              <label className={`block text-xs font-semibold mb-1 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                Diagnóstico / Motivo del Presupuesto:
+              </label>
+              <textarea
+                rows={2}
+                value={budgetModalNote}
+                onChange={(e) => setBudgetModalNote(e.target.value)}
+                placeholder="Ej: Módulo display OLED dañado, requiere cambio de pantalla original..."
+                className={`w-full border rounded-xl p-2.5 text-xs outline-none focus:border-purple-500 ${
+                  isLight ? 'bg-white border-slate-300 text-slate-900 placeholder-slate-400' : 'bg-zinc-900 border-zinc-700 text-zinc-200 placeholder-zinc-500'
+                }`}
+              />
+            </div>
+
+            {/* Opciones adicionales */}
+            <div className="space-y-2 pt-1 text-xs">
+              <label className="flex items-center gap-2 cursor-pointer font-medium">
+                <input
+                  type="checkbox"
+                  checked={budgetModalChangeStatus}
+                  onChange={(e) => setBudgetModalChangeStatus(e.target.checked)}
+                  className="w-4 h-4 rounded text-purple-600 border-zinc-500"
+                />
+                <span className={isLight ? 'text-slate-800' : 'text-zinc-200'}>
+                  Pasar orden al estado <strong className="text-purple-500">"Presupuestar (Espera Autorización)"</strong>
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer font-bold text-emerald-600 dark:text-emerald-400">
+                <input
+                  type="checkbox"
+                  checked={budgetModalSendWhatsApp}
+                  onChange={(e) => setBudgetModalSendWhatsApp(e.target.checked)}
+                  className="w-4 h-4 rounded text-emerald-500 border-zinc-500"
+                />
+                <span>Enviar presupuesto al cliente por WhatsApp ({waMode === 'web' ? 'Web Directo' : waMode === 'desktop' ? 'App Windows' : 'wa.me'})</span>
+              </label>
+            </div>
+
+            {/* Botones */}
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsBudgetModalOpen(false)}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border cursor-pointer transition-colors ${
+                  isLight ? 'border-slate-300 hover:bg-slate-100 text-slate-700' : 'border-zinc-700 hover:bg-zinc-800 text-zinc-300'
+                }`}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                className="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-purple-600/30"
+              >
+                <Check className="w-4 h-4" />
+                <span>Guardar Presupuesto</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
   if (isEmbedded) {
     return (
       <div className="space-y-6 font-sans">
@@ -2085,6 +2472,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
         {/* MODALES AUXILIARES */}
         {renderPatternModal()}
         {renderPaymentModal()}
+        {renderBudgetModal()}
         {ticketModalOrder && (
           <OrderTicketModal
             order={ticketModalOrder}
@@ -2193,6 +2581,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
       {/* MODALES AUXILIARES */}
       {renderPatternModal()}
       {renderPaymentModal()}
+      {renderBudgetModal()}
       {ticketModalOrder && (
         <OrderTicketModal
           order={ticketModalOrder}

@@ -1028,6 +1028,17 @@ export function DataProvider({ children }) {
     setOrders(prev => {
       const updated = prev.map(o => {
         if (o.id !== orderId && o.orderNumber !== orderId) return o;
+        
+        let serviceUpdates = {};
+        if (extraData.budgetTotal !== undefined && extraData.budgetTotal !== null && extraData.budgetTotal !== '') {
+          const newBudget = parseFloat(extraData.budgetTotal) || 0;
+          const currentDeposit = Number(o.service?.deposit) || 0;
+          serviceUpdates = {
+            budgetTotal: newBudget,
+            balanceDue: Math.max(0, newBudget - currentDeposit)
+          };
+        }
+
         const newLogs = [
           ...(o.logs || []),
           {
@@ -1040,6 +1051,10 @@ export function DataProvider({ children }) {
           ...o,
           ...extraData,
           status: newStatus,
+          service: {
+            ...(o.service || {}),
+            ...serviceUpdates
+          },
           updatedAt: new Date().toISOString(),
           logs: newLogs
         };
@@ -1073,6 +1088,65 @@ export function DataProvider({ children }) {
       }
     } catch (e) {
       console.warn('⚠️ No se pudo sincronizar estado con PostgreSQL:', e.message);
+    }
+  };
+
+  const updateOrderBudget = async (orderId, newBudgetTotal, note = '', operator = 'Taller Montec') => {
+    const budgetNum = parseFloat(newBudgetTotal) || 0;
+
+    // 1. Actualización optimista inmediata
+    setOrders(prev => {
+      const updated = prev.map(o => {
+        if (o.id !== orderId && o.orderNumber !== orderId) return o;
+        const currentDeposit = Number(o.service?.deposit) || 0;
+        const newBalance = Math.max(0, budgetNum - currentDeposit);
+        const logAction = note || `Presupuesto asignado/modificado: $${budgetNum.toLocaleString('es-AR')}. Saldo restante: $${newBalance.toLocaleString('es-AR')}`;
+        const newLogs = [
+          ...(o.logs || []),
+          {
+            timestamp: new Date().toISOString(),
+            action: logAction,
+            status: o.status
+          }
+        ];
+        return {
+          ...o,
+          service: {
+            ...(o.service || {}),
+            budgetTotal: budgetNum,
+            balanceDue: newBalance
+          },
+          updatedAt: new Date().toISOString(),
+          logs: newLogs
+        };
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error guardando presupuesto localmente:', e);
+      }
+      return updated;
+    });
+
+    // 2. Persistencia en PostgreSQL (Railway)
+    try {
+      const res = await api.updateOrdenPresupuesto(orderId, {
+        budgetTotal: budgetNum,
+        note: note || `Presupuesto actualizado a $${budgetNum.toLocaleString('es-AR')}`,
+        operator
+      });
+      if (res && res.success && res.order) {
+        const normalized = normalizeOrderData(res.order);
+        setOrders(prev => {
+          const updated = prev.map(o => (o.id === normalized.id || o.orderNumber === normalized.orderNumber) ? normalized : o);
+          try {
+            localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+          } catch (e) {}
+          return updated;
+        });
+      }
+    } catch (e) {
+      console.warn('⚠️ No se pudo sincronizar presupuesto con PostgreSQL:', e.message);
     }
   };
 
@@ -2556,6 +2630,7 @@ export function DataProvider({ children }) {
       logoutEmployee,
       createRepairOrder,
       updateRepairOrder,
+      updateOrderBudget,
       updateRepairOrderStatus,
       addOrderInternalNote,
       recordOrderPayment,

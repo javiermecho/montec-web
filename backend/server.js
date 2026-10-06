@@ -289,7 +289,7 @@ app.post('/api/orders', async (req, res) => {
 // Actualizar estado e informe técnico de una orden
 app.patch('/api/orders/:id/status', async (req, res) => {
   const { id } = req.params;
-  const { status, technicalReport, operator, internalNotes } = req.body;
+  const { status, technicalReport, operator, internalNotes, budgetTotal } = req.body;
   const dbConnected = await isDbConnected();
 
   if (!dbConnected) {
@@ -310,37 +310,56 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     }
 
     const currentOrder = existingRes.rows[0];
+    
+    // Si viene un nuevo presupuesto asignado
+    let budgetTotalVal = currentOrder.budget_total;
+    let balanceDueVal = currentOrder.balance_due;
+    if (budgetTotal !== undefined && budgetTotal !== null && budgetTotal !== '') {
+      budgetTotalVal = parseFloat(budgetTotal) || 0;
+      const depositVal = parseFloat(currentOrder.deposit || 0);
+      balanceDueVal = Math.max(0, budgetTotalVal - depositVal);
+    }
+
     const updatedServiceData = {
       ...(currentOrder.service_data || {}),
       status: status,
       technicalReport: technicalReport || currentOrder.service_data?.technicalReport,
-      internalNotes: internalNotes || currentOrder.service_data?.internalNotes
+      internalNotes: internalNotes || currentOrder.service_data?.internalNotes,
+      budgetTotal: budgetTotalVal,
+      balanceDue: balanceDueVal
     };
 
     const currentLogs = Array.isArray(currentOrder.logs) ? currentOrder.logs : [];
+    const logDetails = [
+      technicalReport || 'Estado actualizado desde panel de taller',
+      (budgetTotal !== undefined && budgetTotal !== null && budgetTotal !== '') ? `Presupuesto asignado: $${Number(budgetTotalVal).toLocaleString('es-AR')}` : null
+    ].filter(Boolean).join('. ');
+
     const newLog = {
       date: new Date().toISOString(),
       action: `Cambio de Estado a: ${status}`,
-      details: technicalReport || 'Estado actualizado desde panel de taller',
+      details: logDetails,
       user: operator || 'Taller Montec'
     };
     const updatedLogs = [newLog, ...currentLogs];
 
     const updateSql = `
       UPDATE repair_orders 
-      SET status = $1, service_data = $2, logs = $3, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $4
+      SET status = $1, budget_total = $2, balance_due = $3, service_data = $4, logs = $5, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $6
       RETURNING *;
     `;
 
     const result = await query(updateSql, [
-      status, 
+      status,
+      budgetTotalVal,
+      balanceDueVal,
       JSON.stringify(updatedServiceData), 
       JSON.stringify(updatedLogs), 
       currentOrder.id
     ]);
 
-    console.log(`✅ Estado de orden ${currentOrder.order_number} actualizado a "${status}" en PostgreSQL`);
+    console.log(`✅ Estado de orden ${currentOrder.order_number} actualizado a "${status}" en PostgreSQL (Presupuesto: $${budgetTotalVal})`);
     res.json({
       success: true,
       message: 'Estado de orden actualizado',
@@ -349,6 +368,75 @@ app.patch('/api/orders/:id/status', async (req, res) => {
   } catch (error) {
     console.error('❌ Error al actualizar estado de orden:', error);
     res.status(500).json({ error: 'Error al actualizar estado en la base de datos', details: error.message });
+  }
+});
+
+// Actualizar presupuesto / valor total acordado de una orden
+app.patch('/api/orders/:id/budget', async (req, res) => {
+  const { id } = req.params;
+  const { budgetTotal, note, operator } = req.body;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    const isNum = !isNaN(parseInt(id, 10)) && String(parseInt(id, 10)) === String(id);
+    const existingRes = await query(
+      isNum 
+        ? 'SELECT * FROM repair_orders WHERE id = $1 LIMIT 1'
+        : 'SELECT * FROM repair_orders WHERE LOWER(order_number) = LOWER($1) LIMIT 1',
+      [id]
+    );
+    if (existingRes.rowCount === 0) {
+      return res.status(404).json({ error: 'Orden no encontrada' });
+    }
+
+    const currentOrder = existingRes.rows[0];
+    const newBudget = parseFloat(budgetTotal || 0);
+    const deposit = parseFloat(currentOrder.deposit || 0);
+    const newBalance = Math.max(0, newBudget - deposit);
+
+    const updatedServiceData = {
+      ...(currentOrder.service_data || {}),
+      budgetTotal: newBudget,
+      balanceDue: newBalance
+    };
+
+    const currentLogs = Array.isArray(currentOrder.logs) ? currentOrder.logs : [];
+    const newLog = {
+      date: new Date().toISOString(),
+      action: 'Presupuesto Actualizado',
+      details: note || `Valor de la reparación establecido en $${newBudget.toLocaleString('es-AR')}. Saldo a abonar: $${newBalance.toLocaleString('es-AR')}.`,
+      user: operator || 'Taller Montec'
+    };
+    const updatedLogs = [newLog, ...currentLogs];
+
+    const updateSql = `
+      UPDATE repair_orders 
+      SET budget_total = $1, balance_due = $2, service_data = $3, logs = $4, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $5
+      RETURNING *;
+    `;
+
+    const result = await query(updateSql, [
+      newBudget,
+      newBalance,
+      JSON.stringify(updatedServiceData),
+      JSON.stringify(updatedLogs),
+      currentOrder.id
+    ]);
+
+    console.log(`✅ Presupuesto de orden ${currentOrder.order_number} actualizado a $${newBudget} en PostgreSQL`);
+    res.json({
+      success: true,
+      message: 'Presupuesto actualizado exitosamente',
+      order: mapDbOrderToFrontend(result.rows[0])
+    });
+  } catch (error) {
+    console.error('❌ Error al actualizar presupuesto de orden:', error);
+    res.status(500).json({ error: 'Error al actualizar presupuesto en la base de datos', details: error.message });
   }
 });
 

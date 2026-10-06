@@ -169,6 +169,17 @@ export async function updateOrdenEstado(id, estadoData) {
 }
 
 /**
+ * Actualiza el presupuesto / precio total acordado de una orden
+ */
+export async function updateOrdenPresupuesto(id, budgetData) {
+  const res = await request(`/orders/${encodeURIComponent(id)}/budget`, {
+    method: 'PATCH',
+    body: JSON.stringify(budgetData)
+  });
+  return res;
+}
+
+/**
  * Registra un cobro de saldo o seña adicional
  */
 export async function updateOrdenPago(id, pagoData) {
@@ -499,6 +510,7 @@ export const api = {
   getOrdenById,
   createOrden,
   updateOrdenEstado,
+  updateOrdenPresupuesto,
   updateOrdenPago,
   deleteOrden,
   getProductos,
