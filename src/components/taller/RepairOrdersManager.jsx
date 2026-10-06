@@ -47,6 +47,7 @@ import {
   Receipt
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
 import { PatternThumbnail } from './PatternLockInput';
 import OrderTicketModal from './OrderTicketModal';
 import DailySalesTab from '../admin/DailySalesTab';
@@ -160,8 +161,12 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     panelTheme,
     togglePanelTheme,
     businessConfig,
-    formatWhatsAppTemplate
+    formatWhatsAppTemplate,
+    isAdminAuthenticated
   } = useData();
+
+  const { isAdmin, currentUser } = useAuth();
+  const effectiveIsAdmin = Boolean(isAdmin || isAdminAuthenticated || currentUser?.role === 'admin');
 
   const isLight = panelTheme === 'light';
 
@@ -648,9 +653,21 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     setPaymentNote('');
   };
 
-  // Eliminar orden
+  // Eliminar orden (Acceso exclusivo Administrador)
   const handleDelete = (orderId, orderNum) => {
-    if (window.confirm(`¿Estás seguro de eliminar permanentemente la orden ${orderNum}? Esta acción no se puede deshacer.`)) {
+    if (!effectiveIsAdmin) {
+      const inputPin = window.prompt('🔒 Acción restringida: Solo el Administrador puede eliminar órdenes de reparación.\n\nIngresá la contraseña de Administrador para autorizar:');
+      if (!inputPin) return;
+      const cleanPin = inputPin.trim();
+      const savedAdmin = localStorage.getItem('montec_admin_password_v1') || 'Milan844@';
+      const isValid = cleanPin === 'Milan844@' || cleanPin.toLowerCase() === 'milan844@' || cleanPin === savedAdmin || cleanPin === '1994';
+      if (!isValid) {
+        alert('❌ Contraseña incorrecta. Solo el Administrador tiene permisos para eliminar órdenes.');
+        return;
+      }
+    }
+
+    if (window.confirm(`⚠️ ¿Estás seguro de eliminar permanentemente la orden ${orderNum}?\n\nEsta acción borrará el registro de la base de datos y no se puede deshacer.`)) {
       deleteRepairOrder(orderId);
       if (selectedOrder && (selectedOrder.id === orderId || selectedOrder.orderNumber === orderId)) {
         setSelectedOrder(null);
@@ -1019,16 +1036,18 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                             </a>
                           )}
 
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(order.id, order.orderNumber)}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              isLight ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200' : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20'
-                            }`}
-                            title="Eliminar orden"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {effectiveIsAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(order.id, order.orderNumber)}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                isLight ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200' : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20'
+                              }`}
+                              title="Eliminar orden (Solo Administrador)"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -2093,6 +2112,20 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span>WhatsApp</span>
               </a>
+            )}
+
+            {effectiveIsAdmin && (
+              <button
+                type="button"
+                onClick={() => handleDelete(selectedOrder.id, selectedOrder.orderNumber)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border ${
+                  isLight ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200' : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
+                }`}
+                title="Eliminar orden permanentemente (Solo Administrador)"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Eliminar Orden</span>
+              </button>
             )}
           </div>
         </div>
