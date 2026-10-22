@@ -4,11 +4,11 @@ import Hero from './components/Hero';
 import QuotationTool from './components/QuotationTool';
 import Laboratory from './components/Laboratory';
 import StoryTeaser from './components/StoryTeaser';
-import Accessories from './components/Accessories';
 import InstagramFeed from './components/InstagramFeed';
 import LocationContact from './components/LocationContact';
 import Footer from './components/Footer';
 import HistoryPage from './pages/HistoryPage';
+import StorePage from './pages/StorePage';
 import AdminPanel from './components/AdminPanel';
 import DiagnosticChatbot from './components/DiagnosticChatbot';
 import RepairOrderReceiver from './components/taller/RepairOrderReceiver';
@@ -16,6 +16,7 @@ import OperatorCockpit from './components/taller/OperatorCockpit';
 import TallerLoginScreen from './components/taller/TallerLoginScreen';
 import { DataProvider, useData } from './context/DataContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { useSubdomain } from './hooks/useSubdomain';
 
 function checkIsHistoryPage() {
   if (typeof window === 'undefined') return false;
@@ -35,6 +36,7 @@ function checkIsHistoryPage() {
 }
 
 function AppContent() {
+  const { isStore, navigateToStore, navigateToMain } = useSubdomain();
   const { isTallerSubdomain, isAuthenticated, isOperator, isAdmin } = useAuth();
   const { isAdminOpen, setIsAdminOpen, isTallerOpen, setIsTallerOpen, setIsAdminAuthenticated } = useData();
   const [isHistoryPage, setIsHistoryPage] = useState(checkIsHistoryPage);
@@ -77,6 +79,11 @@ function AppContent() {
     }
   }, [isAdmin, isTallerSubdomain, setIsAdminOpen, setIsAdminAuthenticated]);
 
+  // MODO 0: SUBDOMINIO O ENTORNO EXCLUSIVO DE TIENDA ONLINE (tienda.montec.ar / /tienda)
+  if (isStore) {
+    return <StorePage />;
+  }
+
   // MODO 1: SUBDOMINIO O ENTORNO EXCLUSIVO DE TALLER (taller.montec.ar / ?taller=1 / #taller)
   if (isTallerSubdomain) {
     if (!isAuthenticated) {
@@ -104,22 +111,21 @@ function AppContent() {
   // MODO 3: SITIO WEB PÚBLICO COMERCIAL (montec.ar)
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#0A0A0A] text-white flex flex-col selection:bg-[#FF5500] selection:text-white">
-      {/* Navbar flotante superior con acceso admin y taller */}
-      <Navbar onNavigateHistory={navigateToHistory} />
+      {/* Navbar flotante superior con acceso a Tienda, admin y taller */}
+      <Navbar onNavigateHistory={navigateToHistory} onNavigateStore={navigateToStore} />
 
-      {/* Contenido Principal Comercial */}
+      {/* Contenido Principal Comercial de Servicio Técnico y Laboratorio */}
       <main className="flex-1 w-full max-w-full overflow-x-hidden">
         <Hero />
         <QuotationTool />
         <Laboratory />
         <StoryTeaser onOpenStory={navigateToHistory} />
-        <Accessories />
         <InstagramFeed />
         <LocationContact />
       </main>
 
       {/* Footer */}
-      <Footer />
+      <Footer onNavigateStore={navigateToStore} />
 
       {/* Asistente Virtual Interactivo de Diagnóstico Técnico */}
       <DiagnosticChatbot />

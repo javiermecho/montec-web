@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Menu, X, Shield, Lock, MapPin, Phone } from 'lucide-react';
+import { MessageCircle, Menu, X, Shield, Lock, MapPin, Phone, ShoppingBag } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
+import { getStoreTargetUrl } from '../hooks/useSubdomain';
 import { trackClickLlamadaOMapa, trackWhatsAppClick } from '../services/analytics';
 
-export default function Navbar({ onNavigateHistory }) {
+export default function Navbar({ onNavigateHistory, onNavigateStore }) {
   const { setIsQuoteModalOpen, businessConfig } = useData();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -42,7 +43,7 @@ export default function Navbar({ onNavigateHistory }) {
     { name: 'Laboratorio', href: '#laboratorio' },
     { name: 'Historia', href: '/historia' },
     { name: 'Instagram', href: '#instagram' },
-    { name: 'Accesorios', href: '#accesorios' },
+    { name: 'Tienda Online', href: getStoreTargetUrl(), isStore: true, badge: 'STORE' },
     { name: 'Ubicación', href: '#ubicacion' },
   ];
 
@@ -153,6 +154,29 @@ export default function Navbar({ onNavigateHistory }) {
                     className="relative px-3.5 py-1.5 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-white/5 flex items-center gap-1.5 cursor-pointer"
                   >
                     <span>{link.name}</span>
+                  </a>
+                );
+              }
+
+              if (link.isStore) {
+                return (
+                  <a
+                    key={link.name}
+                    href={getStoreTargetUrl()}
+                    onClick={(e) => {
+                      if (onNavigateStore) {
+                        e.preventDefault();
+                        onNavigateStore();
+                      }
+                    }}
+                    className="relative px-3 py-1.5 text-sm font-bold text-white bg-gradient-to-r from-[#FF5500]/20 to-[#FF6600]/30 hover:from-[#FF5500]/35 hover:to-[#FF6600]/45 border border-[#FF5500]/40 hover:border-[#FF5500] transition-all duration-200 rounded-xl flex items-center gap-1.5 shadow-[0_0_15px_rgba(255,85,0,0.25)] cursor-pointer"
+                    title="Visitar Tienda Online oficial Montec"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5 text-[#FF5500]" />
+                    <span>{link.name}</span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded-full font-black bg-[#FF5500] text-white">
+                      {link.badge}
+                    </span>
                   </a>
                 );
               }
@@ -273,6 +297,31 @@ export default function Navbar({ onNavigateHistory }) {
                     className="flex items-center justify-between px-3 py-2 text-base font-medium text-zinc-300 hover:text-white hover:bg-zinc-800/60 rounded-lg transition-colors cursor-pointer"
                   >
                     <span>{link.name}</span>
+                  </a>
+                );
+              }
+
+              if (link.isStore) {
+                return (
+                  <a
+                    key={link.name}
+                    href={getStoreTargetUrl()}
+                    onClick={(e) => {
+                      setMobileMenuOpen(false);
+                      if (onNavigateStore) {
+                        e.preventDefault();
+                        onNavigateStore();
+                      }
+                    }}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 text-base font-bold text-white bg-gradient-to-r from-[#FF5500]/25 to-[#FF6600]/25 border border-[#FF5500]/40 rounded-xl transition-all cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      <ShoppingBag className="w-4 h-4 text-[#FF5500]" />
+                      <span>{link.name}</span>
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-[#FF5500] text-white animate-pulse">
+                      {link.badge}
+                    </span>
                   </a>
                 );
               }

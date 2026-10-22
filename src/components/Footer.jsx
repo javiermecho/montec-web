@@ -2,9 +2,10 @@ import React from 'react';
 import { MessageCircle, Instagram, MapPin, ShieldCheck, ArrowUp, Clock, Phone, Car } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
+import { getStoreTargetUrl } from '../hooks/useSubdomain';
 import { trackClickLlamadaOMapa, trackWhatsAppClick } from '../services/analytics';
 
-export default function Footer() {
+export default function Footer({ onNavigateStore }) {
   const { businessConfig } = useData();
   const rawWhatsapp = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.supportPhone || '5492235444991';
   const whatsappNumber = rawWhatsapp.replace(/[^0-9]/g, '') || '5492235444991';
@@ -91,7 +92,19 @@ export default function Footer() {
                 <a href="#instagram" className="hover:text-white transition-colors">Instagram @montec.arg</a>
               </li>
               <li>
-                <a href="#accesorios" className="hover:text-white transition-colors">Catálogo de Accesorios</a>
+                <a 
+                  href={getStoreTargetUrl()} 
+                  onClick={(e) => {
+                    if (onNavigateStore) {
+                      e.preventDefault();
+                      onNavigateStore();
+                    }
+                  }}
+                  className="hover:text-[#FF5500] transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>Tienda Online Montec</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#FF5500]/20 text-[#FF5500] font-bold">STORE</span>
+                </a>
               </li>
               <li>
                 <a href="#ubicacion" className="hover:text-white transition-colors">Ubicación y Contacto</a>
