@@ -42,7 +42,7 @@ import {
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { searchPartsForRepair, generateQuickSupplierLinks, detectPartCategory } from '../../services/partsSearchService';
-import PatternLockInput from './PatternLockInput';
+import PatternLockInput, { getDeviceSecurity } from './PatternLockInput';
 import OrderTicketModal from './OrderTicketModal';
 import RepairOrdersManager from './RepairOrdersManager';
 import CostBreakdownModal from './CostBreakdownModal';
@@ -671,16 +671,26 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
     setIsSubmittingOrder(true);
 
     try {
+      const normalizedSecurity = getDeviceSecurity(formData.device, formData.service);
+      const devicePayload = {
+        ...formData.device,
+        patternLock: normalizedSecurity.patternLock,
+        pinLock: normalizedSecurity.pin,
+        security: normalizedSecurity
+      };
+
       // Guardar orden (sincroniza con PostgreSQL en Railway y obtiene #MON-XXXX oficial)
       const savedOrder = await createRepairOrder({
         customer: formData.customer,
-        device: formData.device,
+        device: devicePayload,
         service: {
           ...formData.service,
           budgetTotal: totalNum,
           deposit: depositNum,
           balanceDue: Math.max(0, totalNum - depositNum),
-          warranty: formData.service.warranty || '90 días de garantía escrita'
+          warranty: formData.service.warranty || '90 días de garantía escrita',
+          patternLock: normalizedSecurity.patternLock,
+          pinLock: normalizedSecurity.pin
         }
       });
 
@@ -1386,13 +1396,22 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
               {formData.device.security.type === 'pattern' && (
                 <PatternLockInput
                   value={formData.device.security.patternSequence}
-                  onChange={(seq) => setFormData(prev => ({
-                    ...prev,
-                    device: {
-                      ...prev.device,
-                      security: { ...prev.device.security, patternSequence: seq }
-                    }
-                  }))}
+                  onChange={(seq) => setFormData(prev => {
+                    const patStr = Array.isArray(seq) && seq.length > 0 ? seq.join('-') : '';
+                    return {
+                      ...prev,
+                      device: {
+                        ...prev.device,
+                        patternLock: patStr,
+                        security: { 
+                          ...prev.device.security, 
+                          type: 'pattern',
+                          patternSequence: seq,
+                          patternLock: patStr
+                        }
+                      }
+                    };
+                  })}
                 />
               )}
 

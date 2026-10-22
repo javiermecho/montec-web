@@ -55,6 +55,7 @@ import DailySalesTab from './admin/DailySalesTab';
 import MonthlyBalanceTab from './admin/MonthlyBalanceTab';
 import LocalSettingsTab from './taller/LocalSettingsTab';
 import WhatsAppTemplatesTab from './admin/WhatsAppTemplatesTab';
+import SalesCloserAssistantTab from './taller/SalesCloserAssistantTab';
 import RepairOrderReceiver from './taller/RepairOrderReceiver';
 import UnifiedDeliveryModal from './taller/UnifiedDeliveryModal';
 
@@ -579,6 +580,18 @@ export default function AdminPanel() {
         >
           <MessageSquare className="w-4 h-4 text-emerald-400" />
           <span>WhatsApp & Plantillas</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('whatsapp_closer')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'whatsapp_closer'
+              ? 'bg-[#FF5500] text-white shadow-[0_0_15px_rgba(255,85,0,0.35)]'
+              : 'text-emerald-400/90 hover:text-white hover:bg-zinc-800/60'
+            }`}
+          title="Asistente de Cierre de Reparaciones y Conversión WhatsApp"
+        >
+          <MessageSquare className="w-4 h-4 text-emerald-400" />
+          <span>Cierre WhatsApp</span>
         </button>
 
         <button
@@ -1574,6 +1587,13 @@ export default function AdminPanel() {
         {/* ============================================================== */}
         {activeTab === 'whatsapp_templates' && (
           <WhatsAppTemplatesTab />
+        )}
+
+        {/* ============================================================== */}
+        {/* PESTAÑA: CIERRE WHATSAPP (ASISTENTE DE VENTAS Y CONVERSIÓN)    */}
+        {/* ============================================================== */}
+        {activeTab === 'whatsapp_closer' && (
+          <SalesCloserAssistantTab />
         )}
 
       </div>

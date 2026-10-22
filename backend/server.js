@@ -45,18 +45,69 @@ app.use(express.urlencoded({ limit: '15mb', extended: true }));
 
 // Helper para formatear ordenes de DB a estructura frontend
 const mapDbOrderToFrontend = (row) => {
+  const parseJson = (val, fallback) => {
+    if (!val) return fallback;
+    if (typeof val === 'object') return val;
+    try { return JSON.parse(val); } catch (e) { return fallback; }
+  };
+
+  const clientData = parseJson(row.client_data, {});
+  const deviceData = parseJson(row.device_data, {});
+  const serviceData = parseJson(row.service_data, {});
+  const paymentsData = parseJson(row.payments, []);
+  const logsData = parseJson(row.logs, []);
+
+  // Normalizar seguridad de desbloqueo (patrón o pin)
+  const rawSeq = deviceData.security?.patternSequence || deviceData.patternLock || serviceData.patternLock || '';
+  let patternSequence = [];
+  if (Array.isArray(rawSeq)) {
+    patternSequence = rawSeq.map(Number).filter(n => !isNaN(n) && n >= 1 && n <= 9);
+  } else if (typeof rawSeq === 'string' && rawSeq.trim()) {
+    try {
+      const parsed = JSON.parse(rawSeq);
+      if (Array.isArray(parsed)) patternSequence = parsed.map(Number).filter(n => !isNaN(n) && n >= 1 && n <= 9);
+      else throw new Error('Not array');
+    } catch (e) {
+      patternSequence = rawSeq.replace(/[\[\]\s]/g, '').split(/[-,\.]+/).map(Number).filter(n => !isNaN(n) && n >= 1 && n <= 9);
+    }
+  }
+
+  const patternLockStr = patternSequence.length > 0 ? patternSequence.join('-') : (deviceData.patternLock || serviceData.patternLock || '');
+  const pinLockStr = deviceData.security?.pin || deviceData.pinLock || serviceData.pinLock || '';
+
+  let secType = deviceData.security?.type;
+  if (!secType) {
+    if (patternSequence.length > 0) secType = 'pattern';
+    else if (pinLockStr) secType = 'pin';
+    else secType = 'none';
+  } else if (secType === 'pin' && patternSequence.length > 0 && !pinLockStr) {
+    secType = 'pattern';
+  }
+
+  const securityObj = {
+    ...(deviceData.security || {}),
+    type: secType,
+    pin: pinLockStr,
+    patternSequence,
+    patternLock: patternLockStr,
+    accountInfo: deviceData.security?.accountInfo || deviceData.accountInfo || ''
+  };
+
   const customerObj = {
     name: row.client_name,
     phone: row.client_phone,
-    ...(row.client_data || {})
+    ...clientData
   };
   const serviceObj = {
-    ...(row.service_data || {}),
+    ...serviceData,
     status: row.status,
     budgetTotal: parseFloat(row.budget_total || 0),
     deposit: parseFloat(row.deposit || 0),
-    balanceDue: parseFloat(row.balance_due || 0)
+    balanceDue: parseFloat(row.balance_due || 0),
+    patternLock: patternLockStr,
+    pinLock: pinLockStr
   };
+
   return {
     id: row.id,
     orderNumber: row.order_number,
@@ -66,11 +117,14 @@ const mapDbOrderToFrontend = (row) => {
     device: {
       model: row.device_model,
       type: row.device_type,
-      ...(row.device_data || {})
+      ...deviceData,
+      patternLock: patternLockStr,
+      pinLock: pinLockStr,
+      security: securityObj
     },
     service: serviceObj,
-    payments: row.payments || [],
-    logs: row.logs || [],
+    payments: paymentsData,
+    logs: logsData,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };

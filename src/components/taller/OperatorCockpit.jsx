@@ -25,7 +25,8 @@ import {
   Store,
   Wallet,
   Receipt,
-  Download
+  Download,
+  MessageSquare
 } from 'lucide-react';
 import MontecLogo from '../MontecLogo';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +40,7 @@ import PartsSearchTab from '../admin/PartsSearchTab';
 import RepairOrderReceiver from './RepairOrderReceiver';
 import UnifiedDeliveryModal from './UnifiedDeliveryModal';
 import LocalSettingsTab from './LocalSettingsTab';
+import SalesCloserAssistantTab from './SalesCloserAssistantTab';
 
 export default function OperatorCockpit({ onClose }) {
   const { currentUser, role, isAdmin, logout, elevateToAdmin, isTallerSubdomain } = useAuth();
@@ -100,6 +102,9 @@ export default function OperatorCockpit({ onClose }) {
       } else if (e.key === 'F11') {
         e.preventDefault();
         setActiveTab('quote');
+      } else if (e.key === 'F7') {
+        e.preventDefault();
+        setActiveTab('closer');
       } else if (e.key === 'Escape') {
         if (isNewOrderOpen) setIsNewOrderOpen(false);
         if (deliveryOrder) setDeliveryOrder(null);
@@ -367,6 +372,23 @@ export default function OperatorCockpit({ onClose }) {
             </span>
           </button>
 
+          {/* F7: CIERRE WHATSAPP (ASISTENTE DE VENTAS) */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('closer')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer shrink-0 ${activeTab === 'closer'
+                ? 'bg-zinc-800 text-white border border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                : 'text-emerald-400/90 hover:text-white hover:bg-zinc-900 border border-emerald-500/20'
+              }`}
+            title="Asistente y Simulador de Cierre por WhatsApp (F7)"
+          >
+            <MessageSquare className="w-4 h-4 text-emerald-400" />
+            <span>Cierre WhatsApp</span>
+            <span className="px-1.5 py-0.5 rounded bg-zinc-900 text-[10px] font-mono text-emerald-400 border border-emerald-500/30">
+              F7
+            </span>
+          </button>
+
           {/* MI LOCAL & FACTURACIÓN ARCA / AFIP */}
           <button
             type="button"
@@ -449,6 +471,11 @@ export default function OperatorCockpit({ onClose }) {
         {/* PESTAÑA: CONFIGURACIÓN DEL LOCAL & ARCA (AFIP) */}
         {activeTab === 'local_settings' && (
           <LocalSettingsTab />
+        )}
+
+        {/* PESTAÑA F7: ASISTENTE DE CIERRE WHATSAPP (CONVERSIÓN Y MANUAL IPHONE) */}
+        {activeTab === 'closer' && (
+          <SalesCloserAssistantTab />
         )}
 
       </main>

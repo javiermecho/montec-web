@@ -17,6 +17,7 @@ import {
   getGuildTapaCost
 } from '../data/iphonePricingData';
 import { api } from '../services/api';
+import { getDeviceSecurity } from '../components/taller/PatternLockInput';
 
 const DataContext = createContext(null);
 
@@ -425,6 +426,8 @@ export function DataProvider({ children }) {
           if (!ord) return ord;
           const customerObj = ord.customer || ord.client || {};
           const statusVal = ord.status || ord.service?.status || 'received';
+          const sec = getDeviceSecurity(ord.device, ord.service);
+
           return {
             ...ord,
             status: statusVal,
@@ -436,12 +439,16 @@ export function DataProvider({ children }) {
             client: customerObj,
             device: {
               ...(ord.device || {}),
-              model: ord.device?.model || ord.deviceModel || 'Dispositivo'
+              model: ord.device?.model || ord.deviceModel || 'Dispositivo',
+              patternLock: sec.patternLock || ord.device?.patternLock || ord.service?.patternLock || '',
+              pinLock: sec.pin || ord.device?.pinLock || ord.service?.pinLock || '',
+              security: sec
             },
             service: {
               ...(ord.service || {}),
               status: statusVal,
-              requestedRepair: ord.service?.requestedRepair || ord.service?.issue || ord.issue || 'Reparación'
+              requestedRepair: ord.service?.requestedRepair || ord.service?.issue || ord.issue || 'Reparación',
+              patternLock: sec.patternLock || ord.service?.patternLock || ''
             }
           };
         };
@@ -1932,26 +1939,57 @@ export function DataProvider({ children }) {
           return prod;
         });
       });
+    }
 
-      // 3. Registrar venta de los accesorios en sales
+    // 3. Registrar SIEMPRE el cobro y venta en el libro de Ventas Diarias (sales)
+    // Permite que la reparación aparezca facturada y cobrada en Caja Diaria (F8) y AFIP
+    if (totalAmount > 0 || balancePaid > 0 || (Array.isArray(accessories) && accessories.length > 0)) {
+      const saleItems = [];
+
+      // A. Ítem del servicio de reparación si se cobró saldo
+      if (balancePaid > 0) {
+        saleItems.push({
+          id: `rep-${orderId || Date.now()}`,
+          name: `Reparación: ${repairName || 'Servicio técnico'} (${deviceModel || 'Equipo'}) - Orden ${orderNumber}`,
+          category: 'Servicio Técnico / Taller',
+          price: balancePaid,
+          quantity: 1,
+          isService: true
+        });
+      }
+
+      // B. Ítems de accesorios agregados
+      if (Array.isArray(accessories) && accessories.length > 0) {
+        accessories.forEach(a => {
+          saleItems.push({
+            id: a.id,
+            name: a.name,
+            category: a.category || 'Accesorios',
+            price: Number(a.price) || 0,
+            quantity: Number(a.quantity) || 1,
+            sku: a.sku
+          });
+        });
+      }
+
       const saleId = `sale-delivery-${Date.now()}`;
+      const cleanOrderNum = (orderNumber || '').replace(/[^0-9]/g, '');
+      const ticketNum = `#TCK-ENT-${cleanOrderNum || (1000 + sales.length + 1)}`;
+      const subtotalCalc = balancePaid + accessoriesTotal;
+
       const newSale = {
         id: saleId,
-        ticketNumber: `#TCK-ACC-${1000 + sales.length + 1}`,
+        ticketNumber: ticketNum,
+        documentType: 'ticket_x',
+        documentNumber: ticketNum,
         createdAt: deliveredAt,
         formattedDate: new Date(deliveredAt).toLocaleString('es-AR'),
-        items: accessories.map(a => ({
-          id: a.id,
-          name: a.name,
-          price: a.price,
-          quantity: a.quantity,
-          sku: a.sku
-        })),
-        subtotal: accessoriesTotal,
+        items: saleItems,
+        subtotal: subtotalCalc,
         discountType: discount > 0 ? 'fixed' : 'none',
         discountValue: discount,
         discountAmount: discount,
-        total: Math.max(0, accessoriesTotal - discount),
+        total: totalAmount,
         paymentMethod: paymentLabel,
         cashGiven: cashGiven || 0,
         changeDue: changeDue || 0,
@@ -1963,7 +2001,30 @@ export function DataProvider({ children }) {
         seller: 'Mostrador Montec (Entrega Taller)'
       };
 
-      setSales(prev => [newSale, ...prev]);
+      setSales(prev => {
+        const updatedSales = [newSale, ...prev];
+        try {
+          localStorage.setItem(STORAGE_KEYS.SALES, JSON.stringify(updatedSales));
+        } catch (e) {}
+        return updatedSales;
+      });
+
+      // Sincronizar venta comercial en PostgreSQL (Railway)
+      try {
+        api.createVenta({
+          ticketNumber: ticketNum,
+          documentType: 'ticket_x',
+          documentNumber: ticketNum,
+          items: saleItems,
+          subtotal: subtotalCalc,
+          discount: discount,
+          total: totalAmount,
+          paymentMethod: paymentLabel,
+          customer: { name: clientName, phone: clientPhone },
+          seller: 'Mostrador Montec (Entrega Taller)'
+        }).catch(err => console.warn('⚠️ No se pudo sincronizar venta de entrega con PostgreSQL:', err.message));
+      } catch (err) {}
+
       saveClientToPadron({ name: clientName, phone: clientPhone });
     }
 

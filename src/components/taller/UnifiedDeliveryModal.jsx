@@ -23,16 +23,48 @@ import {
   AlertCircle,
   Wrench,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  Receipt,
+  FileText,
+  Lock
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
+import CommercialInvoicePOS from '../pos/CommercialInvoicePOS';
+
+// ─── COMPONENTE TOAST ────────────────────────────────────────────────────
+function Toast({ message, type = 'info', onClose }) {
+  const colors = {
+    success: 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200',
+    error: 'bg-rose-950/90 border-rose-500/50 text-rose-200',
+    warning: 'bg-amber-950/90 border-amber-500/50 text-amber-200',
+    info: 'bg-sky-950/90 border-sky-500/50 text-sky-200'
+  };
+  const icons = {
+    success: <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />,
+    error: <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />,
+    warning: <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />,
+    info: <AlertCircle className="w-4 h-4 text-sky-400 shrink-0" />
+  };
+
+  return (
+    <div className={`fixed top-6 right-6 z-[100] px-4 py-3 rounded-xl border shadow-2xl flex items-center gap-3 animate-fadeIn max-w-md ${colors[type]}`}>
+      {icons[type]}
+      <span className="text-xs font-medium leading-tight">{message}</span>
+      {onClose && (
+        <button onClick={onClose} className="p-0.5 rounded hover:bg-white/10 transition-colors ml-2 shrink-0 cursor-pointer">
+          <X className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDelivered }) {
   const { inventory, recordUnifiedDelivery, businessConfig } = useData();
 
   if (!isOpen || !order) return null;
 
-  // Estados locales
+  // ─── ESTADOS LOCALES ──────────────────────────────────────────
   const balanceDue = Number(order.service?.balanceDue || 0);
 
   // Resolución técnica al entregar: 'ready' (Reparado OK) o 'no_repair' (Sin Reparar / Devolución)
@@ -51,8 +83,21 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
   const [deliveryNotes, setDeliveryNotes] = useState('');
   const [isCopiedAlias, setIsCopiedAlias] = useState(false);
 
-  // Estado de comprobante generado post-cobro
-  const [completedSale, setCompletedSale] = useState(null);
+  // ─── ESTADOS DE FLUJO BLINDADO ────────────────────────────────
+  const [completedSale, setCompletedSale] = useState(null);       // Datos del cobro finalizado
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false); // Modal de facturación abierto
+  const [invoiceCompleted, setInvoiceCompleted] = useState(false); // Factura emitida
+  const [showZeroCostConfirm, setShowZeroCostConfirm] = useState(false); // Confirmación $0
+  const [deliveryPayloadPending, setDeliveryPayloadPending] = useState(null); // Payload pendiente de confirmación
+  
+  // ─── TOAST NOTIFICATIONS ─────────────────────────────────────
+  const [toast, setToast] = useState(null);
+  const showToast = (message, type = 'info', duration = 4000) => {
+    setToast({ message, type });
+    if (duration > 0) {
+      setTimeout(() => setToast(null), duration);
+    }
+  };
 
   // Categorías de accesorios
   const categories = ['Todos', 'Hidrogel & Templados', 'Fundas & Cases', 'Cargadores & Fuentes', 'Cables & Adaptadores', 'Audio & Auriculares'];
@@ -75,7 +120,7 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
       const exists = prev.find(item => item.id === product.id);
       if (exists) {
         if (exists.quantity >= product.stock) {
-          alert(`No hay más stock disponible de ${product.name} (Stock: ${product.stock})`);
+          showToast(`No hay más stock disponible de ${product.name} (Stock: ${product.stock})`, 'warning');
           return prev;
         }
         return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
@@ -92,7 +137,7 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
           const newQty = item.quantity + delta;
           if (newQty <= 0) return null;
           if (newQty > item.stock) {
-            alert(`Stock máximo alcanzado (${item.stock})`);
+            showToast(`Stock máximo alcanzado (${item.stock})`, 'warning');
             return item;
           }
           return { ...item, quantity: newQty };
@@ -107,7 +152,7 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     setAddedAccessories(prev => prev.filter(item => item.id !== productId));
   };
 
-  // Cálculos financieros con consideración de saldo bonificado si no hubo reparación
+  // ─── CÁLCULOS FINANCIEROS ─────────────────────────────────────
   const effectiveBalanceDue = waiveRepairBalance ? 0 : balanceDue;
   const accessoriesSubtotal = addedAccessories.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const grossTotal = effectiveBalanceDue + accessoriesSubtotal;
@@ -122,55 +167,130 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
   const cashNum = parseFloat(cashGiven) || 0;
   const changeDue = paymentMethod === 'cash' && cashNum > grandTotal ? cashNum - grandTotal : 0;
 
-  // Finalizar entrega y cobro
+  // ─── MAPEO DE MÉTODO DE PAGO INTERNO → LABEL POS ─────────────
+  const paymentMethodToLabel = {
+    cash: 'Efectivo',
+    transfer: 'Transferencia / Alias',
+    card: 'Tarjeta Débito/Crédito',
+    qr: 'Mercado Pago QR'
+  };
+
+  // ─── REGLA 1: ¿El botón de finalizar debe estar bloqueado? ───
+  // El operador debe haber seleccionado resolución Y si hay saldo > 0, debe completar el pago
+  const isPaymentInsufficient = grandTotal > 0 && paymentMethod === 'cash' && cashNum > 0 && cashNum < grandTotal;
+  
+  // ─── CONSTRUIR PAYLOAD DE ENTREGA ─────────────────────────────
+  const buildDeliveryPayload = () => ({
+    orderId: order.id,
+    orderNumber: order.orderNumber,
+    clientName: order.client?.name || order.customer?.name || 'Cliente',
+    clientPhone: order.client?.phone || order.customer?.phone || '',
+    clientDni: order.client?.dni || order.client?.docNumber || order.customer?.dni || '',
+    clientCuit: order.client?.cuit || order.customer?.cuit || '',
+    deviceModel: `${order.device?.brand || ''} ${order.device?.model || ''}`.trim(),
+    repairName: order.service?.requestedRepair || 'Reparación de Taller',
+    balancePaid: effectiveBalanceDue,
+    repairResolution: deliveryResolution, // 'ready' | 'no_repair'
+    isRepaired: deliveryResolution === 'ready',
+    accessories: addedAccessories.map(a => ({
+      id: a.id,
+      name: a.name,
+      price: a.price,
+      quantity: a.quantity,
+      sku: a.sku
+    })),
+    accessoriesTotal: accessoriesSubtotal,
+    discount: discountAmount,
+    totalAmount: grandTotal,
+    paymentMethod,
+    cashGiven: paymentMethod === 'cash' ? cashNum : null,
+    changeDue: paymentMethod === 'cash' ? changeDue : null,
+    notes: deliveryNotes,
+    deliveredAt: new Date().toISOString()
+  });
+
+  // ─── REGLA 3: HANDLER PARA ENTREGA $0 ─────────────────────────
+  const handleConfirmZeroCostDelivery = () => {
+    setShowZeroCostConfirm(false);
+    
+    const payload = deliveryPayloadPending || buildDeliveryPayload();
+    
+    // Registrar en DataContext directamente (sin facturación)
+    if (recordUnifiedDelivery) {
+      recordUnifiedDelivery(payload);
+    }
+
+    setCompletedSale(payload);
+    setInvoiceCompleted(true); // Marcar como completado (sin factura requerida)
+    showToast('Equipo entregado sin cargo. Orden marcada como entregada.', 'success');
+
+    if (onDelivered) {
+      onDelivered(order.id, payload);
+    }
+  };
+
+  // ─── REGLA 2: HANDLER PARA ABRIR FACTURACIÓN AUTOMÁTICA ───────
+  const handleOpenInvoiceModal = (payload) => {
+    setDeliveryPayloadPending(payload);
+    setShowInvoiceModal(true);
+    showToast('Procesando cobro... Se abrió la ventana de Facturación.', 'info');
+  };
+
+  // ─── HANDLER DE CIERRE DE FACTURACIÓN ─────────────────────────
+  const handleInvoiceClose = () => {
+    // Si se cerró la facturación sin emitir, NO marcar como entregado
+    if (!invoiceCompleted) {
+      showToast('⚠️ La factura no fue emitida. La entrega queda pendiente hasta facturar.', 'warning', 5000);
+    }
+    setShowInvoiceModal(false);
+  };
+
+  // ─── HANDLER POST-EMISIÓN DE FACTURA ──────────────────────────
+  // Se llama cuando el usuario cierra el POS después de emitir
+  const handleInvoiceCompleted = () => {
+    setInvoiceCompleted(true);
+    setShowInvoiceModal(false);
+    
+    const payload = deliveryPayloadPending || buildDeliveryPayload();
+    
+    // Ahora sí registrar la entrega en DataContext
+    if (recordUnifiedDelivery) {
+      recordUnifiedDelivery(payload);
+    }
+
+    setCompletedSale(payload);
+    showToast('✅ Factura emitida y cobro registrado. Orden entregada correctamente.', 'success', 5000);
+
+    if (onDelivered) {
+      onDelivered(order.id, payload);
+    }
+  };
+
+  // ─── FLUJO PRINCIPAL: FINALIZAR ENTREGA Y COBRO ───────────────
   const handleFinalize = () => {
     if (!deliveryResolution) {
-      alert('Por favor selecciona si el equipo se entrega "Reparado OK" o "Sin Reparación".');
+      showToast('Por favor selecciona si el equipo se entrega "Reparado OK" o "Sin Reparación".', 'error');
       return;
     }
 
-    if (paymentMethod === 'cash' && cashNum < grandTotal && grossTotal > 0) {
-      if (!confirm(`El monto recibido ($${cashNum.toLocaleString('es-AR')}) es menor al Total a Cobrar ($${grandTotal.toLocaleString('es-AR')}). ¿Deseas continuar igual?`)) {
-        return;
-      }
+    // REGLA 1: Bloqueo estricto por saldo pendiente / efectivo insuficiente
+    if (isPaymentInsufficient) {
+      showToast(`No se puede completar la entrega hasta que se procese el pago del saldo pendiente ($${grandTotal.toLocaleString('es-AR')}). Monto ingresado ($${cashNum.toLocaleString('es-AR')}) es insuficiente.`, 'error', 6000);
+      return;
     }
 
-    const deliveryPayload = {
-      orderId: order.id,
-      orderNumber: order.orderNumber,
-      clientName: order.client?.name || order.customer?.name || 'Cliente',
-      clientPhone: order.client?.phone || order.customer?.phone || '',
-      deviceModel: `${order.device?.brand || ''} ${order.device?.model || ''}`.trim(),
-      repairName: order.service?.requestedRepair || 'Reparación de Taller',
-      balancePaid: effectiveBalanceDue,
-      repairResolution: deliveryResolution, // 'ready' | 'no_repair'
-      isRepaired: deliveryResolution === 'ready',
-      accessories: addedAccessories.map(a => ({
-        id: a.id,
-        name: a.name,
-        price: a.price,
-        quantity: a.quantity,
-        sku: a.sku
-      })),
-      accessoriesTotal: accessoriesSubtotal,
-      discount: discountAmount,
-      totalAmount: grandTotal,
-      paymentMethod,
-      cashGiven: paymentMethod === 'cash' ? cashNum : null,
-      changeDue: paymentMethod === 'cash' ? changeDue : null,
-      notes: deliveryNotes,
-      deliveredAt: new Date().toISOString()
-    };
+    const payload = buildDeliveryPayload();
 
-    // Registrar en DataContext
-    if (recordUnifiedDelivery) {
-      recordUnifiedDelivery(deliveryPayload);
+    // ─── REGLA 3: Si el total es $0, pedir confirmación explícita ──
+    if (grandTotal === 0) {
+      setDeliveryPayloadPending(payload);
+      setShowZeroCostConfirm(true);
+      return;
     }
 
-    setCompletedSale(deliveryPayload);
-    if (onDelivered) {
-      onDelivered(order.id, deliveryPayload);
-    }
+    // ─── REGLA 2: Si hay monto a cobrar, abrir facturación automática ──
+    // NO registrar la entrega todavía. Solo se registra después de emitir la factura.
+    handleOpenInvoiceModal(payload);
   };
 
   // Enviar ticket por WhatsApp
@@ -178,7 +298,7 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     if (!completedSale) return;
     const phone = (completedSale.clientPhone || '').replace(/\D/g, '');
     if (!phone) {
-      alert('Esta orden no tiene número de teléfono registrado');
+      showToast('Esta orden no tiene número de teléfono registrado', 'warning');
       return;
     }
 
@@ -230,10 +350,72 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     setTimeout(() => setIsCopiedAlias(false), 2500);
   };
 
+  // ─── DATOS PARA PRECARGAR EN CommercialInvoicePOS ────────────
+  const buildInvoiceInitialData = () => {
+    const payload = deliveryPayloadPending || buildDeliveryPayload();
+    const items = [];
+
+    // Ítem de servicio de reparación
+    if (payload.balancePaid > 0) {
+      items.push({
+        id: `rep-${order.id || Date.now()}`,
+        sku: `REP-${(order.orderNumber || '').replace(/[^0-9]/g, '') || '0000'}`,
+        name: `Reparación: ${payload.repairName} (${payload.deviceModel}) - Orden ${payload.orderNumber}`,
+        color: '-',
+        quantity: 1,
+        price: payload.balancePaid,
+        ivaPercent: 21,
+        discountPercent: 0
+      });
+    }
+
+    // Ítems de accesorios
+    if (payload.accessories && payload.accessories.length > 0) {
+      payload.accessories.forEach(a => {
+        items.push({
+          id: a.id,
+          sku: a.sku || `ACC-${Date.now()}`,
+          name: a.name,
+          color: '-',
+          quantity: a.quantity,
+          price: a.price,
+          ivaPercent: 21,
+          discountPercent: 0
+        });
+      });
+    }
+
+    return {
+      client: {
+        name: (payload.clientName || 'CONSUMIDOR FINAL').toUpperCase(),
+        docType: order.client?.docType || 'DNI',
+        docNumber: payload.clientDni || payload.clientCuit || '',
+        taxCondition: order.client?.taxCondition || 'CONSUMIDOR FINAL',
+        email: order.client?.email || '',
+        phone: payload.clientPhone || '',
+        address: order.client?.address || ''
+      },
+      items,
+      paymentMethod: paymentMethodToLabel[payload.paymentMethod] || 'Efectivo',
+      notes: `Cobro de entrega - Orden ${payload.orderNumber}. ${payload.notes || ''}`.trim(),
+      documentType: 'FACTURA_B',
+      advancePayment: 0
+    };
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
       <div className="bg-[#121212] border border-zinc-800 rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
         
+        {/* TOAST NOTIFICATIONS */}
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+
         {/* HEADER */}
         <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/80 shrink-0">
           <div className="flex items-center gap-3">
@@ -263,15 +445,142 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
           </button>
         </div>
 
-        {/* MODAL DE COMPROBANTE FINAL (SI YA SE FINALIZÓ) */}
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {/* MODAL DE CONFIRMACIÓN DE ENTREGA SIN COSTO ($0)              */}
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {showZeroCostConfirm && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-[#1a1a22] border-2 border-amber-500/50 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-fadeIn">
+              {/* Icono de advertencia */}
+              <div className="flex items-center justify-center">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center">
+                  <AlertTriangle className="w-8 h-8 text-amber-400" />
+                </div>
+              </div>
+
+              <div className="text-center space-y-2">
+                <h3 className="text-lg font-heading font-bold text-white">
+                  ¿Entregar esta orden sin costo?
+                </h3>
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  El valor de la reparación figura en <span className="font-bold text-amber-400">$0</span>. 
+                  Confirme si se trata de una garantía, revisión sin reparación o presupuesto sin cargo.
+                </p>
+              </div>
+
+              {/* Datos de la orden */}
+              <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs space-y-1.5">
+                <div className="flex justify-between text-zinc-400">
+                  <span>Orden:</span>
+                  <span className="font-mono font-bold text-white">{order.orderNumber}</span>
+                </div>
+                <div className="flex justify-between text-zinc-400">
+                  <span>Cliente:</span>
+                  <span className="text-white">{order.client?.name || 'Cliente'}</span>
+                </div>
+                <div className="flex justify-between text-zinc-400">
+                  <span>Equipo:</span>
+                  <span className="text-white">{order.device?.brand} {order.device?.model}</span>
+                </div>
+                <div className="flex justify-between text-zinc-400">
+                  <span>Resolución:</span>
+                  <span className={deliveryResolution === 'ready' ? 'text-emerald-400 font-semibold' : 'text-amber-400 font-semibold'}>
+                    {deliveryResolution === 'ready' ? '🟢 Reparado OK' : '🔴 Sin Reparar'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Botones */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => {
+                    setShowZeroCostConfirm(false);
+                    setDeliveryPayloadPending(null);
+                    showToast('Volvé a la pantalla de cobro para cargar el costo de la reparación.', 'info');
+                  }}
+                  className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold transition-all border border-zinc-700 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <ArrowRight className="w-4 h-4 rotate-180" />
+                  <span>Cancelar / Volver y cargar costo</span>
+                </button>
+                <button
+                  onClick={handleConfirmZeroCostDelivery}
+                  className="px-4 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all shadow-lg cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Sí, entregar sin costo</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {/* MODAL DE FACTURACIÓN AUTOMÁTICA (CommercialInvoicePOS)        */}
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {showInvoiceModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 bg-black/90 backdrop-blur-md animate-fadeIn">
+            <div className="bg-[#0f0f14] border border-zinc-700 rounded-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden shadow-2xl flex flex-col">
+              {/* Header del modal de facturación */}
+              <div className="px-5 py-3 border-b border-zinc-800 flex items-center justify-between bg-[#121218] shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <Receipt className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      Facturación Obligatoria – Orden {order.orderNumber}
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold border border-emerald-500/30 animate-pulse">
+                        PASO OBLIGATORIO
+                      </span>
+                    </h3>
+                    <p className="text-[11px] text-zinc-400">
+                      Emita el comprobante fiscal o comercial antes de finalizar la entrega. Los datos de la reparación ya están precargados.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleInvoiceCompleted}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-lg cursor-pointer flex items-center gap-2"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Factura Emitida – Finalizar</span>
+                  </button>
+                  <button
+                    onClick={handleInvoiceClose}
+                    className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                    title="Cerrar sin emitir (la entrega quedará pendiente)"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              {/* CommercialInvoicePOS precargado */}
+              <div className="flex-1 overflow-y-auto">
+                <CommercialInvoicePOS
+                  isModal={true}
+                  initialData={buildInvoiceInitialData()}
+                  onOpenDailyCash={() => {}}
+                  onClose={handleInvoiceClose}
+                  onEmitSuccess={handleInvoiceCompleted}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {/* MODAL DE COMPROBANTE FINAL (SI YA SE FINALIZÓ)               */}
+        {/* ══════════════════════════════════════════════════════════════ */}
         {completedSale ? (
           <div className="p-6 sm:p-8 flex-1 overflow-y-auto space-y-6 animate-fadeIn">
             <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 flex items-center gap-3">
               <Check className="w-6 h-6 shrink-0 text-emerald-400" />
               <div>
-                <h4 className="font-bold text-base text-white">¡Entrega y Cobro Registrados Exitosamente!</h4>
+                <h4 className="font-bold text-base text-white">¡Entrega, Cobro y Facturación Registrados!</h4>
                 <p className="text-xs text-emerald-200/80">
-                  El estado de la orden {completedSale.orderNumber} cambió a "Entregado" y se descontó el stock de los accesorios.
+                  La orden {completedSale.orderNumber} pasó a "Entregado". El saldo de reparación (${completedSale.balancePaid.toLocaleString('es-AR')}) quedó asentado en Caja Diaria y en el libro de Ventas comerciales con comprobante asignado.
                 </p>
               </div>
             </div>
@@ -669,6 +978,15 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                   <div className="text-3xl sm:text-4xl font-heading font-extrabold text-[#FF5500]">
                     ${grandTotal.toLocaleString('es-AR')}
                   </div>
+                  {/* REGLA 1: Aviso de saldo pendiente si grandTotal > 0 */}
+                  {grandTotal > 0 && (
+                    <div className="flex items-center justify-center gap-1.5 mt-2">
+                      <Lock className="w-3 h-3 text-amber-400" />
+                      <span className="text-[10px] text-amber-300 font-medium">
+                        La entrega requiere cobro y facturación obligatoria
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Medio de Pago */}
@@ -768,24 +1086,56 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                   </div>
                 )}
 
+                {/* Notas opcionales */}
+                <div className="space-y-1">
+                  <label className="text-xs text-zinc-400">Notas de entrega (opcional):</label>
+                  <textarea
+                    value={deliveryNotes}
+                    onChange={(e) => setDeliveryNotes(e.target.value)}
+                    placeholder="Observaciones, detalles de garantía..."
+                    rows={2}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 outline-none focus:border-[#FF5500] resize-none"
+                  />
+                </div>
+
               </div>
+
+              {/* ALERTA PAGO INSUFICIENTE */}
+              {isPaymentInsufficient && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                  <span>
+                    No se puede completar la entrega hasta que se procese el pago del saldo pendiente (${grandTotal.toLocaleString('es-AR')}). Efectivo recibido: ${cashNum.toLocaleString('es-AR')}.
+                  </span>
+                </div>
+              )}
 
               {/* BOTÓN FINALIZAR ENTREGA */}
               <button
                 onClick={handleFinalize}
-                disabled={!deliveryResolution}
+                disabled={!deliveryResolution || isPaymentInsufficient}
                 className={`w-full py-3.5 rounded-xl font-heading font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                  deliveryResolution
+                  deliveryResolution && !isPaymentInsufficient
                     ? 'bg-[#FF5500] hover:bg-[#FF6600] text-white shadow-[0_0_25px_rgba(255,85,0,0.4)] hover:shadow-[0_0_35px_rgba(255,85,0,0.6)]'
                     : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
                 }`}
               >
-                <Check className="w-5 h-5" />
-                <span>
-                  {!deliveryResolution
-                    ? 'SELECCIONA RESOLUCIÓN (REPARADO / SIN REPARAR)'
-                    : 'FINALIZAR ENTREGA Y COBRAR'}
-                </span>
+                {!deliveryResolution ? (
+                  <>
+                    <AlertCircle className="w-5 h-5" />
+                    <span>SELECCIONA RESOLUCIÓN (REPARADO / SIN REPARAR)</span>
+                  </>
+                ) : grandTotal > 0 ? (
+                  <>
+                    <Receipt className="w-5 h-5" />
+                    <span>PROCESAR COBRO Y FACTURAR (${grandTotal.toLocaleString('es-AR')})</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-5 h-5" />
+                    <span>ENTREGAR EQUIPO SIN COSTO</span>
+                  </>
+                )}
               </button>
 
             </div>

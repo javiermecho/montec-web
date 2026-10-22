@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Printer, MessageSquare, CheckCircle2, ShieldCheck, Smartphone, Clock, Calendar, AlertCircle } from 'lucide-react';
-import { PatternThumbnail } from './PatternLockInput';
+import { PatternThumbnail, getDeviceSecurity } from './PatternLockInput';
 import { useData } from '../../context/DataContext';
 
 export default function OrderTicketModal({ order, onClose }) {
@@ -216,39 +216,51 @@ export default function OrderTicketModal({ order, onClose }) {
             </div>
 
             {/* Bloque de Seguridad / Desbloqueo */}
-            <div className="mt-2 pt-2 border-t border-zinc-800 print:border-gray-200 flex items-center justify-between">
-              <div>
-                <span className="text-zinc-500 print:text-gray-600 block text-[10px] font-bold uppercase">
-                  Seguridad / Desbloqueo:
-                </span>
-                {device.security?.type === 'pin' && (
-                  <span className="font-mono text-sm font-bold text-[#FF5500] print:text-black">
-                    PIN: {device.security.pin || 'Sin PIN'}
-                  </span>
-                )}
-                {device.security?.type === 'password' && (
-                  <span className="font-mono text-xs font-bold text-zinc-200 print:text-black">
-                    Clave: {device.security.pin}
-                  </span>
-                )}
-                {device.security?.type === 'none' && (
-                  <span className="text-zinc-400 print:text-gray-700 text-xs italic">
-                    Sin clave de bloqueo
-                  </span>
-                )}
-                {device.security?.type === 'pattern' && (
-                  <span className="text-[10px] text-zinc-400 print:text-black block">
-                    Patrón gráfico 3x3:
-                  </span>
-                )}
-              </div>
+            {(() => {
+              const sec = getDeviceSecurity(device, service);
+              return (
+                <div className="mt-2 pt-2 border-t border-zinc-800 print:border-gray-200 flex items-center justify-between">
+                  <div>
+                    <span className="text-zinc-500 print:text-gray-600 block text-[10px] font-bold uppercase">
+                      Seguridad / Desbloqueo:
+                    </span>
+                    {sec.type === 'pin' && (
+                      <span className="font-mono text-sm font-bold text-[#FF5500] print:text-black">
+                        PIN: {sec.pin || 'Sin PIN'}
+                      </span>
+                    )}
+                    {sec.type === 'password' && (
+                      <span className="font-mono text-xs font-bold text-zinc-200 print:text-black">
+                        Clave: {sec.pin || 'Sin clave'}
+                      </span>
+                    )}
+                    {sec.type === 'none' && (
+                      <span className="text-zinc-400 print:text-gray-700 text-xs italic">
+                        Sin clave de bloqueo
+                      </span>
+                    )}
+                    {sec.type === 'pattern' && (
+                      <div>
+                        <span className="text-[10px] text-zinc-400 print:text-black block font-bold">
+                          Patrón gráfico 3x3:
+                        </span>
+                        {sec.patternSequence.length > 0 && (
+                          <span className="text-[10px] font-mono text-purple-400 print:text-black font-semibold">
+                            Secuencia: {sec.patternSequence.join(' - ')}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
-              {device.security?.type === 'pattern' && device.security?.patternSequence?.length > 0 && (
-                <div className="shrink-0">
-                  <PatternThumbnail sequence={device.security.patternSequence} size={65} isPrint={true} />
+                  {sec.type === 'pattern' && sec.patternSequence.length > 0 && (
+                    <div className="shrink-0">
+                      <PatternThumbnail sequence={sec.patternSequence} size={65} isPrint={true} />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              );
+            })()}
           </div>
 
           {/* Falla Solicitada & Checklist */}

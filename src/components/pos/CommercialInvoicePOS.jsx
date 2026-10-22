@@ -112,7 +112,7 @@ const PAYMENT_METHODS = [
   { id: 'Mercado Pago QR', label: 'Mercado Pago QR', icon: QrCode, color: 'text-amber-400' }
 ];
 
-export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
+export default function CommercialInvoicePOS({ onOpenDailyCash, onClose, initialData, isModal, onEmitSuccess }) {
   const {
     inventory = [],
     sales = [],
@@ -127,14 +127,14 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
 
   const isLight = panelTheme === 'light';
 
-  // --- DATOS DEL CLIENTE ---
-  const [docType, setDocType] = useState('DNI');
-  const [docNumber, setDocNumber] = useState('');
-  const [clientName, setClientName] = useState('CONSUMIDOR FINAL');
-  const [taxCondition, setTaxCondition] = useState('CONSUMIDOR FINAL');
-  const [clientEmail, setClientEmail] = useState('');
-  const [clientPhone, setClientPhone] = useState('');
-  const [clientAddress, setClientAddress] = useState('');
+  // --- DATOS DEL CLIENTE (con soporte de precarga desde initialData) ---
+  const [docType, setDocType] = useState(initialData?.client?.docType || 'DNI');
+  const [docNumber, setDocNumber] = useState(initialData?.client?.docNumber || '');
+  const [clientName, setClientName] = useState(initialData?.client?.name || 'CONSUMIDOR FINAL');
+  const [taxCondition, setTaxCondition] = useState(initialData?.client?.taxCondition || 'CONSUMIDOR FINAL');
+  const [clientEmail, setClientEmail] = useState(initialData?.client?.email || '');
+  const [clientPhone, setClientPhone] = useState(initialData?.client?.phone || '');
+  const [clientAddress, setClientAddress] = useState(initialData?.client?.address || '');
   const [clientInternalNotes, setClientInternalNotes] = useState('');
   const [isClientNotesModalOpen, setIsClientNotesModalOpen] = useState(false);
   const [isLookingUpCustomer, setIsLookingUpCustomer] = useState(false);
@@ -147,7 +147,7 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
 
   // --- COMPROBANTE ---
   // Por defecto inicializar en FACTURA B (Consumidor Final) para emitir directamente sin pasos extras
-  const [selectedDocType, setSelectedDocType] = useState('FACTURA_B');
+  const [selectedDocType, setSelectedDocType] = useState(initialData?.documentType || 'FACTURA_B');
   const [docNumberCustom, setDocNumberCustom] = useState('');
   const [optionPrint, setOptionPrint] = useState(true);
   const [optionSendEmail, setOptionSendEmail] = useState(true);
@@ -163,9 +163,24 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
     return `0001-${num}`;
   }, [sales, selectedDocType, docNumberCustom]);
 
-  // --- PRODUCTOS Y SERVICIOS DEL COMPROBANTE ---
+  // --- PRODUCTOS Y SERVICIOS DEL COMPROBANTE (con soporte de precarga) ---
   const [skuInput, setSkuInput] = useState('');
-  const [items, setItems] = useState([]); // [{ id, sku, name, color, quantity, price, ivaPercent, discountPercent }]
+  const [items, setItems] = useState(() => {
+    if (initialData?.items && initialData.items.length > 0) {
+      return initialData.items.map((item, idx) => ({
+        id: item.id || `initial-${Date.now()}-${idx}`,
+        productId: item.productId || null,
+        sku: item.sku || `SERV-${String(idx + 1).padStart(2, '0')}`,
+        name: item.name || 'Servicio',
+        color: item.color || '-',
+        quantity: Number(item.quantity) || 1,
+        price: Number(item.price) || 0,
+        ivaPercent: item.ivaPercent !== undefined ? Number(item.ivaPercent) : 21,
+        discountPercent: Number(item.discountPercent) || 0
+      }));
+    }
+    return [];
+  }); // [{ id, sku, name, color, quantity, price, ivaPercent, discountPercent }]
   const [isSearchProductsModalOpen, setIsSearchProductsModalOpen] = useState(false);
   const [productSearchTerm, setProductSearchTerm] = useState('');
 
@@ -188,11 +203,11 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
   const [newDiscountPercent, setNewDiscountPercent] = useState(10);
 
   // --- NOTAS DEL COMPROBANTE ---
-  const [voucherNotes, setVoucherNotes] = useState('');
+  const [voucherNotes, setVoucherNotes] = useState(initialData?.notes || '');
 
   // --- MEDIO DE PAGO & ADELANTOS ---
-  const [paymentMethod, setPaymentMethod] = useState('Efectivo');
-  const [advancePayment, setAdvancePayment] = useState(0); // Adelantos / señas
+  const [paymentMethod, setPaymentMethod] = useState(initialData?.paymentMethod || 'Efectivo');
+  const [advancePayment, setAdvancePayment] = useState(initialData?.advancePayment || 0); // Adelantos / señas
 
   // --- MODAL POST-EMISIÓN Y VISTA PREVIA ---
   const [emittedVoucher, setEmittedVoucher] = useState(null);
@@ -573,6 +588,14 @@ export default function CommercialInvoicePOS({ onOpenDailyCash, onClose }) {
 
     if (typeof recordSale === 'function') {
       recordSale(newSale);
+    }
+
+    if (typeof onEmitSuccess === 'function') {
+      try {
+        onEmitSuccess(newSale);
+      } catch (err) {
+        console.error('Error invoking onEmitSuccess:', err);
+      }
     }
 
     // Persistir cliente en padrón fiscal local si tiene DNI o CUIT

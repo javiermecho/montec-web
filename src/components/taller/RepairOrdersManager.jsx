@@ -48,8 +48,9 @@ import {
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
-import { PatternThumbnail } from './PatternLockInput';
+import { PatternThumbnail, getDeviceSecurity, parsePatternSequence } from './PatternLockInput';
 import OrderTicketModal from './OrderTicketModal';
+import UnifiedDeliveryModal from './UnifiedDeliveryModal';
 import DailySalesTab from '../admin/DailySalesTab';
 
 // CONFIGURACIÓN DE ESTADOS TÉCNICOS (ESTILO SISTROFIX PROFESIONAL)
@@ -182,6 +183,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [ticketModalOrder, setTicketModalOrder] = useState(null);
+  const [localDeliveryOrder, setLocalDeliveryOrder] = useState(null);
   const [isDailyCashModalOpen, setIsDailyCashModalOpen] = useState(false);
 
   // Modo de apertura de WhatsApp ('web' = directo a web.whatsapp.com, 'desktop' = app Windows, 'link' = wa.me)
@@ -532,6 +534,33 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     let newBudgetNum = undefined;
     if (techBudgetValue !== '' && !isNaN(parseFloat(techBudgetValue))) {
       newBudgetNum = parseFloat(techBudgetValue);
+    }
+
+    // SI EL ESTADO ELEGIDO ES "ENTREGADO", ABRIR DIRECTAMENTE EL COBRO Y FACTURACIÓN
+    // Permite facturar y cobrar el monto de la reparación en el momento exacto de la entrega
+    if (targetStatus === 'delivered') {
+      setIsProcessModalOpen(false);
+
+      const orderToDeliver = {
+        ...selectedOrder,
+        deliveryResolutionChoice,
+        technicalReport: techReport,
+        service: {
+          ...(selectedOrder.service || {}),
+          repairResolution: deliveryResolutionChoice,
+          ...(newBudgetNum !== undefined ? { 
+            budgetTotal: newBudgetNum, 
+            balanceDue: Math.max(0, newBudgetNum - (Number(selectedOrder.service?.deposit) || 0)) 
+          } : {})
+        }
+      };
+
+      if (typeof onDeliverOrder === 'function') {
+        onDeliverOrder(orderToDeliver);
+      } else {
+        setLocalDeliveryOrder(orderToDeliver);
+      }
+      return;
     }
 
     // Datos adicionales a guardar en la orden
@@ -908,13 +937,53 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                         }`}>
                           {order.service?.requestedRepair || order.service?.preliminaryDiagnosis || 'Revisión técnica'}
                         </div>
-                        {order.service?.technician && order.service.technician !== 'Sin Asignar' && (
-                          <div className="mt-1">
+
+                        {/* Indicadores de Técnico y Seguridad de Desbloqueo */}
+                        <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                          {order.service?.technician && order.service.technician !== 'Sin Asignar' && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-medium text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/20">
                               👨‍🔧 {order.service.technician}
                             </span>
-                          </div>
-                        )}
+                          )}
+
+                          {(() => {
+                            const rowSec = getDeviceSecurity(order.device, order.service);
+                            if (rowSec.type === 'pattern' && rowSec.patternSequence.length > 0) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedOrder(order);
+                                    setShowPatternModal(true);
+                                  }}
+                                  className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-purple-300 bg-purple-950/60 border border-purple-500/40 px-2 py-0.5 rounded-md hover:bg-purple-900/70 transition-colors shadow-xs cursor-pointer"
+                                  title={`Ver Patrón 3x3 de ${order.device?.model || 'equipo'}`}
+                                >
+                                  <Lock className="w-3 h-3 text-purple-400" />
+                                  <span>Patrón: {rowSec.patternSequence.join('→')}</span>
+                                </button>
+                              );
+                            }
+                            if (rowSec.type === 'pin' && rowSec.pin) {
+                              return (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-sky-300 bg-sky-950/60 border border-sky-500/40 px-1.5 py-0.5 rounded-md shadow-xs">
+                                  <Lock className="w-3 h-3 text-sky-400" />
+                                  <span>PIN: {rowSec.pin}</span>
+                                </span>
+                              );
+                            }
+                            if (rowSec.type === 'password' && rowSec.pin) {
+                              return (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-amber-300 bg-amber-950/60 border border-amber-500/40 px-1.5 py-0.5 rounded-md shadow-xs">
+                                  <Lock className="w-3 h-3 text-amber-400" />
+                                  <span>Clave</span>
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
                       </td>
 
                       {/* 4. Estado Técnico */}
@@ -1109,10 +1178,16 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
               <span>Imprimir Ticket</span>
             </button>
 
-            {onDeliverOrder && selectedOrder.status !== 'delivered' && (
+            {selectedOrder.status !== 'delivered' && (
               <button
                 type="button"
-                onClick={() => onDeliverOrder(selectedOrder)}
+                onClick={() => {
+                  if (typeof onDeliverOrder === 'function') {
+                    onDeliverOrder(selectedOrder);
+                  } else {
+                    setLocalDeliveryOrder(selectedOrder);
+                  }
+                }}
                 className="px-3.5 py-1.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-[0_0_15px_rgba(255,85,0,0.35)]"
                 title="Entregar equipo y cobrar saldo con venta cruzada de accesorios"
               >
@@ -1393,33 +1468,62 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                     </div>
 
                     {/* CLAVE / SEGURIDAD */}
-                    <div>
-                      <span className={`block text-[11px] mb-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Seguridad de Pantalla</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        {selectedOrder.device?.security?.type === 'pattern' ? (
-                          <div className="flex items-center gap-2">
-                            <span className="px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 text-xs font-bold">
-                              Patrón 3x3
+                    <div className="sm:col-span-2 p-3 rounded-xl border border-dashed border-zinc-700/80 bg-zinc-950/40">
+                      <span className={`block text-[11px] font-bold uppercase tracking-wider mb-2 ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
+                        Seguridad de Desbloqueo del Dispositivo:
+                      </span>
+                      {(() => {
+                        const sec = getDeviceSecurity(selectedOrder.device, selectedOrder.service);
+
+                        if (sec.type === 'pattern' && sec.patternSequence.length > 0) {
+                          return (
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                              <div className="shrink-0 p-1.5 rounded-xl bg-black/60 border border-purple-500/30">
+                                <PatternThumbnail sequence={sec.patternSequence} size={90} showLabel={false} />
+                              </div>
+                              <div className="space-y-1.5 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="px-2.5 py-0.5 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-bold font-mono">
+                                    Patrón 3×3
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowPatternModal(true)}
+                                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer border transition-colors ${
+                                      isLight ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300' : 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700'
+                                    }`}
+                                  >
+                                    <Eye className="w-3.5 h-3.5 text-[#FF5500]" />
+                                    <span>Ampliar</span>
+                                  </button>
+                                </div>
+                                <div className="text-xs font-mono text-zinc-300 flex items-center gap-1.5">
+                                  <span className="text-zinc-500">Secuencia:</span>
+                                  <strong className="text-purple-400 font-bold bg-purple-950/50 px-2 py-0.5 rounded border border-purple-500/30">
+                                    {sec.patternSequence.join(' → ')}
+                                  </strong>
+                                </div>
+                                {sec.accountInfo && (
+                                  <p className="text-[11px] text-zinc-400 mt-1">
+                                    Cuenta/Restauración: <span className="text-zinc-200">{sec.accountInfo}</span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        if (sec.type === 'none') {
+                          return <span className="text-zinc-500 italic text-xs">Sin clave registrada</span>;
+                        }
+
+                        return (
+                          <div className="flex items-center gap-3">
+                            <span className="px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-500/30 text-xs font-mono font-bold">
+                              {sec.type === 'password' ? 'Contraseña' : 'PIN'}
                             </span>
-                            <button
-                              type="button"
-                              onClick={() => setShowPatternModal(true)}
-                              className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer border ${
-                                isLight ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300' : 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700'
-                              }`}
-                            >
-                              <Eye className="w-3.5 h-3.5 text-[#FF5500]" />
-                              <span>Ver Dibujo</span>
-                            </button>
-                          </div>
-                        ) : selectedOrder.device?.security?.type === 'none' ? (
-                          <span className="text-zinc-500 italic text-xs">Sin clave</span>
-                        ) : (
-                          <div className="flex items-center gap-2">
                             <span className={`font-mono font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                              {showPin 
-                                ? (selectedOrder.device?.security?.pin || 'Sin PIN') 
-                                : '••••••••'}
+                              {showPin ? (sec.pin || 'Sin PIN') : '••••••••'}
                             </span>
                             <button
                               type="button"
@@ -1429,10 +1533,10 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                             >
                               {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
-                            {selectedOrder.device?.security?.pin && (
+                            {sec.pin && (
                               <button
                                 type="button"
-                                onClick={() => handleCopy(selectedOrder.device.security.pin, 'pin')}
+                                onClick={() => handleCopy(sec.pin, 'pin')}
                                 className={`p-1.5 rounded hover:bg-zinc-700/30 cursor-pointer ${isLight ? 'text-slate-500 hover:text-slate-800' : 'text-zinc-400 hover:text-white'}`}
                                 title="Copiar PIN"
                               >
@@ -1440,8 +1544,8 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                               </button>
                             )}
                           </div>
-                        )}
-                      </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -2081,10 +2185,16 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
               <span>Reimprimir Ticket</span>
             </button>
 
-            {onDeliverOrder && selectedOrder.status !== 'delivered' && (
+            {selectedOrder.status !== 'delivered' && (
               <button
                 type="button"
-                onClick={() => onDeliverOrder(selectedOrder)}
+                onClick={() => {
+                  if (typeof onDeliverOrder === 'function') {
+                    onDeliverOrder(selectedOrder);
+                  } else {
+                    setLocalDeliveryOrder(selectedOrder);
+                  }
+                }}
                 className="px-3.5 py-1.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-[0_0_15px_rgba(255,85,0,0.35)]"
                 title="Entregar equipo y cobrar saldo con venta cruzada de accesorios"
               >
@@ -2136,6 +2246,8 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   const renderPatternModal = () => {
     if (!showPatternModal || !selectedOrder) return null;
 
+    const sec = getDeviceSecurity(selectedOrder.device, selectedOrder.service);
+
     return createPortal(
       <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fade-in font-sans">
         <div className={`border rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl relative ${
@@ -2160,10 +2272,16 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
 
           <div className="flex justify-center my-3">
             <PatternThumbnail 
-              sequence={selectedOrder.device?.security?.patternSequence || []} 
+              sequence={sec.patternSequence} 
               size={180} 
             />
           </div>
+
+          {sec.patternSequence.length > 0 && (
+            <div className="mt-2 text-xs font-mono text-zinc-300">
+              Secuencia: <strong className="text-purple-400 font-bold">{sec.patternSequence.join(' → ')}</strong>
+            </div>
+          )}
 
           <button
             type="button"
@@ -2619,6 +2737,14 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
         <OrderTicketModal
           order={ticketModalOrder}
           onClose={() => setTicketModalOrder(null)}
+        />
+      )}
+      {localDeliveryOrder && (
+        <UnifiedDeliveryModal
+          order={localDeliveryOrder}
+          isOpen={Boolean(localDeliveryOrder)}
+          onClose={() => setLocalDeliveryOrder(null)}
+          onDelivered={() => setLocalDeliveryOrder(null)}
         />
       )}
 

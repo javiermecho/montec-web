@@ -179,10 +179,68 @@ export default function PatternLockInput({ value = [], onChange }) {
 }
 
 /**
+ * Helper para parsear secuencias de patrones en cualquier formato:
+ * - Array: [1, 2, 5, 8]
+ * - String con guiones: "1-2-5-8"
+ * - String con comas o espacios: "1,2,5,8" o "1 2 5 8"
+ * - String JSON: "[1,2,5,8]"
+ */
+export function parsePatternSequence(val) {
+  if (Array.isArray(val)) {
+    return val.map(Number).filter(n => !isNaN(n) && n >= 1 && n <= 9);
+  }
+  if (typeof val === 'string' && val.trim()) {
+    try {
+      const parsedJson = JSON.parse(val);
+      if (Array.isArray(parsedJson)) {
+        return parsedJson.map(Number).filter(n => !isNaN(n) && n >= 1 && n <= 9);
+      }
+    } catch (e) {}
+
+    const clean = val.replace(/[\[\]\s]/g, '');
+    const parts = clean.split(/[-,\.\s]+/).map(Number).filter(n => !isNaN(n) && n >= 1 && n <= 9);
+    return parts;
+  }
+  return [];
+}
+
+/**
+ * Helper universal para extraer y normalizar la seguridad del dispositivo
+ */
+export function getDeviceSecurity(device, service) {
+  const sec = device?.security || {};
+  const rawSeq = sec.patternSequence || sec.pattern || device?.patternLock || device?.patternSequence || service?.patternLock || '';
+  const parsedSeq = parsePatternSequence(rawSeq);
+  
+  let type = sec.type;
+  if (!type) {
+    if (parsedSeq.length > 0) type = 'pattern';
+    else if (sec.pin || device?.pinLock || service?.pinLock) type = 'pin';
+    else if (sec.accountInfo || device?.accountInfo) type = 'password';
+    else type = 'none';
+  } else if (type === 'pin' && parsedSeq.length > 0 && !sec.pin) {
+    type = 'pattern';
+  }
+
+  const pin = sec.pin || device?.pinLock || service?.pinLock || '';
+  const accountInfo = sec.accountInfo || device?.accountInfo || '';
+
+  return {
+    type,
+    pin,
+    patternSequence: parsedSeq,
+    patternLock: parsedSeq.length > 0 ? parsedSeq.join('-') : '',
+    accountInfo
+  };
+}
+
+/**
  * Componente miniatura estático para imprimir el patrón en el ticket o ver en la lista
  */
-export function PatternThumbnail({ sequence = [], size = 70, isPrint = false }) {
-  if (!Array.isArray(sequence) || sequence.length === 0) {
+export function PatternThumbnail({ sequence = [], size = 70, isPrint = false, showLabel = true }) {
+  const safeSequence = parsePatternSequence(sequence);
+
+  if (safeSequence.length === 0) {
     return (
       <span className={isPrint ? "text-gray-500 text-xs" : "text-zinc-500 text-xs italic"}>
         Sin patrón
@@ -190,7 +248,7 @@ export function PatternThumbnail({ sequence = [], size = 70, isPrint = false }) 
     );
   }
 
-  const linePoints = sequence.map(id => {
+  const linePoints = safeSequence.map(id => {
     const dot = DOTS.find(d => d.id === id);
     return dot ? { x: dot.x, y: dot.y } : null;
   }).filter(Boolean);
@@ -204,7 +262,7 @@ export function PatternThumbnail({ sequence = [], size = 70, isPrint = false }) 
       <svg 
         viewBox="0 0 150 150" 
         style={{ width: `${size}px`, height: `${size}px` }}
-        className={isPrint ? "border border-gray-400 rounded bg-white" : "border border-zinc-800 rounded-lg bg-zinc-950"}
+        className={isPrint ? "border border-gray-400 rounded bg-white shadow-xs" : "border border-zinc-800 rounded-lg bg-zinc-950 shadow-xs"}
       >
         {linePoints.length > 1 && (
           <polyline
@@ -217,8 +275,8 @@ export function PatternThumbnail({ sequence = [], size = 70, isPrint = false }) 
           />
         )}
         {DOTS.map((dot) => {
-          const isSelected = sequence.includes(dot.id);
-          const orderIdx = sequence.indexOf(dot.id);
+          const isSelected = safeSequence.includes(dot.id);
+          const orderIdx = safeSequence.indexOf(dot.id);
           return (
             <g key={dot.id}>
               <circle
@@ -243,9 +301,11 @@ export function PatternThumbnail({ sequence = [], size = 70, isPrint = false }) 
           );
         })}
       </svg>
-      <span className={`text-[10px] font-mono mt-0.5 ${isPrint ? "text-black font-bold" : "text-[#FF5500]"}`}>
-        {sequence.join('-')}
-      </span>
+      {showLabel && (
+        <span className={`text-[10px] font-mono mt-0.5 ${isPrint ? "text-black font-bold" : "text-[#FF5500] font-bold"}`}>
+          {safeSequence.join(' → ')}
+        </span>
+      )}
     </div>
   );
 }
