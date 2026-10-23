@@ -241,10 +241,27 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   };
 
   const handleSaveInlineCost = async (orderId) => {
-    const costNum = parseFloat(inlineCostValue) || 0;
+    const costNum = Math.max(0, parseFloat(inlineCostValue) || 0);
+    const supplierStr = (inlineSupplierValue || '').trim();
+
+    // Actualización inmediata en el estado de selectedOrder para feedback visual instantáneo
+    setSelectedOrder(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        partCost: costNum,
+        partSupplier: supplierStr,
+        service: {
+          ...(prev.service || {}),
+          partCost: costNum,
+          partSupplier: supplierStr
+        }
+      };
+    });
+
     await updateOrderPartCost(orderId, {
       partCost: costNum,
-      partSupplier: inlineSupplierValue,
+      partSupplier: supplierStr,
       partName: selectedOrder?.partName || ''
     });
     setIsEditingCostInline(false);
@@ -2943,10 +2960,30 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
           onSelectPart={async (selectedData) => {
             const targetId = (costModalOrder || selectedOrder)?.id;
             if (targetId) {
+              const costNum = Math.max(0, Number(selectedData.costPrice) || 0);
+              const supplierStr = (selectedData.supplierName || '').trim();
+              const partNameStr = (selectedData.partName || '').trim();
+
+              setSelectedOrder(prev => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  partCost: costNum,
+                  partSupplier: supplierStr,
+                  partName: partNameStr,
+                  service: {
+                    ...(prev.service || {}),
+                    partCost: costNum,
+                    partSupplier: supplierStr,
+                    partName: partNameStr
+                  }
+                };
+              });
+
               await updateOrderPartCost(targetId, {
-                partCost: selectedData.costPrice,
-                partSupplier: selectedData.supplierName,
-                partName: selectedData.partName
+                partCost: costNum,
+                partSupplier: supplierStr,
+                partName: partNameStr
               });
             }
             setIsPartCostModalOpen(false);

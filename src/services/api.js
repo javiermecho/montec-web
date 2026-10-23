@@ -169,6 +169,17 @@ export async function updateOrdenEstado(id, estadoData) {
 }
 
 /**
+ * Actualiza el costo del repuesto e insumos de una orden en PostgreSQL
+ */
+export async function updateOrdenPartCost(id, partCostData) {
+  const res = await request(`/orders/${encodeURIComponent(id)}/part-cost`, {
+    method: 'PATCH',
+    body: JSON.stringify(partCostData)
+  });
+  return res;
+}
+
+/**
  * Actualiza el presupuesto / precio total acordado de una orden
  */
 export async function updateOrdenPresupuesto(id, budgetData) {

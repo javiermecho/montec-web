@@ -93,6 +93,11 @@ const mapDbOrderToFrontend = (row) => {
     accountInfo: deviceData.security?.accountInfo || deviceData.accountInfo || ''
   };
 
+  const rawPartCost = serviceData.partCost ?? row.service_data?.partCost ?? 0;
+  const partCostNum = Number(rawPartCost) >= 0 ? Number(rawPartCost) : 0;
+  const partSupplierStr = String(serviceData.partSupplier || row.service_data?.partSupplier || '').trim();
+  const partNameStr = String(serviceData.partName || row.service_data?.partName || '').trim();
+
   const customerObj = {
     name: row.client_name,
     phone: row.client_phone,
@@ -100,6 +105,9 @@ const mapDbOrderToFrontend = (row) => {
   };
   const serviceObj = {
     ...serviceData,
+    partCost: partCostNum,
+    partSupplier: partSupplierStr,
+    partName: partNameStr,
     status: row.status,
     budgetTotal: parseFloat(row.budget_total || 0),
     deposit: parseFloat(row.deposit || 0),
@@ -111,6 +119,9 @@ const mapDbOrderToFrontend = (row) => {
   return {
     id: row.id,
     orderNumber: row.order_number,
+    partCost: partCostNum,
+    partSupplier: partSupplierStr,
+    partName: partNameStr,
     status: row.status,
     customer: customerObj,
     client: customerObj,
@@ -343,7 +354,7 @@ app.post('/api/orders', async (req, res) => {
 // Actualizar estado e informe técnico de una orden
 app.patch('/api/orders/:id/status', async (req, res) => {
   const { id } = req.params;
-  const { status, technicalReport, operator, internalNotes, budgetTotal } = req.body;
+  const { status, technicalReport, operator, internalNotes, budgetTotal, partCost, partSupplier, partName } = req.body;
   const dbConnected = await isDbConnected();
 
   if (!dbConnected) {
@@ -364,6 +375,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     }
 
     const currentOrder = existingRes.rows[0];
+    const newStatus = status || currentOrder.status || 'received';
     
     // Si viene un nuevo presupuesto asignado
     let budgetTotalVal = currentOrder.budget_total;
@@ -374,25 +386,40 @@ app.patch('/api/orders/:id/status', async (req, res) => {
       balanceDueVal = Math.max(0, budgetTotalVal - depositVal);
     }
 
+    const existingServiceData = typeof currentOrder.service_data === 'object' && currentOrder.service_data !== null
+      ? currentOrder.service_data
+      : (JSON.parse(currentOrder.service_data || '{}'));
+
     const updatedServiceData = {
-      ...(currentOrder.service_data || {}),
-      status: status,
-      technicalReport: technicalReport || currentOrder.service_data?.technicalReport,
-      internalNotes: internalNotes || currentOrder.service_data?.internalNotes,
+      ...existingServiceData,
+      status: newStatus,
+      technicalReport: technicalReport || existingServiceData.technicalReport,
+      internalNotes: internalNotes || existingServiceData.internalNotes,
       budgetTotal: budgetTotalVal,
       balanceDue: balanceDueVal
     };
 
+    if (partCost !== undefined && partCost !== null) {
+      updatedServiceData.partCost = Math.max(0, parseFloat(partCost) || 0);
+    }
+    if (partSupplier !== undefined) {
+      updatedServiceData.partSupplier = String(partSupplier).trim();
+    }
+    if (partName !== undefined) {
+      updatedServiceData.partName = String(partName).trim();
+    }
+
     const currentLogs = Array.isArray(currentOrder.logs) ? currentOrder.logs : [];
     const logDetails = [
-      technicalReport || 'Estado actualizado desde panel de taller',
-      (budgetTotal !== undefined && budgetTotal !== null && budgetTotal !== '') ? `Presupuesto asignado: $${Number(budgetTotalVal).toLocaleString('es-AR')}` : null
+      technicalReport || (status ? 'Estado actualizado desde panel de taller' : null),
+      (budgetTotal !== undefined && budgetTotal !== null && budgetTotal !== '') ? `Presupuesto asignado: $${Number(budgetTotalVal).toLocaleString('es-AR')}` : null,
+      (partCost !== undefined && partCost !== null) ? `Costo de repuesto: $${Number(updatedServiceData.partCost).toLocaleString('es-AR')}` : null
     ].filter(Boolean).join('. ');
 
     const newLog = {
       date: new Date().toISOString(),
-      action: `Cambio de Estado a: ${status}`,
-      details: logDetails,
+      action: status ? `Cambio de Estado a: ${status}` : 'Actualización de Orden',
+      details: logDetails || 'Actualización de datos técnicos',
       user: operator || 'Taller Montec'
     };
     const updatedLogs = [newLog, ...currentLogs];
@@ -405,7 +432,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     `;
 
     const result = await query(updateSql, [
-      status,
+      newStatus,
       budgetTotalVal,
       balanceDueVal,
       JSON.stringify(updatedServiceData), 
@@ -413,7 +440,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
       currentOrder.id
     ]);
 
-    console.log(`✅ Estado de orden ${currentOrder.order_number} actualizado a "${status}" en PostgreSQL (Presupuesto: $${budgetTotalVal})`);
+    console.log(`✅ Orden ${currentOrder.order_number} actualizada en PostgreSQL (Estado: "${newStatus}", Costo: $${updatedServiceData.partCost || 0})`);
     res.json({
       success: true,
       message: 'Estado de orden actualizado',
@@ -422,6 +449,82 @@ app.patch('/api/orders/:id/status', async (req, res) => {
   } catch (error) {
     console.error('❌ Error al actualizar estado de orden:', error);
     res.status(500).json({ error: 'Error al actualizar estado en la base de datos', details: error.message });
+  }
+});
+
+// Actualizar costo de repuesto / proveedor de una orden
+app.patch('/api/orders/:id/part-cost', async (req, res) => {
+  const { id } = req.params;
+  const { partCost, partSupplier, partName, operator } = req.body;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ error: 'Base de datos no disponible' });
+  }
+
+  try {
+    const isNum = !isNaN(parseInt(id, 10)) && String(parseInt(id, 10)) === String(id);
+    const existingRes = await query(
+      isNum 
+        ? 'SELECT * FROM repair_orders WHERE id = $1 LIMIT 1'
+        : 'SELECT * FROM repair_orders WHERE LOWER(order_number) = LOWER($1) LIMIT 1',
+      [id]
+    );
+    if (existingRes.rowCount === 0) {
+      return res.status(404).json({ error: 'Orden no encontrada' });
+    }
+
+    const currentOrder = existingRes.rows[0];
+    const costNum = Math.max(0, parseFloat(partCost) || 0);
+    const supplierStr = String(partSupplier || '').trim();
+    const nameStr = String(partName || '').trim();
+
+    const existingServiceData = typeof currentOrder.service_data === 'object' && currentOrder.service_data !== null
+      ? currentOrder.service_data
+      : (JSON.parse(currentOrder.service_data || '{}'));
+
+    const updatedServiceData = {
+      ...existingServiceData,
+      partCost: costNum,
+      partSupplier: supplierStr,
+      partName: nameStr
+    };
+
+    const currentLogs = Array.isArray(currentOrder.logs) 
+      ? currentOrder.logs 
+      : (typeof currentOrder.logs === 'string' ? JSON.parse(currentOrder.logs || '[]') : []);
+
+    const logDetails = `Costo de repuesto: $${costNum.toLocaleString('es-AR')}${supplierStr ? ` (Proveedor: ${supplierStr})` : ''}${nameStr ? ` - ${nameStr}` : ''}`;
+    const newLog = {
+      date: new Date().toISOString(),
+      action: 'Costo de Repuesto Actualizado',
+      details: logDetails,
+      user: operator || 'Taller Montec'
+    };
+    const updatedLogs = [newLog, ...currentLogs];
+
+    const updateSql = `
+      UPDATE repair_orders 
+      SET service_data = $1, logs = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+      RETURNING *;
+    `;
+
+    const result = await query(updateSql, [
+      JSON.stringify(updatedServiceData),
+      JSON.stringify(updatedLogs),
+      currentOrder.id
+    ]);
+
+    console.log(`✅ Costo de repuesto para orden ${currentOrder.order_number} actualizado a $${costNum} en PostgreSQL`);
+    res.json({
+      success: true,
+      message: 'Costo de repuesto actualizado exitosamente',
+      order: mapDbOrderToFrontend(result.rows[0])
+    });
+  } catch (error) {
+    console.error('❌ Error al actualizar costo de repuesto de orden:', error);
+    res.status(500).json({ error: 'Error al actualizar costo de repuesto en la base de datos', details: error.message });
   }
 });
 

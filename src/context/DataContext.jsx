@@ -473,7 +473,28 @@ export function DataProvider({ children }) {
             setOrders(prev => {
               // Si hay órdenes reales en PostgreSQL, filtramos la orden de ejemplo de muestra inicial
               const filteredPrev = prev.filter(o => o.id !== 'order-sample-1' && o.orderNumber !== '#MON-1041');
-              const merged = [...normalizedRemote];
+              
+              // MERGE INTELIGENTE: Si la orden en el servidor tiene partCost 0 o vacío, pero localmente
+              // ya tenía un costo asignado, preservar el costo local para no perderlo por latencia.
+              const merged = normalizedRemote.map(serverOrd => {
+                const localMatch = filteredPrev.find(l => l.orderNumber === serverOrd.orderNumber || String(l.id) === String(serverOrd.id));
+                if (localMatch && (!serverOrd.partCost || serverOrd.partCost === 0) && localMatch.partCost > 0) {
+                  return {
+                    ...serverOrd,
+                    partCost: localMatch.partCost,
+                    partSupplier: localMatch.partSupplier || serverOrd.partSupplier,
+                    partName: localMatch.partName || serverOrd.partName,
+                    service: {
+                      ...(serverOrd.service || {}),
+                      partCost: localMatch.partCost,
+                      partSupplier: localMatch.partSupplier || serverOrd.service?.partSupplier,
+                      partName: localMatch.partName || serverOrd.service?.partName
+                    }
+                  };
+                }
+                return serverOrd;
+              });
+
               filteredPrev.forEach(localOrd => {
                 if (!merged.some(m => m.orderNumber === localOrd.orderNumber || String(m.id) === String(localOrd.id))) {
                   merged.push(normalizeOrderData(localOrd));
@@ -1055,7 +1076,8 @@ export function DataProvider({ children }) {
     // 1. Actualización optimista en memoria y localStorage
     setOrders(prev => {
       const updated = prev.map(o => {
-        if (o.id !== orderId && o.orderNumber !== orderId) return o;
+        const isMatch = String(o.id) === String(orderId) || o.orderNumber === orderId || (orderId && typeof orderId === 'object' && String(o.id) === String(orderId.id));
+        if (!isMatch) return o;
         
         const logAction = `Costo de repuesto actualizado: $${costNum.toLocaleString('es-AR')}${supplierStr ? ` (${supplierStr})` : ''}${nameStr ? ` - ${nameStr}` : ''}`;
         const newLogs = [
@@ -1093,8 +1115,25 @@ export function DataProvider({ children }) {
 
     // 2. Persistencia en PostgreSQL mediante Railway
     try {
-      if (typeof api.updateOrdenEstado === 'function') {
-        await api.updateOrdenEstado(orderId, {
+      const targetId = (typeof orderId === 'object' && orderId?.id) ? orderId.id : orderId;
+      if (typeof api.updateOrdenPartCost === 'function') {
+        const res = await api.updateOrdenPartCost(targetId, {
+          partCost: costNum,
+          partSupplier: supplierStr,
+          partName: nameStr,
+          operator: 'Taller Montec'
+        });
+        if (!res?.success && typeof api.updateOrdenEstado === 'function') {
+          await api.updateOrdenEstado(targetId, {
+            partCost: costNum,
+            partSupplier: supplierStr,
+            partName: nameStr,
+            technicalReport: `Costo de repuesto actualizado a $${costNum.toLocaleString('es-AR')}${supplierStr ? ` (${supplierStr})` : ''}`,
+            operator: 'Taller Montec'
+          });
+        }
+      } else if (typeof api.updateOrdenEstado === 'function') {
+        await api.updateOrdenEstado(targetId, {
           partCost: costNum,
           partSupplier: supplierStr,
           partName: nameStr,
