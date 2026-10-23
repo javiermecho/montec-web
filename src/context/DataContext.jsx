@@ -428,8 +428,17 @@ export function DataProvider({ children }) {
           const statusVal = ord.status || ord.service?.status || 'received';
           const sec = getDeviceSecurity(ord.device, ord.service);
 
+          const rawPartCost = ord.partCost ?? ord.service?.partCost ?? ord.service_data?.partCost ?? 0;
+          const partCostNum = Number(rawPartCost);
+          const cleanPartCost = (!isNaN(partCostNum) && partCostNum >= 0) ? partCostNum : 0;
+          const cleanPartSupplier = ord.partSupplier || ord.service?.partSupplier || ord.service_data?.partSupplier || '';
+          const cleanPartName = ord.partName || ord.service?.partName || ord.service_data?.partName || '';
+
           return {
             ...ord,
+            partCost: cleanPartCost,
+            partSupplier: cleanPartSupplier,
+            partName: cleanPartName,
             status: statusVal,
             customer: {
               ...customerObj,
@@ -446,6 +455,9 @@ export function DataProvider({ children }) {
             },
             service: {
               ...(ord.service || {}),
+              partCost: cleanPartCost,
+              partSupplier: cleanPartSupplier,
+              partName: cleanPartName,
               status: statusVal,
               requestedRepair: ord.service?.requestedRepair || ord.service?.issue || ord.issue || 'Reparación',
               patternLock: sec.patternLock || ord.service?.patternLock || ''
@@ -891,6 +903,10 @@ export function DataProvider({ children }) {
     // Registrar automáticamente cliente en padrón general
     saveClientToPadron(orderData.customer || orderData.client);
 
+    const cleanPartCost = Math.max(0, Number(orderData.partCost ?? orderData.service?.partCost ?? 0) || 0);
+    const cleanPartSupplier = (orderData.partSupplier || orderData.service?.partSupplier || '').trim();
+    const cleanPartName = (orderData.partName || orderData.service?.partName || '').trim();
+
     // 1. Intentar registrar en PostgreSQL mediante Railway si la API está accesible
     try {
       const response = await api.createOrden({
@@ -923,8 +939,13 @@ export function DataProvider({ children }) {
           balanceDue: parseFloat(orderData.service?.balanceDue || 0),
           warranty: orderData.service?.warranty || '90 días de garantía escrita',
           status: orderData.status || orderData.service?.status || 'received',
-          technician: orderData.service?.technician || orderData.technician || 'Sin Asignar'
+          technician: orderData.service?.technician || orderData.technician || 'Sin Asignar',
+          partCost: cleanPartCost,
+          partSupplier: cleanPartSupplier,
+          partName: cleanPartName
         },
+        partCost: cleanPartCost,
+        partSupplier: cleanPartSupplier,
         operator: orderData.service?.technician || 'Operador Mostrador'
       });
 
@@ -936,6 +957,9 @@ export function DataProvider({ children }) {
           createdAt: response.order.createdAt || new Date().toISOString(),
           updatedAt: response.order.updatedAt || new Date().toISOString(),
           status: response.order.service?.status || 'received',
+          partCost: cleanPartCost,
+          partSupplier: cleanPartSupplier,
+          partName: cleanPartName,
           customer: {
             ...orderData.customer,
             name: response.order.client?.name || orderData.customer?.name,
@@ -947,12 +971,15 @@ export function DataProvider({ children }) {
           },
           service: {
             ...orderData.service,
-            ...response.order.service
+            ...response.order.service,
+            partCost: cleanPartCost,
+            partSupplier: cleanPartSupplier,
+            partName: cleanPartName
           },
           logs: response.order.logs || [
             {
               timestamp: new Date().toISOString(),
-              action: 'Recepción e ingreso de orden a taller (PostgreSQL)',
+              action: `Recepción e ingreso de orden a taller (PostgreSQL)${cleanPartCost > 0 ? ` - Costo repuesto: $${cleanPartCost.toLocaleString('es-AR')}` : ''}`,
               status: 'received'
             }
           ]
@@ -986,10 +1013,19 @@ export function DataProvider({ children }) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: orderData.status || 'received',
+      partCost: cleanPartCost,
+      partSupplier: cleanPartSupplier,
+      partName: cleanPartName,
+      service: {
+        ...(orderData.service || {}),
+        partCost: cleanPartCost,
+        partSupplier: cleanPartSupplier,
+        partName: cleanPartName
+      },
       logs: [
         {
           timestamp: new Date().toISOString(),
-          action: 'Recepción e ingreso de orden a taller (Local)',
+          action: `Recepción e ingreso de orden a taller (Local)${cleanPartCost > 0 ? ` - Costo repuesto: $${cleanPartCost.toLocaleString('es-AR')}` : ''}`,
           status: orderData.status || 'received'
         }
       ]
@@ -1006,6 +1042,69 @@ export function DataProvider({ children }) {
     });
 
     return newOrder;
+  };
+
+  /**
+   * Actualiza el costo del repuesto de una orden existente y sincroniza con PostgreSQL
+   */
+  const updateOrderPartCost = async (orderId, { partCost, partSupplier = '', partName = '' }) => {
+    const costNum = Math.max(0, Number(partCost) || 0);
+    const supplierStr = (partSupplier || '').trim();
+    const nameStr = (partName || '').trim();
+
+    // 1. Actualización optimista en memoria y localStorage
+    setOrders(prev => {
+      const updated = prev.map(o => {
+        if (o.id !== orderId && o.orderNumber !== orderId) return o;
+        
+        const logAction = `Costo de repuesto actualizado: $${costNum.toLocaleString('es-AR')}${supplierStr ? ` (${supplierStr})` : ''}${nameStr ? ` - ${nameStr}` : ''}`;
+        const newLogs = [
+          ...(o.logs || []),
+          {
+            timestamp: new Date().toISOString(),
+            action: logAction,
+            status: o.status
+          }
+        ];
+
+        return {
+          ...o,
+          partCost: costNum,
+          partSupplier: supplierStr,
+          partName: nameStr,
+          service: {
+            ...(o.service || {}),
+            partCost: costNum,
+            partSupplier: supplierStr,
+            partName: nameStr
+          },
+          updatedAt: new Date().toISOString(),
+          logs: newLogs
+        };
+      });
+
+      try {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Error guardando costo de orden localmente:', e);
+      }
+      return updated;
+    });
+
+    // 2. Persistencia en PostgreSQL mediante Railway
+    try {
+      if (typeof api.updateOrdenEstado === 'function') {
+        await api.updateOrdenEstado(orderId, {
+          partCost: costNum,
+          partSupplier: supplierStr,
+          partName: nameStr,
+          technicalReport: `Costo de repuesto actualizado a $${costNum.toLocaleString('es-AR')}${supplierStr ? ` (${supplierStr})` : ''}`,
+          operator: 'Taller Montec'
+        });
+      }
+    } catch (err) {
+      console.warn('⚠️ No se pudo sincronizar costo de repuesto con Railway:', err.message);
+    }
   };
 
   const updateRepairOrder = (orderId, updatedFields) => {
@@ -1874,17 +1973,27 @@ export function DataProvider({ children }) {
           }
         ];
 
+        const finalPartCost = deliveryData.partCost !== undefined ? Number(deliveryData.partCost) : Number(o.partCost || o.service?.partCost || 0);
+        const finalPartSupplier = deliveryData.partSupplier !== undefined ? deliveryData.partSupplier : (o.partSupplier || o.service?.partSupplier || '');
+        const finalPartName = deliveryData.partName !== undefined ? deliveryData.partName : (o.partName || o.service?.partName || '');
+
         return {
           ...o,
           status: 'delivered',
           repairResolution: deliveryData.repairResolution || 'ready',
           isRepaired: deliveryData.isRepaired !== undefined ? deliveryData.isRepaired : true,
+          partCost: finalPartCost,
+          partSupplier: finalPartSupplier,
+          partName: finalPartName,
           payments: newPayments,
           service: {
             ...o.service,
             status: 'delivered',
             repairResolution: deliveryData.repairResolution || 'ready',
             isRepaired: deliveryData.isRepaired !== undefined ? deliveryData.isRepaired : true,
+            partCost: finalPartCost,
+            partSupplier: finalPartSupplier,
+            partName: finalPartName,
             deposit: newDeposit,
             balanceDue: 0,
             deliveredAt: deliveredAt
@@ -1910,7 +2019,10 @@ export function DataProvider({ children }) {
         technicalReport: `Entrega realizada: ${resText}. Saldo: $${balancePaid}. Vía ${paymentLabel}`,
         operator: 'Mostrador Montec',
         repairResolution: deliveryData.repairResolution || 'ready',
-        isRepaired: deliveryData.isRepaired !== undefined ? deliveryData.isRepaired : true
+        isRepaired: deliveryData.isRepaired !== undefined ? deliveryData.isRepaired : true,
+        partCost: deliveryData.partCost !== undefined ? Number(deliveryData.partCost) : undefined,
+        partSupplier: deliveryData.partSupplier || undefined,
+        partName: deliveryData.partName || undefined
       }).catch(err => console.warn('⚠️ No se pudo sincronizar estado de entrega a PostgreSQL:', err.message));
 
       if (balancePaid > 0) {
@@ -2135,59 +2247,88 @@ export function DataProvider({ children }) {
   };
 
   /**
-   * Calcula el balance financiero y cierre de mes consolidando Ventas + Taller - Gastos
+   * Calcula el balance financiero consolidado para un período libre o mensual:
+   * 1. Utilidad de Reparaciones (Taller): Facturación - Costo de Repuestos
+   * 2. Utilidad de Productos (Mostrador): Facturación - CMV Costo de Mercadería
+   * 3. Gastos Fijos y Operativos
+   * 4. Resultado Neto Final Real de Bolsillo
    */
-  const getMonthlyFinancialSummary = (targetMonth, targetYear) => {
-    const now = new Date();
-    const month = targetMonth !== undefined ? parseInt(targetMonth, 10) : (now.getMonth() + 1);
-    const year = targetYear !== undefined ? parseInt(targetYear, 10) : now.getFullYear();
+  const getPeriodFinancialSummary = (params = {}) => {
+    // Soporte para firma polimórfica: (targetMonth, targetYear) o ({ startDate, endDate, month, year })
+    let startDate = null;
+    let endDate = null;
+    let month = null;
+    let year = null;
 
-    // 1. Filtrar ventas del mes
-    let salesTotal = 0;
-    let salesCash = 0;
-    let salesBank = 0;
-    let salesCard = 0;
-    let salesCount = 0;
+    if (typeof params === 'number' || typeof arguments[1] === 'number') {
+      month = parseInt(params, 10);
+      year = parseInt(arguments[1], 10);
+    } else if (params && typeof params === 'object') {
+      startDate = params.startDate;
+      endDate = params.endDate;
+      month = params.month !== undefined ? parseInt(params.month, 10) : (params.targetMonth !== undefined ? parseInt(params.targetMonth, 10) : null);
+      year = params.year !== undefined ? parseInt(params.year, 10) : (params.targetYear !== undefined ? parseInt(params.targetYear, 10) : null);
+    }
 
-    (sales || []).forEach(s => {
-      if (!s) return;
-      const sDate = s.createdAt ? new Date(s.createdAt) : null;
-      if (!sDate || isNaN(sDate.getTime())) return;
-      if ((sDate.getMonth() + 1) === month && sDate.getFullYear() === year) {
-        const amt = Number(s.total || 0);
-        salesTotal += amt;
-        salesCount++;
-        const method = String(s.paymentMethod || '').toLowerCase();
-        if (method.includes('efectivo') || method === 'cash') {
-          salesCash += amt;
-        } else if (method.includes('transf') || method.includes('banco') || method.includes('mp') || method.includes('mercado')) {
-          salesBank += amt;
-        } else if (method.includes('tarjet') || method.includes('debito') || method.includes('credito')) {
-          salesCard += amt;
-        } else {
-          salesCash += amt;
-        }
-      }
-    });
+    let startMs = 0;
+    let endMs = Infinity;
 
-    // 2. Filtrar pagos de órdenes de reparación del mes
-    let repairsTotal = 0;
+    if (startDate && endDate) {
+      const s = new Date(startDate);
+      s.setHours(0, 0, 0, 0);
+      startMs = s.getTime();
+
+      const e = new Date(endDate);
+      e.setHours(23, 59, 59, 999);
+      endMs = e.getTime();
+    } else {
+      const now = new Date();
+      const targetMonth = month || (now.getMonth() + 1);
+      const targetYear = year || now.getFullYear();
+
+      const s = new Date(targetYear, targetMonth - 1, 1, 0, 0, 0, 0);
+      const e = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
+      startMs = s.getTime();
+      endMs = e.getTime();
+      month = targetMonth;
+      year = targetYear;
+    }
+
+    // Helper para verificar si un timestamp cae en el período
+    const isTimestampInPeriod = (timestamp) => {
+      if (!timestamp) return false;
+      const t = new Date(timestamp).getTime();
+      return !isNaN(t) && t >= startMs && t <= endMs;
+    };
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 1. REPARACIONES (TALLER TÉCNICO) & ÓRDENES ENTREGADAS
+    // ──────────────────────────────────────────────────────────────────────────
+    let repairsRevenue = 0;
     let repairsCash = 0;
     let repairsBank = 0;
     let repairsCard = 0;
-    let repairsCount = 0;
+    let repairsPartsCost = 0;
+    let missingCostCount = 0;
+
+    const deliveredOrdersInPeriod = [];
 
     (orders || []).forEach(o => {
       if (!o) return;
+
+      // Fecha representativa de la entrega / resolución
+      const deliveryTime = o.service?.deliveredAt || o.deliveredAt || o.updatedAt || o.createdAt;
+      const isDelivered = o.status === 'delivered';
+      const isDeliveredInPeriod = isDelivered && isTimestampInPeriod(deliveryTime);
+
+      // 1.a Sumar cobros realizados en el período
       const pList = Array.isArray(o.payments) ? o.payments : [];
       pList.forEach(p => {
         if (!p || !p.amount) return;
-        const pDate = p.timestamp ? new Date(p.timestamp) : (o.createdAt ? new Date(o.createdAt) : null);
-        if (!pDate || isNaN(pDate.getTime())) return;
-        if ((pDate.getMonth() + 1) === month && pDate.getFullYear() === year) {
+        const pDate = p.timestamp || o.createdAt;
+        if (isTimestampInPeriod(pDate)) {
           const amt = Number(p.amount || 0);
-          repairsTotal += amt;
-          repairsCount++;
+          repairsRevenue += amt;
           const method = String(p.method || '').toLowerCase();
           if (method.includes('efectivo') || method === 'cash') {
             repairsCash += amt;
@@ -2200,9 +2341,130 @@ export function DataProvider({ children }) {
           }
         }
       });
+
+      // 1.b Si la orden fue entregada en este período, incluirla en la lista detallada y computar su costo de repuesto
+      if (isDeliveredInPeriod) {
+        const rawCost = o.partCost ?? o.service?.partCost ?? o.service_data?.partCost ?? 0;
+        const partCostNum = Math.max(0, Number(rawCost) || 0);
+        repairsPartsCost += partCostNum;
+
+        if (partCostNum === 0) {
+          missingCostCount++;
+        }
+
+        // Total cobrado por la reparación
+        const budgetTotal = Number(o.service?.budgetTotal || 0);
+        const paymentsTotal = pList.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const effectiveCharged = budgetTotal > 0 ? budgetTotal : paymentsTotal;
+        const netUtility = effectiveCharged - partCostNum;
+        const marginPct = effectiveCharged > 0 ? Math.round((netUtility / effectiveCharged) * 100) : 0;
+
+        deliveredOrdersInPeriod.push({
+          id: o.id,
+          orderNumber: o.orderNumber || `#ORD-${o.id}`,
+          deliveredAt: deliveryTime,
+          clientName: o.customer?.name || o.client?.name || 'Cliente Mostrador',
+          clientPhone: o.customer?.phone || o.client?.phone || '',
+          deviceModel: `${o.device?.brand || ''} ${o.device?.model || ''}`.trim() || 'Dispositivo',
+          requestedRepair: o.service?.requestedRepair || o.service?.issue || 'Servicio Técnico',
+          budgetTotal: effectiveCharged,
+          partCost: partCostNum,
+          hasCost: partCostNum > 0,
+          partSupplier: o.partSupplier || o.service?.partSupplier || '',
+          partName: o.partName || o.service?.partName || '',
+          netUtility,
+          marginPct,
+          repairResolution: o.repairResolution || o.service?.repairResolution || 'ready',
+          status: o.status
+        });
+      }
     });
 
-    // 3. Filtrar gastos del mes (con desduplicación inteligente)
+    // Ordenar órdenes entregadas cronológicamente más recientes primero
+    deliveredOrdersInPeriod.sort((a, b) => new Date(b.deliveredAt || 0) - new Date(a.deliveredAt || 0));
+
+    const repairsNetProfit = repairsRevenue - repairsPartsCost;
+    const repairsMarginPercent = repairsRevenue > 0 ? Number(((repairsNetProfit / repairsRevenue) * 100).toFixed(1)) : 0;
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 2. VENTAS DE PRODUCTOS (MOSTRADOR / ACCESORIOS / POS)
+    // ──────────────────────────────────────────────────────────────────────────
+    let productsRevenue = 0;
+    let productsCost = 0; // CMV
+    let productsCash = 0;
+    let productsBank = 0;
+    let productsCard = 0;
+    let productsSalesCount = 0;
+
+    // Mapa rápido de costos de inventario para lookup de CMV
+    const inventoryCostMap = new Map();
+    (inventory || []).forEach(prod => {
+      if (prod) {
+        if (prod.sku) inventoryCostMap.set(String(prod.sku).toLowerCase(), Number(prod.costPrice || 0));
+        if (prod.id) inventoryCostMap.set(String(prod.id), Number(prod.costPrice || 0));
+        if (prod.barcode) inventoryCostMap.set(String(prod.barcode), Number(prod.costPrice || 0));
+      }
+    });
+
+    (sales || []).forEach(s => {
+      if (!s) return;
+      const sDate = s.createdAt || s.fecha;
+      if (!isTimestampInPeriod(sDate)) return;
+
+      let saleHasProducts = false;
+      const items = Array.isArray(s.items) ? s.items : [];
+
+      if (items.length > 0) {
+        items.forEach(it => {
+          // Si el ítem es servicio técnico de taller, se excluye de la venta de productos comerciales
+          if (it.isService === true || it.category === 'Servicio Técnico / Taller' || (it.name && it.name.startsWith('Reparación:'))) {
+            return;
+          }
+
+          saleHasProducts = true;
+          const qty = Number(it.quantity) || 1;
+          const itemPrice = Number(it.price || 0) * qty;
+          productsRevenue += itemPrice;
+
+          // Calcular CMV del producto
+          let unitCost = Number(it.costPrice || 0);
+          if (unitCost <= 0) {
+            const bySku = it.sku ? inventoryCostMap.get(String(it.sku).toLowerCase()) : null;
+            const byId = it.id ? inventoryCostMap.get(String(it.id)) : null;
+            unitCost = bySku || byId || (it.price ? Math.round(Number(it.price) * 0.45) : 0);
+          }
+          productsCost += (unitCost * qty);
+        });
+      } else {
+        // Venta sin desglose de ítems (venta directa)
+        saleHasProducts = true;
+        const totalAmt = Number(s.total || 0);
+        productsRevenue += totalAmt;
+        productsCost += Math.round(totalAmt * 0.45);
+      }
+
+      if (saleHasProducts) {
+        productsSalesCount++;
+        const amt = Number(s.total || 0);
+        const method = String(s.paymentMethod || '').toLowerCase();
+        if (method.includes('efectivo') || method === 'cash') {
+          productsCash += amt;
+        } else if (method.includes('transf') || method.includes('banco') || method.includes('mp') || method.includes('mercado')) {
+          productsBank += amt;
+        } else if (method.includes('tarjet') || method.includes('debito') || method.includes('credito')) {
+          productsCard += amt;
+        } else {
+          productsCash += amt;
+        }
+      }
+    });
+
+    const productsNetProfit = productsRevenue - productsCost;
+    const productsMarginPercent = productsRevenue > 0 ? Number(((productsNetProfit / productsRevenue) * 100).toFixed(1)) : 0;
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 3. GASTOS OPERATIVOS DEL PERÍODO
+    // ──────────────────────────────────────────────────────────────────────────
     let expensesTotal = 0;
     let expensesCash = 0;
     let expensesBank = 0;
@@ -2213,37 +2475,36 @@ export function DataProvider({ children }) {
 
     (expenses || []).forEach(e => {
       if (!e) return;
-      const eDate = e.fecha ? new Date(e.fecha) : (e.creado_en ? new Date(e.creado_en) : null);
-      if (!eDate || isNaN(eDate.getTime())) return;
-      if ((eDate.getMonth() + 1) === month && eDate.getFullYear() === year) {
-        // Desduplicar si viene duplicado por ID o por contenido idéntico en el mismo minuto
-        const idKey = String(e.id);
-        const minStr = eDate.toISOString().slice(0, 16);
-        const contentKey = `${(e.concepto || '').toLowerCase().trim()}_${Number(e.monto)}_${e.categoria}_${minStr}`;
+      const eDate = e.fecha || e.creado_en;
+      if (!isTimestampInPeriod(eDate)) return;
 
-        if (seenExpenseKeys.has(idKey) || seenExpenseKeys.has(contentKey)) {
-          return;
-        }
-        seenExpenseKeys.add(idKey);
-        seenExpenseKeys.add(contentKey);
+      const idKey = String(e.id);
+      const minStr = new Date(eDate).toISOString().slice(0, 16);
+      const contentKey = `${(e.concepto || '').toLowerCase().trim()}_${Number(e.monto)}_${e.categoria}_${minStr}`;
 
-        const amt = Number(e.monto || 0);
-        expensesTotal += amt;
-        expensesCount++;
-        const method = String(e.metodo_pago || '').toLowerCase();
-        if (method.includes('efectivo') || method === 'cash') {
-          expensesCash += amt;
-        } else if (method.includes('transf') || method.includes('banco') || method.includes('mp') || method.includes('mercado')) {
-          expensesBank += amt;
-        } else if (method.includes('tarjet') || method.includes('debito') || method.includes('credito')) {
-          expensesCard += amt;
-        } else {
-          expensesCash += amt;
-        }
-
-        const cat = e.categoria || 'Varios';
-        categoryTotals[cat] = (categoryTotals[cat] || 0) + amt;
+      if (seenExpenseKeys.has(idKey) || seenExpenseKeys.has(contentKey)) {
+        return;
       }
+      seenExpenseKeys.add(idKey);
+      seenExpenseKeys.add(contentKey);
+
+      const amt = Number(e.monto || 0);
+      expensesTotal += amt;
+      expensesCount++;
+
+      const method = String(e.metodo_pago || '').toLowerCase();
+      if (method.includes('efectivo') || method === 'cash') {
+        expensesCash += amt;
+      } else if (method.includes('transf') || method.includes('banco') || method.includes('mp') || method.includes('mercado')) {
+        expensesBank += amt;
+      } else if (method.includes('tarjet') || method.includes('debito') || method.includes('credito')) {
+        expensesCard += amt;
+      } else {
+        expensesCash += amt;
+      }
+
+      const cat = e.categoria || 'Varios';
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + amt;
     });
 
     const byCategory = Object.entries(categoryTotals).map(([categoria, total]) => ({
@@ -2252,23 +2513,49 @@ export function DataProvider({ children }) {
       percentage: expensesTotal > 0 ? ((total / expensesTotal) * 100).toFixed(1) : 0
     })).sort((a, b) => b.total - a.total);
 
-    const totalIncome = salesTotal + repairsTotal;
-    const netBalance = totalIncome - expensesTotal;
-    const cashOnHand = (salesCash + repairsCash) - expensesCash;
-    const bankBalance = (salesBank + repairsBank) - expensesBank;
+    // ──────────────────────────────────────────────────────────────────────────
+    // 4. RESUMEN EJECUTIVO Y RESULTADO NETO FINAL
+    // ──────────────────────────────────────────────────────────────────────────
+    const totalRevenue = repairsRevenue + productsRevenue;
+    const totalDirectCost = repairsPartsCost + productsCost;
+    const grossProfit = repairsNetProfit + productsNetProfit; // Ganancia bruta consolidada (Taller + Productos)
+    const finalNetProfit = grossProfit - expensesTotal; // Ganancia Limpia Real de Bolsillo
+
+    const totalCashIn = repairsCash + productsCash;
+    const totalBankIn = repairsBank + productsBank;
+    const totalCardIn = repairsCard + productsCard;
+
+    const cashOnHand = totalCashIn - expensesCash;
+    const bankBalance = totalBankIn - expensesBank;
 
     return {
-      period: { month, year },
-      income: {
-        total: totalIncome,
-        sales: salesTotal,
-        repairs: repairsTotal,
-        cash: salesCash + repairsCash,
-        bank: salesBank + repairsBank,
-        card: salesCard + repairsCard,
-        salesCount,
-        repairsCount
+      period: {
+        startDate,
+        endDate,
+        month,
+        year,
+        startMs,
+        endMs
       },
+      // 1. Taller Técnico (Reparaciones)
+      repairs: {
+        revenue: repairsRevenue,
+        partsCost: repairsPartsCost,
+        netProfit: repairsNetProfit,
+        marginPercent: repairsMarginPercent,
+        deliveredCount: deliveredOrdersInPeriod.length,
+        missingCostCount,
+        deliveredOrders: deliveredOrdersInPeriod
+      },
+      // 2. Venta de Productos (Mostrador / Accesorios)
+      products: {
+        revenue: productsRevenue,
+        cost: productsCost,
+        netProfit: productsNetProfit,
+        marginPercent: productsMarginPercent,
+        salesCount: productsSalesCount
+      },
+      // 3. Gastos Operativos
       expenses: {
         total: expensesTotal,
         cash: expensesCash,
@@ -2277,17 +2564,44 @@ export function DataProvider({ children }) {
         count: expensesCount,
         byCategory
       },
-      netBalance,
+      // 4. Resultado Consolidado Ejecutivo
+      executive: {
+        totalRevenue,
+        totalDirectCost,
+        grossProfit,
+        operatingExpenses: expensesTotal,
+        finalNetProfit,
+        marginPercent: totalRevenue > 0 ? Number(((finalNetProfit / totalRevenue) * 100).toFixed(1)) : 0
+      },
+      // Compatibilidad con vistas previas
+      income: {
+        total: totalRevenue,
+        sales: productsRevenue,
+        repairs: repairsRevenue,
+        cash: totalCashIn,
+        bank: totalBankIn,
+        card: totalCardIn,
+        salesCount: productsSalesCount,
+        repairsCount: deliveredOrdersInPeriod.length
+      },
+      netBalance: finalNetProfit,
       cashBreakdown: {
         cashOnHand,
-        incomeCash: salesCash + repairsCash,
+        incomeCash: totalCashIn,
         expenseCash: expensesCash,
         bankBalance,
-        incomeBank: salesBank + repairsBank,
+        incomeBank: totalBankIn,
         expenseBank: expensesBank,
-        cardBalance: (salesCard + repairsCard) - expensesCard
+        cardBalance: totalCardIn - expensesCard
       }
     };
+  };
+
+  /**
+   * Wrapper retrocompatible para getMonthlyFinancialSummary
+   */
+  const getMonthlyFinancialSummary = (targetMonth, targetYear) => {
+    return getPeriodFinancialSummary({ targetMonth, targetYear });
   };
 
   // --- Restaurar valores de fábrica ---
@@ -2656,6 +2970,7 @@ export function DataProvider({ children }) {
       updateExpense,
       deleteExpense,
       getMonthlyFinancialSummary,
+      getPeriodFinancialSummary,
       dolarRate,
       dolarInfo,
       refreshDolarRate: updateDolar,
@@ -2691,6 +3006,7 @@ export function DataProvider({ children }) {
       logoutEmployee,
       createRepairOrder,
       updateRepairOrder,
+      updateOrderPartCost,
       updateOrderBudget,
       updateRepairOrderStatus,
       addOrderInternalNote,

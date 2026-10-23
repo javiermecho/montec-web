@@ -52,6 +52,7 @@ import { PatternThumbnail, getDeviceSecurity, parsePatternSequence } from './Pat
 import OrderTicketModal from './OrderTicketModal';
 import UnifiedDeliveryModal from './UnifiedDeliveryModal';
 import DailySalesTab from '../admin/DailySalesTab';
+import PartCostFinderModal from './PartCostFinderModal';
 
 // CONFIGURACIÓN DE ESTADOS TÉCNICOS (ESTILO SISTROFIX PROFESIONAL)
 export const STATUS_CONFIG = {
@@ -152,6 +153,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   const { 
     orders, 
     updateRepairOrder,
+    updateOrderPartCost,
     updateRepairOrderStatus, 
     updateOrderBudget,
     addOrderInternalNote,
@@ -225,6 +227,28 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Efectivo');
   const [paymentNote, setPaymentNote] = useState('');
+
+  // Costo de repuesto & Buscador en proveedores
+  const [isPartCostModalOpen, setIsPartCostModalOpen] = useState(false);
+  const [costModalOrder, setCostModalOrder] = useState(null);
+  const [isEditingCostInline, setIsEditingCostInline] = useState(false);
+  const [inlineCostValue, setInlineCostValue] = useState('');
+  const [inlineSupplierValue, setInlineSupplierValue] = useState('');
+
+  const handleOpenPartCostModal = (order) => {
+    setCostModalOrder(order);
+    setIsPartCostModalOpen(true);
+  };
+
+  const handleSaveInlineCost = async (orderId) => {
+    const costNum = parseFloat(inlineCostValue) || 0;
+    await updateOrderPartCost(orderId, {
+      partCost: costNum,
+      partSupplier: inlineSupplierValue,
+      partName: selectedOrder?.partName || ''
+    });
+    setIsEditingCostInline(false);
+  };
 
   // Nueva nota interna rápida
   const [newNoteText, setNewNoteText] = useState('');
@@ -1623,6 +1647,133 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                     </div>
                   </div>
 
+                  {/* BLOQUE DE COSTO DE REPUESTO & UTILIDAD NETA */}
+                  {(() => {
+                    const budgetTotal = Number(selectedOrder.service?.budgetTotal || 0);
+                    const partCost = Number(selectedOrder.partCost || 0);
+                    const netProfit = budgetTotal - partCost;
+                    const marginPercent = budgetTotal > 0 ? ((netProfit / budgetTotal) * 100).toFixed(0) : 0;
+                    const supplier = selectedOrder.partSupplier || '';
+                    const partName = selectedOrder.partName || '';
+
+                    return (
+                      <div className={`p-3.5 rounded-xl mb-4 border transition-all ${
+                        partCost === 0 
+                          ? (isLight ? 'bg-amber-500/10 border-amber-300' : 'bg-amber-500/10 border-amber-500/30')
+                          : (isLight ? 'bg-emerald-500/5 border-emerald-300/60' : 'bg-emerald-500/5 border-emerald-500/20')
+                      }`}>
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">
+                              🔩 Costo de Repuesto / Insumo
+                            </span>
+                            {partCost === 0 && (
+                              <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-bold">
+                                ⚠️ Sin costo ($0)
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenPartCostModal(selectedOrder)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-white bg-[#FF5500] hover:bg-[#FF5500]/90 rounded-lg shadow-xs transition-all cursor-pointer"
+                          >
+                            <Search className="w-3.5 h-3.5" />
+                            <span>Buscar en Proveedores</span>
+                          </button>
+                        </div>
+
+                        {isEditingCostInline ? (
+                          <div className="flex flex-wrap items-center gap-2 pt-1 pb-2">
+                            <div className="relative flex-1 min-w-[120px]">
+                              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-bold">$</span>
+                              <input
+                                type="number"
+                                value={inlineCostValue}
+                                onChange={(e) => setInlineCostValue(e.target.value)}
+                                placeholder="Costo ($)"
+                                className="w-full pl-6 pr-2 py-1.5 text-xs bg-zinc-900 border border-zinc-700 rounded-lg text-white font-mono focus:border-[#FF5500] outline-hidden"
+                                autoFocus
+                              />
+                            </div>
+                            <input
+                              type="text"
+                              value={inlineSupplierValue}
+                              onChange={(e) => setInlineSupplierValue(e.target.value)}
+                              placeholder="Proveedor (ej: SmartSupply)"
+                              className="flex-1 min-w-[140px] px-2.5 py-1.5 text-xs bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:border-[#FF5500] outline-hidden"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleSaveInlineCost(selectedOrder.id)}
+                              className="px-3 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors cursor-pointer"
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setIsEditingCostInline(false)}
+                              className="px-2 py-1.5 text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-3 gap-2 py-1 text-center items-center">
+                            <div className="text-left">
+                              <span className="text-[10px] block text-zinc-400 uppercase font-semibold">Costo Repuesto</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-sm sm:text-base font-bold font-mono text-zinc-200">
+                                  ${partCost.toLocaleString('es-AR')}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setInlineCostValue(partCost.toString());
+                                    setInlineSupplierValue(supplier);
+                                    setIsEditingCostInline(true);
+                                  }}
+                                  className="text-zinc-400 hover:text-[#FF5500] p-1 transition-colors cursor-pointer"
+                                  title="Editar costo manualmente"
+                                >
+                                  ✏️
+                                </button>
+                              </div>
+                              {supplier && (
+                                <span className="text-[10px] text-zinc-400 block truncate" title={supplier}>
+                                  Prov: <strong className="text-zinc-300">{supplier}</strong>
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="border-x border-zinc-800/80 px-2">
+                              <span className="text-[10px] block text-zinc-400 uppercase font-semibold">Ganancia Neta</span>
+                              <span className={`text-sm sm:text-base font-black font-mono ${
+                                netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                              }`}>
+                                ${netProfit.toLocaleString('es-AR')}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="text-[10px] block text-zinc-400 uppercase font-semibold">Margen %</span>
+                              <span className={`text-sm sm:text-base font-black font-mono ${
+                                marginPercent >= 50 ? 'text-emerald-400' : marginPercent > 0 ? 'text-amber-400' : 'text-rose-400'
+                              }`}>
+                                {marginPercent}%
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        {partName && (
+                          <div className="mt-1 pt-1 border-t border-zinc-800/50 text-[11px] text-zinc-400 truncate">
+                            Repuesto: <span className="text-zinc-200">{partName}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   <div className="space-y-2 text-xs sm:text-sm">
                     <div className={isLight ? 'text-slate-600' : 'text-zinc-400'}>
                       <strong className={isLight ? 'text-slate-900' : 'text-zinc-300'}>👨‍🔧 Técnico Asignado:</strong>{' '}
@@ -2774,6 +2925,34 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
             </div>
           </div>
         </div>
+      )}
+
+      {/* MODAL DE BÚSQUEDA DE COSTOS DE REPUESTOS EN PROVEEDORES */}
+      {isPartCostModalOpen && (
+        <PartCostFinderModal
+          isOpen={isPartCostModalOpen}
+          onClose={() => {
+            setIsPartCostModalOpen(false);
+            setCostModalOrder(null);
+          }}
+          order={costModalOrder || selectedOrder}
+          currentCost={costModalOrder?.partCost || selectedOrder?.partCost || 0}
+          currentSupplier={costModalOrder?.partSupplier || selectedOrder?.partSupplier || ''}
+          currentPartName={costModalOrder?.partName || selectedOrder?.partName || ''}
+          customerPrice={Number((costModalOrder || selectedOrder)?.service?.budgetTotal || 0)}
+          onSelectPart={async (selectedData) => {
+            const targetId = (costModalOrder || selectedOrder)?.id;
+            if (targetId) {
+              await updateOrderPartCost(targetId, {
+                partCost: selectedData.costPrice,
+                partSupplier: selectedData.supplierName,
+                partName: selectedData.partName
+              });
+            }
+            setIsPartCostModalOpen(false);
+            setCostModalOrder(null);
+          }}
+        />
       )}
 
     </div>

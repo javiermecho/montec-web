@@ -46,6 +46,7 @@ import PatternLockInput, { getDeviceSecurity } from './PatternLockInput';
 import OrderTicketModal from './OrderTicketModal';
 import RepairOrdersManager from './RepairOrdersManager';
 import CostBreakdownModal from './CostBreakdownModal';
+import PartCostFinderModal from './PartCostFinderModal';
 
 export default function RepairOrderReceiver({ forceOpen = false, onClose = null }) {
   const auth = useAuth();
@@ -87,6 +88,7 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
   const [pinError, setPinError] = useState(false);
   const [activeSubModal, setActiveSubModal] = useState(null); // 'orders_list', 'ticket_view'
   const [activeTicketOrder, setActiveTicketOrder] = useState(null);
+  const [isPartCostModalOpen, setIsPartCostModalOpen] = useState(false);
 
   // Estados de búsqueda predictiva de clientes
   const [clientSearchQuery, setClientSearchQuery] = useState('');
@@ -201,6 +203,9 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
       budgetTotal: '',
       deposit: '',
       balanceDue: 0,
+      partCost: '',
+      partSupplier: '',
+      partName: '',
       estimatedDeliveryDate: '',
       warranty: '90 días de garantía escrita',
       status: 'received',
@@ -667,6 +672,9 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
 
     const totalNum = parseFloat(formData.service.budgetTotal) || 0;
     const depositNum = parseFloat(formData.service.deposit) || 0;
+    const partCostNum = parseFloat(formData.service.partCost) || 0;
+    const partSupplierStr = formData.service.partSupplier || '';
+    const partNameStr = formData.service.partName || '';
 
     setIsSubmittingOrder(true);
 
@@ -683,11 +691,17 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
       const savedOrder = await createRepairOrder({
         customer: formData.customer,
         device: devicePayload,
+        partCost: partCostNum,
+        partSupplier: partSupplierStr,
+        partName: partNameStr,
         service: {
           ...formData.service,
           budgetTotal: totalNum,
           deposit: depositNum,
           balanceDue: Math.max(0, totalNum - depositNum),
+          partCost: partCostNum,
+          partSupplier: partSupplierStr,
+          partName: partNameStr,
           warranty: formData.service.warranty || '90 días de garantía escrita',
           patternLock: normalizedSecurity.patternLock,
           pinLock: normalizedSecurity.pin
@@ -1943,8 +1957,8 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
               </div>
             </div>
 
-            {/* COSTOS, SEÑA Y SALDO RESTANTE */}
-            <div className={`p-3 rounded-xl border space-y-2 transition-colors ${
+            {/* COSTOS, REPUESTOS, SEÑA Y SALDO RESTANTE */}
+            <div className={`p-3.5 rounded-xl border space-y-3 transition-colors ${
               isLight
                 ? 'bg-white border-orange-200/80 shadow-xs'
                 : 'bg-gradient-to-r from-zinc-950 via-[#1C120C] to-zinc-950 border-[#FF5500]/40 shadow-inner'
@@ -1966,7 +1980,7 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
                       title="Ver desglose de costo de repuesto proveedor vs mano de obra"
                     >
                       <Lightbulb className={`w-3 h-3 ${isLight ? 'text-amber-600' : 'text-amber-400'}`} />
-                      <span>💡 Ver Cotización / Costos</span>
+                      <span>💡 Cotizador</span>
                     </button>
                   </div>
                   <input
@@ -2004,6 +2018,92 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
                     }`}
                   />
                 </div>
+              </div>
+
+              {/* BLOQUE DE COSTO DEL REPUESTO E INTEGRACIÓN CON PROVEEDORES */}
+              <div className={`p-2.5 rounded-xl border ${
+                isLight ? 'bg-orange-50/60 border-orange-200' : 'bg-zinc-900/90 border-zinc-800'
+              }`}>
+                <div className="flex items-center justify-between mb-1.5 flex-wrap gap-1">
+                  <label className={`text-[11px] font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-800' : 'text-zinc-200'}`}>
+                    <Package className="w-3.5 h-3.5 text-[#FF5500]" />
+                    <span>Costo del Repuesto ($)</span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsPartCostModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FF5500] hover:bg-[#FF6600] active:scale-95 text-white text-[11px] font-bold shadow-sm shadow-[#FF5500]/30 transition-all cursor-pointer"
+                    title="Buscar costo mayorista en Smart Supply, CellStore, SoulFix, Grupo Armar"
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    <span>🔍 Buscar en Proveedores</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center">
+                  <div className="relative">
+                    <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono select-none ${isLight ? 'text-slate-400' : 'text-zinc-500'}`}>$</span>
+                    <input
+                      type="number"
+                      value={formData.service.partCost}
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
+                        service: { ...prev.service, partCost: e.target.value }
+                      }))}
+                      placeholder="0 (Costo repuesto)"
+                      className={`w-full border rounded-xl pl-7 pr-3 py-1.5 text-xs font-mono font-bold outline-none focus:border-[#FF5500] ${
+                        isLight
+                          ? 'bg-white border-slate-300 text-slate-900'
+                          : 'bg-zinc-950 border-zinc-700 text-white'
+                      }`}
+                    />
+                  </div>
+
+                  <div className="text-[11px] truncate">
+                    {formData.service.partSupplier ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        <span>📦 {formData.service.partSupplier}</span>
+                      </span>
+                    ) : (
+                      <span className={`text-[10px] italic ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>
+                        {Number(formData.service.partCost) > 0 ? 'Proveedor manual' : '⚠️ Sin costo cargado ($0)'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Cálculo en Tiempo Real: Ganancia Neta y Margen */}
+                {(() => {
+                  const bTotal = parseFloat(formData.service.budgetTotal) || 0;
+                  const pCost = parseFloat(formData.service.partCost) || 0;
+                  const netUtility = bTotal - pCost;
+                  const marginPct = bTotal > 0 ? Math.round((netUtility / bTotal) * 100) : 0;
+
+                  return (
+                    <div className={`mt-2 pt-2 border-t flex items-center justify-between text-xs ${
+                      isLight ? 'border-orange-200/80' : 'border-zinc-800'
+                    }`}>
+                      <span className={`text-[10px] uppercase font-bold ${isLight ? 'text-slate-600' : 'text-zinc-400'}`}>
+                        Utilidad Estimada:
+                      </span>
+                      <div className="flex items-center gap-2 font-mono">
+                        <span className={`font-bold ${netUtility >= 0 ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : 'text-rose-400'}`}>
+                          ${netUtility.toLocaleString('es-AR')}
+                        </span>
+                        {bTotal > 0 && (
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ${
+                            netUtility >= 0 
+                              ? (isLight ? 'bg-emerald-100 text-emerald-800' : 'bg-emerald-500/20 text-emerald-300')
+                              : 'bg-rose-500/20 text-rose-300'
+                          }`}>
+                            {marginPct}% margen
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Saldo Calculado Automáticamente */}
@@ -2311,13 +2411,27 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
         </div>
       )}
 
-      {/* NOTIFICACIÓN TOAST FLOTANTE */}
-      {modelSuccessNotice && (
-        <div className="fixed bottom-5 right-5 z-[80] bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 text-xs font-bold animate-bounce border border-emerald-400">
-          <Check className="w-4 h-4" />
-          <span>{modelSuccessNotice}</span>
-        </div>
-      )}
+      {/* MODAL DE BÚSQUEDA RÁPIDA DE COSTO DE REPUESTOS EN PROVEEDORES */}
+      <PartCostFinderModal
+        isOpen={isPartCostModalOpen}
+        onClose={() => setIsPartCostModalOpen(false)}
+        modelName={formData.device.model}
+        issueText={formData.service.requestedRepair}
+        issueId={selectedIssueId}
+        currentCost={formData.service.partCost}
+        clientPrice={formData.service.budgetTotal}
+        onSelectCost={({ costArs, supplier, partName }) => {
+          setFormData(prev => ({
+            ...prev,
+            service: {
+              ...prev.service,
+              partCost: costArs.toString(),
+              partSupplier: supplier,
+              partName: partName
+            }
+          }));
+        }}
+      />
 
     </div>
   );

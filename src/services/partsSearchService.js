@@ -7,7 +7,7 @@ import { SOULFIX_PARTS } from '../data/soulfixParts.js';
 import { GRUPOARMAR_PARTS } from '../data/grupoarmarParts.js';
 
 // Lista unificada de todos los repuestos catalogados con su proveedor y enlace
-const ALL_CATALOG_PARTS = [
+export const ALL_CATALOG_PARTS = [
   ...CELLSTORE_PARTS.map(p => ({
     name: p.name || '',
     brand: p.brand || '',
@@ -239,4 +239,71 @@ export function generateQuickSupplierLinks(modelName, issueLabel = 'Módulo Pant
       url: `https://listado.mercadolibre.com.ar/${encodeURIComponent(cleanModel + ' ' + issueLabel)}`
     }
   ];
+}
+
+/**
+ * Búsqueda flexible de repuestos para autocompletado de costos de reparación.
+ * Admite búsqueda por texto libre y/o filtros por modelo, proveedor y stock.
+ */
+export function searchCatalogPartsFlexible({
+  query = '',
+  modelName = '',
+  issueText = '',
+  providerKey = 'all',
+  onlyInStock = false,
+  sortBy = 'price_asc'
+} = {}) {
+  const cleanQuery = (query || `${modelName} ${issueText}`).trim();
+  
+  if (!cleanQuery && providerKey === 'all') {
+    return [];
+  }
+
+  // Extraer tokens de búsqueda
+  const rawTokens = cleanQuery
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\(\)\/\-_,]/g, " ")
+    .split(/\s+/)
+    .filter(t => t.length > 0);
+
+  let list = ALL_CATALOG_PARTS;
+
+  // Filtrar por proveedor si aplica
+  if (providerKey && providerKey !== 'all') {
+    list = list.filter(p => p.provider_key === providerKey);
+  }
+
+  // Filtrar por stock
+  if (onlyInStock) {
+    list = list.filter(p => p.in_stock);
+  }
+
+  // Si hay tokens, filtrar coincidencias
+  if (rawTokens.length > 0) {
+    list = list.filter(part => {
+      const partName = (part.name || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const partBrand = (part.brand || '').toLowerCase();
+      const combined = `${partBrand} ${partName}`;
+
+      // Todos los tokens deben coincidir de forma flexible
+      return rawTokens.every(tok => combined.includes(tok));
+    });
+  }
+
+  // Ordenamiento
+  return list.sort((a, b) => {
+    // Si no está forzado el stock, priorizar stock
+    if (a.in_stock && !b.in_stock) return -1;
+    if (!a.in_stock && b.in_stock) return 1;
+
+    if (sortBy === 'price_asc') {
+      return (a.price_cash_ars || 0) - (b.price_cash_ars || 0);
+    }
+    if (sortBy === 'price_desc') {
+      return (b.price_cash_ars || 0) - (a.price_cash_ars || 0);
+    }
+    return (a.name || '').localeCompare(b.name || '');
+  });
 }

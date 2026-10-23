@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import CommercialInvoicePOS from '../pos/CommercialInvoicePOS';
+import PartCostFinderModal from './PartCostFinderModal';
 
 // ─── COMPONENTE TOAST ────────────────────────────────────────────────────
 function Toast({ message, type = 'info', onClose }) {
@@ -60,12 +61,18 @@ function Toast({ message, type = 'info', onClose }) {
 }
 
 export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDelivered }) {
-  const { inventory, recordUnifiedDelivery, businessConfig } = useData();
+  const { inventory, recordUnifiedDelivery, businessConfig, updateOrderPartCost } = useData();
 
   if (!isOpen || !order) return null;
 
   // ─── ESTADOS LOCALES ──────────────────────────────────────────
   const balanceDue = Number(order.service?.balanceDue || 0);
+
+  // Costo de repuesto & Buscador en proveedores
+  const [partCost, setPartCost] = useState(order.partCost !== undefined ? Number(order.partCost) : 0);
+  const [partSupplier, setPartSupplier] = useState(order.partSupplier || '');
+  const [partName, setPartName] = useState(order.partName || '');
+  const [isPartCostModalOpen, setIsPartCostModalOpen] = useState(false);
 
   // Resolución técnica al entregar: 'ready' (Reparado OK) o 'no_repair' (Sin Reparar / Devolución)
   const isInitiallyResolved = order.status === 'ready' || order.status === 'repaired' || order.status === 'no_repair';
@@ -192,6 +199,9 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     balancePaid: effectiveBalanceDue,
     repairResolution: deliveryResolution, // 'ready' | 'no_repair'
     isRepaired: deliveryResolution === 'ready',
+    partCost: parseFloat(partCost) || 0,
+    partSupplier: partSupplier || '',
+    partName: partName || '',
     accessories: addedAccessories.map(a => ({
       id: a.id,
       name: a.name,
@@ -790,6 +800,81 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                     )}
                   </div>
                 </div>
+
+                {/* COSTO DEL REPUESTO & UTILIDAD EN LA ENTREGA */}
+                {(() => {
+                  const budgetTotal = Number(order.service?.budgetTotal || 0);
+                  const costNum = parseFloat(partCost) || 0;
+                  const netProfit = budgetTotal - costNum;
+                  const marginPercent = budgetTotal > 0 ? ((netProfit / budgetTotal) * 100).toFixed(0) : 0;
+
+                  return (
+                    <div className={`p-3 rounded-xl border mt-3 transition-all ${
+                      costNum === 0 
+                        ? 'bg-amber-500/10 border-amber-500/30' 
+                        : 'bg-zinc-950/70 border-zinc-800'
+                    }`}>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                            🔩 Costo del Repuesto
+                          </span>
+                          {costNum === 0 && (
+                            <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-bold">
+                              ⚠️ Sin costo ($0)
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsPartCostModalOpen(true)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-[#FF5500] hover:bg-[#FF5500]/90 rounded-lg transition-all cursor-pointer shadow-xs"
+                        >
+                          <Search className="w-3 h-3" />
+                          <span>Buscar en Proveedores</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-12 gap-2 items-center">
+                        <div className="col-span-5 relative">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-bold">$</span>
+                          <input
+                            type="number"
+                            value={partCost}
+                            onChange={(e) => setPartCost(e.target.value)}
+                            placeholder="Costo"
+                            className="w-full pl-6 pr-2 py-1 text-xs bg-zinc-900 border border-zinc-700 rounded-lg text-white font-mono focus:border-[#FF5500] outline-hidden"
+                          />
+                        </div>
+                        <div className="col-span-7 flex items-center justify-end gap-3 text-right">
+                          <div>
+                            <span className="text-[10px] block text-zinc-400 uppercase font-semibold">Utilidad Taller</span>
+                            <span className={`text-xs sm:text-sm font-black font-mono ${
+                              netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                            }`}>
+                              ${netProfit.toLocaleString('es-AR')}
+                            </span>
+                          </div>
+                          <div className="border-l border-zinc-800 pl-3">
+                            <span className="text-[10px] block text-zinc-400 uppercase font-semibold">Margen</span>
+                            <span className={`text-xs sm:text-sm font-black font-mono ${
+                              marginPercent >= 50 ? 'text-emerald-400' : marginPercent > 0 ? 'text-amber-400' : 'text-rose-400'
+                            }`}>
+                              {marginPercent}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {(partSupplier || partName) && (
+                        <div className="mt-2 pt-1.5 border-t border-zinc-800/60 flex items-center justify-between text-[10px] text-zinc-400">
+                          {partSupplier && <span>Prov: <strong className="text-zinc-300">{partSupplier}</strong></span>}
+                          {partName && <span className="truncate max-w-[200px]" title={partName}>{partName}</span>}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Sección Venta Cruzada de Accesorios */}
@@ -1141,6 +1226,32 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
             </div>
 
           </div>
+        )}
+
+        {/* MODAL DE BÚSQUEDA DE REPUESTO EN PROVEEDORES */}
+        {isPartCostModalOpen && (
+          <PartCostFinderModal
+            isOpen={isPartCostModalOpen}
+            onClose={() => setIsPartCostModalOpen(false)}
+            order={order}
+            currentCost={partCost}
+            currentSupplier={partSupplier}
+            currentPartName={partName}
+            customerPrice={Number(order.service?.budgetTotal || 0)}
+            onSelectPart={(selectedData) => {
+              setPartCost(selectedData.costPrice);
+              setPartSupplier(selectedData.supplierName);
+              setPartName(selectedData.partName);
+              if (order?.id && updateOrderPartCost) {
+                updateOrderPartCost(order.id, {
+                  partCost: selectedData.costPrice,
+                  partSupplier: selectedData.supplierName,
+                  partName: selectedData.partName
+                });
+              }
+              setIsPartCostModalOpen(false);
+            }}
+          />
         )}
 
       </div>
