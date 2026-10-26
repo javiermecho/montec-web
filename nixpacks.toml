@@ -3,14 +3,12 @@ nixPkgs = ["nodejs_22"]
 
 [phases.install]
 cmds = [
-  "npm ci --no-audit --no-fund || npm install --no-audit --no-fund",
-  "cd backend && npm install --no-audit --no-fund"
+  "npm install --omit=dev --no-audit --no-fund",
+  "cd backend && npm install --omit=dev --no-audit --no-fund"
 ]
 
 [phases.build]
-cmds = [
-  "npm run build"
-]
+cmds = []
 
 [start]
 cmd = "node run-server.js"
