@@ -123,18 +123,73 @@ export default function MonthlyBalanceTab() {
 
   // Cálculo financiero consolidado reactivo para el período seleccionado
   const summary = useMemo(() => {
-    if (getPeriodFinancialSummary) {
-      return getPeriodFinancialSummary({ startDate, endDate });
+    let raw = null;
+    try {
+      if (typeof getPeriodFinancialSummary === 'function') {
+        raw = getPeriodFinancialSummary({ startDate, endDate });
+      }
+    } catch (err) {
+      console.error('Error calculando balance en MonthlyBalanceTab:', err);
     }
-    return {
+
+    const defaultSummary = {
       income: { total: 0, repairs: 0, repairsCount: 0, sales: 0, salesCount: 0 },
       expenses: { total: 0, count: 0, byCategory: [] },
       cashBreakdown: { incomeCash: 0, incomeBank: 0, expenseCash: 0, expenseBank: 0, cashOnHand: 0, bankBalance: 0, netTotal: 0 },
       repairsProfitability: { revenue: 0, partsCost: 0, netProfit: 0, marginPercent: 0, count: 0, deliveredOrders: [] },
-      salesProfitability: { revenue: 0, cogs: 0, netProfit: 0, marginPercent: 0, count: 0 },
+      salesProfitability: { revenue: 0, cogs: 0, cost: 0, netProfit: 0, marginPercent: 0, count: 0 },
       operationalExpenses: 0,
       finalNetPocketProfit: 0,
       netBalance: 0
+    };
+
+    if (!raw) return defaultSummary;
+
+    const rep = raw.repairsProfitability || raw.repairs || {};
+    const sal = raw.salesProfitability || raw.products || {};
+    const exp = raw.expenses || {};
+    const exec = raw.executive || {};
+
+    return {
+      ...defaultSummary,
+      ...raw,
+      repairsProfitability: {
+        revenue: Number(rep.revenue || 0),
+        partsCost: Number(rep.partsCost || 0),
+        netProfit: Number(rep.netProfit || 0),
+        marginPercent: Number(rep.marginPercent || 0),
+        count: Number(rep.count ?? rep.deliveredCount ?? 0),
+        deliveredOrders: Array.isArray(rep.deliveredOrders) ? rep.deliveredOrders : []
+      },
+      salesProfitability: {
+        revenue: Number(sal.revenue || 0),
+        cogs: Number(sal.cogs ?? sal.cost ?? 0),
+        cost: Number(sal.cogs ?? sal.cost ?? 0),
+        netProfit: Number(sal.netProfit || 0),
+        marginPercent: Number(sal.marginPercent || 0),
+        count: Number(sal.count ?? sal.salesCount ?? 0)
+      },
+      operationalExpenses: Number(raw.operationalExpenses ?? exec.operatingExpenses ?? exp.total ?? 0),
+      finalNetPocketProfit: Number(raw.finalNetPocketProfit ?? exec.finalNetProfit ?? raw.netBalance ?? 0),
+      expenses: {
+        total: Number(exp.total || 0),
+        count: Number(exp.count || 0),
+        byCategory: Array.isArray(exp.byCategory) ? exp.byCategory : []
+      },
+      cashBreakdown: {
+        cashOnHand: Number(raw.cashBreakdown?.cashOnHand || 0),
+        incomeCash: Number(raw.cashBreakdown?.incomeCash || 0),
+        expenseCash: Number(raw.cashBreakdown?.expenseCash || 0),
+        bankBalance: Number(raw.cashBreakdown?.bankBalance || 0),
+        incomeBank: Number(raw.cashBreakdown?.incomeBank || 0),
+        expenseBank: Number(raw.cashBreakdown?.expenseBank || 0),
+        netTotal: Number(raw.cashBreakdown?.netTotal || 0)
+      },
+      income: {
+        total: Number(raw.income?.total || 0),
+        repairs: Number(raw.income?.repairs || 0),
+        sales: Number(raw.income?.sales || 0)
+      }
     };
   }, [getPeriodFinancialSummary, startDate, endDate]);
 
@@ -785,14 +840,14 @@ export default function MonthlyBalanceTab() {
 
                       {/* Falla / Trabajo */}
                       <td className="py-3 px-3">
-                        <span className="text-zinc-300 block max-w-[200px] truncate" title={ord.issue}>
-                          {ord.issue}
+                        <span className="text-zinc-300 block max-w-[200px] truncate" title={ord.issue || ord.requestedRepair || 'Servicio Técnico'}>
+                          {ord.issue || ord.requestedRepair || 'Servicio Técnico'}
                         </span>
                       </td>
 
                       {/* Cobrado al Cliente */}
                       <td className="py-3 px-3 text-right font-mono font-bold text-white whitespace-nowrap">
-                        ${ord.charged.toLocaleString('es-AR')}
+                        ${Number(ord.charged ?? ord.budgetTotal ?? 0).toLocaleString('es-AR')}
                       </td>
 
                       {/* Costo de Repuesto (con alerta, edición in-line y buscador de proveedores) */}
@@ -826,13 +881,13 @@ export default function MonthlyBalanceTab() {
                           </div>
                         ) : (
                           <div className="flex items-center justify-center gap-2">
-                            {ord.partCost === 0 ? (
+                            {Number(ord.partCost || 0) === 0 ? (
                               <span className="inline-flex items-center gap-1 text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
                                 ⚠️ Sin costo ($0)
                               </span>
                             ) : (
                               <span className="font-mono font-semibold text-zinc-200">
-                                ${ord.partCost.toLocaleString('es-AR')}
+                                ${Number(ord.partCost || 0).toLocaleString('es-AR')}
                               </span>
                             )}
 
@@ -871,15 +926,15 @@ export default function MonthlyBalanceTab() {
 
                       {/* Utilidad Neta */}
                       <td className="py-3 px-3 text-right font-mono font-bold whitespace-nowrap">
-                        <span className={ord.netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
-                          ${ord.netProfit.toLocaleString('es-AR')}
+                        <span className={Number(ord.netProfit ?? ord.netUtility ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                          ${Number(ord.netProfit ?? ord.netUtility ?? 0).toLocaleString('es-AR')}
                         </span>
                       </td>
 
                       {/* Margen % */}
                       <td className="py-3 px-3 text-center font-mono font-bold whitespace-nowrap">
-                        <span className={`text-xs ${ord.marginPercent >= 50 ? 'text-emerald-400' : ord.marginPercent > 0 ? 'text-amber-400' : 'text-rose-400'}`}>
-                          {ord.marginPercent}%
+                        <span className={`text-xs ${Number(ord.marginPercent ?? ord.marginPct ?? 0) >= 50 ? 'text-emerald-400' : Number(ord.marginPercent ?? ord.marginPct ?? 0) > 0 ? 'text-amber-400' : 'text-rose-400'}`}>
+                          {Number(ord.marginPercent ?? ord.marginPct ?? 0)}%
                         </span>
                       </td>
                     </tr>
@@ -1559,10 +1614,10 @@ export default function MonthlyBalanceTab() {
                 <tr key={ord.id}>
                   <td className="py-1 font-mono font-bold">{ord.orderNumber}</td>
                   <td className="py-1">{ord.clientName} - {ord.deviceModel}</td>
-                  <td className="py-1">{ord.issue}</td>
-                  <td className="py-1 text-right font-mono">${ord.charged.toLocaleString('es-AR')}</td>
-                  <td className="py-1 text-right font-mono">${ord.partCost.toLocaleString('es-AR')}</td>
-                  <td className="py-1 text-right font-mono font-bold">${ord.netProfit.toLocaleString('es-AR')}</td>
+                  <td className="py-1">{ord.issue || ord.requestedRepair || 'Servicio Técnico'}</td>
+                  <td className="py-1 text-right font-mono">${Number(ord.charged ?? ord.budgetTotal ?? 0).toLocaleString('es-AR')}</td>
+                  <td className="py-1 text-right font-mono">${Number(ord.partCost || 0).toLocaleString('es-AR')}</td>
+                  <td className="py-1 text-right font-mono font-bold">${Number(ord.netProfit ?? ord.netUtility ?? 0).toLocaleString('es-AR')}</td>
                 </tr>
               ))}
             </tbody>

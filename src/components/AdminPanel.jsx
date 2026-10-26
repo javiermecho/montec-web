@@ -58,6 +58,7 @@ import WhatsAppTemplatesTab from './admin/WhatsAppTemplatesTab';
 import SalesCloserAssistantTab from './taller/SalesCloserAssistantTab';
 import RepairOrderReceiver from './taller/RepairOrderReceiver';
 import UnifiedDeliveryModal from './taller/UnifiedDeliveryModal';
+import ErrorBoundary from './common/ErrorBoundary';
 
 export default function AdminPanel() {
   const {
@@ -620,7 +621,9 @@ export default function AdminPanel() {
         {/* PESTAÑA: GESTIÓN DE GASTOS Y CIERRE DE MES (BALANCE MENSUAL)  */}
         {/* ============================================================== */}
         {activeTab === 'expenses' && (
-          <MonthlyBalanceTab />
+          <ErrorBoundary title="Gastos & Cierre de Mes (Balance)">
+            <MonthlyBalanceTab />
+          </ErrorBoundary>
         )}
 
         {/* ============================================================== */}

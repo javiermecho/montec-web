@@ -2406,13 +2406,17 @@ export function DataProvider({ children }) {
           clientPhone: o.customer?.phone || o.client?.phone || '',
           deviceModel: `${o.device?.brand || ''} ${o.device?.model || ''}`.trim() || 'Dispositivo',
           requestedRepair: o.service?.requestedRepair || o.service?.issue || 'Servicio Técnico',
+          issue: o.service?.issue || o.service?.requestedRepair || 'Servicio Técnico',
           budgetTotal: effectiveCharged,
+          charged: effectiveCharged,
           partCost: partCostNum,
           hasCost: partCostNum > 0,
           partSupplier: o.partSupplier || o.service?.partSupplier || '',
           partName: o.partName || o.service?.partName || '',
           netUtility,
+          netProfit: netUtility,
           marginPct,
+          marginPercent: marginPct,
           repairResolution: o.repairResolution || o.service?.repairResolution || 'ready',
           status: o.status
         });
@@ -2583,6 +2587,17 @@ export function DataProvider({ children }) {
         netProfit: repairsNetProfit,
         marginPercent: repairsMarginPercent,
         deliveredCount: deliveredOrdersInPeriod.length,
+        count: deliveredOrdersInPeriod.length,
+        missingCostCount,
+        deliveredOrders: deliveredOrdersInPeriod
+      },
+      repairsProfitability: {
+        revenue: repairsRevenue,
+        partsCost: repairsPartsCost,
+        netProfit: repairsNetProfit,
+        marginPercent: repairsMarginPercent,
+        count: deliveredOrdersInPeriod.length,
+        deliveredCount: deliveredOrdersInPeriod.length,
         missingCostCount,
         deliveredOrders: deliveredOrdersInPeriod
       },
@@ -2590,11 +2605,24 @@ export function DataProvider({ children }) {
       products: {
         revenue: productsRevenue,
         cost: productsCost,
+        cogs: productsCost,
         netProfit: productsNetProfit,
         marginPercent: productsMarginPercent,
-        salesCount: productsSalesCount
+        salesCount: productsSalesCount,
+        count: productsSalesCount
+      },
+      salesProfitability: {
+        revenue: productsRevenue,
+        cost: productsCost,
+        cogs: productsCost,
+        netProfit: productsNetProfit,
+        marginPercent: productsMarginPercent,
+        salesCount: productsSalesCount,
+        count: productsSalesCount
       },
       // 3. Gastos Operativos
+      operationalExpenses: expensesTotal,
+      finalNetPocketProfit: finalNetProfit,
       expenses: {
         total: expensesTotal,
         cash: expensesCash,
