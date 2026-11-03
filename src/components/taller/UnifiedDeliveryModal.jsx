@@ -68,7 +68,8 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
   // ─── ESTADOS LOCALES & METADATA CONTABLE ───────────────────────
   const repairBudgetTotal = Number(order.service?.budgetTotal ?? order.budgetTotal ?? 0);
   const depositPaid = Number(order.service?.deposit ?? order.deposit ?? 0);
-  const rawBalanceDue = Number(order.service?.balanceDue ?? Math.max(0, repairBudgetTotal - depositPaid));
+  const balanceDue = Number(order.service?.balanceDue ?? Math.max(0, repairBudgetTotal - depositPaid));
+  const rawBalanceDue = balanceDue;
 
   const isOrderAlreadyInvoiced = Boolean(order.isFacturada || order.service?.isFacturada);
   const existingFacturaNumero = order.facturaNumero || order.service?.facturaNumero || '';
@@ -1192,7 +1193,7 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between text-zinc-300">
                     <span>Saldo Reparación Taller:</span>
-                    <span className="font-mono font-semibold">${balanceDue.toLocaleString('es-AR')}</span>
+                    <span className="font-mono font-semibold">${effectiveBalanceDue.toLocaleString('es-AR')}</span>
                   </div>
 
                   {accessoriesSubtotal > 0 && (

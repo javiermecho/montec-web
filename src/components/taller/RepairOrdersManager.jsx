@@ -54,6 +54,7 @@ import OrderTicketModal from './OrderTicketModal';
 import UnifiedDeliveryModal from './UnifiedDeliveryModal';
 import DailySalesTab from '../admin/DailySalesTab';
 import PartCostFinderModal from './PartCostFinderModal';
+import ErrorBoundary from '../common/ErrorBoundary';
 
 // CONFIGURACIÓN DE ESTADOS TÉCNICOS (ESTILO SISTROFIX PROFESIONAL)
 export const STATUS_CONFIG = {
@@ -1069,7 +1070,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                       <td className="py-3 px-4 align-middle text-right whitespace-nowrap">
                         <div className={`font-mono font-bold text-sm ${
                           balance > 0 
-                            ? (isLight ? 'text-amber-600' : 'text-emerald-600') 
+                            ? (isLight ? 'text-amber-600' : 'text-amber-400') 
                             : (isLight ? 'text-emerald-600' : 'text-emerald-400')
                         }`}>
                           {balance > 0 ? `$${balance.toLocaleString('es-AR')}` : 'Abonado OK'}
@@ -2950,12 +2951,14 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
         />
       )}
       {localDeliveryOrder && (
-        <UnifiedDeliveryModal
-          order={localDeliveryOrder}
-          isOpen={Boolean(localDeliveryOrder)}
-          onClose={() => setLocalDeliveryOrder(null)}
-          onDelivered={() => setLocalDeliveryOrder(null)}
-        />
+        <ErrorBoundary title="Modal de Entrega y Cobro">
+          <UnifiedDeliveryModal
+            order={localDeliveryOrder}
+            isOpen={Boolean(localDeliveryOrder)}
+            onClose={() => setLocalDeliveryOrder(null)}
+            onDelivered={() => setLocalDeliveryOrder(null)}
+          />
+        </ErrorBoundary>
       )}
 
       {/* MODAL DE CAJA DIARIA FLOTANTE EN TALLER */}
