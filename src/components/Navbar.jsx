@@ -40,11 +40,10 @@ export default function Navbar({ onNavigateHistory, onNavigateStore, onNavigateO
   const navLinks = [
     { name: 'Inicio', href: '#inicio' },
     { name: 'Cotizador', href: '#cotizador', badge: 'Online' },
-    { name: 'Seguimiento', href: '/estado', isTracking: true, badge: 'En Vivo' },
     { name: 'Laboratorio', href: '#laboratorio' },
     { name: 'Historia', href: '/historia' },
     { name: 'Instagram', href: '#instagram' },
-    { name: 'Tienda Online', href: getStoreTargetUrl(), isStore: true, badge: 'STORE' },
+    { name: 'Tienda', href: getStoreTargetUrl(), isStore: true, badge: 'STORE' },
     { name: 'Ubicación', href: '#ubicacion' },
   ];
 
