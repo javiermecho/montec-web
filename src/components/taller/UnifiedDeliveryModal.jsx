@@ -66,10 +66,15 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
   if (!isOpen || !order) return null;
 
   // ─── ESTADOS LOCALES & METADATA CONTABLE ───────────────────────
-  const repairBudgetTotal = Number(order.service?.budgetTotal ?? order.budgetTotal ?? 0);
-  const depositPaid = Number(order.service?.deposit ?? order.deposit ?? 0);
-  const balanceDue = Number(order.service?.balanceDue ?? Math.max(0, repairBudgetTotal - depositPaid));
-  const rawBalanceDue = balanceDue;
+  const repairBudgetTotal = Number(
+    order.service?.budgetTotal ?? order.budgetTotal ?? order.total ?? order.presupuesto ?? order.price ?? 0
+  );
+  const depositPaid = Number(
+    order.service?.deposit ?? order.deposit ?? order.sena ?? order.adelanto ?? 0
+  );
+  // El saldo pendiente real SIEMPRE es la diferencia matemática entre presupuesto y seña:
+  const saldoRealReparacion = Math.max(0, repairBudgetTotal - depositPaid);
+  const rawBalanceDue = saldoRealReparacion;
 
   const isOrderAlreadyInvoiced = Boolean(order.isFacturada || order.service?.isFacturada);
   const existingFacturaNumero = order.facturaNumero || order.service?.facturaNumero || '';
@@ -167,7 +172,7 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
   };
 
   // ─── CÁLCULOS FINANCIEROS ─────────────────────────────────────
-  const effectiveBalanceDue = waiveRepairBalance ? 0 : rawBalanceDue;
+  const effectiveBalanceDue = waiveRepairBalance ? 0 : saldoRealReparacion;
   const accessoriesSubtotal = addedAccessories.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const grossTotal = effectiveBalanceDue + accessoriesSubtotal;
 
@@ -177,13 +182,13 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
 
   const grandTotal = Math.max(0, grossTotal - discountAmount);
 
-  // Diagnóstico financiero claro de la orden
-  // Caso 1: Reparación realmente sin costo (presupuesto $0 y sin accesorios)
+  // Diagnóstico financiero claro de la orden según casos reales:
+  // CASO A: TIENE SALDO PENDIENTE (total > 0 y saldoRealReparacion > 0)
+  const hasPendingBalance = !waiveRepairBalance && saldoRealReparacion > 0;
+  // CASO B: REALMENTE 100% PAGADA PREVIAMENTE (total > 0 y senaPrevia >= totalReparacion)
+  const isPrepaidFull = repairBudgetTotal > 0 && depositPaid >= repairBudgetTotal;
+  // CASO C: REPARACIÓN EN GARANTÍA O PRESUPUESTO $0
   const isRealZeroCost = repairBudgetTotal === 0 && accessoriesSubtotal === 0;
-  // Caso 2: Reparación saldada / pagada previamente (total > 0 y saldoPendiente <= 0)
-  const isPrepaidFull = repairBudgetTotal > 0 && effectiveBalanceDue <= 0;
-  // Caso 3: Reparación con saldo pendiente (total > 0 y saldoPendiente > 0)
-  const hasPendingBalance = effectiveBalanceDue > 0;
 
   // Vuelto en efectivo
   const cashNum = parseFloat(cashGiven) || 0;
@@ -491,8 +496,8 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#121212] border border-zinc-800 rounded-3xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 bg-black/85 backdrop-blur-md animate-fadeIn">
+      <div className="bg-[#121212] border border-zinc-800 rounded-2xl w-full max-w-6xl h-[94vh] max-h-[850px] flex flex-col shadow-2xl overflow-hidden">
         
         {/* TOAST NOTIFICATIONS */}
         {toast && (
@@ -503,22 +508,22 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
           />
         )}
 
-        {/* HEADER */}
-        <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/80 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#FF5500]/10 border border-[#FF5500]/30 flex items-center justify-center text-[#FF5500]">
-              <Package className="w-5 h-5" />
+        {/* HEADER COMPACTO */}
+        <div className="px-4 py-2 sm:py-2.5 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/90 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#FF5500]/10 border border-[#FF5500]/30 flex items-center justify-center text-[#FF5500] shrink-0">
+              <Package className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-heading font-bold text-white">
+                <h3 className="text-sm sm:text-base font-heading font-bold text-white">
                   Entrega de Equipo & Cobro Unificado
                 </h3>
                 <span className="px-2 py-0.5 rounded-full bg-[#FF5500]/20 text-[#FF5500] text-xs font-mono font-bold border border-[#FF5500]/30">
                   {order.orderNumber}
                 </span>
               </div>
-              <p className="text-xs text-zinc-400">
+              <p className="text-[11px] text-zinc-400 hidden sm:block">
                 Cobro de saldo de taller con venta cruzada de accesorios en un solo comprobante
               </p>
             </div>
@@ -526,9 +531,9 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+            className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -800,35 +805,37 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
           </div>
         ) : (
           /* PANTALLA PRINCIPAL DE CONFIGURACIÓN DE COBRO */
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="flex-1 overflow-hidden p-3 grid grid-cols-1 lg:grid-cols-12 gap-3 min-h-0">
             
             {/* COLUMNA IZQUIERDA: RESUMEN DE LA ORDEN & VENTA CRUZADA (7 COLS) */}
-            <div className="lg:col-span-7 space-y-5">
+            <div className="lg:col-span-7 flex flex-col justify-between overflow-hidden gap-2 min-h-0">
               
-              {/* Tarjeta de Datos del Equipo y Resolución Obligatoria */}
-              <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 space-y-4">
-                <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                  <span className="text-xs font-mono font-bold text-[#FF5500]">DATOS DE LA REPARACIÓN</span>
-                  <span className="text-xs text-zinc-400">{order.client?.name || order.customer?.name || 'Cliente'}</span>
+              {/* Tarjeta de Datos del Equipo, Saldos y Resolución */}
+              <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-2.5 sm:p-3 space-y-2 shrink-0">
+                <div className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-[11px] font-mono font-bold text-[#FF5500]">DATOS DE LA REPARACIÓN</span>
+                  <span className="text-xs text-zinc-300 font-medium">{order.client?.name || order.customer?.name || 'Cliente'}</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="grid grid-cols-3 gap-2 text-xs">
                   <div>
-                    <span className="text-zinc-500 block">Equipo:</span>
-                    <span className="font-semibold text-white">{order.device?.brand} {order.device?.model}</span>
+                    <span className="text-zinc-500 text-[10px] block">Equipo:</span>
+                    <span className="font-semibold text-white truncate block">{order.device?.brand} {order.device?.model}</span>
                   </div>
                   <div>
-                    <span className="text-zinc-500 block">Teléfono:</span>
-                    <span className="font-semibold text-white">{order.client?.phone || order.customer?.phone || 'Sin registrar'}</span>
+                    <span className="text-zinc-500 text-[10px] block">Teléfono:</span>
+                    <span className="font-semibold text-white truncate block">{order.client?.phone || order.customer?.phone || 'Sin registrar'}</span>
                   </div>
-                  <div className="col-span-2">
-                    <span className="text-zinc-500 block">Trabajo Solicitado:</span>
-                    <span className="text-zinc-200">{order.service?.requestedRepair || 'Servicio Técnico'}</span>
+                  <div>
+                    <span className="text-zinc-500 text-[10px] block">Falla / Servicio:</span>
+                    <span className="text-zinc-300 truncate block" title={order.service?.requestedRepair || 'Servicio Técnico'}>
+                      {order.service?.requestedRepair || 'Servicio Técnico'}
+                    </span>
                   </div>
                 </div>
 
                 {/* RESUMEN ECONÓMICO TRANSPARENTE: PRESUPUESTO, SEÑA Y SALDO */}
-                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800 text-xs">
+                <div className="grid grid-cols-3 gap-2 p-2 rounded-lg bg-zinc-950/80 border border-zinc-800 text-xs">
                   <div>
                     <span className="text-[10px] block text-zinc-400 uppercase font-semibold">Presupuesto</span>
                     <span className="font-mono font-bold text-white">${repairBudgetTotal.toLocaleString('es-AR')}</span>
@@ -845,29 +852,37 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                   </div>
                 </div>
 
-                {/* BADGE DESTACADO: SI ESTÁ 100% PAGADA PREVIAMENTE */}
+                {/* BADGE DESTACADO: SI ESTÁ 100% PAGADA PREVIAMENTE (CASO B) */}
                 {isPrepaidFull && (
-                  <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs flex items-center justify-between animate-fadeIn">
-                    <div className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                  <div className="p-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs flex items-center justify-between animate-fadeIn">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                       <div>
-                        <span className="font-bold text-white block">✅ Reparación 100% Pagada</span>
-                        <span className="text-[11px] text-emerald-200/90">
-                          Total: ${repairBudgetTotal.toLocaleString('es-AR')} | Seña previa: ${depositPaid.toLocaleString('es-AR')} | Saldo a cobrar hoy: $0
+                        <span className="font-bold text-white block text-xs">✅ Reparación 100% Pagada</span>
+                        <span className="text-[10px] text-emerald-200/90">
+                          Seña previa de ${depositPaid.toLocaleString('es-AR')} cubre el total. Saldo hoy: $0
                         </span>
                       </div>
                     </div>
-                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px] border border-emerald-500/30">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px] border border-emerald-500/30">
                       SALDO $0
                     </span>
                   </div>
                 )}
 
+                {/* BADGE DESTACADO: CASO C (GARANTÍA / $0 REAL) */}
+                {isRealZeroCost && (
+                  <div className="p-2 rounded-lg bg-blue-500/15 border border-blue-500/40 text-blue-300 text-xs flex items-center gap-2 animate-fadeIn">
+                    <AlertTriangle className="w-4 h-4 text-blue-400 shrink-0" />
+                    <span className="text-xs font-semibold text-white">Garantía técnica / Revisión sin costo ($0)</span>
+                  </div>
+                )}
+
                 {/* ESTADO DE FACTURACIÓN FISCAL */}
                 {isOrderAlreadyInvoiced ? (
-                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Receipt className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <div className="py-1 px-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <Receipt className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                       <span className="font-medium text-zinc-300">Comprobante Fiscal:</span>
                       <strong className="text-white font-mono">🧾 Facturada ({existingFacturaNumero || 'OK'})</strong>
                     </div>
@@ -876,27 +891,32 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                     </span>
                   </div>
                 ) : repairBudgetTotal > 0 ? (
-                  <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-                      <span>⚠️ Esta reparación de <strong>${repairBudgetTotal.toLocaleString('es-AR')}</strong> aún no fue facturada.</span>
+                  <div className="py-1.5 px-2.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="truncate text-xs">⚠️ Reparación de <strong>${repairBudgetTotal.toLocaleString('es-AR')}</strong> aún no fue facturada.</span>
                     </div>
-                    <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold whitespace-nowrap">
-                      Facturar al entregar
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenInvoiceModal(buildDeliveryPayload())}
+                      className="bg-[#FF5500] hover:bg-[#FF6600] active:scale-95 text-white font-bold px-2.5 py-1 rounded-lg text-[11px] shadow-sm shrink-0 transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <Receipt className="w-3 h-3" />
+                      <span>Facturar al entregar</span>
+                    </button>
                   </div>
                 ) : null}
 
                 {/* SELECTOR OBLIGATORIO DE RESOLUCIÓN */}
-                <div className="pt-3 border-t border-zinc-800 space-y-2">
+                <div className="pt-2 border-t border-zinc-800/80 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-white flex items-center gap-1.5">
                       <span>¿Cómo se entrega el equipo?</span>
-                      <span className="text-rose-400 text-xs">* Obligatorio</span>
+                      <span className="text-rose-400 text-[10px]">* Requerido</span>
                     </label>
                     <span className="text-[11px] text-zinc-400">
-                      {deliveryResolution === 'ready' && <span className="text-emerald-400 font-semibold">Reparado OK</span>}
-                      {deliveryResolution === 'no_repair' && <span className="text-amber-400 font-semibold">Sin Reparar</span>}
+                      {deliveryResolution === 'ready' && <span className="text-emerald-400 font-semibold">🟢 Reparado OK</span>}
+                      {deliveryResolution === 'no_repair' && <span className="text-amber-400 font-semibold">🔴 Sin Reparar</span>}
                       {!deliveryResolution && <span className="text-rose-400 animate-pulse font-medium">Requerido para entregar</span>}
                     </span>
                   </div>
@@ -908,19 +928,17 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                         setDeliveryResolution('ready');
                         setWaiveRepairBalance(false);
                       }}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                      className={`py-1.5 px-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
                         deliveryResolution === 'ready'
-                          ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500/50 shadow-lg shadow-emerald-950/40'
+                          ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 ring-1 ring-emerald-500/50'
                           : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
                       }`}
                     >
-                      <div className="flex items-center gap-2 font-bold text-xs">
-                        <CheckCircle2 className={`w-4 h-4 ${deliveryResolution === 'ready' ? 'text-emerald-400' : 'text-zinc-500'}`} />
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <CheckCircle2 className={`w-3.5 h-3.5 ${deliveryResolution === 'ready' ? 'text-emerald-400' : 'text-zinc-500'}`} />
                         <span>🟢 Reparado OK</span>
                       </div>
-                      <span className="text-[11px] text-zinc-400 leading-tight">
-                        Trabajo finalizado con éxito. Aplica garantía.
-                      </span>
+                      <span className="text-[10px] text-zinc-400">Aplica garantía</span>
                     </button>
 
                     <button
@@ -929,29 +947,27 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                         setDeliveryResolution('no_repair');
                         setWaiveRepairBalance(true);
                       }}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                      className={`py-1.5 px-2.5 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
                         deliveryResolution === 'no_repair'
-                          ? 'bg-amber-500/15 border-amber-500 text-amber-300 ring-1 ring-amber-500/50 shadow-lg shadow-amber-950/40'
+                          ? 'bg-amber-500/15 border-amber-500 text-amber-300 ring-1 ring-amber-500/50'
                           : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-white'
                       }`}
                     >
-                      <div className="flex items-center gap-2 font-bold text-xs">
-                        <AlertTriangle className={`w-4 h-4 ${deliveryResolution === 'no_repair' ? 'text-amber-400' : 'text-zinc-500'}`} />
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <AlertTriangle className={`w-3.5 h-3.5 ${deliveryResolution === 'no_repair' ? 'text-amber-400' : 'text-zinc-500'}`} />
                         <span>🔴 Sin Reparar</span>
                       </div>
-                      <span className="text-[11px] text-zinc-400 leading-tight">
-                        Devolución sin reparación o rechazo.
-                      </span>
+                      <span className="text-[10px] text-zinc-400">Devolución</span>
                     </button>
                   </div>
 
                   {deliveryResolution === 'no_repair' && (
-                    <div className="mt-2 p-2.5 rounded-xl bg-amber-950/30 border border-amber-500/30 flex items-center justify-between text-xs animate-fadeIn">
-                      <div className="flex items-center gap-2 text-amber-200">
-                        <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-                        <span>Equipo sin reparación:</span>
+                    <div className="p-2 rounded-lg bg-amber-950/30 border border-amber-500/30 flex items-center justify-between text-xs animate-fadeIn">
+                      <div className="flex items-center gap-1.5 text-amber-200">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span className="text-[11px]">Equipo sin reparación:</span>
                       </div>
-                      <label className="flex items-center gap-2 cursor-pointer select-none text-zinc-300 hover:text-white">
+                      <label className="flex items-center gap-1.5 cursor-pointer select-none text-zinc-300 hover:text-white">
                         <input
                           type="checkbox"
                           checked={waiveRepairBalance}
@@ -964,129 +980,110 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                   )}
                 </div>
 
-                <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs">
-                  <span className="font-semibold text-zinc-300">Saldo Reparación a Cobrar:</span>
-                  <div className="text-right">
-                    {waiveRepairBalance && balanceDue > 0 ? (
-                      <div className="flex items-center gap-2">
-                        <span className="line-through text-zinc-500 font-mono">${balanceDue.toLocaleString('es-AR')}</span>
-                        <span className="font-mono font-bold text-emerald-400">$0 (Bonificado)</span>
-                      </div>
-                    ) : (
-                      <span className="text-base font-mono font-bold text-orange-400">
-                        ${effectiveBalanceDue.toLocaleString('es-AR')}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* COSTO DEL REPUESTO & UTILIDAD EN LA ENTREGA */}
+                {/* COSTO DEL REPUESTO & UTILIDAD EN LA ENTREGA (Compact Row) */}
                 {(() => {
-                  const budgetTotal = Number(order.service?.budgetTotal || 0);
                   const costNum = parseFloat(partCost) || 0;
-                  const netProfit = budgetTotal - costNum;
-                  const marginPercent = budgetTotal > 0 ? ((netProfit / budgetTotal) * 100).toFixed(0) : 0;
+                  const netProfit = repairBudgetTotal - costNum;
+                  const marginPercent = repairBudgetTotal > 0 ? ((netProfit / repairBudgetTotal) * 100).toFixed(0) : 0;
 
                   return (
-                    <div className={`p-3 rounded-xl border mt-3 transition-all ${
+                    <div className={`p-2 rounded-lg border transition-all text-xs ${
                       costNum === 0 
                         ? 'bg-amber-500/10 border-amber-500/30' 
                         : 'bg-zinc-950/70 border-zinc-800'
                     }`}>
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
-                            🔩 Costo del Repuesto
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 whitespace-nowrap">
+                            🔩 Repuesto:
                           </span>
-                          {costNum === 0 && (
-                            <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-bold">
-                              ⚠️ Sin costo ($0)
+                          {costNum === 0 ? (
+                            <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">
+                              Sin costo ($0)
                             </span>
+                          ) : (
+                            partSupplier && (
+                              <span className="text-[10px] text-zinc-400 font-medium truncate max-w-[100px]">
+                                ({partSupplier})
+                              </span>
+                            )
                           )}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => setIsPartCostModalOpen(true)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-white bg-[#FF5500] hover:bg-[#FF5500]/90 rounded-lg transition-all cursor-pointer shadow-xs"
-                        >
-                          <Search className="w-3 h-3" />
-                          <span>Buscar en Proveedores</span>
-                        </button>
-                      </div>
 
-                      <div className="grid grid-cols-12 gap-2 items-center">
-                        <div className="col-span-5 relative">
-                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-bold">$</span>
-                          <input
-                            type="number"
-                            value={partCost}
-                            onChange={(e) => setPartCost(e.target.value)}
-                            placeholder="Costo"
-                            className="w-full pl-6 pr-2 py-1 text-xs bg-zinc-900 border border-zinc-700 rounded-lg text-white font-mono focus:border-[#FF5500] outline-hidden"
-                          />
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <div className="relative w-20">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-bold">$</span>
+                            <input
+                              type="number"
+                              value={partCost}
+                              onChange={(e) => setPartCost(e.target.value)}
+                              placeholder="0"
+                              className="w-full pl-5 pr-1.5 py-0.5 text-xs bg-zinc-900 border border-zinc-700 rounded text-white font-mono focus:border-[#FF5500] outline-none"
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setIsPartCostModalOpen(true)}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold text-white bg-[#FF5500] hover:bg-[#FF6600] rounded transition-all cursor-pointer shadow-xs shrink-0"
+                          >
+                            <Search className="w-3 h-3" />
+                            <span>Proveedores</span>
+                          </button>
                         </div>
-                        <div className="col-span-7 flex items-center justify-end gap-3 text-right">
+
+                        <div className="flex items-center gap-2 pl-2 border-l border-zinc-800 text-right shrink-0">
                           <div>
-                            <span className="text-[10px] block text-zinc-400 uppercase font-semibold">Utilidad Taller</span>
-                            <span className={`text-xs sm:text-sm font-black font-mono ${
-                              netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                            }`}>
+                            <span className="text-[9px] block text-zinc-400 uppercase font-semibold">Utilidad</span>
+                            <span className={`text-xs font-mono font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                               ${netProfit.toLocaleString('es-AR')}
                             </span>
                           </div>
-                          <div className="border-l border-zinc-800 pl-3">
-                            <span className="text-[10px] block text-zinc-400 uppercase font-semibold">Margen</span>
-                            <span className={`text-xs sm:text-sm font-black font-mono ${
-                              marginPercent >= 50 ? 'text-emerald-400' : marginPercent > 0 ? 'text-amber-400' : 'text-rose-400'
-                            }`}>
+                          <div>
+                            <span className="text-[9px] block text-zinc-400 uppercase font-semibold">Margen</span>
+                            <span className={`text-xs font-mono font-bold ${marginPercent >= 50 ? 'text-emerald-400' : marginPercent > 0 ? 'text-amber-400' : 'text-rose-400'}`}>
                               {marginPercent}%
                             </span>
                           </div>
                         </div>
                       </div>
-
-                      {(partSupplier || partName) && (
-                        <div className="mt-2 pt-1.5 border-t border-zinc-800/60 flex items-center justify-between text-[10px] text-zinc-400">
-                          {partSupplier && <span>Prov: <strong className="text-zinc-300">{partSupplier}</strong></span>}
-                          {partName && <span className="truncate max-w-[200px]" title={partName}>{partName}</span>}
-                        </div>
-                      )}
                     </div>
                   );
                 })()}
+
               </div>
 
-              {/* Sección Venta Cruzada de Accesorios */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-[#FF5500]" />
-                    <h4 className="text-sm font-heading font-bold text-white">
+              {/* SECCIÓN VENTA CRUZADA DE ACCESORIOS (SCROLL INTERNO ACOTADO) */}
+              <div className="flex-1 bg-zinc-900/60 border border-zinc-800 rounded-xl p-2.5 flex flex-col justify-between overflow-hidden gap-1.5 min-h-0">
+                <div className="flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <ShoppingBag className="w-3.5 h-3.5 text-[#FF5500]" />
+                    <h4 className="text-xs font-heading font-bold text-white">
                       Venta Cruzada de Accesorios
                     </h4>
                   </div>
-                  <span className="text-xs text-zinc-400">Funda, vidrio templado, cable, etc.</span>
+                  <span className="text-[10px] text-zinc-400">Sumar fundas, vidrios, cargadores...</span>
                 </div>
 
                 {/* Buscador & Categorías */}
-                <div className="space-y-2">
+                <div className="space-y-1 shrink-0">
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={accessorySearch}
                       onChange={(e) => setAccessorySearch(e.target.value)}
-                      placeholder="Buscar accesorio para agregar..."
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 outline-none focus:border-[#FF5500]"
+                      placeholder="Buscar accesorio..."
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-8 pr-3 py-1 text-xs text-white placeholder-zinc-500 outline-none focus:border-[#FF5500]"
                     />
                   </div>
 
-                  <div className="flex items-center gap-1 overflow-x-auto pb-1">
+                  <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
                     {categories.map(cat => (
                       <button
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
-                        className={`px-2.5 py-1 rounded-lg text-[11px] whitespace-nowrap transition-colors cursor-pointer ${
+                        className={`px-2 py-0.5 rounded text-[10px] whitespace-nowrap transition-colors cursor-pointer ${
                           selectedCategory === cat 
                             ? 'bg-[#FF5500] text-white font-semibold' 
                             : 'bg-zinc-900 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-800'
@@ -1098,77 +1095,77 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                   </div>
                 </div>
 
-                {/* Lista de Accesorios Rápidos */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-1">
-                  {filteredInventory.slice(0, 8).map(prod => (
+                {/* Lista de Accesorios Rápidos (Scroll acotado) */}
+                <div className="grid grid-cols-2 gap-1.5 max-h-24 sm:max-h-28 overflow-y-auto p-0.5 shrink-0">
+                  {filteredInventory.slice(0, 6).map(prod => (
                     <div
                       key={prod.id}
                       onClick={() => handleAddAccessory(prod)}
-                      className="p-2.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-[#FF5500]/50 transition-all cursor-pointer flex items-center justify-between group"
+                      className="p-1.5 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 hover:border-[#FF5500]/50 transition-all cursor-pointer flex items-center justify-between group"
                     >
-                      <div className="min-w-0 pr-2">
-                        <div className="text-xs font-semibold text-white truncate group-hover:text-[#FF5500] transition-colors">
+                      <div className="min-w-0 pr-1.5">
+                        <div className="text-[11px] font-semibold text-white truncate group-hover:text-[#FF5500] transition-colors">
                           {prod.name}
                         </div>
-                        <div className="text-[10px] text-zinc-400">
+                        <div className="text-[9px] text-zinc-400">
                           Stock: {prod.stock} • ${prod.price?.toLocaleString('es-AR')}
                         </div>
                       </div>
                       <button 
                         type="button"
-                        className="p-1 rounded-lg bg-[#FF5500]/10 text-[#FF5500] group-hover:bg-[#FF5500] group-hover:text-white transition-all shrink-0"
+                        className="p-0.5 rounded bg-[#FF5500]/10 text-[#FF5500] group-hover:bg-[#FF5500] group-hover:text-white transition-all shrink-0"
                       >
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="w-3 h-3" />
                       </button>
                     </div>
                   ))}
                 </div>
 
-                {/* Accesorios Ya Agregados al Cobro */}
+                {/* Accesorios Ya Agregados (Scroll acotado) */}
                 {addedAccessories.length > 0 && (
-                  <div className="pt-2 border-t border-zinc-800 space-y-2">
-                    <span className="text-[11px] font-mono text-zinc-400 uppercase font-semibold">
-                      Accesorios Agregados a la Entrega ({addedAccessories.length})
+                  <div className="pt-1 border-t border-zinc-800 space-y-1 overflow-y-auto max-h-20 shrink-0">
+                    <span className="text-[10px] font-mono text-zinc-400 uppercase font-semibold block">
+                      Agregados ({addedAccessories.length}):
                     </span>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       {addedAccessories.map(item => (
                         <div 
                           key={item.id}
-                          className="flex items-center justify-between bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-xs"
+                          className="flex items-center justify-between bg-zinc-950 border border-zinc-800 rounded-lg p-1 text-xs"
                         >
-                          <div className="min-w-0 flex-1 pr-2">
-                            <span className="font-semibold text-white block truncate">{item.name}</span>
-                            <span className="text-[10px] text-zinc-400 font-mono">
+                          <div className="min-w-0 flex-1 pr-1.5">
+                            <span className="font-semibold text-white block truncate text-[11px]">{item.name}</span>
+                            <span className="text-[9px] text-zinc-400 font-mono">
                               ${item.price.toLocaleString('es-AR')} c/u
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
-                            <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-700 rounded-lg px-1 py-0.5">
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <div className="flex items-center bg-zinc-900 border border-zinc-700 rounded px-1 py-0.5">
                               <button 
                                 onClick={() => handleUpdateQuantity(item.id, -1)}
                                 className="p-0.5 text-zinc-400 hover:text-white"
                               >
-                                <Minus className="w-3 h-3" />
+                                <Minus className="w-2.5 h-2.5" />
                               </button>
                               <span className="font-mono text-xs px-1 text-white font-bold">{item.quantity}</span>
                               <button 
                                 onClick={() => handleUpdateQuantity(item.id, 1)}
                                 className="p-0.5 text-zinc-400 hover:text-white"
                               >
-                                <Plus className="w-3 h-3" />
+                                <Plus className="w-2.5 h-2.5" />
                               </button>
                             </div>
 
-                            <span className="font-mono font-bold text-white w-20 text-right">
+                            <span className="font-mono font-bold text-white text-xs w-16 text-right">
                               ${(item.price * item.quantity).toLocaleString('es-AR')}
                             </span>
 
                             <button 
                               onClick={() => handleRemoveAccessory(item.id)}
-                              className="p-1 text-zinc-500 hover:text-rose-400 transition-colors"
+                              className="p-0.5 text-zinc-500 hover:text-rose-400 transition-colors"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
                         </div>
@@ -1176,21 +1173,20 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                     </div>
                   </div>
                 )}
-
               </div>
-
             </div>
 
             {/* COLUMNA DERECHA: TOTALES, MEDIOS DE PAGO Y COBRO (5 COLS) */}
-            <div className="lg:col-span-5 bg-zinc-950 border border-zinc-800 rounded-2xl p-5 flex flex-col justify-between space-y-5">
+            <div className="lg:col-span-5 bg-zinc-950 border border-zinc-800 rounded-xl p-3 sm:p-4 flex flex-col justify-between overflow-hidden gap-2 min-h-0">
               
-              <div className="space-y-4">
-                <h4 className="text-xs font-mono uppercase font-bold text-zinc-400 border-b border-zinc-800 pb-2">
-                  Resumen de Cobro de Mostrador
+              <div className="space-y-2.5">
+                <h4 className="text-[11px] font-mono uppercase font-bold text-zinc-400 border-b border-zinc-800 pb-1.5 flex items-center justify-between">
+                  <span>Resumen de Cobro</span>
+                  <span className="text-[10px] text-zinc-500 font-sans">Mostrador</span>
                 </h4>
 
                 {/* Desglose */}
-                <div className="space-y-2 text-xs">
+                <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between text-zinc-300">
                     <span>Saldo Reparación Taller:</span>
                     <span className="font-mono font-semibold">${effectiveBalanceDue.toLocaleString('es-AR')}</span>
@@ -1204,13 +1200,13 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                   )}
 
                   {/* Descuento Opcional */}
-                  <div className="pt-2 border-t border-zinc-900 flex items-center justify-between gap-2">
-                    <span className="text-zinc-400">Descuento:</span>
+                  <div className="pt-1 border-t border-zinc-900 flex items-center justify-between gap-2">
+                    <span className="text-zinc-400 text-[11px]">Descuento:</span>
                     <div className="flex items-center gap-1">
                       <select 
                         value={discountType} 
                         onChange={(e) => setDiscountType(e.target.value)}
-                        className="bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white"
+                        className="bg-zinc-900 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-white"
                       >
                         <option value="fixed">$</option>
                         <option value="percent">%</option>
@@ -1221,7 +1217,7 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                         value={discountValue || ''}
                         onChange={(e) => setDiscountValue(Number(e.target.value) || 0)}
                         placeholder="0"
-                        className="w-20 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white font-mono text-right"
+                        className="w-16 bg-zinc-900 border border-zinc-700 rounded px-1.5 py-0.5 text-xs text-white font-mono text-right"
                       />
                     </div>
                   </div>
@@ -1235,129 +1231,127 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                 </div>
 
                 {/* TOTAL GENERAL DESTACADO */}
-                <div className={`p-4 rounded-2xl border-2 text-center space-y-1 transition-all ${
+                <div className={`py-2.5 px-3 rounded-xl border-2 text-center space-y-0.5 transition-all ${
                   isPrepaidFull && accessoriesSubtotal === 0
-                    ? 'bg-gradient-to-br from-emerald-950/60 to-black border-emerald-500/60 shadow-[0_0_25px_rgba(16,185,129,0.25)]'
-                    : 'bg-gradient-to-br from-zinc-900 to-black border-[#FF5500]/60 shadow-[0_0_25px_rgba(255,85,0,0.25)]'
+                    ? 'bg-gradient-to-br from-emerald-950/60 to-black border-emerald-500/60 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                    : 'bg-gradient-to-br from-zinc-900 to-black border-[#FF5500]/60 shadow-[0_0_20px_rgba(255,85,0,0.2)]'
                 }`}>
-                  <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-bold">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 font-bold block">
                     TOTAL A COBRAR EN MOSTRADOR
                   </span>
-                  <div className={`text-3xl sm:text-4xl font-heading font-extrabold ${
+                  <div className={`text-2xl sm:text-3xl font-heading font-extrabold ${
                     isPrepaidFull && accessoriesSubtotal === 0 ? 'text-emerald-400' : 'text-[#FF5500]'
                   }`}>
                     ${grandTotal.toLocaleString('es-AR')}
                   </div>
                   {isPrepaidFull && accessoriesSubtotal === 0 ? (
-                    <div className="flex items-center justify-center gap-1.5 mt-2 text-emerald-400 text-xs font-semibold">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Reparación 100% abonada previamente. Saldo a cobrar hoy: $0</span>
+                    <div className="flex items-center justify-center gap-1 text-emerald-400 text-[11px] font-semibold">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      <span>Reparación 100% abonada previamente. Saldo: $0</span>
                     </div>
                   ) : grandTotal > 0 ? (
-                    <div className="flex items-center justify-center gap-1.5 mt-2">
-                      <Lock className="w-3 h-3 text-amber-400" />
-                      <span className="text-[10px] text-amber-300 font-medium">
-                        Saldo pendiente a cobrar al cliente en mostrador
-                      </span>
+                    <div className="flex items-center justify-center gap-1 text-[10px] text-amber-300 font-medium">
+                      <Lock className="w-2.5 h-2.5 text-amber-400" />
+                      <span>Saldo pendiente a cobrar al cliente</span>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center gap-1.5 mt-2 text-zinc-400 text-[10px]">
+                    <div className="text-zinc-400 text-[10px]">
                       <span>Orden sin cargo ($0)</span>
                     </div>
                   )}
                 </div>
 
                 {/* Medio de Pago */}
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-zinc-300 block">Medio de Pago:</label>
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-zinc-300 block">Medio de Pago:</label>
+                  <div className="grid grid-cols-2 gap-1.5">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('cash')}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      className={`py-1.5 px-2 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         paymentMethod === 'cash'
                           ? 'bg-[#FF5500]/20 border-[#FF5500] text-white shadow-sm'
                           : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
                       }`}
                     >
-                      <Banknote className="w-4 h-4 text-emerald-400" />
+                      <Banknote className="w-3.5 h-3.5 text-emerald-400" />
                       <span>Efectivo</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('transfer')}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      className={`py-1.5 px-2 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         paymentMethod === 'transfer'
                           ? 'bg-[#FF5500]/20 border-[#FF5500] text-white shadow-sm'
                           : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
                       }`}
                     >
-                      <CreditCard className="w-4 h-4 text-blue-400" />
+                      <CreditCard className="w-3.5 h-3.5 text-blue-400" />
                       <span>Transferencia</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('card')}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      className={`py-1.5 px-2 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         paymentMethod === 'card'
                           ? 'bg-[#FF5500]/20 border-[#FF5500] text-white shadow-sm'
                           : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
                       }`}
                     >
-                      <CreditCard className="w-4 h-4 text-purple-400" />
-                      <span>Tarjeta Déb/Créd</span>
+                      <CreditCard className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Tarjeta</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('qr')}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      className={`py-1.5 px-2 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                         paymentMethod === 'qr'
                           ? 'bg-[#FF5500]/20 border-[#FF5500] text-white shadow-sm'
                           : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
                       }`}
                     >
-                      <QrCode className="w-4 h-4 text-cyan-400" />
-                      <span>Mercado Pago QR</span>
+                      <QrCode className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>MP QR</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Opciones Específicas por Medio de Pago */}
                 {paymentMethod === 'cash' && (
-                  <div className="p-3 bg-zinc-900/90 rounded-xl border border-zinc-800 space-y-2 text-xs">
+                  <div className="p-2 bg-zinc-900/90 rounded-lg border border-zinc-800 space-y-1 text-xs">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-zinc-400">Paga con $:</span>
+                      <span className="text-zinc-400 text-[11px]">Paga con $:</span>
                       <input
                         type="number"
                         value={cashGiven}
                         onChange={(e) => setCashGiven(e.target.value)}
                         placeholder={grandTotal.toString()}
-                        className="w-32 bg-zinc-950 border border-zinc-700 rounded-lg px-2.5 py-1 text-white font-mono text-right outline-none focus:border-[#FF5500]"
+                        className="w-28 bg-zinc-950 border border-zinc-700 rounded px-2 py-0.5 text-white font-mono text-right outline-none focus:border-[#FF5500] text-xs"
                       />
                     </div>
                     {changeDue > 0 && (
-                      <div className="flex items-center justify-between text-emerald-400 font-bold pt-1 border-t border-zinc-800">
-                        <span>Vuelto a entregar:</span>
-                        <span className="font-mono text-sm">${changeDue.toLocaleString('es-AR')}</span>
+                      <div className="flex items-center justify-between text-emerald-400 font-bold pt-1 border-t border-zinc-800 text-xs">
+                        <span>Vuelto:</span>
+                        <span className="font-mono">${changeDue.toLocaleString('es-AR')}</span>
                       </div>
                     )}
                   </div>
                 )}
 
                 {paymentMethod === 'transfer' && (
-                  <div className="p-3 bg-zinc-900/90 rounded-xl border border-zinc-800 text-xs space-y-1.5">
-                    <div className="text-zinc-400 text-[11px]">Alias Oficial Montec:</div>
-                    <div className="flex items-center justify-between bg-zinc-950 p-2 rounded-lg border border-zinc-700">
-                      <span className="font-mono font-bold text-white">montec.mdp</span>
+                  <div className="p-2 bg-zinc-900/90 rounded-lg border border-zinc-800 text-xs space-y-1">
+                    <div className="text-zinc-400 text-[10px]">Alias Oficial Montec:</div>
+                    <div className="flex items-center justify-between bg-zinc-950 p-1.5 rounded border border-zinc-700">
+                      <span className="font-mono font-bold text-white text-xs">montec.mdp</span>
                       <button
                         type="button"
                         onClick={handleCopyAlias}
-                        className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-xs text-orange-400 flex items-center gap-1 font-semibold cursor-pointer"
+                        className="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] text-orange-400 flex items-center gap-1 font-semibold cursor-pointer"
                       >
-                        {isCopiedAlias ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        {isCopiedAlias ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
                         <span>{isCopiedAlias ? 'Copiado' : 'Copiar'}</span>
                       </button>
                     </div>
@@ -1366,13 +1360,13 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
 
                 {/* Notas opcionales */}
                 <div className="space-y-1">
-                  <label className="text-xs text-zinc-400">Notas de entrega (opcional):</label>
+                  <label className="text-[10px] text-zinc-400 block">Notas de entrega (opcional):</label>
                   <textarea
                     value={deliveryNotes}
                     onChange={(e) => setDeliveryNotes(e.target.value)}
-                    placeholder="Observaciones, detalles de garantía..."
-                    rows={2}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 outline-none focus:border-[#FF5500] resize-none"
+                    placeholder="Detalles de garantía o entrega..."
+                    rows={1}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs text-white placeholder-zinc-500 outline-none focus:border-[#FF5500] resize-none"
                   />
                 </div>
 
@@ -1380,82 +1374,84 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
 
               {/* ALERTA PAGO INSUFICIENTE */}
               {isPaymentInsufficient && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
-                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                <div className="flex items-center gap-1.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[11px]">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
                   <span>
-                    No se puede completar la entrega hasta que se procese el pago del saldo pendiente (${grandTotal.toLocaleString('es-AR')}). Efectivo recibido: ${cashNum.toLocaleString('es-AR')}.
+                    El saldo pendiente es ${grandTotal.toLocaleString('es-AR')} (recibido: ${cashNum.toLocaleString('es-AR')}).
                   </span>
                 </div>
               )}
 
               {/* BOTONES DE ACCIÓN PARA ENTREGA Y FACTURACIÓN */}
-              {!deliveryResolution ? (
-                <div className="p-3.5 rounded-xl bg-zinc-800 text-zinc-400 text-xs font-bold text-center border border-zinc-700 flex items-center justify-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-zinc-500" />
-                  <span>SELECCIONA RESOLUCIÓN (REPARADO O SIN REPARAR)</span>
-                </div>
-              ) : isRealZeroCost ? (
-                /* Caso 1: Garantía o revisión verdaderamente sin costo */
-                <button
-                  type="button"
-                  onClick={handleFinalize}
-                  className="w-full py-3.5 rounded-xl font-heading font-bold text-sm bg-amber-600 hover:bg-amber-500 text-white shadow-[0_0_20px_rgba(217,119,6,0.35)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-                >
-                  <AlertTriangle className="w-5 h-5" />
-                  <span>ENTREGAR EQUIPO SIN COSTO (REVISIÓN / GARANTÍA $0)</span>
-                </button>
-              ) : !isOrderAlreadyInvoiced && repairBudgetTotal > 0 ? (
-                /* Caso 2: Orden con costo que aún NO fue facturada fiscalmente */
-                <div className="space-y-2">
+              <div className="pt-1">
+                {!deliveryResolution ? (
+                  <div className="py-2.5 px-3 rounded-xl bg-zinc-800/80 text-zinc-400 text-xs font-bold text-center border border-zinc-700 flex items-center justify-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-zinc-500" />
+                    <span>SELECCIONA RESOLUCIÓN (REPARADO O SIN REPARAR)</span>
+                  </div>
+                ) : isRealZeroCost ? (
+                  /* Caso 1: Garantía o revisión verdaderamente sin costo */
                   <button
                     type="button"
-                    onClick={() => handleOpenInvoiceModal(buildDeliveryPayload())}
+                    onClick={handleFinalize}
+                    className="w-full py-2.5 rounded-xl font-heading font-bold text-xs sm:text-sm bg-amber-600 hover:bg-amber-500 text-white shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>ENTREGAR SIN COSTO (REVISIÓN / GARANTÍA $0)</span>
+                  </button>
+                ) : !isOrderAlreadyInvoiced && repairBudgetTotal > 0 ? (
+                  /* Caso 2: Orden con costo que aún NO fue facturada fiscalmente */
+                  <div className="space-y-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenInvoiceModal(buildDeliveryPayload())}
+                      disabled={isPaymentInsufficient}
+                      className={`w-full py-2.5 rounded-xl font-heading font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md active:scale-95 ${
+                        !isPaymentInsufficient
+                          ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-emerald-950/40'
+                          : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+                      }`}
+                    >
+                      <Receipt className="w-4 h-4" />
+                      <span>🧾 FACTURAR Y ENTREGAR (${(repairBudgetTotal + accessoriesSubtotal).toLocaleString('es-AR')})</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowBypassInvoiceConfirm(true)}
+                      disabled={isPaymentInsufficient}
+                      className="w-full py-1.5 rounded-lg text-[11px] font-semibold bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                    >
+                      <FileText className="w-3 h-3 text-zinc-500" />
+                      <span>Entregar sin facturar (Excepción)</span>
+                    </button>
+                  </div>
+                ) : (
+                  /* Caso 3: Orden ya facturada previamente */
+                  <button
+                    type="button"
+                    onClick={handleFinalize}
                     disabled={isPaymentInsufficient}
-                    className={`w-full py-3.5 rounded-xl font-heading font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg active:scale-95 ${
+                    className={`w-full py-2.5 rounded-xl font-heading font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-95 ${
                       !isPaymentInsufficient
-                        ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-emerald-950/40'
+                        ? 'bg-[#FF5500] hover:bg-[#FF6600] text-white shadow-[0_0_20px_rgba(255,85,0,0.4)]'
                         : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
                     }`}
                   >
-                    <Receipt className="w-5 h-5" />
-                    <span>🧾 FACTURAR Y ENTREGAR (${(repairBudgetTotal + accessoriesSubtotal).toLocaleString('es-AR')})</span>
+                    {grandTotal > 0 ? (
+                      <>
+                        <Receipt className="w-4 h-4" />
+                        <span>COBRAR SALDO (${grandTotal.toLocaleString('es-AR')}) Y FINALIZAR ENTREGA</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>FINALIZAR ENTREGA (FACTURADO Y PAGADO)</span>
+                      </>
+                    )}
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowBypassInvoiceConfirm(true)}
-                    disabled={isPaymentInsufficient}
-                    className="w-full py-2.5 rounded-xl text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-                  >
-                    <FileText className="w-3.5 h-3.5 text-zinc-500" />
-                    <span>Entregar sin facturar (Excepción de mostrador)</span>
-                  </button>
-                </div>
-              ) : (
-                /* Caso 3: Orden ya facturada previamente */
-                <button
-                  type="button"
-                  onClick={handleFinalize}
-                  disabled={isPaymentInsufficient}
-                  className={`w-full py-3.5 rounded-xl font-heading font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 ${
-                    !isPaymentInsufficient
-                      ? 'bg-[#FF5500] hover:bg-[#FF6600] text-white shadow-[0_0_25px_rgba(255,85,0,0.4)]'
-                      : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
-                  }`}
-                >
-                  {grandTotal > 0 ? (
-                    <>
-                      <Receipt className="w-5 h-5" />
-                      <span>COBRAR SALDO (${grandTotal.toLocaleString('es-AR')}) Y FINALIZAR ENTREGA</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-5 h-5" />
-                      <span>FINALIZAR ENTREGA (EQUIPO FACTURADO Y PAGADO)</span>
-                    </>
-                  )}
-                </button>
-              )}
+                )}
+              </div>
 
             </div>
 
