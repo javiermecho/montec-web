@@ -139,6 +139,30 @@ export async function getOrdenById(id) {
 }
 
 /**
+ * Consulta pública de seguimiento de una orden (seguro, sin datos privados ni contraseñas)
+ * @param {Object} params
+ * @param {string} params.order - N° de orden (ej: "MON-1042", "1042")
+ * @param {string} [params.dni] - DNI o Teléfono del cliente para validación
+ */
+export async function trackPublicOrder({ order, dni } = {}) {
+  const params = new URLSearchParams();
+  if (order) params.append('order', String(order).trim().replace(/^#/, ''));
+  if (dni) params.append('dni', String(dni).trim());
+
+  const res = await request(`/public/orders/track?${params.toString()}`, { method: 'GET' });
+  if (res.success && (res.data?.order || res.data?.data)) {
+    return { 
+      success: true, 
+      order: res.data?.order || res.data?.data 
+    };
+  }
+  return { 
+    success: false, 
+    error: res.error || res.data?.error || 'No se pudo consultar el estado de la reparación' 
+  };
+}
+
+/**
  * Crea una nueva orden en PostgreSQL y devuelve el número correlativo oficial #MON-XXXX
  */
 export async function createOrden(orderData) {

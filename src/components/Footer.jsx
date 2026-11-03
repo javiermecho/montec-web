@@ -72,6 +72,21 @@ export default function Footer({ onNavigateStore }) {
                 <a href="#cotizador" className="hover:text-[#FF5500] transition-colors">Cotizador de Reparación</a>
               </li>
               <li>
+                <a 
+                  href="/estado" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.history.pushState({}, '', '/estado');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="hover:text-[#FF5500] text-[#FF5500] font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <span>🔍 Estado de Reparación</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#FF5500]/20 text-[#FF5500] font-bold">EN VIVO</span>
+                </a>
+              </li>
+              <li>
                 <a href="#laboratorio" className="hover:text-white transition-colors">Laboratorio Propio</a>
               </li>
               <li>

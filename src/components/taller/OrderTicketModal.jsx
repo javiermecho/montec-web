@@ -1,13 +1,16 @@
 import React from 'react';
-import { X, Printer, MessageSquare, CheckCircle2, ShieldCheck, Smartphone, Clock, Calendar, AlertCircle } from 'lucide-react';
+import { X, Printer, MessageSquare, CheckCircle2, ShieldCheck, Smartphone, Clock, Calendar, AlertCircle, QrCode } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { PatternThumbnail, getDeviceSecurity } from './PatternLockInput';
 import { useData } from '../../context/DataContext';
+import { getOrderTrackingUrl } from '../../services/orderTrackingService';
 
 export default function OrderTicketModal({ order, onClose }) {
   const { businessConfig, formatWhatsAppTemplate } = useData();
   if (!order) return null;
 
   const { customer, device, service } = order;
+  const trackingUrl = getOrderTrackingUrl(order.orderNumber);
 
   const handlePrint = () => {
     window.print();
@@ -38,11 +41,13 @@ export default function OrderTicketModal({ order, onClose }) {
     const city = businessConfig?.business?.city || 'Mar del Plata';
 
     const rawTemplate = businessConfig?.whatsappTemplates?.orderReceived ||
-      '¡Hola {cliente}! 👋 Te contactamos de *{local}*.\n\n📋 *ORDEN DE REPARACIÓN:* {orden}\n📱 *Equipo:* {equipo}\n🛠️ *Trabajo a realizar:* {falla}\n💰 *Total Acordado:* {total}\n💵 *Seña Recibida:* {sena}\n⚖️ *Saldo al Retirar:* {saldo}\n⏱️ *Plazo estimado:* {fecha_entrega}\n📍 *Taller:* {direccion}, {ciudad}\n🛡️ *Garantía:* {garantia}\n\nTe avisaremos por este medio cuando tu equipo esté en mesa de trabajo o listo para retirar. ¡Gracias por confiar en {local}!';
+      '¡Hola {cliente}! 👋 Te contactamos de *{local}*.\n\n📋 *ORDEN DE REPARACIÓN:* {orden}\n📱 *Equipo:* {equipo}\n🛠️ *Trabajo a realizar:* {falla}\n💰 *Total Acordado:* {total}\n💵 *Seña Recibida:* {sena}\n⚖️ *Saldo al Retirar:* {saldo}\n⏱️ *Plazo estimado:* {fecha_entrega}\n📍 *Taller:* {direccion}, {ciudad}\n🛡️ *Garantía:* {garantia}\n\n🔍 *Seguí el estado de tu equipo en vivo desde acá:*\n{link_seguimiento}\n\nTe avisaremos por este medio cuando tu equipo esté en mesa de trabajo o listo para retirar. ¡Gracias por confiar en {local}!';
 
     const vars = {
       cliente: customer.name || 'Cliente',
       orden: order.orderNumber,
+      link_seguimiento: trackingUrl,
+      link_estado: trackingUrl,
       equipo: `${device.brand || ''} ${device.model || ''}`.trim(),
       falla: service.requestedRepair || service.issueDescription || service.problem || 'Diagnóstico y reparación general',
       total: `$${(service.budgetTotal || 0).toLocaleString('es-AR')}`,
@@ -348,6 +353,30 @@ export default function OrderTicketModal({ order, onClose }) {
               <span className="font-bold text-emerald-400 print:text-black">
                 {service.warranty || '90 días de garantía escrita'}
               </span>
+            </div>
+          </div>
+
+          {/* Ficha de Seguimiento en Vivo con QR */}
+          <div className="bg-zinc-900/80 print:bg-gray-50 p-2.5 rounded-xl border border-zinc-800 print:border-gray-300 flex items-center justify-between gap-3">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-[#FF5500] print:text-black flex items-center gap-1 uppercase tracking-wider">
+                <QrCode className="w-3.5 h-3.5" />
+                Seguimiento en Vivo de tu Reparación
+              </span>
+              <p className="text-[10px] text-zinc-300 print:text-gray-700 leading-tight">
+                Escaneá el código QR o ingresá a:
+              </p>
+              <a
+                href={trackingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[10px] font-mono text-[#FF5500] hover:underline font-semibold block break-all print:text-black"
+              >
+                {trackingUrl}
+              </a>
+            </div>
+            <div className="p-1.5 bg-white rounded-lg shrink-0 shadow-xs">
+              <QRCodeSVG value={trackingUrl} size={64} level="M" />
             </div>
           </div>
 

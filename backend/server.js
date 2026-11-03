@@ -141,6 +141,65 @@ const mapDbOrderToFrontend = (row) => {
   };
 };
 
+// Helper para formatear ordenes de DB para CONSULTA PÚBLICA (Tracking de Clientes)
+// IMPORTANTE: Por seguridad NUNCA expone costos internos, proveedores, contraseñas, patrones ni notas privadas de técnicos.
+const mapDbOrderToPublicTracking = (row) => {
+  const parseJson = (val, fallback) => {
+    if (!val) return fallback;
+    if (typeof val === 'object') return val;
+    try { return JSON.parse(val); } catch (e) { return fallback; }
+  };
+
+  const clientData = parseJson(row.client_data, {});
+  const deviceData = parseJson(row.device_data, {});
+  const serviceData = parseJson(row.service_data, {});
+  const logsData = parseJson(row.logs, []);
+
+  // Formato seguro del nombre de cliente (ej: "Martín B.")
+  const rawName = String(row.client_name || '').trim();
+  const nameParts = rawName.split(/\s+/);
+  const safeClientName = nameParts.length > 1
+    ? `${nameParts[0]} ${nameParts[1].charAt(0).toUpperCase()}.`
+    : (nameParts[0] || 'Cliente');
+
+  const budgetTotal = parseFloat(row.budget_total || serviceData.budgetTotal || 0);
+  const deposit = parseFloat(row.deposit || serviceData.deposit || 0);
+  const balanceDue = parseFloat(row.balance_due || serviceData.balanceDue || Math.max(0, budgetTotal - deposit));
+
+  const publicLogs = Array.isArray(logsData) ? logsData.map(l => ({
+    timestamp: l.timestamp || l.date || l.createdAt,
+    status: l.status,
+    action: l.action || l.message || 'Actualización de estado en taller'
+  })) : [];
+
+  return {
+    orderNumber: row.order_number,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    client: {
+      name: safeClientName,
+      fullName: rawName
+    },
+    device: {
+      brand: deviceData.brand || '',
+      model: row.device_model || deviceData.model || '',
+      type: row.device_type || deviceData.type || 'Dispositivo'
+    },
+    service: {
+      requestedRepair: serviceData.requestedRepair || serviceData.issueDescription || serviceData.problem || serviceData.falla || 'Revisión técnica',
+      preliminaryDiagnosis: serviceData.preliminaryDiagnosis || '',
+      technicalReport: serviceData.techReport || serviceData.technicalReport || '',
+      estimatedDeliveryDate: serviceData.estimatedDeliveryDate || serviceData.estimatedTime || '24 a 48 hs',
+      budgetTotal,
+      deposit,
+      balanceDue,
+      warranty: serviceData.warranty || '90 días escrita'
+    },
+    logs: publicLogs
+  };
+};
+
 // Helper para formatear productos
 const mapDbProductToFrontend = (row) => ({
   id: row.id,
@@ -263,6 +322,127 @@ app.get('/api/orders/:id', async (req, res) => {
   } catch (error) {
     console.error('❌ Error al buscar orden:', error);
     res.status(500).json({ error: 'Error al buscar orden en la base de datos' });
+  }
+});
+
+// ==========================================
+// 2.1 ENDPOINT PÚBLICO DE SEGUIMIENTO (TRACKING)
+// ==========================================
+
+// Endpoint público para consulta de estado de reparación por N° de Orden y DNI/Teléfono
+app.get('/api/public/orders/track', async (req, res) => {
+  const { order, dni } = req.query;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ 
+      success: false, 
+      error: 'Base de datos temporalmente no disponible. Consultanos por WhatsApp.' 
+    });
+  }
+
+  const orderQuery = String(order || '').trim().replace(/^#/, '');
+  const dniQuery = String(dni || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
+
+  if (!orderQuery) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Por favor, indicá el número de orden a consultar.' 
+    });
+  }
+
+  try {
+    // Buscar coincidencia flexible por orden (ej: MON-1042, 1042, #MON-1042)
+    const sql = `
+      SELECT * FROM repair_orders 
+      WHERE LOWER(order_number) = LOWER($1) 
+         OR LOWER(order_number) = LOWER('#' || $1)
+         OR LOWER(order_number) LIKE LOWER('%' || $1)
+         OR (id::text = $1)
+      ORDER BY id DESC
+      LIMIT 1
+    `;
+
+    const result = await query(sql, [orderQuery]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'No encontramos una reparación con ese número de orden. Verificá los datos o escribinos por WhatsApp.' 
+      });
+    }
+
+    const row = result.rows[0];
+
+    // Si se envió DNI o teléfono, validar coincidencia estricta con el titular
+    if (dniQuery) {
+      let clientData = {};
+      try {
+        clientData = typeof row.client_data === 'object' ? (row.client_data || {}) : JSON.parse(row.client_data || '{}');
+      } catch (e) {
+        clientData = {};
+      }
+
+      const phoneRaw = String(row.client_phone || '').replace(/[^0-9]/g, '');
+      const docRaw = String(clientData.docNumber || clientData.dni || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
+
+      const phoneMatches = phoneRaw.includes(dniQuery) || (dniQuery.length >= 6 && phoneRaw.endsWith(dniQuery));
+      const docMatches = docRaw === dniQuery || docRaw.includes(dniQuery) || (dniQuery.length >= 6 && dniQuery.includes(docRaw));
+
+      if (!phoneMatches && !docMatches) {
+        return res.status(404).json({
+          success: false,
+          error: 'No encontramos una reparación con ese número de orden y DNI o Teléfono. Verificá los datos o consultanos por WhatsApp.'
+        });
+      }
+    }
+
+    return res.json({
+      success: true,
+      order: mapDbOrderToPublicTracking(row)
+    });
+  } catch (error) {
+    console.error('❌ Error en tracking público de orden:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error interno al consultar la orden.' 
+    });
+  }
+});
+
+// Endpoint público por parámetro directo en ruta /api/public/orders/:orderNumber
+app.get('/api/public/orders/:orderNumber', async (req, res) => {
+  const { orderNumber } = req.params;
+  const dbConnected = await isDbConnected();
+
+  if (!dbConnected) {
+    return res.status(503).json({ success: false, error: 'Base de datos temporalmente no disponible' });
+  }
+
+  const cleanNum = String(orderNumber || '').trim().replace(/^#/, '');
+
+  try {
+    const sql = `
+      SELECT * FROM repair_orders 
+      WHERE LOWER(order_number) = LOWER($1) 
+         OR LOWER(order_number) = LOWER('#' || $1)
+         OR LOWER(order_number) LIKE LOWER('%' || $1)
+         OR (id::text = $1)
+      ORDER BY id DESC
+      LIMIT 1
+    `;
+
+    const result = await query(sql, [cleanNum]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ success: false, error: 'Orden no encontrada' });
+    }
+
+    res.json({
+      success: true,
+      order: mapDbOrderToPublicTracking(result.rows[0])
+    });
+  } catch (error) {
+    console.error('❌ Error al obtener tracking público:', error);
+    res.status(500).json({ success: false, error: 'Error al buscar orden' });
   }
 });
 

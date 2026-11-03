@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Menu, X, Shield, Lock, MapPin, Phone, ShoppingBag } from 'lucide-react';
+import { MessageCircle, Menu, X, Shield, Lock, MapPin, Phone, ShoppingBag, Clock, Search } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import { useData } from '../context/DataContext';
 import { getStoreTargetUrl } from '../hooks/useSubdomain';
 import { trackClickLlamadaOMapa, trackWhatsAppClick } from '../services/analytics';
 
-export default function Navbar({ onNavigateHistory, onNavigateStore }) {
+export default function Navbar({ onNavigateHistory, onNavigateStore, onNavigateOrderStatus, onOpenTracker }) {
   const { setIsQuoteModalOpen, businessConfig } = useData();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -40,6 +40,7 @@ export default function Navbar({ onNavigateHistory, onNavigateStore }) {
   const navLinks = [
     { name: 'Inicio', href: '#inicio' },
     { name: 'Cotizador', href: '#cotizador', badge: 'Online' },
+    { name: 'Seguimiento', href: '/estado', isTracking: true, badge: 'En Vivo' },
     { name: 'Laboratorio', href: '#laboratorio' },
     { name: 'Historia', href: '/historia' },
     { name: 'Instagram', href: '#instagram' },
@@ -82,6 +83,23 @@ export default function Navbar({ onNavigateHistory, onNavigateStore }) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <button
+            onClick={() => {
+              if (onOpenTracker) onOpenTracker();
+              else if (onNavigateOrderStatus) onNavigateOrderStatus();
+              else {
+                window.history.pushState({}, '', '/estado');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }
+            }}
+            className="flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-[#FF5500]/15 hover:bg-[#FF5500]/25 border border-[#FF5500]/30 text-white font-medium transition-all cursor-pointer whitespace-nowrap"
+            title="Consultar estado de reparación con N° de orden y DNI"
+          >
+            <span className="text-[#FF5500]">🔍</span>
+            <span className="font-bold text-[#FF5500]">¿Estado de tu equipo?</span>
+            <span className="hidden sm:inline text-zinc-300">Consultá aquí</span>
+          </button>
+
           <span className="hidden lg:inline text-zinc-700">•</span>
           <span className="hidden lg:inline text-emerald-400 font-medium">🚗 Estacionamiento libre en la puerta</span>
           
@@ -126,6 +144,31 @@ export default function Navbar({ onNavigateHistory, onNavigateStore }) {
                     onClick={() => setIsQuoteModalOpen(true)}
                     className="relative px-3.5 py-1.5 text-sm font-medium text-zinc-300 hover:text-white transition-colors duration-200 rounded-lg hover:bg-white/5 flex items-center gap-1.5 cursor-pointer"
                   >
+                    <span>{link.name}</span>
+                    {link.badge && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/30 animate-pulse">
+                        {link.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              }
+
+              if (link.isTracking) {
+                return (
+                  <button
+                    key={link.name}
+                    onClick={() => {
+                      if (onOpenTracker) onOpenTracker();
+                      else if (onNavigateOrderStatus) onNavigateOrderStatus();
+                      else {
+                        window.history.pushState({}, '', '/estado');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                      }
+                    }}
+                    className="relative px-3.5 py-1.5 text-sm font-semibold text-zinc-200 hover:text-white transition-colors duration-200 rounded-lg hover:bg-white/5 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Clock className="w-3.5 h-3.5 text-[#FF5500]" />
                     <span>{link.name}</span>
                     {link.badge && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/30 animate-pulse">
@@ -271,6 +314,34 @@ export default function Navbar({ onNavigateHistory, onNavigateStore }) {
                     <span>{link.name}</span>
                     {link.badge && (
                       <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-[#FF5500]/20 text-[#FF5500]">
+                        {link.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              }
+
+              if (link.isTracking) {
+                return (
+                  <button
+                    key={link.name}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      if (onOpenTracker) onOpenTracker();
+                      else if (onNavigateOrderStatus) onNavigateOrderStatus();
+                      else {
+                        window.history.pushState({}, '', '/estado');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                      }
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2 text-base font-semibold text-[#FF5500] hover:bg-zinc-800/60 rounded-lg transition-colors text-left"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-[#FF5500]" />
+                      <span>Estado de Reparación</span>
+                    </span>
+                    {link.badge && (
+                      <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-[#FF5500] text-white">
                         {link.badge}
                       </span>
                     )}

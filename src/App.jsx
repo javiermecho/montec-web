@@ -9,6 +9,8 @@ import LocationContact from './components/LocationContact';
 import Footer from './components/Footer';
 import HistoryPage from './pages/HistoryPage';
 import StorePage from './pages/StorePage';
+import OrderStatusPage from './pages/OrderStatusPage';
+import OrderTrackerModal from './components/common/OrderTrackerModal';
 import AdminPanel from './components/AdminPanel';
 import DiagnosticChatbot from './components/DiagnosticChatbot';
 import RepairOrderReceiver from './components/taller/RepairOrderReceiver';
@@ -35,34 +37,75 @@ function checkIsHistoryPage() {
   );
 }
 
+function checkIsOrderStatusPage() {
+  if (typeof window === 'undefined') return false;
+  const path = window.location.pathname.toLowerCase();
+  const search = window.location.search.toLowerCase();
+  const hash = window.location.hash.toLowerCase();
+  return (
+    path === '/estado' ||
+    path.startsWith('/estado/') ||
+    path === '/seguimiento' ||
+    path.startsWith('/seguimiento/') ||
+    path === '/reparacion' ||
+    path.startsWith('/reparacion/') ||
+    search.includes('orden=') ||
+    search.includes('order=') ||
+    search.includes('page=estado') ||
+    search.includes('page=seguimiento') ||
+    hash === '#estado' ||
+    hash === '#seguimiento'
+  );
+}
+
 function AppContent() {
   const { isStore, navigateToStore, navigateToMain } = useSubdomain();
   const { isTallerSubdomain, isAuthenticated, isOperator, isAdmin } = useAuth();
   const { isAdminOpen, setIsAdminOpen, isTallerOpen, setIsTallerOpen, setIsAdminAuthenticated } = useData();
   const [isHistoryPage, setIsHistoryPage] = useState(checkIsHistoryPage);
+  const [isOrderStatusPage, setIsOrderStatusPage] = useState(checkIsOrderStatusPage);
+  const [isTrackerModalOpen, setIsTrackerModalOpen] = useState(false);
 
-  // Escuchar navegación por historial y hash para la página de historia
+  // Escuchar navegación por historial, popstate y hash
   useEffect(() => {
     const handleUrlChange = () => {
       setIsHistoryPage(checkIsHistoryPage());
+      setIsOrderStatusPage(checkIsOrderStatusPage());
     };
     window.addEventListener('popstate', handleUrlChange);
     window.addEventListener('hashchange', handleUrlChange);
+
+    const handleOpenTrackerEvent = () => {
+      setIsTrackerModalOpen(true);
+    };
+    window.addEventListener('montec:openTracker', handleOpenTrackerEvent);
+
     return () => {
       window.removeEventListener('popstate', handleUrlChange);
       window.removeEventListener('hashchange', handleUrlChange);
+      window.removeEventListener('montec:openTracker', handleOpenTrackerEvent);
     };
   }, []);
 
   const navigateToHome = () => {
     window.history.pushState({}, '', '/');
     setIsHistoryPage(false);
+    setIsOrderStatusPage(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToHistory = () => {
     window.history.pushState({}, '', '/historia');
     setIsHistoryPage(true);
+    setIsOrderStatusPage(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToOrderStatus = (orderNumber) => {
+    const url = orderNumber ? `/estado?orden=${encodeURIComponent(orderNumber)}` : '/estado';
+    window.history.pushState({}, '', url);
+    setIsHistoryPage(false);
+    setIsOrderStatusPage(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -108,15 +151,28 @@ function AppContent() {
     return <HistoryPage onNavigateHome={navigateToHome} />;
   }
 
+  // MODO 2.5: PÁGINA PÚBLICA DE SEGUIMIENTO EN VIVO (/estado, /seguimiento, ?orden=...)
+  if (isOrderStatusPage) {
+    return <OrderStatusPage onNavigateHome={navigateToHome} />;
+  }
+
   // MODO 3: SITIO WEB PÚBLICO COMERCIAL (montec.ar)
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#0A0A0A] text-white flex flex-col selection:bg-[#FF5500] selection:text-white">
       {/* Navbar flotante superior con acceso a Tienda, admin y taller */}
-      <Navbar onNavigateHistory={navigateToHistory} onNavigateStore={navigateToStore} />
+      <Navbar 
+        onNavigateHistory={navigateToHistory} 
+        onNavigateStore={navigateToStore}
+        onNavigateOrderStatus={() => navigateToOrderStatus()}
+        onOpenTracker={() => setIsTrackerModalOpen(true)}
+      />
 
       {/* Contenido Principal Comercial de Servicio Técnico y Laboratorio */}
       <main className="flex-1 w-full max-w-full overflow-x-hidden">
-        <Hero />
+        <Hero 
+          onOpenTracker={() => setIsTrackerModalOpen(true)}
+          onNavigateOrderStatus={navigateToOrderStatus}
+        />
         <QuotationTool />
         <Laboratory />
         <StoryTeaser onOpenStory={navigateToHistory} />
@@ -126,6 +182,13 @@ function AppContent() {
 
       {/* Footer */}
       <Footer onNavigateStore={navigateToStore} />
+
+      {/* Modal Interactivo de Seguimiento de Reparación */}
+      <OrderTrackerModal 
+        isOpen={isTrackerModalOpen} 
+        onClose={() => setIsTrackerModalOpen(false)}
+        onNavigateToStatusPage={navigateToOrderStatus}
+      />
 
       {/* Asistente Virtual Interactivo de Diagnóstico Técnico */}
       <DiagnosticChatbot />

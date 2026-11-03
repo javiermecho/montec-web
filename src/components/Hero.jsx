@@ -11,14 +11,15 @@ import {
   MapPin,
   Star,
   ExternalLink,
-  Award
+  Award,
+  Search
 } from 'lucide-react';
 import MontecLogo from './MontecLogo';
 import GoogleReviewsCarousel from './GoogleReviewsCarousel';
 import { useData } from '../context/DataContext';
 import { trackWhatsAppClick, trackClickLlamadaOMapa } from '../services/analytics';
 
-export default function Hero() {
+export default function Hero({ onOpenTracker, onNavigateOrderStatus }) {
   const { setIsQuoteModalOpen, businessConfig } = useData();
 
   const brands = [
@@ -148,6 +149,41 @@ export default function Hero() {
           >
             <Wrench className="w-4 h-4 text-orange-400" />
             <span>Cotizar Online</span>
+          </button>
+        </div>
+
+        {/* ============================================================== */}
+        {/* TARJETA DESTACADA: BUSCADOR DE ESTADO DE REPARACIÓN EN VIVO    */}
+        {/* ============================================================== */}
+        <div className="max-w-xl mx-auto mb-8 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-zinc-900/95 via-zinc-900/98 to-zinc-950/95 border border-[#FF5500]/40 shadow-[0_0_30px_rgba(255,85,0,0.18)] backdrop-blur-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="w-10 h-10 rounded-xl bg-[#FF5500]/20 border border-[#FF5500]/40 flex items-center justify-center shrink-0 text-[#FF5500] shadow-[0_0_15px_rgba(255,85,0,0.3)]">
+              <Clock className="w-5 h-5 text-[#FF5500]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-bold text-white">¿Buscás el estado de tu reparación?</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full font-black bg-[#FF5500] text-white">EN VIVO</span>
+              </div>
+              <p className="text-[11px] text-zinc-400 mt-0.5">
+                Consultá el avance en laboratorio y saldo pendiente con tu N° de orden y DNI.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              if (onOpenTracker) onOpenTracker();
+              else if (onNavigateOrderStatus) onNavigateOrderStatus();
+              else {
+                window.history.pushState({}, '', '/estado');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }
+            }}
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white font-bold text-xs transition-all shadow-[0_0_15px_rgba(255,85,0,0.4)] hover:shadow-[0_0_25px_rgba(255,85,0,0.6)] flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>Consultar Estado</span>
           </button>
         </div>
 

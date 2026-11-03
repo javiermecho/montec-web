@@ -66,6 +66,8 @@ export default function WhatsAppTemplatesTab() {
       availableVars: [
         { tag: '{cliente}', label: 'Nombre Cliente', example: 'Juan Pérez' },
         { tag: '{orden}', label: 'N° de Orden', example: 'ORD-1042' },
+        { tag: '{link_seguimiento}', label: 'Link de Seguimiento en Vivo', example: 'https://montec.ar/estado?orden=ORD-1042' },
+        { tag: '{link_estado}', label: 'Link de Estado (Alias)', example: 'https://montec.ar/estado?orden=ORD-1042' },
         { tag: '{equipo}', label: 'Equipo', example: 'iPhone 12' },
         { tag: '{falla}', label: 'Falla Declarada / Motivo', example: 'Pantalla partida no da imagen' },
         { tag: '{total}', label: 'Presupuesto Total', example: '$95.000' },
@@ -88,6 +90,8 @@ export default function WhatsAppTemplatesTab() {
       availableVars: [
         { tag: '{cliente}', label: 'Nombre Cliente', example: 'María González' },
         { tag: '{orden}', label: 'N° de Orden', example: 'ORD-1038' },
+        { tag: '{link_seguimiento}', label: 'Link de Seguimiento en Vivo', example: 'https://montec.ar/estado?orden=ORD-1038' },
+        { tag: '{link_estado}', label: 'Link de Estado (Alias)', example: 'https://montec.ar/estado?orden=ORD-1038' },
         { tag: '{equipo}', label: 'Equipo', example: 'Samsung Galaxy A54' },
         { tag: '{saldo}', label: 'Saldo Pendiente', example: '$42.000' },
         { tag: '{total}', label: 'Total Reparación', example: '$62.000' },
@@ -107,6 +111,7 @@ export default function WhatsAppTemplatesTab() {
       availableVars: [
         { tag: '{cliente}', label: 'Nombre Cliente', example: 'Lucas Romero' },
         { tag: '{orden}', label: 'N° de Orden', example: 'ORD-1055' },
+        { tag: '{link_seguimiento}', label: 'Link de Seguimiento en Vivo', example: 'https://montec.ar/estado?orden=ORD-1055' },
         { tag: '{equipo}', label: 'Equipo', example: 'Motorola Moto G84' },
         { tag: '{informe_tecnico}', label: 'Informe Técnico', example: 'Se detectó integrado de carga dañado por sobretensión.' },
         { tag: '{total}', label: 'Presupuesto Total', example: '$55.000' },
@@ -125,6 +130,7 @@ export default function WhatsAppTemplatesTab() {
       availableVars: [
         { tag: '{cliente}', label: 'Nombre Cliente', example: 'Martín Suárez' },
         { tag: '{orden}', label: 'N° de Orden', example: 'ORD-1060' },
+        { tag: '{link_seguimiento}', label: 'Link de Seguimiento en Vivo', example: 'https://montec.ar/estado?orden=ORD-1060' },
         { tag: '{equipo}', label: 'Equipo', example: 'iPad Air 4' },
         { tag: '{local}', label: 'Nombre Local', example: businessConfig?.business?.fantasyName || 'MONTEC' }
       ]
@@ -139,6 +145,7 @@ export default function WhatsAppTemplatesTab() {
       availableVars: [
         { tag: '{cliente}', label: 'Nombre Cliente', example: 'Estela Benítez' },
         { tag: '{orden}', label: 'N° de Orden', example: 'ORD-1062' },
+        { tag: '{link_seguimiento}', label: 'Link de Seguimiento en Vivo', example: 'https://montec.ar/estado?orden=ORD-1062' },
         { tag: '{equipo}', label: 'Equipo', example: 'iPhone 14 Pro Max' },
         { tag: '{local}', label: 'Nombre Local', example: businessConfig?.business?.fantasyName || 'MONTEC' }
       ]
@@ -153,6 +160,7 @@ export default function WhatsAppTemplatesTab() {
       availableVars: [
         { tag: '{cliente}', label: 'Nombre Cliente', example: 'Diego Gómez' },
         { tag: '{orden}', label: 'N° de Orden', example: 'ORD-1049' },
+        { tag: '{link_seguimiento}', label: 'Link de Seguimiento en Vivo', example: 'https://montec.ar/estado?orden=ORD-1049' },
         { tag: '{equipo}', label: 'Equipo', example: 'MacBook Air M1' },
         { tag: '{informe_tecnico}', label: 'Informe Técnico', example: 'Placa con sulfato avanzado en líneas de alimentación no recuperables.' },
         { tag: '{direccion}', label: 'Dirección Local', example: businessConfig?.business?.address || 'Montes Carballo 943' },
@@ -170,6 +178,7 @@ export default function WhatsAppTemplatesTab() {
       availableVars: [
         { tag: '{cliente}', label: 'Nombre Cliente', example: 'Camila Rossi' },
         { tag: '{orden}', label: 'N° de Orden', example: 'ORD-1033' },
+        { tag: '{link_seguimiento}', label: 'Link de Seguimiento en Vivo', example: 'https://montec.ar/estado?orden=ORD-1033' },
         { tag: '{equipo}', label: 'Equipo', example: 'iPhone 11' },
         { tag: '{garantia}', label: 'Garantía Otorgada', example: '90 días por escrito' },
         { tag: '{local}', label: 'Nombre Local', example: businessConfig?.business?.fantasyName || 'MONTEC' }
