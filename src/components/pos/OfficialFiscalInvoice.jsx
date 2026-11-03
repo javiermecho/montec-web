@@ -244,7 +244,7 @@ export default function OfficialFiscalInvoice({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto">
+    <div id="printable-fiscal-invoice" className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static print:inset-auto print:block">
       
       {/* CONTENEDOR PRINCIPAL */}
       <div className="w-full max-w-4xl bg-white text-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-300 my-auto print:border-none print:shadow-none print:w-full print:max-w-none print:rounded-none">
@@ -439,13 +439,13 @@ export default function OfficialFiscalInvoice({
               </div>
 
               {/* DATOS DEL RECEPTOR / CLIENTE */}
-              <div className="p-4 border-b-2 border-slate-900 bg-white space-y-1 text-xs">
+              <div className="p-4 border-b-2 border-slate-900 bg-white space-y-1.5 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
                   <div className="sm:col-span-4">
-                    <strong>{customerDocType}:</strong> <span className="font-mono font-bold">{customerDocNumber || 'Consumidor Final'}</span>
+                    <strong>{customerDocType}:</strong> <span className="font-mono font-bold text-slate-900">{customerDocNumber || 'Consumidor Final'}</span>
                   </div>
                   <div className="sm:col-span-8">
-                    <strong>Apellido y Nombre / Razón Social:</strong> <span className="font-bold">{customerName}</span>
+                    <strong>Apellido y Nombre / Razón Social:</strong> <span className="font-bold text-slate-950 uppercase">{customerName}</span>
                   </div>
                 </div>
 
@@ -454,30 +454,48 @@ export default function OfficialFiscalInvoice({
                     <strong>Condición frente al IVA:</strong> {customerTaxCondition}
                   </div>
                   <div className="sm:col-span-4">
-                    <strong>Domicilio Comercial:</strong> {customerAddress}
+                    <strong>Domicilio Comercial / Particular:</strong> {customerAddress}
                   </div>
                   <div className="sm:col-span-4">
-                    <strong>Condición de Venta:</strong> <span className="font-semibold text-slate-800">{paymentMethod}</span>
+                    <strong>Condición de Venta:</strong> <span className="font-semibold text-slate-900">{paymentMethod}</span>
                   </div>
                 </div>
+
+                {(voucher.orderRef || voucher.deviceModel) && (
+                  <div className="mt-2 pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2 text-[11px] text-slate-700 bg-slate-50/80 p-2 rounded">
+                    <div className="sm:col-span-4">
+                      <strong>Orden de Taller:</strong> <span className="font-mono font-bold text-slate-950">#{voucher.orderRef}</span>
+                    </div>
+                    {voucher.deviceModel && (
+                      <div className="sm:col-span-4">
+                        <strong>Equipo / Modelo:</strong> <span className="font-semibold text-slate-950">{voucher.deviceModel}</span>
+                      </div>
+                    )}
+                    {voucher.deviceImei && (
+                      <div className="sm:col-span-4">
+                        <strong>IMEI / Serie:</strong> <span className="font-mono text-slate-800">{voucher.deviceImei}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {/* TABLA DE ÍTEMS / PRODUCTOS Y SERVICIOS */}
+              {/* TABLA DE ÍTEMS / PRODUCTOS Y SERVICIOS SEGÚN NORMATIVA AFIP */}
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-[11px]">
+                <table className="w-full text-left border-collapse text-[11px] border-b border-slate-300">
                   <thead>
-                    <tr className="bg-slate-900 text-white text-[10px] uppercase tracking-wider">
-                      <th className="py-2 px-3">Código</th>
-                      <th className="py-2 px-3">Producto / Servicio</th>
-                      <th className="py-2 px-2 text-center">Cant.</th>
-                      <th className="py-2 px-2 text-center">U. Medida</th>
-                      <th className="py-2 px-3 text-right">Precio Unit.</th>
-                      <th className="py-2 px-2 text-center">% Bonif.</th>
-                      <th className="py-2 px-3 text-right">Subtotal</th>
+                    <tr className="bg-slate-100 text-slate-950 border-b-2 border-slate-900 text-[10px] uppercase tracking-wider font-bold">
+                      <th className="py-2.5 px-3 border-r border-slate-300">Código</th>
+                      <th className="py-2.5 px-3 border-r border-slate-300">Producto / Servicio</th>
+                      <th className="py-2.5 px-2 text-center border-r border-slate-300">Cant.</th>
+                      <th className="py-2.5 px-2 text-center border-r border-slate-300">U. Medida</th>
+                      <th className="py-2.5 px-3 text-right border-r border-slate-300">Precio Unit.</th>
+                      <th className="py-2.5 px-2 text-center border-r border-slate-300">% Bonif.</th>
+                      <th className="py-2.5 px-3 text-right">Subtotal</th>
                       {docMeta.discriminatesIva && (
                         <>
-                          <th className="py-2 px-2 text-center">Alícuota IVA</th>
-                          <th className="py-2 px-3 text-right">Subtotal c/IVA</th>
+                          <th className="py-2.5 px-2 text-center border-l border-slate-300">Alícuota IVA</th>
+                          <th className="py-2.5 px-3 text-right border-l border-slate-300">Subtotal c/IVA</th>
                         </>
                       )}
                     </tr>
@@ -492,23 +510,23 @@ export default function OfficialFiscalInvoice({
                       const itemWithIva = itemSubtotal * (1 + ivaRate / 100);
 
                       return (
-                        <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
-                          <td className="py-2 px-3 font-mono font-bold text-slate-600">{item.sku || `ITEM-${idx + 1}`}</td>
-                          <td className="py-2 px-3 font-semibold text-slate-900">
+                        <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}>
+                          <td className="py-2 px-3 font-mono font-bold text-slate-700 border-r border-slate-200">{item.sku || `ITEM-${idx + 1}`}</td>
+                          <td className="py-2 px-3 font-semibold text-slate-900 border-r border-slate-200">
                             {item.name}
                             {item.color && item.color !== '-' && (
                               <span className="text-slate-500 font-normal ml-1">({item.color})</span>
                             )}
                           </td>
-                          <td className="py-2 px-2 text-center font-bold">{qty}</td>
-                          <td className="py-2 px-2 text-center text-slate-600">unidades</td>
-                          <td className="py-2 px-3 text-right font-mono">${Math.round(price).toLocaleString('es-AR')}</td>
-                          <td className="py-2 px-2 text-center text-slate-600">{disc > 0 ? `${disc}%` : '0%'}</td>
+                          <td className="py-2 px-2 text-center font-bold border-r border-slate-200">{qty}</td>
+                          <td className="py-2 px-2 text-center text-slate-600 border-r border-slate-200">unidades</td>
+                          <td className="py-2 px-3 text-right font-mono border-r border-slate-200">${Math.round(price).toLocaleString('es-AR')}</td>
+                          <td className="py-2 px-2 text-center text-slate-600 border-r border-slate-200">{disc > 0 ? `${disc}%` : '0%'}</td>
                           <td className="py-2 px-3 text-right font-mono font-bold">${Math.round(itemSubtotal).toLocaleString('es-AR')}</td>
                           {docMeta.discriminatesIva && (
                             <>
-                              <td className="py-2 px-2 text-center font-mono">{ivaRate}%</td>
-                              <td className="py-2 px-3 text-right font-mono font-bold">${Math.round(itemWithIva).toLocaleString('es-AR')}</td>
+                              <td className="py-2 px-2 text-center font-mono border-l border-slate-200">{ivaRate}%</td>
+                              <td className="py-2 px-3 text-right font-mono font-bold border-l border-slate-200">${Math.round(itemWithIva).toLocaleString('es-AR')}</td>
                             </>
                           )}
                         </tr>
@@ -655,6 +673,8 @@ export default function OfficialFiscalInvoice({
               {/* DATOS DE COMPROBANTE Y CLIENTE */}
               <div className="text-[11px] space-y-1 pb-2 border-b border-dashed border-slate-400">
                 <div>Nro. Comp: <strong>{fullDocNumber}</strong></div>
+                {voucher.orderRef && <div>Orden de Taller: <strong>#{voucher.orderRef}</strong></div>}
+                {voucher.deviceModel && <div>Equipo: <strong>{voucher.deviceModel}</strong></div>}
                 <div>Fecha/Hora: {emissionDateStr} {emissionTimeStr}</div>
                 <div>Cliente: <strong>{customerName}</strong></div>
                 <div>{customerDocType}: {customerDocNumber || 'Consumidor Final'}</div>

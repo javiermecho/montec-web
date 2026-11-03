@@ -85,7 +85,7 @@ export default function OrderTicketModal({ order, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fade-in print:p-0 print:bg-white print:static print:inset-auto">
+    <div id="printable-order-ticket" className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-fade-in print:p-0 print:bg-white print:static print:inset-auto print:block">
       
       {/* Contenedor del Modal / Ticket */}
       <div className="bg-[#18181B] border border-zinc-800 rounded-2xl max-w-xl w-full shadow-2xl flex flex-col overflow-hidden max-h-[92vh] print:max-h-none print:shadow-none print:border-none print:bg-white print:text-black">

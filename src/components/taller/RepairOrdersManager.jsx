@@ -52,9 +52,91 @@ import { getOrderTrackingUrl } from '../../services/orderTrackingService';
 import { PatternThumbnail, getDeviceSecurity, parsePatternSequence } from './PatternLockInput';
 import OrderTicketModal from './OrderTicketModal';
 import UnifiedDeliveryModal from './UnifiedDeliveryModal';
+import OfficialFiscalInvoice from '../pos/OfficialFiscalInvoice';
 import DailySalesTab from '../admin/DailySalesTab';
 import PartCostFinderModal from './PartCostFinderModal';
 import ErrorBoundary from '../common/ErrorBoundary';
+
+/**
+ * Normaliza los datos de una orden de reparación para emitir / visualizar
+ * la Factura Fiscal Electrónica reglamentaria de ARCA / AFIP (RG 1415 y 4892)
+ */
+export function buildVoucherFromOrder(order) {
+  if (!order) return null;
+  const customer = order.customer || order.client || {};
+  const service = order.service || {};
+  const device = order.device || {};
+
+  const total = Number(service.budgetTotal ?? order.budgetTotal ?? order.total ?? order.presupuesto ?? order.price ?? 0);
+  const deposit = Number(service.deposit ?? order.deposit ?? order.sena ?? order.adelanto ?? 0);
+
+  // Extraer dígitos del número de orden para el comprobante formal (ej: MON-1072 -> 1072)
+  const orderDigits = (order.orderNumber || '').replace(/[^0-9]/g, '') || '1';
+  const cleanDocNumber = order.facturaNumero || service.facturaNumero || `00001-${orderDigits.padStart(8, '0')}`;
+
+  const docType = (customer.taxCondition === 'Responsable Inscripto' || (customer.cuit && customer.cuit.length === 11))
+    ? 'FACTURA_A'
+    : 'FACTURA_B';
+
+  const repairName = service.requestedRepair || service.issueDescription || service.problem || 'Servicio Técnico Especializado';
+  const deviceLabel = `${device.brand || ''} ${device.model || ''}`.trim() || 'Dispositivo';
+  const imeiLabel = device.imei ? ` (IMEI/Serie: ${device.imei})` : '';
+
+  const items = [
+    {
+      id: `rep-${order.id || orderDigits}`,
+      sku: `REP-${orderDigits.padStart(4, '0')}`,
+      name: `Reparación: ${repairName} - ${deviceLabel}${imeiLabel} [Orden #${order.orderNumber}]`,
+      quantity: 1,
+      price: total,
+      discountPercent: 0,
+      ivaPercent: 21,
+      color: '-'
+    }
+  ];
+
+  if (Array.isArray(order.accessories) && order.accessories.length > 0) {
+    order.accessories.forEach((acc, i) => {
+      items.push({
+        id: acc.id || `acc-${i + 1}`,
+        sku: acc.sku || `ACC-${i + 1}`,
+        name: acc.name,
+        quantity: acc.quantity || 1,
+        price: acc.price || 0,
+        discountPercent: 0,
+        ivaPercent: 21,
+        color: '-'
+      });
+    });
+  }
+
+  const itemsTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  return {
+    id: `inv-${order.id || order.orderNumber}`,
+    orderRef: order.orderNumber,
+    deviceModel: deviceLabel,
+    deviceImei: device.imei || '',
+    documentType: docType,
+    documentNumber: cleanDocNumber,
+    createdAt: order.deliveredAt || order.updatedAt || order.createdAt || new Date().toISOString(),
+    customer: {
+      name: (customer.name || 'CONSUMIDOR FINAL').toUpperCase(),
+      docType: customer.docType || (customer.cuit ? 'CUIT' : 'DNI'),
+      docNumber: customer.docNumber || customer.dni || customer.cuit || '0',
+      taxCondition: customer.taxCondition || 'CONSUMIDOR FINAL',
+      address: customer.address || 'Mar del Plata, Buenos Aires',
+      phone: customer.phone || '',
+      email: customer.email || ''
+    },
+    items,
+    subtotal: itemsTotal,
+    total: itemsTotal,
+    paymentMethod: order.paymentMethod || 'Efectivo / Transferencia',
+    notes: `Orden de Reparación ${order.orderNumber}.${deposit > 0 ? ` Seña previa imputada: $${deposit.toLocaleString('es-AR')}.` : ''} Garantía técnica oficial de 90 días en mano de obra y repuesto colocado.`,
+    seller: 'Laboratorio Montec'
+  };
+}
 
 // CONFIGURACIÓN DE ESTADOS TÉCNICOS (ESTILO SISTROFIX PROFESIONAL)
 export const STATUS_CONFIG = {
@@ -187,6 +269,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [ticketModalOrder, setTicketModalOrder] = useState(null);
+  const [fiscalInvoiceOrder, setFiscalInvoiceOrder] = useState(null);
   const [localDeliveryOrder, setLocalDeliveryOrder] = useState(null);
   const [isDailyCashModalOpen, setIsDailyCashModalOpen] = useState(false);
 
@@ -1141,11 +1224,22 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
 
                           <button
                             type="button"
+                            onClick={() => setFiscalInvoiceOrder(order)}
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                              isLight ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700' : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400'
+                            }`}
+                            title="Ver / Imprimir Factura Fiscal Oficial ARCA (AFIP)"
+                          >
+                            <Receipt className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => setTicketModalOrder(order)}
                             className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                               isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white'
                             }`}
-                            title="Imprimir Ticket de Recepción"
+                            title="Imprimir Ticket de Recepción de Taller"
                           >
                             <Printer className="w-3.5 h-3.5 text-zinc-400 hover:text-zinc-700" />
                           </button>
@@ -1226,15 +1320,30 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
 
             <button
               type="button"
+              onClick={() => setFiscalInvoiceOrder(selectedOrder)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border ${
+                isLight
+                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300 shadow-xs'
+                  : 'bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border-emerald-500/40'
+              }`}
+              title="Ver o imprimir Factura Fiscal Oficial ARCA (AFIP) en Hoja A4 o Ticket 80mm"
+            >
+              <Receipt className="w-4 h-4 text-emerald-400" />
+              <span>Factura ARCA</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setTicketModalOrder(selectedOrder)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border ${
                 isLight
                   ? 'bg-white hover:bg-slate-100 text-slate-800 border-slate-300 shadow-xs'
                   : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border-zinc-700'
               }`}
+              title="Imprimir Ticket de Taller / Recepción"
             >
               <Printer className="w-4 h-4 text-[#FF5500]" />
-              <span>Imprimir Ticket</span>
+              <span>Ticket Taller</span>
             </button>
 
             {selectedOrder.status !== 'delivered' && (
@@ -1683,28 +1792,35 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                   </div>
 
                   {/* ESTADO FISCAL Y FACTURACIÓN */}
-                  <div className={`p-2.5 rounded-xl mb-4 border flex items-center justify-between text-xs ${
+                  <div className={`p-3 rounded-xl mb-4 border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
                     Boolean(selectedOrder.isFacturada || selectedOrder.service?.isFacturada)
                       ? (isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300')
                       : (isLight ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-amber-500/10 border-amber-500/30 text-amber-300')
                   }`}>
-                    <div className="flex items-center gap-2">
-                      <Receipt className="w-4 h-4 shrink-0" />
-                      <span>
-                        {Boolean(selectedOrder.isFacturada || selectedOrder.service?.isFacturada) ? (
-                          <>Factura Fiscal: <strong className="font-mono">#{selectedOrder.facturaNumero || selectedOrder.service?.facturaNumero || 'Emitida'}</strong></>
-                        ) : (
-                          <>Factura Fiscal: <strong>Pendiente de emisión</strong> (Se factura al momento de entregar)</>
-                        )}
-                      </span>
+                    <div className="flex items-center gap-2.5">
+                      <Receipt className="w-5 h-5 shrink-0 text-emerald-400" />
+                      <div>
+                        <div className={`font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          {Boolean(selectedOrder.isFacturada || selectedOrder.service?.isFacturada) ? (
+                            <>Factura Fiscal Emitida: <strong className="font-mono text-emerald-400">#{selectedOrder.facturaNumero || selectedOrder.service?.facturaNumero || 'Emitida'}</strong></>
+                          ) : (
+                            <>Factura Fiscal: <strong>Comprobante Oficial ARCA disponible</strong></>
+                          )}
+                        </div>
+                        <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                          Formato reglamentario ARCA (AFIP) Hoja A4 y Ticket 80mm con CAE y código QR
+                        </div>
+                      </div>
                     </div>
-                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
-                      Boolean(selectedOrder.isFacturada || selectedOrder.service?.isFacturada)
-                        ? 'bg-emerald-500/20 text-emerald-400'
-                        : 'bg-amber-500/20 text-amber-400'
-                    }`}>
-                      {Boolean(selectedOrder.isFacturada || selectedOrder.service?.isFacturada) ? 'Facturada' : 'Sin Facturar'}
-                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => setFiscalInvoiceOrder(selectedOrder)}
+                      className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm cursor-pointer shrink-0"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Ver / Imprimir Factura ARCA</span>
+                    </button>
                   </div>
 
                   {/* BLOQUE DE COSTO DE REPUESTO & UTILIDAD NETA */}
@@ -2385,6 +2501,16 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
+              onClick={() => setFiscalInvoiceOrder(selectedOrder)}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 border-emerald-500/40"
+              title="Ver o imprimir Factura Fiscal Oficial ARCA (AFIP)"
+            >
+              <Receipt className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Factura ARCA</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setTicketModalOrder(selectedOrder)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer border ${
                 isLight
@@ -2393,7 +2519,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
               }`}
             >
               <Printer className="w-3.5 h-3.5 text-[#FF5500]" />
-              <span>Reimprimir Ticket</span>
+              <span>Ticket Taller</span>
             </button>
 
             {selectedOrder.status !== 'delivered' && (
@@ -2841,6 +2967,13 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
             onClose={() => setTicketModalOrder(null)}
           />
         )}
+        {fiscalInvoiceOrder && (
+          <OfficialFiscalInvoice
+            voucher={buildVoucherFromOrder(fiscalInvoiceOrder)}
+            businessConfig={businessConfig}
+            onClose={() => setFiscalInvoiceOrder(null)}
+          />
+        )}
       </div>
     );
   }
@@ -2948,6 +3081,13 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
         <OrderTicketModal
           order={ticketModalOrder}
           onClose={() => setTicketModalOrder(null)}
+        />
+      )}
+      {fiscalInvoiceOrder && (
+        <OfficialFiscalInvoice
+          voucher={buildVoucherFromOrder(fiscalInvoiceOrder)}
+          businessConfig={businessConfig}
+          onClose={() => setFiscalInvoiceOrder(null)}
         />
       )}
       {localDeliveryOrder && (

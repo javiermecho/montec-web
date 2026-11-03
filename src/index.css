@@ -487,3 +487,61 @@
 .montec-panel-light ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8 !important;
 }
+
+/* ==========================================================================
+   ESTILOS DE IMPRESIÓN OFICIALES (ARCA / AFIP & TICKETS DE TALLER)
+   ========================================================================== */
+@media print {
+  /* 1. Fondo blanco puro, texto negro y sin scrollbars */
+  html, body {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 2. Ocultar todos los elementos de administración, navegación, botones y paneles */
+  header:not(#printable-fiscal-invoice header):not(#printable-order-ticket header),
+  nav,
+  aside,
+  button:not(.allow-print),
+  .panel-top-header,
+  .print\:hidden,
+  .no-print,
+  [role="navigation"] {
+    display: none !important;
+  }
+
+  /* 3. Aislamiento estricto si el Comprobante Fiscal ARCA o Ticket está abierto */
+  body:has(#printable-fiscal-invoice) > #root > *:not(:has(#printable-fiscal-invoice)),
+  body:has(#printable-order-ticket) > #root > *:not(:has(#printable-order-ticket)) {
+    display: none !important;
+  }
+
+  #printable-fiscal-invoice,
+  #printable-order-ticket {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    z-index: 99999 !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 8mm 10mm;
+  }
+}

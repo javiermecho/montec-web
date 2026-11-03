@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import CommercialInvoicePOS from '../pos/CommercialInvoicePOS';
+import OfficialFiscalInvoice from '../pos/OfficialFiscalInvoice';
 import PartCostFinderModal from './PartCostFinderModal';
 
 // ─── COMPONENTE TOAST ────────────────────────────────────────────────────
@@ -104,6 +105,7 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
   // ─── ESTADOS DE FLUJO BLINDADO & FACTURACIÓN ──────────────────
   const [completedSale, setCompletedSale] = useState(null);       // Datos del cobro finalizado
   const [showInvoiceModal, setShowInvoiceModal] = useState(false); // Modal de facturación abierto
+  const [showFiscalInvoiceModal, setShowFiscalInvoiceModal] = useState(false); // Factura normalizada ARCA
   const [invoiceCompleted, setInvoiceCompleted] = useState(false); // Factura emitida
   const [showZeroCostConfirm, setShowZeroCostConfirm] = useState(false); // Confirmación $0
   const [showBypassInvoiceConfirm, setShowBypassInvoiceConfirm] = useState(false); // Confirmación de entrega sin factura fiscal
@@ -495,6 +497,24 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     };
   };
 
+  // Voucher estructurado para Factura Oficial ARCA (AFIP)
+  const buildVoucherFromCompletedSale = () => {
+    const init = buildInvoiceInitialData();
+    const totalAmount = init.items.reduce((s, it) => s + (it.price * (it.quantity || 1)), 0);
+    return {
+      ...init,
+      customer: init.client,
+      subtotal: totalAmount,
+      total: totalAmount,
+      documentNumber: completedSale?.facturaNumero || `00001-${(order.orderNumber || '').replace(/[^0-9]/g, '').padStart(8, '0')}`,
+      createdAt: completedSale?.deliveredAt || new Date().toISOString(),
+      orderRef: order.orderNumber,
+      deviceModel: `${order.device?.brand || ''} ${order.device?.model || ''}`.trim(),
+      deviceImei: order.device?.imei || '',
+      seller: 'Laboratorio Montec'
+    };
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 bg-black/85 backdrop-blur-md animate-fadeIn">
       <div className="bg-[#121212] border border-zinc-800 rounded-2xl w-full max-w-6xl h-[94vh] max-h-[850px] flex flex-col shadow-2xl overflow-hidden">
@@ -780,22 +800,34 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
             {/* Acciones del Comprobante */}
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
+                type="button"
+                onClick={() => setShowFiscalInvoiceModal(true)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs sm:text-sm font-bold transition-all shadow-lg cursor-pointer"
+              >
+                <Receipt className="w-4 h-4" />
+                <span>Factura Oficial ARCA (A4)</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => window.print()}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs sm:text-sm font-semibold transition-all border border-zinc-700 cursor-pointer"
               >
                 <Printer className="w-4 h-4 text-orange-400" />
-                <span>Imprimir Ticket</span>
+                <span>Imprimir Ticket 80mm</span>
               </button>
 
               <button
+                type="button"
                 onClick={handleSendWhatsAppTicket}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold transition-all shadow-lg cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Enviar Comprobante por WhatsApp</span>
+                <span>Enviar WhatsApp</span>
               </button>
 
               <button
+                type="button"
                 onClick={onClose}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#FF5500] hover:bg-[#FF6600] text-white text-xs sm:text-sm font-bold transition-all shadow-[0_0_15px_rgba(255,85,0,0.4)] cursor-pointer"
               >
@@ -1481,6 +1513,15 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
               }
               setIsPartCostModalOpen(false);
             }}
+          />
+        )}
+
+        {/* MODAL DE FACTURA OFICIAL ARCA (AFIP) */}
+        {showFiscalInvoiceModal && completedSale && (
+          <OfficialFiscalInvoice
+            voucher={buildVoucherFromCompletedSale()}
+            businessConfig={businessConfig}
+            onClose={() => setShowFiscalInvoiceModal(false)}
           />
         )}
 
