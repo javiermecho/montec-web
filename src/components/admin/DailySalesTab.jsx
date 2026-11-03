@@ -181,26 +181,28 @@ export default function DailySalesTab() {
     };
 
     filteredSales.forEach(s => {
-      const amount = Number(s.total) || 0;
-      totalRevenue += amount;
+      // Dinero efectivamente ingresado en caja (evita duplicar la seña si la factura es por el total)
+      const actualCash = Number(s.cashCollected !== undefined ? s.cashCollected : s.total) || 0;
+      const billedTotal = Number(s.total) || 0;
+      totalRevenue += actualCash;
 
       const docType = s.documentType || 'ticket_x';
       if (['factura_a', 'factura_b', 'factura_c'].includes(docType)) {
-        facturasTotal += amount;
+        facturasTotal += billedTotal;
         facturasCount++;
       } else if (docType === 'remito') {
-        remitosTotal += amount;
+        remitosTotal += billedTotal;
         remitosCount++;
       } else {
-        ticketsTotal += amount;
+        ticketsTotal += actualCash;
         ticketsCount++;
       }
 
       const method = s.paymentMethod || 'Efectivo';
       if (paymentTotals[method] !== undefined) {
-        paymentTotals[method] += amount;
+        paymentTotals[method] += actualCash;
       } else {
-        paymentTotals['Otros'] += amount;
+        paymentTotals['Otros'] += actualCash;
       }
     });
 
@@ -710,6 +712,11 @@ export default function DailySalesTab() {
                           <FileText className="w-3 h-3" />
                           <span>{docInfo.label}</span>
                         </span>
+                        {sale.isDeposit && (
+                          <span className="ml-1.5 inline-block text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                            SEÑA
+                          </span>
+                        )}
                       </td>
 
                       {/* N° Comprobante */}

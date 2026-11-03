@@ -61,12 +61,17 @@ function Toast({ message, type = 'info', onClose }) {
 }
 
 export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDelivered }) {
-  const { inventory, recordUnifiedDelivery, businessConfig, updateOrderPartCost } = useData();
+  const { inventory, recordUnifiedDelivery, businessConfig, updateOrderPartCost, markOrderAsInvoiced } = useData();
 
   if (!isOpen || !order) return null;
 
-  // ─── ESTADOS LOCALES ──────────────────────────────────────────
-  const balanceDue = Number(order.service?.balanceDue || 0);
+  // ─── ESTADOS LOCALES & METADATA CONTABLE ───────────────────────
+  const repairBudgetTotal = Number(order.service?.budgetTotal ?? order.budgetTotal ?? 0);
+  const depositPaid = Number(order.service?.deposit ?? order.deposit ?? 0);
+  const rawBalanceDue = Number(order.service?.balanceDue ?? Math.max(0, repairBudgetTotal - depositPaid));
+
+  const isOrderAlreadyInvoiced = Boolean(order.isFacturada || order.service?.isFacturada);
+  const existingFacturaNumero = order.facturaNumero || order.service?.facturaNumero || '';
 
   // Costo de repuesto & Buscador en proveedores
   const [partCost, setPartCost] = useState(order.partCost !== undefined ? Number(order.partCost) : 0);
@@ -90,11 +95,12 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
   const [deliveryNotes, setDeliveryNotes] = useState('');
   const [isCopiedAlias, setIsCopiedAlias] = useState(false);
 
-  // ─── ESTADOS DE FLUJO BLINDADO ────────────────────────────────
+  // ─── ESTADOS DE FLUJO BLINDADO & FACTURACIÓN ──────────────────
   const [completedSale, setCompletedSale] = useState(null);       // Datos del cobro finalizado
   const [showInvoiceModal, setShowInvoiceModal] = useState(false); // Modal de facturación abierto
   const [invoiceCompleted, setInvoiceCompleted] = useState(false); // Factura emitida
   const [showZeroCostConfirm, setShowZeroCostConfirm] = useState(false); // Confirmación $0
+  const [showBypassInvoiceConfirm, setShowBypassInvoiceConfirm] = useState(false); // Confirmación de entrega sin factura fiscal
   const [deliveryPayloadPending, setDeliveryPayloadPending] = useState(null); // Payload pendiente de confirmación
   
   // ─── TOAST NOTIFICATIONS ─────────────────────────────────────
@@ -160,7 +166,7 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
   };
 
   // ─── CÁLCULOS FINANCIEROS ─────────────────────────────────────
-  const effectiveBalanceDue = waiveRepairBalance ? 0 : balanceDue;
+  const effectiveBalanceDue = waiveRepairBalance ? 0 : rawBalanceDue;
   const accessoriesSubtotal = addedAccessories.reduce((acc, item) => acc + (item.price * item.quantity), 0);
   const grossTotal = effectiveBalanceDue + accessoriesSubtotal;
 
@@ -169,6 +175,14 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     : Math.min(Number(discountValue) || 0, grossTotal);
 
   const grandTotal = Math.max(0, grossTotal - discountAmount);
+
+  // Diagnóstico financiero claro de la orden
+  // Caso 1: Reparación realmente sin costo (presupuesto $0 y sin accesorios)
+  const isRealZeroCost = repairBudgetTotal === 0 && accessoriesSubtotal === 0;
+  // Caso 2: Reparación saldada / pagada previamente (total > 0 y saldoPendiente <= 0)
+  const isPrepaidFull = repairBudgetTotal > 0 && effectiveBalanceDue <= 0;
+  // Caso 3: Reparación con saldo pendiente (total > 0 y saldoPendiente > 0)
+  const hasPendingBalance = effectiveBalanceDue > 0;
 
   // Vuelto en efectivo
   const cashNum = parseFloat(cashGiven) || 0;
@@ -192,13 +206,17 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     orderNumber: order.orderNumber,
     clientName: order.client?.name || order.customer?.name || 'Cliente',
     clientPhone: order.client?.phone || order.customer?.phone || '',
-    clientDni: order.client?.dni || order.client?.docNumber || order.customer?.dni || '',
+    clientDni: order.client?.dni || order.client?.docNumber || order.customer?.docNumber || order.customer?.dni || '',
     clientCuit: order.client?.cuit || order.customer?.cuit || '',
     deviceModel: `${order.device?.brand || ''} ${order.device?.model || ''}`.trim(),
     repairName: order.service?.requestedRepair || 'Reparación de Taller',
+    repairBudgetTotal,
+    depositPaid,
     balancePaid: effectiveBalanceDue,
     repairResolution: deliveryResolution, // 'ready' | 'no_repair'
     isRepaired: deliveryResolution === 'ready',
+    isFacturada: isOrderAlreadyInvoiced,
+    facturaNumero: existingFacturaNumero,
     partCost: parseFloat(partCost) || 0,
     partSupplier: partSupplier || '',
     partName: partName || '',
@@ -219,57 +237,92 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     deliveredAt: new Date().toISOString()
   });
 
-  // ─── REGLA 3: HANDLER PARA ENTREGA $0 ─────────────────────────
+  // ─── HANDLER PARA ENTREGA $0 REAL (GARANTÍA / SIN COSTO) ─────
   const handleConfirmZeroCostDelivery = () => {
     setShowZeroCostConfirm(false);
     
     const payload = deliveryPayloadPending || buildDeliveryPayload();
     
-    // Registrar en DataContext directamente (sin facturación)
+    // Registrar en DataContext directamente (sin facturación fiscal requerida)
     if (recordUnifiedDelivery) {
-      recordUnifiedDelivery(payload);
+      recordUnifiedDelivery({
+        ...payload,
+        isFacturada: false,
+        alreadyRecordedInSales: false
+      });
     }
 
     setCompletedSale(payload);
-    setInvoiceCompleted(true); // Marcar como completado (sin factura requerida)
-    showToast('Equipo entregado sin cargo. Orden marcada como entregada.', 'success');
+    setInvoiceCompleted(true);
+    showToast('Equipo entregado sin cargo (Garantía / Revisión sin costo).', 'success');
 
     if (onDelivered) {
       onDelivered(order.id, payload);
     }
   };
 
-  // ─── REGLA 2: HANDLER PARA ABRIR FACTURACIÓN AUTOMÁTICA ───────
-  const handleOpenInvoiceModal = (payload) => {
-    setDeliveryPayloadPending(payload);
-    setShowInvoiceModal(true);
-    showToast('Procesando cobro... Se abrió la ventana de Facturación.', 'info');
-  };
+  // ─── HANDLER PARA ENTREGA SIN FACTURA FISCAL (EXCEPCIÓN) ──────
+  const handleDeliverWithoutInvoice = () => {
+    setShowBypassInvoiceConfirm(false);
+    const basePayload = deliveryPayloadPending || buildDeliveryPayload();
+    const payload = {
+      ...basePayload,
+      isFacturada: false,
+      alreadyRecordedInSales: false
+    };
 
-  // ─── HANDLER DE CIERRE DE FACTURACIÓN ─────────────────────────
-  const handleInvoiceClose = () => {
-    // Si se cerró la facturación sin emitir, NO marcar como entregado
-    if (!invoiceCompleted) {
-      showToast('⚠️ La factura no fue emitida. La entrega queda pendiente hasta facturar.', 'warning', 5000);
-    }
-    setShowInvoiceModal(false);
-  };
-
-  // ─── HANDLER POST-EMISIÓN DE FACTURA ──────────────────────────
-  // Se llama cuando el usuario cierra el POS después de emitir
-  const handleInvoiceCompleted = () => {
-    setInvoiceCompleted(true);
-    setShowInvoiceModal(false);
-    
-    const payload = deliveryPayloadPending || buildDeliveryPayload();
-    
-    // Ahora sí registrar la entrega en DataContext
     if (recordUnifiedDelivery) {
       recordUnifiedDelivery(payload);
     }
 
     setCompletedSale(payload);
-    showToast('✅ Factura emitida y cobro registrado. Orden entregada correctamente.', 'success', 5000);
+    setInvoiceCompleted(true);
+    showToast('Equipo entregado sin emitir factura fiscal. Movimiento asentado en caja.', 'info', 5000);
+
+    if (onDelivered) {
+      onDelivered(order.id, payload);
+    }
+  };
+
+  // ─── HANDLER PARA ABRIR FACTURACIÓN AUTOMÁTICA ───────────────
+  const handleOpenInvoiceModal = (payload) => {
+    setDeliveryPayloadPending(payload || buildDeliveryPayload());
+    setShowInvoiceModal(true);
+    showToast('Abriendo ventana de Facturación Fiscal por el total del servicio...', 'info');
+  };
+
+  // ─── HANDLER DE CIERRE DE FACTURACIÓN ─────────────────────────
+  const handleInvoiceClose = () => {
+    if (!invoiceCompleted) {
+      showToast('⚠️ La factura no fue emitida. La entrega continúa pendiente.', 'warning', 5000);
+    }
+    setShowInvoiceModal(false);
+  };
+
+  // ─── HANDLER POST-EMISIÓN DE FACTURA ──────────────────────────
+  const handleInvoiceCompleted = (emittedSale) => {
+    setInvoiceCompleted(true);
+    setShowInvoiceModal(false);
+    
+    const invoiceNum = emittedSale?.documentNumber || emittedSale?.ticketNumber || 'FAC-' + Date.now();
+    const basePayload = deliveryPayloadPending || buildDeliveryPayload();
+    const payload = {
+      ...basePayload,
+      isFacturada: true,
+      facturaNumero: invoiceNum,
+      alreadyRecordedInSales: true
+    };
+    
+    if (markOrderAsInvoiced) {
+      markOrderAsInvoiced(order.id, invoiceNum);
+    }
+
+    if (recordUnifiedDelivery) {
+      recordUnifiedDelivery(payload);
+    }
+
+    setCompletedSale(payload);
+    showToast(`✅ Factura ${invoiceNum} emitida y cobro registrado. Orden entregada correctamente.`, 'success', 5000);
 
     if (onDelivered) {
       onDelivered(order.id, payload);
@@ -283,7 +336,7 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
       return;
     }
 
-    // REGLA 1: Bloqueo estricto por saldo pendiente / efectivo insuficiente
+    // Bloqueo estricto por saldo pendiente / efectivo insuficiente
     if (isPaymentInsufficient) {
       showToast(`No se puede completar la entrega hasta que se procese el pago del saldo pendiente ($${grandTotal.toLocaleString('es-AR')}). Monto ingresado ($${cashNum.toLocaleString('es-AR')}) es insuficiente.`, 'error', 6000);
       return;
@@ -291,15 +344,33 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
 
     const payload = buildDeliveryPayload();
 
-    // ─── REGLA 3: Si el total es $0, pedir confirmación explícita ──
-    if (grandTotal === 0) {
+    // Caso 1: Reparación y entrega realmente sin costo ($0)
+    if (isRealZeroCost) {
       setDeliveryPayloadPending(payload);
       setShowZeroCostConfirm(true);
       return;
     }
 
-    // ─── REGLA 2: Si hay monto a cobrar, abrir facturación automática ──
-    // NO registrar la entrega todavía. Solo se registra después de emitir la factura.
+    // Caso 2: Orden ya facturada previamente
+    if (isOrderAlreadyInvoiced) {
+      if (recordUnifiedDelivery) {
+        recordUnifiedDelivery({
+          ...payload,
+          isFacturada: true,
+          facturaNumero: existingFacturaNumero,
+          alreadyRecordedInSales: grandTotal === 0
+        });
+      }
+      setCompletedSale(payload);
+      setInvoiceCompleted(true);
+      showToast('✅ Entrega finalizada con éxito. Orden previamente facturada.', 'success');
+      if (onDelivered) {
+        onDelivered(order.id, payload);
+      }
+      return;
+    }
+
+    // Caso 3: Orden con costo que aún no fue facturada
     handleOpenInvoiceModal(payload);
   };
 
@@ -365,26 +436,29 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     const payload = deliveryPayloadPending || buildDeliveryPayload();
     const items = [];
 
-    // Ítem de servicio de reparación
-    if (payload.balancePaid > 0) {
+    // Ítem de servicio de reparación por el TOTAL DEL SERVICIO (no solo el saldo restante)
+    // REGLA FISCAL: La factura fiscal debe emitirse por el TOTAL de la reparación al momento de la entrega.
+    const serviceAmountToBill = deliveryResolution === 'no_repair' && waiveRepairBalance ? 0 : repairBudgetTotal;
+
+    if (serviceAmountToBill > 0) {
       items.push({
         id: `rep-${order.id || Date.now()}`,
         sku: `REP-${(order.orderNumber || '').replace(/[^0-9]/g, '') || '0000'}`,
-        name: `Reparación: ${payload.repairName} (${payload.deviceModel}) - Orden ${payload.orderNumber}`,
+        name: `Reparación: ${payload.repairName || 'Servicio Técnico'} (${payload.deviceModel || 'Equipo'}) - Orden ${payload.orderNumber}`,
         color: '-',
         quantity: 1,
-        price: payload.balancePaid,
+        price: serviceAmountToBill, // MONTO TOTAL DE LA REPARACIÓN
         ivaPercent: 21,
         discountPercent: 0
       });
     }
 
-    // Ítems de accesorios
+    // Ítems de accesorios adicionales si los hubiera
     if (payload.accessories && payload.accessories.length > 0) {
       payload.accessories.forEach(a => {
         items.push({
           id: a.id,
-          sku: a.sku || `ACC-${Date.now()}`,
+          sku: a.sku || `ACC-${a.id}`,
           name: a.name,
           color: '-',
           quantity: a.quantity,
@@ -398,18 +472,20 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
     return {
       client: {
         name: (payload.clientName || 'CONSUMIDOR FINAL').toUpperCase(),
-        docType: order.client?.docType || 'DNI',
+        docType: order.client?.docType || order.customer?.docType || 'DNI',
         docNumber: payload.clientDni || payload.clientCuit || '',
-        taxCondition: order.client?.taxCondition || 'CONSUMIDOR FINAL',
-        email: order.client?.email || '',
+        taxCondition: order.client?.taxCondition || order.customer?.taxCondition || 'CONSUMIDOR FINAL',
+        email: order.client?.email || order.customer?.email || '',
         phone: payload.clientPhone || '',
-        address: order.client?.address || ''
+        address: order.client?.address || order.customer?.address || ''
       },
       items,
       paymentMethod: paymentMethodToLabel[payload.paymentMethod] || 'Efectivo',
-      notes: `Cobro de entrega - Orden ${payload.orderNumber}. ${payload.notes || ''}`.trim(),
+      notes: `Entrega de reparación - Orden ${payload.orderNumber}.${depositPaid > 0 ? ` Seña previa imputada: $${depositPaid.toLocaleString('es-AR')}.` : ''} ${payload.notes || ''}`.trim(),
       documentType: 'FACTURA_B',
-      advancePayment: 0
+      // Imputamos la seña previa para que el POS calcule el saldo real a cobrar hoy en mostrador
+      advancePayment: depositPaid,
+      orderRef: payload.orderNumber
     };
   };
 
@@ -519,6 +595,48 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                 >
                   <Check className="w-4 h-4" />
                   <span>Sí, entregar sin costo</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {/* MODAL DE CONFIRMACIÓN DE ENTREGA SIN FACTURAR               */}
+        {/* ══════════════════════════════════════════════════════════════ */}
+        {showBypassInvoiceConfirm && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-[#1a1a22] border-2 border-zinc-700 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-fadeIn">
+              <div className="flex items-center justify-center">
+                <div className="w-14 h-14 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center">
+                  <FileText className="w-7 h-7 text-zinc-300" />
+                </div>
+              </div>
+
+              <div className="text-center space-y-2">
+                <h3 className="text-lg font-heading font-bold text-white">
+                  ¿Entregar sin factura fiscal?
+                </h3>
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  Esta orden de <strong className="text-emerald-400 font-bold">${repairBudgetTotal.toLocaleString('es-AR')}</strong> se marcará como entregada en el taller y se asentará el cobro en la caja interna, pero <span className="text-amber-400 font-semibold">no se emitirá comprobante AFIP/fiscal</span> en este momento.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowBypassInvoiceConfirm(false)}
+                  className="px-4 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold transition-all border border-zinc-700 cursor-pointer"
+                >
+                  Cancelar / Volver
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeliverWithoutInvoice}
+                  className="px-4 py-3 rounded-xl bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-bold transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Sí, entregar sin factura</span>
                 </button>
               </div>
             </div>
@@ -690,7 +808,7 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
               <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 space-y-4">
                 <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
                   <span className="text-xs font-mono font-bold text-[#FF5500]">DATOS DE LA REPARACIÓN</span>
-                  <span className="text-xs text-zinc-400">{order.client?.name || 'Cliente'}</span>
+                  <span className="text-xs text-zinc-400">{order.client?.name || order.customer?.name || 'Cliente'}</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-xs">
@@ -700,13 +818,73 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                   </div>
                   <div>
                     <span className="text-zinc-500 block">Teléfono:</span>
-                    <span className="font-semibold text-white">{order.client?.phone || 'Sin registrar'}</span>
+                    <span className="font-semibold text-white">{order.client?.phone || order.customer?.phone || 'Sin registrar'}</span>
                   </div>
                   <div className="col-span-2">
                     <span className="text-zinc-500 block">Trabajo Solicitado:</span>
                     <span className="text-zinc-200">{order.service?.requestedRepair || 'Servicio Técnico'}</span>
                   </div>
                 </div>
+
+                {/* RESUMEN ECONÓMICO TRANSPARENTE: PRESUPUESTO, SEÑA Y SALDO */}
+                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-zinc-950/70 border border-zinc-800 text-xs">
+                  <div>
+                    <span className="text-[10px] block text-zinc-400 uppercase font-semibold">Presupuesto</span>
+                    <span className="font-mono font-bold text-white">${repairBudgetTotal.toLocaleString('es-AR')}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] block text-zinc-400 uppercase font-semibold">Seña Previa</span>
+                    <span className="font-mono font-bold text-emerald-400">${depositPaid.toLocaleString('es-AR')}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] block text-zinc-400 uppercase font-semibold">Saldo al Retirar</span>
+                    <span className={`font-mono font-bold ${effectiveBalanceDue > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      ${effectiveBalanceDue.toLocaleString('es-AR')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* BADGE DESTACADO: SI ESTÁ 100% PAGADA PREVIAMENTE */}
+                {isPrepaidFull && (
+                  <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs flex items-center justify-between animate-fadeIn">
+                    <div className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <div>
+                        <span className="font-bold text-white block">✅ Reparación 100% Pagada</span>
+                        <span className="text-[11px] text-emerald-200/90">
+                          Total: ${repairBudgetTotal.toLocaleString('es-AR')} | Seña previa: ${depositPaid.toLocaleString('es-AR')} | Saldo a cobrar hoy: $0
+                        </span>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold text-[10px] border border-emerald-500/30">
+                      SALDO $0
+                    </span>
+                  </div>
+                )}
+
+                {/* ESTADO DE FACTURACIÓN FISCAL */}
+                {isOrderAlreadyInvoiced ? (
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Receipt className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span className="font-medium text-zinc-300">Comprobante Fiscal:</span>
+                      <strong className="text-white font-mono">🧾 Facturada ({existingFacturaNumero || 'OK'})</strong>
+                    </div>
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">
+                      Facturada
+                    </span>
+                  </div>
+                ) : repairBudgetTotal > 0 ? (
+                  <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>⚠️ Esta reparación de <strong>${repairBudgetTotal.toLocaleString('es-AR')}</strong> aún no fue facturada.</span>
+                    </div>
+                    <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold whitespace-nowrap">
+                      Facturar al entregar
+                    </span>
+                  </div>
+                ) : null}
 
                 {/* SELECTOR OBLIGATORIO DE RESOLUCIÓN */}
                 <div className="pt-3 border-t border-zinc-800 space-y-2">
@@ -1056,20 +1234,34 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                 </div>
 
                 {/* TOTAL GENERAL DESTACADO */}
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-zinc-900 to-black border-2 border-[#FF5500]/60 shadow-[0_0_25px_rgba(255,85,0,0.25)] text-center space-y-1">
+                <div className={`p-4 rounded-2xl border-2 text-center space-y-1 transition-all ${
+                  isPrepaidFull && accessoriesSubtotal === 0
+                    ? 'bg-gradient-to-br from-emerald-950/60 to-black border-emerald-500/60 shadow-[0_0_25px_rgba(16,185,129,0.25)]'
+                    : 'bg-gradient-to-br from-zinc-900 to-black border-[#FF5500]/60 shadow-[0_0_25px_rgba(255,85,0,0.25)]'
+                }`}>
                   <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-bold">
                     TOTAL A COBRAR EN MOSTRADOR
                   </span>
-                  <div className="text-3xl sm:text-4xl font-heading font-extrabold text-[#FF5500]">
+                  <div className={`text-3xl sm:text-4xl font-heading font-extrabold ${
+                    isPrepaidFull && accessoriesSubtotal === 0 ? 'text-emerald-400' : 'text-[#FF5500]'
+                  }`}>
                     ${grandTotal.toLocaleString('es-AR')}
                   </div>
-                  {/* REGLA 1: Aviso de saldo pendiente si grandTotal > 0 */}
-                  {grandTotal > 0 && (
+                  {isPrepaidFull && accessoriesSubtotal === 0 ? (
+                    <div className="flex items-center justify-center gap-1.5 mt-2 text-emerald-400 text-xs font-semibold">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Reparación 100% abonada previamente. Saldo a cobrar hoy: $0</span>
+                    </div>
+                  ) : grandTotal > 0 ? (
                     <div className="flex items-center justify-center gap-1.5 mt-2">
                       <Lock className="w-3 h-3 text-amber-400" />
                       <span className="text-[10px] text-amber-300 font-medium">
-                        La entrega requiere cobro y facturación obligatoria
+                        Saldo pendiente a cobrar al cliente en mostrador
                       </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-1.5 mt-2 text-zinc-400 text-[10px]">
+                      <span>Orden sin cargo ($0)</span>
                     </div>
                   )}
                 </div>
@@ -1195,33 +1387,74 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                 </div>
               )}
 
-              {/* BOTÓN FINALIZAR ENTREGA */}
-              <button
-                onClick={handleFinalize}
-                disabled={!deliveryResolution || isPaymentInsufficient}
-                className={`w-full py-3.5 rounded-xl font-heading font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                  deliveryResolution && !isPaymentInsufficient
-                    ? 'bg-[#FF5500] hover:bg-[#FF6600] text-white shadow-[0_0_25px_rgba(255,85,0,0.4)] hover:shadow-[0_0_35px_rgba(255,85,0,0.6)]'
-                    : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
-                }`}
-              >
-                {!deliveryResolution ? (
-                  <>
-                    <AlertCircle className="w-5 h-5" />
-                    <span>SELECCIONA RESOLUCIÓN (REPARADO / SIN REPARAR)</span>
-                  </>
-                ) : grandTotal > 0 ? (
-                  <>
+              {/* BOTONES DE ACCIÓN PARA ENTREGA Y FACTURACIÓN */}
+              {!deliveryResolution ? (
+                <div className="p-3.5 rounded-xl bg-zinc-800 text-zinc-400 text-xs font-bold text-center border border-zinc-700 flex items-center justify-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-zinc-500" />
+                  <span>SELECCIONA RESOLUCIÓN (REPARADO O SIN REPARAR)</span>
+                </div>
+              ) : isRealZeroCost ? (
+                /* Caso 1: Garantía o revisión verdaderamente sin costo */
+                <button
+                  type="button"
+                  onClick={handleFinalize}
+                  className="w-full py-3.5 rounded-xl font-heading font-bold text-sm bg-amber-600 hover:bg-amber-500 text-white shadow-[0_0_20px_rgba(217,119,6,0.35)] flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+                >
+                  <AlertTriangle className="w-5 h-5" />
+                  <span>ENTREGAR EQUIPO SIN COSTO (REVISIÓN / GARANTÍA $0)</span>
+                </button>
+              ) : !isOrderAlreadyInvoiced && repairBudgetTotal > 0 ? (
+                /* Caso 2: Orden con costo que aún NO fue facturada fiscalmente */
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenInvoiceModal(buildDeliveryPayload())}
+                    disabled={isPaymentInsufficient}
+                    className={`w-full py-3.5 rounded-xl font-heading font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition-all shadow-lg active:scale-95 ${
+                      !isPaymentInsufficient
+                        ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-emerald-950/40'
+                        : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+                    }`}
+                  >
                     <Receipt className="w-5 h-5" />
-                    <span>PROCESAR COBRO Y FACTURAR (${grandTotal.toLocaleString('es-AR')})</span>
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-5 h-5" />
-                    <span>ENTREGAR EQUIPO SIN COSTO</span>
-                  </>
-                )}
-              </button>
+                    <span>🧾 FACTURAR Y ENTREGAR (${(repairBudgetTotal + accessoriesSubtotal).toLocaleString('es-AR')})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowBypassInvoiceConfirm(true)}
+                    disabled={isPaymentInsufficient}
+                    className="w-full py-2.5 rounded-xl text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-zinc-500" />
+                    <span>Entregar sin facturar (Excepción de mostrador)</span>
+                  </button>
+                </div>
+              ) : (
+                /* Caso 3: Orden ya facturada previamente */
+                <button
+                  type="button"
+                  onClick={handleFinalize}
+                  disabled={isPaymentInsufficient}
+                  className={`w-full py-3.5 rounded-xl font-heading font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-95 ${
+                    !isPaymentInsufficient
+                      ? 'bg-[#FF5500] hover:bg-[#FF6600] text-white shadow-[0_0_25px_rgba(255,85,0,0.4)]'
+                      : 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-zinc-700'
+                  }`}
+                >
+                  {grandTotal > 0 ? (
+                    <>
+                      <Receipt className="w-5 h-5" />
+                      <span>COBRAR SALDO (${grandTotal.toLocaleString('es-AR')}) Y FINALIZAR ENTREGA</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-5 h-5" />
+                      <span>FINALIZAR ENTREGA (EQUIPO FACTURADO Y PAGADO)</span>
+                    </>
+                  )}
+                </button>
+              )}
 
             </div>
 

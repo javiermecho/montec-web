@@ -983,6 +983,8 @@ export function DataProvider({ children }) {
           createdAt: response.order.createdAt || new Date().toISOString(),
           updatedAt: response.order.updatedAt || new Date().toISOString(),
           status: response.order.service?.status || 'received',
+          isFacturada: Boolean(orderData.isFacturada || orderData.service?.isFacturada || response.order.isFacturada),
+          facturaNumero: orderData.facturaNumero || orderData.service?.facturaNumero || response.order.facturaNumero || '',
           partCost: cleanPartCost,
           partSupplier: cleanPartSupplier,
           partName: cleanPartName,
@@ -998,6 +1000,8 @@ export function DataProvider({ children }) {
           service: {
             ...orderData.service,
             ...response.order.service,
+            isFacturada: Boolean(orderData.isFacturada || orderData.service?.isFacturada || response.order.isFacturada),
+            facturaNumero: orderData.facturaNumero || orderData.service?.facturaNumero || response.order.facturaNumero || '',
             partCost: cleanPartCost,
             partSupplier: cleanPartSupplier,
             partName: cleanPartName
@@ -1010,6 +1014,71 @@ export function DataProvider({ children }) {
             }
           ]
         };
+
+        // Si se recibió una seña o pago por adelantado, registrar en Caja Diaria / Ventas
+        const depositAmount = parseFloat(savedOrder.service?.deposit || 0);
+        if (depositAmount > 0) {
+          const cleanNum = (savedOrder.orderNumber || '').replace(/[^0-9]/g, '');
+          const isDepositInvoiced = Boolean(savedOrder.isFacturada);
+          const depositDocNum = savedOrder.facturaNumero || `#REC-SEÑA-${cleanNum || Date.now()}`;
+
+          const depositSale = {
+            id: `sale-deposit-${savedOrder.id || Date.now()}`,
+            ticketNumber: depositDocNum,
+            documentType: isDepositInvoiced ? 'factura_c' : 'recibo',
+            documentNumber: depositDocNum,
+            isDeposit: true,
+            orderId: savedOrder.id,
+            orderRef: savedOrder.orderNumber,
+            client: savedOrder.customer,
+            customer: {
+              name: savedOrder.customer?.name || 'Cliente Mostrador',
+              phone: savedOrder.customer?.phone || '',
+              docNumber: savedOrder.customer?.docNumber || ''
+            },
+            items: [
+              {
+                id: `dep-${savedOrder.id}`,
+                name: `Seña / Anticipo: ${savedOrder.service?.requestedRepair || 'Reparación'} (${savedOrder.device?.brand || ''} ${savedOrder.device?.model || ''}) - Orden ${savedOrder.orderNumber}`,
+                category: 'Servicio Técnico / Taller',
+                price: depositAmount,
+                quantity: 1,
+                isService: true
+              }
+            ],
+            subtotal: depositAmount,
+            total: depositAmount,
+            cashCollected: depositAmount,
+            paymentMethod: orderData.service?.paymentMethod || 'Efectivo',
+            source: 'taller_deposit',
+            seller: 'Operador Mostrador (Ingreso Taller)',
+            createdAt: savedOrder.createdAt || new Date().toISOString(),
+            formattedDate: new Date(savedOrder.createdAt || Date.now()).toLocaleString('es-AR')
+          };
+
+          setSales(prevSales => {
+            const updated = [depositSale, ...prevSales];
+            try {
+              localStorage.setItem(STORAGE_KEYS.SALES, JSON.stringify(updated));
+            } catch (e) {}
+            return updated;
+          });
+
+          try {
+            api.createVenta({
+              ticketNumber: depositDocNum,
+              documentType: isDepositInvoiced ? 'factura_c' : 'recibo',
+              documentNumber: depositDocNum,
+              items: depositSale.items,
+              subtotal: depositAmount,
+              discount: 0,
+              total: depositAmount,
+              paymentMethod: orderData.service?.paymentMethod || 'Efectivo',
+              customer: depositSale.customer,
+              seller: 'Operador Mostrador (Ingreso Taller)'
+            }).catch(() => null);
+          } catch (err) {}
+        }
 
         setOrders(prev => {
           const updated = [savedOrder, ...prev];
@@ -1039,11 +1108,15 @@ export function DataProvider({ children }) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: orderData.status || 'received',
+      isFacturada: Boolean(orderData.isFacturada || orderData.service?.isFacturada),
+      facturaNumero: orderData.facturaNumero || orderData.service?.facturaNumero || '',
       partCost: cleanPartCost,
       partSupplier: cleanPartSupplier,
       partName: cleanPartName,
       service: {
         ...(orderData.service || {}),
+        isFacturada: Boolean(orderData.isFacturada || orderData.service?.isFacturada),
+        facturaNumero: orderData.facturaNumero || orderData.service?.facturaNumero || '',
         partCost: cleanPartCost,
         partSupplier: cleanPartSupplier,
         partName: cleanPartName
@@ -1056,6 +1129,56 @@ export function DataProvider({ children }) {
         }
       ]
     };
+
+    // Registrar seña en caja para guardado local si la hubo
+    const localDepositAmount = parseFloat(newOrder.service?.deposit || 0);
+    if (localDepositAmount > 0) {
+      const cleanNum = (newOrder.orderNumber || '').replace(/[^0-9]/g, '');
+      const isDepositInvoiced = Boolean(newOrder.isFacturada);
+      const depositDocNum = newOrder.facturaNumero || `#REC-SEÑA-${cleanNum || Date.now()}`;
+
+      const localDepositSale = {
+        id: `sale-deposit-${newOrder.id}`,
+        ticketNumber: depositDocNum,
+        documentType: isDepositInvoiced ? 'factura_c' : 'recibo',
+        documentNumber: depositDocNum,
+        isDeposit: true,
+        orderId: newOrder.id,
+        orderRef: newOrder.orderNumber,
+        client: newOrder.customer,
+        customer: {
+          name: newOrder.customer?.name || 'Cliente Mostrador',
+          phone: newOrder.customer?.phone || '',
+          docNumber: newOrder.customer?.docNumber || ''
+        },
+        items: [
+          {
+            id: `dep-${newOrder.id}`,
+            name: `Seña / Anticipo: ${newOrder.service?.requestedRepair || 'Reparación'} (${newOrder.device?.brand || ''} ${newOrder.device?.model || ''}) - Orden ${newOrder.orderNumber}`,
+            category: 'Servicio Técnico / Taller',
+            price: localDepositAmount,
+            quantity: 1,
+            isService: true
+          }
+        ],
+        subtotal: localDepositAmount,
+        total: localDepositAmount,
+        cashCollected: localDepositAmount,
+        paymentMethod: orderData.service?.paymentMethod || 'Efectivo',
+        source: 'taller_deposit',
+        seller: 'Operador Mostrador (Ingreso Taller)',
+        createdAt: newOrder.createdAt,
+        formattedDate: new Date(newOrder.createdAt).toLocaleString('es-AR')
+      };
+
+      setSales(prevSales => {
+        const updated = [localDepositSale, ...prevSales];
+        try {
+          localStorage.setItem(STORAGE_KEYS.SALES, JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
+    }
 
     setOrders(prev => {
       const updated = [newOrder, ...prev];
@@ -2020,12 +2143,16 @@ export function DataProvider({ children }) {
         const finalPartCost = deliveryData.partCost !== undefined ? Number(deliveryData.partCost) : Number(o.partCost || o.service?.partCost || 0);
         const finalPartSupplier = deliveryData.partSupplier !== undefined ? deliveryData.partSupplier : (o.partSupplier || o.service?.partSupplier || '');
         const finalPartName = deliveryData.partName !== undefined ? deliveryData.partName : (o.partName || o.service?.partName || '');
+        const orderIsInvoiced = deliveryData.isFacturada !== undefined ? Boolean(deliveryData.isFacturada) : Boolean(o.isFacturada || o.service?.isFacturada);
+        const orderFacturaNum = deliveryData.facturaNumero || o.facturaNumero || o.service?.facturaNumero || '';
 
         return {
           ...o,
           status: 'delivered',
           repairResolution: deliveryData.repairResolution || 'ready',
           isRepaired: deliveryData.isRepaired !== undefined ? deliveryData.isRepaired : true,
+          isFacturada: orderIsInvoiced,
+          facturaNumero: orderFacturaNum,
           partCost: finalPartCost,
           partSupplier: finalPartSupplier,
           partName: finalPartName,
@@ -2035,6 +2162,8 @@ export function DataProvider({ children }) {
             status: 'delivered',
             repairResolution: deliveryData.repairResolution || 'ready',
             isRepaired: deliveryData.isRepaired !== undefined ? deliveryData.isRepaired : true,
+            isFacturada: orderIsInvoiced,
+            facturaNumero: orderFacturaNum,
             partCost: finalPartCost,
             partSupplier: finalPartSupplier,
             partName: finalPartName,
@@ -2060,10 +2189,12 @@ export function DataProvider({ children }) {
       const resText = deliveryData.repairResolution === 'ready' ? 'Reparado OK' : 'Sin Reparación / Devolución';
       api.updateOrdenEstado(orderId, {
         status: 'delivered',
-        technicalReport: `Entrega realizada: ${resText}. Saldo: $${balancePaid}. Vía ${paymentLabel}`,
+        technicalReport: `Entrega realizada: ${resText}. Saldo: $${balancePaid}. Vía ${paymentLabel}${deliveryData.isFacturada ? ` (Factura: ${deliveryData.facturaNumero || 'Emitida'})` : ''}`,
         operator: 'Mostrador Montec',
         repairResolution: deliveryData.repairResolution || 'ready',
         isRepaired: deliveryData.isRepaired !== undefined ? deliveryData.isRepaired : true,
+        isFacturada: deliveryData.isFacturada !== undefined ? Boolean(deliveryData.isFacturada) : undefined,
+        facturaNumero: deliveryData.facturaNumero || undefined,
         partCost: deliveryData.partCost !== undefined ? Number(deliveryData.partCost) : undefined,
         partSupplier: deliveryData.partSupplier || undefined,
         partName: deliveryData.partName || undefined
@@ -2097,9 +2228,10 @@ export function DataProvider({ children }) {
       });
     }
 
-    // 3. Registrar SIEMPRE el cobro y venta en el libro de Ventas Diarias (sales)
-    // Permite que la reparación aparezca facturada y cobrada en Caja Diaria (F8) y AFIP
-    if (totalAmount > 0 || balancePaid > 0 || (Array.isArray(accessories) && accessories.length > 0)) {
+    // 3. Registrar venta en el libro de Ventas Diarias (sales)
+    // NOTA CONTABLE: Si la factura ya fue emitida desde CommercialInvoicePOS (alreadyRecordedInSales === true),
+    // NO duplicar la venta en sales para mantener la integridad de Caja Diaria.
+    if (!deliveryData.alreadyRecordedInSales && (totalAmount > 0 || balancePaid > 0 || (Array.isArray(accessories) && accessories.length > 0))) {
       const saleItems = [];
 
       // A. Ítem del servicio de reparación si se cobró saldo
@@ -2146,6 +2278,7 @@ export function DataProvider({ children }) {
         discountValue: discount,
         discountAmount: discount,
         total: totalAmount,
+        cashCollected: totalAmount,
         paymentMethod: paymentLabel,
         cashGiven: cashGiven || 0,
         changeDue: changeDue || 0,
@@ -2182,9 +2315,43 @@ export function DataProvider({ children }) {
       } catch (err) {}
 
       saveClientToPadron({ name: clientName, phone: clientPhone });
+    } else {
+      saveClientToPadron({ name: clientName, phone: clientPhone });
     }
 
     return true;
+  };
+
+  /**
+   * Marca una orden de reparación como facturada con su número de comprobante fiscal
+   */
+  const markOrderAsInvoiced = (orderId, facturaNumero = '') => {
+    setOrders(prev => {
+      const updated = prev.map(o => {
+        if (o.id !== orderId && o.orderNumber !== orderId) return o;
+        return {
+          ...o,
+          isFacturada: true,
+          facturaNumero: facturaNumero || o.facturaNumero || 'FAC-OK',
+          service: {
+            ...o.service,
+            isFacturada: true,
+            facturaNumero: facturaNumero || o.service?.facturaNumero || 'FAC-OK'
+          }
+        };
+      });
+      try {
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    try {
+      api.updateOrdenEstado(orderId, {
+        isFacturada: true,
+        facturaNumero: facturaNumero || 'FAC-OK'
+      }).catch(() => null);
+    } catch (e) {}
   };
 
   // --- Operaciones de Gastos Operativos y Cierre Mensual ---
@@ -3080,6 +3247,7 @@ export function DataProvider({ children }) {
       updateRepairOrder,
       updateOrderPartCost,
       updateOrderBudget,
+      markOrderAsInvoiced,
       updateRepairOrderStatus,
       addOrderInternalNote,
       recordOrderPayment,

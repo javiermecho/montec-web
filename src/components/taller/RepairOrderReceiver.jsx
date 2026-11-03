@@ -214,6 +214,7 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
   };
 
   const [formData, setFormData] = useState(initialFormState);
+  const [invoiceDepositNow, setInvoiceDepositNow] = useState(false);
 
   // Bloquear scroll de página cuando esté abierto
   useEffect(() => {
@@ -688,12 +689,17 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
       };
 
       // Guardar orden (sincroniza con PostgreSQL en Railway y obtiene #MON-XXXX oficial)
+      const isDepositBilled = invoiceDepositNow && depositNum > 0;
+      const facturaNumAnticipo = isDepositBilled ? `FAC-ANT-${Date.now().toString().slice(-4)}` : '';
+
       const savedOrder = await createRepairOrder({
         customer: formData.customer,
         device: devicePayload,
         partCost: partCostNum,
         partSupplier: partSupplierStr,
         partName: partNameStr,
+        isFacturada: isDepositBilled,
+        facturaNumero: facturaNumAnticipo,
         service: {
           ...formData.service,
           budgetTotal: totalNum,
@@ -702,6 +708,8 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
           partCost: partCostNum,
           partSupplier: partSupplierStr,
           partName: partNameStr,
+          isFacturada: isDepositBilled,
+          facturaNumero: facturaNumAnticipo,
           warranty: formData.service.warranty || '90 días de garantía escrita',
           patternLock: normalizedSecurity.patternLock,
           pinLock: normalizedSecurity.pin
@@ -714,6 +722,7 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
 
       // Resetear formulario a nuevo
       setFormData(initialFormState);
+      setInvoiceDepositNow(false);
       setModelSearchQuery('');
     } catch (err) {
       console.error('Error al generar orden:', err);
@@ -2019,6 +2028,28 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
                   />
                 </div>
               </div>
+
+              {/* OPCIÓN: FACTURAR FISCALMENTE EL ANTICIPO AL INGRESAR */}
+              {parseFloat(formData.service.deposit) > 0 && (
+                <div className={`p-2.5 rounded-xl border flex items-center justify-between animate-fadeIn mb-2 ${
+                  isLight ? 'bg-emerald-50 border-emerald-300' : 'bg-emerald-950/30 border-emerald-500/30'
+                }`}>
+                  <label className="flex items-center gap-2 cursor-pointer select-none text-xs">
+                    <input
+                      type="checkbox"
+                      checked={invoiceDepositNow}
+                      onChange={(e) => setInvoiceDepositNow(e.target.checked)}
+                      className="w-4 h-4 rounded border-zinc-700 text-emerald-500 focus:ring-0 cursor-pointer"
+                    />
+                    <span className={`font-semibold ${isLight ? 'text-slate-800' : 'text-emerald-200'}`}>
+                      🧾 Emitir factura fiscal por el anticipo ahora (opcional)
+                    </span>
+                  </label>
+                  <span className="text-[10px] text-emerald-400 font-mono font-bold">
+                    {invoiceDepositNow ? 'Se marcará facturada' : 'Solo recibo interno'}
+                  </span>
+                </div>
+              )}
 
               {/* BLOQUE DE COSTO DEL REPUESTO E INTEGRACIÓN CON PROVEEDORES */}
               <div className={`p-2.5 rounded-xl border ${

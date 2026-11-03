@@ -1069,7 +1069,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                       <td className="py-3 px-4 align-middle text-right whitespace-nowrap">
                         <div className={`font-mono font-bold text-sm ${
                           balance > 0 
-                            ? (isLight ? 'text-amber-600' : 'text-amber-400') 
+                            ? (isLight ? 'text-amber-600' : 'text-emerald-600') 
                             : (isLight ? 'text-emerald-600' : 'text-emerald-400')
                         }`}>
                           {balance > 0 ? `$${balance.toLocaleString('es-AR')}` : 'Abonado OK'}
@@ -1095,6 +1095,19 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                             </button>
                           )}
                         </div>
+                        {Boolean(order.isFacturada || order.service?.isFacturada) ? (
+                          <div className="mt-0.5">
+                            <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20" title={`Factura: ${order.facturaNumero || order.service?.facturaNumero || 'Emitida'}`}>
+                              🧾 Facturada
+                            </span>
+                          </div>
+                        ) : Number(totalBudget) > 0 && (order.status === 'ready' || order.status === 'delivered') ? (
+                          <div className="mt-0.5">
+                            <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20" title="Pendiente de emisión de factura fiscal al entregar">
+                              ⚠️ No facturada
+                            </span>
+                          </div>
+                        ) : null}
                       </td>
 
                       {/* 6. Fecha Pactada */}
@@ -1666,6 +1679,31 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                         ${Number(selectedOrder.service?.balanceDue || 0).toLocaleString('es-AR')}
                       </span>
                     </div>
+                  </div>
+
+                  {/* ESTADO FISCAL Y FACTURACIÓN */}
+                  <div className={`p-2.5 rounded-xl mb-4 border flex items-center justify-between text-xs ${
+                    Boolean(selectedOrder.isFacturada || selectedOrder.service?.isFacturada)
+                      ? (isLight ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300')
+                      : (isLight ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-amber-500/10 border-amber-500/30 text-amber-300')
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <Receipt className="w-4 h-4 shrink-0" />
+                      <span>
+                        {Boolean(selectedOrder.isFacturada || selectedOrder.service?.isFacturada) ? (
+                          <>Factura Fiscal: <strong className="font-mono">#{selectedOrder.facturaNumero || selectedOrder.service?.facturaNumero || 'Emitida'}</strong></>
+                        ) : (
+                          <>Factura Fiscal: <strong>Pendiente de emisión</strong> (Se factura al momento de entregar)</>
+                        )}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                      Boolean(selectedOrder.isFacturada || selectedOrder.service?.isFacturada)
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'bg-amber-500/20 text-amber-400'
+                    }`}>
+                      {Boolean(selectedOrder.isFacturada || selectedOrder.service?.isFacturada) ? 'Facturada' : 'Sin Facturar'}
+                    </span>
                   </div>
 
                   {/* BLOQUE DE COSTO DE REPUESTO & UTILIDAD NETA */}
