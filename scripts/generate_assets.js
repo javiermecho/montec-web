@@ -192,3 +192,4 @@ generateAssets().catch(err => {
   console.error('Error generando activos:', err);
   process.exit(1);
 });
+
