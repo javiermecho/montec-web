@@ -1,8 +1,8 @@
 {
-  "name": "montec | Taller & Punto de Venta",
-  "short_name": "montec Taller",
-  "description": "Sistema de Gestión de Órdenes de Reparación, Control de Taller y Punto de Venta de montec Mar del Plata",
-  "start_url": "/?mode=taller",
+  "name": "montec | Servicio Técnico & Taller",
+  "short_name": "montec",
+  "description": "Servicio Técnico Especializado de Celulares, iPhone y Notebooks en Mar del Plata. Seguimiento y Control de Taller.",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#08080A",

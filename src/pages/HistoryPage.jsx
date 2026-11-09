@@ -23,19 +23,23 @@ import MontecLogo from '../components/MontecLogo';
 import Footer from '../components/Footer';
 import { trackWhatsAppClick, trackClickLlamadaOMapa } from '../services/analytics';
 import { useData } from '../context/DataContext';
+import { useSEO } from '../hooks/useSEO';
 
 export default function HistoryPage({ onNavigateHome }) {
   const { setIsQuoteModalOpen, businessConfig } = useData();
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
+  // SEO y Canónica estricta para Google Search Console
+  useSEO({
+    title: 'Nuestra Historia • 12 Años de Trayectoria | Montec Mar del Plata',
+    description: 'Conocé la historia de Montec en Mar del Plata. Desde 2012 reparando celulares, iPhone, Mac y notebooks con laboratorio propio y honestidad técnica.',
+    canonical: 'https://montec.ar/historia',
+    noindex: false
+  });
+
   // Asegurar scroll al tope al ingresar a la página
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    const originalTitle = document.title;
-    document.title = 'Nuestra Historia • 12 Años de Trayectoria | Montec Mar del Plata';
-    return () => {
-      document.title = originalTitle;
-    };
   }, []);
 
   const rawWhatsapp = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.supportPhone || '5492235444991';

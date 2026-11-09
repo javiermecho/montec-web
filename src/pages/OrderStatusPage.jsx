@@ -24,6 +24,7 @@ import {
 import MontecLogo from '../components/MontecLogo';
 import { useData } from '../context/DataContext';
 import { queryOrderTracking, getOrderTrackingUrl } from '../services/orderTrackingService';
+import { useSEO } from '../hooks/useSEO';
 
 /**
  * 5 Etapas Oficiales del Stepper Visual para Clientes
@@ -105,6 +106,14 @@ function getStepIndexForStatus(status) {
 
 export default function OrderStatusPage({ onNavigateHome }) {
   const { orders = [], businessConfig } = useData();
+
+  // Excluir de Google Search Console para no generar Soft 404 o Canónicas Erróneas
+  useSEO({
+    title: 'Consulta de Estado de Reparación en Tiempo Real | Montec',
+    description: 'Consultá el estado y avance de tu equipo en reparación en el laboratorio de Montec Mar del Plata.',
+    canonical: 'https://montec.ar/estado',
+    noindex: true
+  });
 
   // Estados del buscador y formulario
   const [orderQueryInput, setOrderQueryInput] = useState('');

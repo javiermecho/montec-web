@@ -1,13 +1,30 @@
 User-agent: *
 Allow: /
+Allow: /historia
+Allow: /terminos.html
+Allow: /privacidad.html
 
+# Excluir rutas privadas de taller, administración y seguimiento transaccional
+Disallow: /taller
+Disallow: /taller/
+Disallow: /estado
+Disallow: /estado/
+Disallow: /seguimiento
+Disallow: /seguimiento/
+Disallow: /reparacion
+Disallow: /reparacion/
+Disallow: /*?mode=*
+Disallow: /*?orden=*
+Disallow: /*?order=*
+Disallow: /*?taller=*
+Disallow: /*?cockpit=*
+Disallow: /*?admin=*
+
+# Bots de anuncios de Google (mantener acceso completo para verificación de anuncios)
 User-agent: AdsBot-Google
 Allow: /
 
 User-agent: AdsBot-Google-Mobile
-Allow: /
-
-User-agent: Googlebot
 Allow: /
 
 User-agent: Mediapartners-Google

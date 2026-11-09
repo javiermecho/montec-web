@@ -1,6 +1,17 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # 1. Forzar HTTPS de forma canónica (evitar duplicados HTTP vs HTTPS)
+  RewriteCond %{HTTPS} off
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 2. Redirigir www a no-www (evitar duplicados www vs non-www)
+  RewriteCond %{HTTP_HOST} ^www\.montec\.ar$ [NC]
+  RewriteRule ^(.*)$ https://montec.ar/$1 [L,R=301]
+
+  # 3. SPA Routing estándar (Redirigir rutas virtuales a index.html preservando archivos reales)
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

@@ -19,6 +19,7 @@ import TallerLoginScreen from './components/taller/TallerLoginScreen';
 import { DataProvider, useData } from './context/DataContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useSubdomain } from './hooks/useSubdomain';
+import { useSEO } from './hooks/useSEO';
 
 function checkIsHistoryPage() {
   if (typeof window === 'undefined') return false;
@@ -65,6 +66,17 @@ function AppContent() {
   const [isHistoryPage, setIsHistoryPage] = useState(checkIsHistoryPage);
   const [isOrderStatusPage, setIsOrderStatusPage] = useState(checkIsOrderStatusPage);
   const [isTrackerModalOpen, setIsTrackerModalOpen] = useState(false);
+
+  // Control estricto de SEO Canónico para la vista principal y panel de taller
+  const isHomeView = !isStore && !isTallerSubdomain && !isHistoryPage && !isOrderStatusPage;
+  useSEO({
+    title: isTallerSubdomain 
+      ? 'Panel de Control y Taller | montec' 
+      : 'montec | Servicio Técnico Independiente de Celulares, iPhone y Notebooks en Mar del Plata',
+    description: 'Taller multimarca y servicio técnico independiente en Constitución, Mar del Plata. Reparación de celulares, iPhone, Samsung, Motorola y PC. Montes Carballo 943.',
+    canonical: 'https://montec.ar/',
+    noindex: isTallerSubdomain // No indexar jamás el panel de empleados/taller
+  });
 
   // Escuchar navegación por historial, popstate y hash
   useEffect(() => {

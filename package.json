@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node run-server.js",
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/postbuild_seo.js",
     "preview": "vite preview",
     "scrape:smartsupply": "node scripts/scrape_smartsupply.cjs",
     "scrape:grupoarmar": "node scripts/scrape_grupoarmar.cjs",

@@ -25,6 +25,7 @@ import ProductCard from '../components/store/ProductCard';
 import ProductDetailModal from '../components/store/ProductDetailModal';
 import CartDrawer from '../components/store/CartDrawer';
 import MontecLogo from '../components/MontecLogo';
+import { useSEO } from '../hooks/useSEO';
 
 const STORAGE_KEYS = {
   CART: 'montec_store_cart_v1',
@@ -47,6 +48,15 @@ function normalizeCategory(cat) {
 export default function StorePage() {
   const { accessories, inventory, dolarRate, businessConfig } = useData();
   const { navigateToMain } = useSubdomain();
+
+  // Canónica independiente para la tienda online
+  const isSubdomain = typeof window !== 'undefined' && window.location.hostname.startsWith('tienda.');
+  useSEO({
+    title: 'Tienda Online de Accesorios y Repuestos | montec Mar del Plata',
+    description: 'Comprá fundas, cargadores, vidrios templados y repuestos para celulares en la tienda oficial de montec Mar del Plata.',
+    canonical: isSubdomain ? 'https://tienda.montec.ar/' : 'https://montec.ar/tienda',
+    noindex: false
+  });
 
   // Estados locales
   const [selectedCategory, setSelectedCategory] = useState('Todos');
