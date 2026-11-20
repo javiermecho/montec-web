@@ -85,33 +85,18 @@ export function saveAnalyticsConfig(config) {
  * Inyecta el script gtag.js si no existe en el DOM y envía el config de GA4
  */
 export function ensureGoogleAnalyticsLoaded(gaId) {
-  if (typeof window === 'undefined' || !gaId || gaId.includes('XXXXX')) return;
+  if (typeof window === 'undefined') return;
 
-  // 1. Asegurar función gtag
+  // Con Google Tag Manager activo (GTM-K99MSJG4), GTM gestiona todos los tags en la nube.
+  // Solo garantizamos dataLayer y la función puente gtag() sin inyectar scripts duplicados.
+  window.dataLayer = window.dataLayer || [];
   if (typeof window.gtag !== 'function') {
-    window.dataLayer = window.dataLayer || [];
     window.gtag = function() {
       window.dataLayer.push(arguments);
     };
-    window.gtag('js', new Date());
   }
 
-  // 2. Comprobar si ya existe el script de gtag en el DOM
-  const existingScript = document.querySelector(`script[src*="googletagmanager.com/gtag/js"]`);
-  if (!existingScript) {
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-    document.head.appendChild(script);
-  }
-
-  // 3. Enviar comando config
-  window.gtag('config', gaId, {
-    page_title: document.title,
-    page_location: window.location.href
-  });
-
-  console.log(`✅ [Analytics] Conectado a Google Analytics ID: ${gaId}`);
+  console.log('✅ [Analytics] Google Tag Manager activo. Eventos sincronizados vía dataLayer.');
 }
 
 /**
@@ -363,11 +348,13 @@ export function trackConsultaAccesorio({ accessoryName, category, price }) {
   });
 }
 
-// Inicializar automáticamente en el inicio de la app si hay ID guardado
+// Inicializar dataLayer para Google Tag Manager
 if (typeof window !== 'undefined') {
-  const initialConfig = getAnalyticsConfig();
-  if (initialConfig.gaId) {
-    ensureGoogleAnalyticsLoaded(initialConfig.gaId);
+  window.dataLayer = window.dataLayer || [];
+  if (typeof window.gtag !== 'function') {
+    window.gtag = function() {
+      window.dataLayer.push(arguments);
+    };
   }
 }
 
