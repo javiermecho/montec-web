@@ -44,7 +44,8 @@ import {
   Sun,
   Moon,
   Wallet,
-  Receipt
+  Receipt,
+  Edit2
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
@@ -319,6 +320,40 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   const [isEditingCostInline, setIsEditingCostInline] = useState(false);
   const [inlineCostValue, setInlineCostValue] = useState('');
   const [inlineSupplierValue, setInlineSupplierValue] = useState('');
+
+  // Modal para Editar Estado Estético Externo
+  const [isAestheticModalOpen, setIsAestheticModalOpen] = useState(false);
+  const [aestheticModalValue, setAestheticModalValue] = useState('');
+
+  const handleOpenAestheticModal = () => {
+    if (!selectedOrder) return;
+    const currentAesthetic = selectedOrder.device?.aestheticCondition || selectedOrder.device?.aesthetic || selectedOrder.aestheticCondition || '';
+    setAestheticModalValue(currentAesthetic);
+    setIsAestheticModalOpen(true);
+  };
+
+  const handleSaveAestheticSubmit = (e) => {
+    e.preventDefault();
+    if (!selectedOrder) return;
+    const cleanValue = aestheticModalValue.trim();
+    updateRepairOrder(selectedOrder.id, {
+      device: {
+        ...(selectedOrder.device || {}),
+        aestheticCondition: cleanValue
+      }
+    });
+    setSelectedOrder(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        device: {
+          ...(prev.device || {}),
+          aestheticCondition: cleanValue
+        }
+      };
+    });
+    setIsAestheticModalOpen(false);
+  };
 
   const handleOpenPartCostModal = (order) => {
     setCostModalOrder(order);
@@ -1628,11 +1663,56 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
                     </div>
 
                     <div>
-                      <span className={`block text-[11px] mb-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Color y Estética</span>
-                      <span className={isLight ? 'text-slate-800' : 'text-zinc-300'}>
-                        {selectedOrder.device?.color ? `Color: ${selectedOrder.device.color}` : 'Color estándar'}
-                        {selectedOrder.device?.aestheticCondition && ` (${selectedOrder.device.aestheticCondition})`}
+                      <span className={`block text-[11px] mb-0.5 ${isLight ? 'text-slate-500' : 'text-zinc-500'}`}>Color del Dispositivo</span>
+                      <span className={`font-medium ${isLight ? 'text-slate-800' : 'text-zinc-300'}`}>
+                        {selectedOrder.device?.color ? selectedOrder.device.color : 'Color estándar'}
                       </span>
+                    </div>
+
+                    {/* ESTADO ESTÉTICO EXTERNO */}
+                    <div className={`sm:col-span-2 p-3.5 rounded-xl border transition-all ${
+                      isLight 
+                        ? 'bg-amber-50/70 border-amber-200/90 text-amber-950 shadow-xs' 
+                        : 'bg-amber-950/20 border-amber-500/25 text-amber-200 shadow-xs'
+                    }`}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4 text-[#FF5500]" />
+                          <span className={`text-[11px] font-bold uppercase tracking-wider ${
+                            isLight ? 'text-amber-900' : 'text-amber-400'
+                          }`}>
+                            Estado Estético Externo (Recepción):
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleOpenAestheticModal}
+                          className={`text-xs px-2.5 py-1 rounded-lg border transition-colors flex items-center gap-1.5 font-semibold cursor-pointer ${
+                            isLight 
+                              ? 'bg-white hover:bg-amber-100 text-amber-900 border-amber-300 shadow-xs' 
+                              : 'bg-zinc-900/90 hover:bg-zinc-800 text-amber-300 border-amber-500/30'
+                          }`}
+                          title="Editar o cargar estado estético"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 text-[#FF5500]" />
+                          <span>
+                            {selectedOrder.device?.aestheticCondition || selectedOrder.device?.aesthetic || selectedOrder.aestheticCondition ? 'Modificar' : 'Cargar estado'}
+                          </span>
+                        </button>
+                      </div>
+                      <p className={`text-xs sm:text-sm font-medium leading-relaxed ${
+                        isLight ? 'text-slate-800' : 'text-zinc-200'
+                      }`}>
+                        {selectedOrder.device?.aestheticCondition 
+                          || selectedOrder.device?.aesthetic 
+                          || selectedOrder.aestheticCondition 
+                          || (
+                            <span className="italic text-zinc-400 dark:text-zinc-500 font-normal">
+                              Sin observaciones estéticas ni daños externos registrados al momento del ingreso.
+                            </span>
+                          )
+                        }
+                      </p>
                     </div>
 
                     {/* CLAVE / SEGURIDAD */}
@@ -2908,6 +2988,97 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     );
   };
 
+  const renderAestheticModal = () => {
+    if (!isAestheticModalOpen || !selectedOrder) return null;
+
+    return createPortal(
+      <div className="fixed inset-0 z-[115] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fade-in font-sans">
+        <div className={`border rounded-2xl p-6 max-w-md w-full shadow-2xl relative ${
+          isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#161619] border-zinc-800 text-white'
+        }`}>
+          <button
+            type="button"
+            onClick={() => setIsAestheticModalOpen(false)}
+            className={`absolute top-4 right-4 p-1 rounded-lg cursor-pointer transition-colors ${
+              isLight ? 'text-slate-400 hover:text-slate-800 hover:bg-slate-100' : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+            }`}
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-9 h-9 rounded-xl bg-[#FF5500]/20 text-[#FF5500] border border-[#FF5500]/30 flex items-center justify-center font-bold">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className={`text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                Estado Estético Externo (Recepción)
+              </h4>
+              <p className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-zinc-400'}`}>
+                Orden {selectedOrder.orderNumber} • {selectedOrder.device?.brand} {selectedOrder.device?.model}
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSaveAestheticSubmit} className="space-y-4 mt-4">
+            <div className={`p-3 rounded-xl border text-xs flex justify-between items-center ${
+              isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+            }`}>
+              <div>
+                <span className="font-bold block">{selectedOrder.customer?.name || 'Cliente'}</span>
+                <span className="text-[11px] opacity-75 font-mono">{selectedOrder.device?.brand} {selectedOrder.device?.model}</span>
+              </div>
+              <div className="text-right">
+                <span className="block text-[10px] uppercase font-bold text-zinc-500">Color Registrado</span>
+                <span className="font-semibold">{selectedOrder.device?.color || 'Color estándar'}</span>
+              </div>
+            </div>
+
+            <div>
+              <label className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                Detalle del Estado Estético y Golpes al Ingreso:
+              </label>
+              <textarea
+                rows={3}
+                autoFocus
+                value={aestheticModalValue}
+                onChange={(e) => setAestheticModalValue(e.target.value)}
+                placeholder="Ej: Bisel con marcas leves de uso, templado roto, tapa trasera con rayas..."
+                className={`w-full border rounded-xl p-3 text-xs outline-none focus:border-[#FF5500] ${
+                  isLight ? 'bg-white border-slate-300 text-slate-900 placeholder-slate-400' : 'bg-zinc-900 border-zinc-700 text-zinc-200 placeholder-zinc-500'
+                }`}
+              />
+              <p className="text-[11px] text-zinc-500 mt-1">
+                Este detalle queda registrado en la orden y se imprime en el comprobante del cliente.
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsAestheticModalOpen(false)}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-semibold border cursor-pointer transition-colors ${
+                  isLight ? 'border-slate-300 hover:bg-slate-100 text-slate-700' : 'border-zinc-700 hover:bg-zinc-800 text-zinc-300'
+                }`}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                className="flex-1 py-2.5 bg-[#FF5500] hover:bg-[#FF6600] text-white rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-[#FF5500]/30"
+              >
+                <Check className="w-4 h-4" />
+                <span>Guardar Estado</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
   if (isEmbedded) {
     return (
       <div className="space-y-6 font-sans">
@@ -2961,6 +3132,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
         {renderPatternModal()}
         {renderPaymentModal()}
         {renderBudgetModal()}
+        {renderAestheticModal()}
         {ticketModalOrder && (
           <OrderTicketModal
             order={ticketModalOrder}
@@ -3077,6 +3249,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
       {renderPatternModal()}
       {renderPaymentModal()}
       {renderBudgetModal()}
+      {renderAestheticModal()}
       {ticketModalOrder && (
         <OrderTicketModal
           order={ticketModalOrder}

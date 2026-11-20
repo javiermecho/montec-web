@@ -212,12 +212,17 @@ export default function OrderTicketModal({ order, onClose }) {
                 <span className="text-zinc-500 print:text-gray-600 block text-[10px]">IMEI / Serie:</span>
                 <span className="font-mono text-zinc-300 print:text-black">{device.imei || 'No registrado'}</span>
               </div>
-              {device.aestheticCondition && (
-                <div className="col-span-2">
-                  <span className="text-zinc-500 print:text-gray-600 block text-[10px]">Estado Estético Externo:</span>
-                  <span className="text-zinc-300 print:text-black italic">{device.aestheticCondition}</span>
-                </div>
-              )}
+              {(() => {
+                const aestheticText = device.aestheticCondition || device.aesthetic || device.estadoEstetico || order.aestheticCondition || order.estadoEstetico || '';
+                return (
+                  <div className="col-span-2">
+                    <span className="text-zinc-500 print:text-gray-600 block text-[10px]">Estado Estético Externo:</span>
+                    <span className="text-zinc-300 print:text-black italic">
+                      {aestheticText || 'Sin observaciones estéticas registradas al ingreso.'}
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Bloque de Seguridad / Desbloqueo */}

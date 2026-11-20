@@ -438,6 +438,13 @@ export function DataProvider({ children }) {
           const cleanPartCost = (!isNaN(partCostNum) && partCostNum >= 0) ? partCostNum : 0;
           const cleanPartSupplier = ord.partSupplier || ord.service?.partSupplier || ord.service_data?.partSupplier || '';
           const cleanPartName = ord.partName || ord.service?.partName || ord.service_data?.partName || '';
+          const aestheticCondition = ord.device?.aestheticCondition 
+            || ord.device?.aesthetic 
+            || ord.device?.estadoEstetico 
+            || ord.aestheticCondition 
+            || ord.estadoEstetico 
+            || ord.detallesEsteticos 
+            || '';
 
           return {
             ...ord,
@@ -454,6 +461,8 @@ export function DataProvider({ children }) {
             device: {
               ...(ord.device || {}),
               model: ord.device?.model || ord.deviceModel || 'Dispositivo',
+              color: ord.device?.color || ord.color || '',
+              aestheticCondition: aestheticCondition,
               patternLock: sec.patternLock || ord.device?.patternLock || ord.service?.patternLock || '',
               pinLock: sec.pin || ord.device?.pinLock || ord.service?.pinLock || '',
               security: sec
@@ -481,23 +490,38 @@ export function DataProvider({ children }) {
               
               // MERGE INTELIGENTE: Si la orden en el servidor tiene partCost 0 o vacío, pero localmente
               // ya tenía un costo asignado, preservar el costo local para no perderlo por latencia.
+              // Igualmente preservar aestheticCondition si el backend no lo devolvió.
               const merged = normalizedRemote.map(serverOrd => {
                 const localMatch = filteredPrev.find(l => l.orderNumber === serverOrd.orderNumber || String(l.id) === String(serverOrd.id));
+                const localAesthetic = localMatch?.device?.aestheticCondition || localMatch?.aestheticCondition || '';
+                const finalAesthetic = serverOrd.device?.aestheticCondition || localAesthetic;
+
+                let updatedOrd = serverOrd;
+                if (finalAesthetic && !serverOrd.device?.aestheticCondition) {
+                  updatedOrd = {
+                    ...updatedOrd,
+                    device: {
+                      ...(updatedOrd.device || {}),
+                      aestheticCondition: finalAesthetic
+                    }
+                  };
+                }
+
                 if (localMatch && (!serverOrd.partCost || serverOrd.partCost === 0) && localMatch.partCost > 0) {
-                  return {
-                    ...serverOrd,
+                  updatedOrd = {
+                    ...updatedOrd,
                     partCost: localMatch.partCost,
                     partSupplier: localMatch.partSupplier || serverOrd.partSupplier,
                     partName: localMatch.partName || serverOrd.partName,
                     service: {
-                      ...(serverOrd.service || {}),
+                      ...(updatedOrd.service || {}),
                       partCost: localMatch.partCost,
                       partSupplier: localMatch.partSupplier || serverOrd.service?.partSupplier,
                       partName: localMatch.partName || serverOrd.service?.partName
                     }
                   };
                 }
-                return serverOrd;
+                return updatedOrd;
               });
 
               filteredPrev.forEach(localOrd => {
@@ -951,6 +975,7 @@ export function DataProvider({ children }) {
           type: orderData.device?.type || 'Smartphone',
           imei: orderData.device?.imei || '',
           color: orderData.device?.color || '',
+          aestheticCondition: orderData.device?.aestheticCondition || orderData.device?.aesthetic || orderData.aestheticCondition || '',
           patternLock: orderData.device?.security?.patternSequence?.join('-') || orderData.device?.patternLock || '',
           pinLock: orderData.device?.security?.pin || orderData.device?.pinLock || '',
           security: orderData.device?.security || {},
@@ -995,7 +1020,8 @@ export function DataProvider({ children }) {
           },
           device: {
             ...orderData.device,
-            model: response.order.device?.model || orderData.device?.model
+            model: response.order.device?.model || orderData.device?.model,
+            aestheticCondition: orderData.device?.aestheticCondition || response.order.device?.aestheticCondition || ''
           },
           service: {
             ...orderData.service,
@@ -1113,6 +1139,10 @@ export function DataProvider({ children }) {
       partCost: cleanPartCost,
       partSupplier: cleanPartSupplier,
       partName: cleanPartName,
+      device: {
+        ...(orderData.device || {}),
+        aestheticCondition: orderData.device?.aestheticCondition || ''
+      },
       service: {
         ...(orderData.service || {}),
         isFacturada: Boolean(orderData.isFacturada || orderData.service?.isFacturada),
@@ -1284,6 +1314,9 @@ export function DataProvider({ children }) {
         return {
           ...o,
           ...updatedFields,
+          device: updatedFields.device ? { ...(o.device || {}), ...updatedFields.device } : o.device,
+          service: updatedFields.service ? { ...(o.service || {}), ...updatedFields.service } : o.service,
+          customer: updatedFields.customer ? { ...(o.customer || {}), ...updatedFields.customer } : o.customer,
           updatedAt: new Date().toISOString()
         };
       });

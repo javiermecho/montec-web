@@ -14,8 +14,13 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    chunkSizeWarningLimit: 2000,
     rollupOptions: {
-      maxParallelFileOps: 3
+      maxParallelFileOps: 2
     }
+  },
+  esbuild: {
+    sourcemap: false,
+    legalComments: 'none'
   }
 })

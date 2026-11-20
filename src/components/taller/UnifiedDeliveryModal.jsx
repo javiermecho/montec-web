@@ -866,6 +866,13 @@ export default function UnifiedDeliveryModal({ order, isOpen, onClose, onDeliver
                   </div>
                 </div>
 
+                {(order.device?.aestheticCondition || order.device?.aesthetic || order.aestheticCondition) && (
+                  <div className="text-[11px] p-2 rounded-lg bg-zinc-950/60 border border-zinc-800/80 text-zinc-300">
+                    <span className="text-zinc-500 font-semibold block text-[10px] uppercase">Estética registrada al ingreso:</span>
+                    <span className="italic text-zinc-200">{order.device?.aestheticCondition || order.device?.aesthetic || order.aestheticCondition}</span>
+                  </div>
+                )}
+
                 {/* RESUMEN ECONÓMICO TRANSPARENTE: PRESUPUESTO, SEÑA Y SALDO */}
                 <div className="grid grid-cols-3 gap-2 p-2 rounded-lg bg-zinc-950/80 border border-zinc-800 text-xs">
                   <div>
