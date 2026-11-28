@@ -19,9 +19,11 @@ import {
   MessageSquare,
   FileText,
   BadgeCheck,
-  Server
+  Server,
+  Lock
 } from 'lucide-react';
 import { useData, DEFAULT_BUSINESS_CONFIG } from '../../context/DataContext';
+import { useAuth } from '../../context/AuthContext';
 import { api } from '../../services/api';
 import FiscalBillingConfigModal from '../pos/FiscalBillingConfigModal';
 
@@ -33,10 +35,11 @@ export default function LocalSettingsTab() {
     panelTheme,
     serverStatus
   } = useData();
+  const { isAdmin, updateCredentials } = useAuth();
 
   const isLight = panelTheme === 'light';
 
-  // Helper para asegurar que la estructura esté 100% poblada sin riesgo de undefined
+  // Helper para asegurar que la estructura esté 100% poblada desde DEFAULT_BUSINESS_CONFIG
   const buildCleanState = (config) => {
     const c = config || {};
     const b = c.business || {};
@@ -46,34 +49,34 @@ export default function LocalSettingsTab() {
 
     return {
       business: {
-        fantasyName: b.fantasyName ?? def.business.fantasyName ?? 'MONTEC',
-        legalName: b.legalName ?? def.business.legalName ?? 'MONTEC SERVICIO TÉCNICO',
-        cuit: b.cuit ?? def.business.cuit ?? '20-38492019-4',
-        iibb: b.iibb ?? def.business.iibb ?? '20-38492019-4',
+        fantasyName: b.fantasyName ?? def.business.fantasyName ?? '',
+        legalName: b.legalName ?? def.business.legalName ?? '',
+        cuit: b.cuit ?? def.business.cuit ?? '',
+        iibb: b.iibb ?? def.business.iibb ?? '',
         ivaCondition: b.ivaCondition ?? def.business.ivaCondition ?? 'Responsable Inscripto',
-        startActivityDate: b.startActivityDate ?? def.business.startActivityDate ?? '2020-01-15',
-        address: b.address ?? def.business.address ?? 'Montes Carballo 943',
-        city: b.city ?? def.business.city ?? 'Mar del Plata',
-        state: b.state ?? def.business.state ?? 'Buenos Aires',
-        zipCode: b.zipCode ?? def.business.zipCode ?? '7600',
+        startActivityDate: b.startActivityDate ?? def.business.startActivityDate ?? '',
+        address: b.address ?? def.business.address ?? '',
+        city: b.city ?? def.business.city ?? '',
+        state: b.state ?? def.business.state ?? '',
+        zipCode: b.zipCode ?? def.business.zipCode ?? '',
         country: b.country ?? def.business.country ?? 'Argentina'
       },
       contact: {
-        supportPhone: ct.supportPhone ?? def.contact.supportPhone ?? '+54 9 223 544-4991',
-        technicalWhatsapp: ct.technicalWhatsapp ?? def.contact.technicalWhatsapp ?? '+54 9 223 544-4991',
-        quotationWhatsapp: ct.quotationWhatsapp ?? def.contact.quotationWhatsapp ?? '+54 9 223 544-4991',
-        contactEmail: ct.contactEmail ?? def.contact.contactEmail ?? 'consultas@montec.ar',
-        billingEmail: ct.billingEmail ?? def.contact.billingEmail ?? 'facturacion@montec.ar',
-        website: ct.website ?? def.contact.website ?? 'https://montec.ar'
+        supportPhone: ct.supportPhone ?? def.contact.supportPhone ?? '',
+        technicalWhatsapp: ct.technicalWhatsapp ?? def.contact.technicalWhatsapp ?? '',
+        quotationWhatsapp: ct.quotationWhatsapp ?? def.contact.quotationWhatsapp ?? '',
+        contactEmail: ct.contactEmail ?? def.contact.contactEmail ?? '',
+        billingEmail: ct.billingEmail ?? def.contact.billingEmail ?? '',
+        website: ct.website ?? def.contact.website ?? ''
       },
       afip: {
-        status: a.status ?? def.afip.status ?? 'active',
-        certificateExpiration: a.certificateExpiration ?? def.afip.certificateExpiration ?? '5/1/2028',
+        status: a.status ?? def.afip.status ?? 'inactive',
+        certificateExpiration: a.certificateExpiration ?? def.afip.certificateExpiration ?? '',
         environment: a.environment ?? def.afip.environment ?? 'produccion',
-        cuit: a.cuit ?? def.afip.cuit ?? '20-38492019-4',
+        cuit: a.cuit ?? def.afip.cuit ?? '',
         puntoVenta: a.puntoVenta ?? def.afip.puntoVenta ?? 1,
         tipoComprobanteDefault: a.tipoComprobanteDefault ?? def.afip.tipoComprobanteDefault ?? '11',
-        claveFiscalCuit: a.claveFiscalCuit ?? def.afip.claveFiscalCuit ?? '20-38492019-4',
+        claveFiscalCuit: a.claveFiscalCuit ?? def.afip.claveFiscalCuit ?? '',
         claveFiscalPassword: a.claveFiscalPassword ?? '',
         lastTested: a.lastTested ?? null
       }
@@ -84,6 +87,28 @@ export default function LocalSettingsTab() {
   const [savingStatus, setSavingStatus] = useState(null); // null | 'saving' | 'saved' | 'error'
   const [testingAfip, setTestingAfip] = useState(false);
   const [afipTestResult, setAfipTestResult] = useState(null);
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [newOperatorPin, setNewOperatorPin] = useState('');
+  const [credFeedback, setCredFeedback] = useState(null);
+
+  const handleUpdateCredentials = async () => {
+    setCredFeedback(null);
+    if (!newAdminPassword.trim() && !newOperatorPin.trim()) {
+      setCredFeedback({ type: 'error', text: 'Ingresá una nueva contraseña de Administrador y/o PIN de Operador.' });
+      return;
+    }
+    const res = await updateCredentials({
+      newAdminPassword: newAdminPassword.trim() || undefined,
+      newOperatorPin: newOperatorPin.trim() || undefined
+    });
+    if (res?.success) {
+      setCredFeedback({ type: 'success', text: res.message || 'Credenciales actualizadas con cifrado seguro en PostgreSQL.' });
+      setNewAdminPassword('');
+      setNewOperatorPin('');
+    } else {
+      setCredFeedback({ type: 'error', text: res?.error || 'No se pudieron actualizar las credenciales.' });
+    }
+  };
 
   // Sincronizar formulario si cambia businessConfig externamente
   useEffect(() => {
@@ -541,6 +566,89 @@ export default function LocalSettingsTab() {
         <div className="lg:col-span-2 pt-4">
           <FiscalBillingConfigModal isEmbedded={true} />
         </div>
+
+        {/* ============================================================== */}
+        {/* SECCIÓN 4: SEGURIDAD Y CLAVES DE ACCESO (ADMIN / OPERADOR)     */}
+        {/* ============================================================== */}
+        {isAdmin && (
+          <div className={`lg:col-span-2 rounded-2xl border p-5 sm:p-6 transition-colors ${
+            isLight ? 'bg-white border-slate-200 shadow-xs' : 'bg-[#121215] border-zinc-800/80'
+          }`}>
+            <div className="flex items-center gap-2.5 pb-4 mb-5 border-b border-zinc-800/40">
+              <div className="w-8 h-8 rounded-xl bg-rose-500/15 text-rose-400 border border-rose-500/30 flex items-center justify-center">
+                <Lock className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  Seguridad y Claves de Acceso al Sistema
+                </h3>
+                <p className="text-[11px] text-zinc-500">
+                  Se guardan cifradas con Scrypt en PostgreSQL. Dejá vacío el campo que no quieras modificar.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  Nueva Contraseña de Administrador (mín. 6 caracteres)
+                </label>
+                <input
+                  type="password"
+                  value={newAdminPassword}
+                  onChange={(e) => setNewAdminPassword(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                    isLight
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-[#FF5500]'
+                      : 'bg-zinc-900/90 border-zinc-700 text-white focus:border-[#FF5500]'
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                  Nuevo PIN de Operador de Mostrador (mín. 4 caracteres)
+                </label>
+                <input
+                  type="password"
+                  value={newOperatorPin}
+                  onChange={(e) => setNewOperatorPin(e.target.value)}
+                  placeholder="••••"
+                  autoComplete="new-password"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                    isLight
+                      ? 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-[#FF5500]'
+                      : 'bg-zinc-900/90 border-zinc-700 text-white focus:border-[#FF5500]'
+                  }`}
+                />
+              </div>
+            </div>
+
+            {credFeedback && (
+              <div className={`mt-4 p-3 rounded-xl border text-xs flex items-center gap-2 ${
+                credFeedback.type === 'success'
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                  : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+              }`}>
+                {credFeedback.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertTriangle className="w-4 h-4 shrink-0" />}
+                <span>{credFeedback.text}</span>
+              </div>
+            )}
+
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={handleUpdateCredentials}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-2 cursor-pointer transition-colors"
+              >
+                <Key className="w-4 h-4" />
+                <span>Actualizar Claves en Base de Datos</span>
+              </button>
+            </div>
+          </div>
+        )}
 
       </form>
     </div>

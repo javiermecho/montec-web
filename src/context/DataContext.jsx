@@ -270,71 +270,7 @@ export function DataProvider({ children }) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
       }
-      return [
-        {
-          id: 'order-sample-1',
-          orderNumber: '#MON-1041',
-          createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-          updatedAt: new Date(Date.now() - 1 * 3600 * 1000).toISOString(),
-          customer: {
-            docType: 'DNI',
-            docNumber: '38492019',
-            name: 'Martín Benítez',
-            taxCondition: 'Consumidor Final',
-            phone: '+54 9 223 512-3456',
-            email: 'martin.b@gmail.com',
-            sendWhatsApp: true,
-            sendEmail: false,
-            internalNotes: 'Cliente habitual recomendado por local vecino.'
-          },
-          device: {
-            type: 'iPhone',
-            brand: 'Apple',
-            model: 'iPhone 13',
-            imei: '358920104829102',
-            color: 'Midnight Black',
-            aestheticCondition: 'Bisel con marcas leves de uso, templado roto.',
-            security: {
-              type: 'pin',
-              pin: '147258',
-              patternSequence: [],
-              accountInfo: ''
-            }
-          },
-          service: {
-            location: 'En Taller (Montes Carballo)',
-            requestedRepair: 'Cambio de Módulo de Pantalla Completa Original',
-            preliminaryDiagnosis: 'Display OLED quebrado con líneas verdes verticales tras caída.',
-            checklist: {
-              turnsOn: true,
-              touchOk: false,
-              camerasOk: true,
-              audioOk: true,
-              chargingOk: true,
-              biometricsOk: true,
-              simTrayPresent: true
-            },
-            budgetTotal: 125000,
-            deposit: 50000,
-            balanceDue: 75000,
-            estimatedDeliveryDate: new Date(Date.now() + 4 * 3600 * 1000).toISOString(),
-            status: 'in_progress',
-            technician: 'Taller Montec'
-          },
-          logs: [
-            {
-              timestamp: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-              action: 'Recepción en mostrador y pago de seña $50.000',
-              status: 'received'
-            },
-            {
-              timestamp: new Date(Date.now() - 1 * 3600 * 1000).toISOString(),
-              action: 'Ingresado a mesa de trabajo para reemplazo de display',
-              status: 'in_progress'
-            }
-          ]
-        }
-      ];
+      return [];
     } catch {
       return [];
     }

@@ -188,7 +188,8 @@ export default function OfficialFiscalInvoice({
   const caeVtoDateObj = new Date(emissionDateObj.getTime() + 10 * 24 * 60 * 60 * 1000);
   const caeVtoStr = voucher.caeVto || caeVtoDateObj.toLocaleDateString('es-AR');
 
-  // Generar CAE consistente de 14 dígitos si no vino provisto
+  // Generar CAE simulado si no vino provisto por un Web Service oficial de AFIP
+  const isSimulatedCae = !voucher.cae;
   const caeNumber = voucher.cae || (() => {
     const seed = `${cleanNum(cuitEmisor).slice(-4)}${ptoVtaStr}${nroCmpStr.slice(-4)}`;
     return `74${seed.padEnd(12, '8')}`.slice(0, 14);
@@ -260,9 +261,15 @@ export default function OfficialFiscalInvoice({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-bold tracking-tight">Comprobante Fiscal Electrónico</h3>
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  ARCA / AFIP OFICIAL
-                </span>
+                {isSimulatedCae ? (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    MODO SIMULACIÓN (SIN VALIDEZ FISCAL)
+                  </span>
+                ) : (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    ARCA / AFIP OFICIAL
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-slate-400">
                 {docMeta.label} • {fullDocNumber}
