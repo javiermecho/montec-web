@@ -242,11 +242,10 @@ export function DataProvider({ children }) {
     }
   }, [expenses]);
 
-  // 4. Estado de autenticación del administrador
+  // 4. Estado de autenticación del administrador (validado con JWT)
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
     try {
-      const savedAuth = localStorage.getItem(STORAGE_KEYS.AUTH);
-      if (savedAuth === 'true') return true;
+      if (!api.getAuthToken()) return false;
       const sessionStr = localStorage.getItem('montec_auth_session_v2');
       if (sessionStr) {
         const session = JSON.parse(sessionStr);
@@ -258,10 +257,9 @@ export function DataProvider({ children }) {
     }
   });
 
-  // 4.1 Estado de autenticación de empleados / taller
+  // 4.1 Estado de autenticación de empleados / taller (validado con JWT)
   const [isEmployeeAuthenticated, setIsEmployeeAuthenticated] = useState(() => {
-    return localStorage.getItem(STORAGE_KEYS.EMPLOYEE_AUTH) === 'true' ||
-           Boolean(localStorage.getItem('montec_auth_session_v2'));
+    return Boolean(api.getAuthToken() && localStorage.getItem('montec_auth_session_v2'));
   });
 
   // 4.2 Órdenes de reparación de taller
@@ -479,7 +477,8 @@ export function DataProvider({ children }) {
           };
         };
 
-        // 1. Sincronizar órdenes desde PostgreSQL en segundo plano
+        // 1. Sincronizar órdenes desde PostgreSQL en segundo plano (solo si hay sesión autenticada)
+        if (api.getAuthToken()) {
         try {
           const remoteOrders = await api.getOrdenes();
           if (Array.isArray(remoteOrders) && remoteOrders.length > 0) {
@@ -538,6 +537,7 @@ export function DataProvider({ children }) {
         } catch (e) {
           console.warn('⚠️ No se pudieron cargar órdenes de PostgreSQL:', e);
         }
+        }
 
         // 2. Sincronizar productos de inventario desde PostgreSQL si existen
         try {
@@ -555,7 +555,8 @@ export function DataProvider({ children }) {
           console.warn('⚠️ No se pudo sincronizar inventario de PostgreSQL:', e);
         }
 
-        // 2.b Sincronizar Ventas y Comprobantes Comerciales desde PostgreSQL
+        // 2.b Sincronizar Ventas y Comprobantes Comerciales desde PostgreSQL (solo autenticado)
+        if (api.getAuthToken()) {
         try {
           const remoteSales = await api.getVentas();
           if (Array.isArray(remoteSales) && remoteSales.length > 0) {
@@ -576,8 +577,10 @@ export function DataProvider({ children }) {
         } catch (e) {
           console.warn('⚠️ No se pudo sincronizar ventas de PostgreSQL:', e);
         }
+        }
 
-        // 2.c Sincronizar Gastos Operativos desde PostgreSQL
+        // 2.c Sincronizar Gastos Operativos desde PostgreSQL (solo autenticado)
+        if (api.getAuthToken()) {
         try {
           const remoteGastos = await api.getGastos({ limit: 1000 });
           if (Array.isArray(remoteGastos)) {
@@ -637,6 +640,7 @@ export function DataProvider({ children }) {
           }
         } catch (e) {
           console.warn('⚠️ No se pudo sincronizar gastos de PostgreSQL:', e);
+        }
         }
 
         // 3. Sincronizar y Respaldar Modelos Soportados en PostgreSQL
@@ -738,11 +742,21 @@ export function DataProvider({ children }) {
         syncWithServer(true);
       }
     };
+    const handleAuthChanged = () => {
+      if (api.getAuthToken()) {
+        syncWithServer();
+      } else {
+        setIsAdminAuthenticated(false);
+        setIsEmployeeAuthenticated(false);
+      }
+    };
     window.addEventListener('online', handleOnline);
+    window.addEventListener('montec-auth-changed', handleAuthChanged);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       clearInterval(syncInterval);
       window.removeEventListener('online', handleOnline);
+      window.removeEventListener('montec-auth-changed', handleAuthChanged);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
@@ -871,57 +885,57 @@ export function DataProvider({ children }) {
   };
 
   // ============================================================================
-  // CLAVES DE ACCESO A PANELES (ADMINISTRADOR Y TALLER)
-  // Podés modificar estas contraseñas acá en cualquier momento:
+  // AUTENTICACIÓN DE PANELES CONTRA BACKEND (JWT + SCRYPT)
   // ============================================================================
-  const ADMIN_PASSWORD = 'Milan844@';
-  const TALLER_PASSWORD = 'Milan844@';
 
   // Autenticación por Clave Administrador
-  const loginAdmin = (pin) => {
+  const loginAdmin = async (pin) => {
     const cleanPin = (pin || '').trim();
-    const savedAdmin = localStorage.getItem('montec_admin_password_v1') || ADMIN_PASSWORD;
-    if (
-      cleanPin === ADMIN_PASSWORD || 
-      cleanPin.toLowerCase() === ADMIN_PASSWORD.toLowerCase() ||
-      cleanPin === savedAdmin ||
-      cleanPin.toLowerCase() === savedAdmin.toLowerCase() ||
-      cleanPin === '1994'
-    ) {
-      setIsAdminAuthenticated(true);
+    if (!cleanPin) return false;
+    const res = await api.loginApi(cleanPin, 'admin');
+    if (res.success && res.user?.role === 'admin') {
+      localStorage.setItem('montec_auth_session_v2', JSON.stringify(res.user));
       localStorage.setItem(STORAGE_KEYS.AUTH, 'true');
+      localStorage.setItem(STORAGE_KEYS.EMPLOYEE_AUTH, 'true');
+      setIsAdminAuthenticated(true);
+      setIsEmployeeAuthenticated(true);
       return true;
     }
     return false;
   };
 
   const logoutAdmin = () => {
+    api.clearAuthToken();
     setIsAdminAuthenticated(false);
     localStorage.removeItem(STORAGE_KEYS.AUTH);
+    localStorage.removeItem('montec_auth_session_v2');
   };
 
   // Autenticación por Clave Empleados / Taller
-  const loginEmployee = (pin) => {
+  const loginEmployee = async (pin) => {
     const cleanPin = (pin || '').trim();
-    const savedPin = localStorage.getItem('montec_operator_pin_v1') || '1234';
-    const savedAdmin = localStorage.getItem('montec_admin_password_v1') || 'Milan844@';
-    if (
-      cleanPin === savedPin || 
-      cleanPin === '1234' || 
-      cleanPin === savedAdmin || 
-      cleanPin === TALLER_PASSWORD || 
-      cleanPin === TALLER_PASSWORD.toLowerCase()
-    ) {
-      setIsEmployeeAuthenticated(true);
+    if (!cleanPin) return false;
+    const res = await api.loginApi(cleanPin, 'auto');
+    if (res.success && res.user) {
+      localStorage.setItem('montec_auth_session_v2', JSON.stringify(res.user));
       localStorage.setItem(STORAGE_KEYS.EMPLOYEE_AUTH, 'true');
+      setIsEmployeeAuthenticated(true);
+      if (res.user.role === 'admin') {
+        localStorage.setItem(STORAGE_KEYS.AUTH, 'true');
+        setIsAdminAuthenticated(true);
+      }
       return true;
     }
     return false;
   };
 
   const logoutEmployee = () => {
+    api.clearAuthToken();
     setIsEmployeeAuthenticated(false);
+    setIsAdminAuthenticated(false);
     localStorage.removeItem(STORAGE_KEYS.EMPLOYEE_AUTH);
+    localStorage.removeItem(STORAGE_KEYS.AUTH);
+    localStorage.removeItem('montec_auth_session_v2');
   };
 
   // Helper para persistir clientes en el padrón / base de datos general de clientes

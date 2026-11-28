@@ -445,9 +445,6 @@ export default function InventoryManager() {
                               className="w-full h-full object-cover group-hover:opacity-90"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
-                                if (e.currentTarget.parentElement) {
-                                  e.currentTarget.parentElement.innerHTML = '<span class="text-zinc-600 text-[10px] font-mono">IMG</span>';
-                                }
                               }}
                             />
                           ) : (

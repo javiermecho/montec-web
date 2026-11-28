@@ -17,6 +17,32 @@ const getApiBaseUrl = () => {
 };
 
 const REQUEST_TIMEOUT_MS = 6000;
+const AUTH_TOKEN_KEY = 'montec_auth_token_v1';
+
+export function getAuthToken() {
+  try {
+    return typeof window !== 'undefined' ? (localStorage.getItem(AUTH_TOKEN_KEY) || '') : '';
+  } catch {
+    return '';
+  }
+}
+
+export function setAuthToken(token) {
+  try {
+    if (typeof window === 'undefined') return;
+    if (token) {
+      localStorage.setItem(AUTH_TOKEN_KEY, token);
+      window.dispatchEvent(new Event('montec-auth-changed'));
+    } else {
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+      window.dispatchEvent(new Event('montec-auth-changed'));
+    }
+  } catch {}
+}
+
+export function clearAuthToken() {
+  setAuthToken('');
+}
 
 /**
  * Cliente HTTP unificado con timeout y manejo robusto de excepciones
@@ -28,9 +54,11 @@ async function request(endpoint, options = {}) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
+  const token = getAuthToken();
   const defaultHeaders = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
   };
 
   const config = {
@@ -49,6 +77,9 @@ async function request(endpoint, options = {}) {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
+      if (response.status === 401 && !endpoint.startsWith('/auth/')) {
+        clearAuthToken();
+      }
       const errorMessage = data?.error || data?.message || `Error del servidor (${response.status})`;
       return {
         success: false,
@@ -539,7 +570,58 @@ export async function getMonthlyBalance(month, year) {
   return null;
 }
 
+// ============================================================================
+// 0. AUTENTICACIÓN Y SESIÓN JWT
+// ============================================================================
+
+export async function loginApi(credential, role = 'auto') {
+  const res = await request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ credential, role })
+  });
+  if (res.success && res.data?.token && res.data?.user) {
+    setAuthToken(res.data.token);
+    return { success: true, token: res.data.token, user: res.data.user };
+  }
+  return { success: false, error: res.error || 'Credenciales incorrectas' };
+}
+
+export async function verifySessionApi() {
+  if (!getAuthToken()) return { success: false };
+  const res = await request('/auth/me', { method: 'GET' });
+  if (res.success && res.data?.user) {
+    return { success: true, user: res.data.user };
+  }
+  if (res.status === 401) {
+    clearAuthToken();
+  }
+  return { success: false, isOffline: res.isOffline };
+}
+
+export async function verifyAdminApi(credential) {
+  const res = await request('/auth/verify-admin', {
+    method: 'POST',
+    body: JSON.stringify({ credential })
+  });
+  return { success: Boolean(res.success && res.data?.success), error: res.error };
+}
+
+export async function changeCredentialsApi({ newAdminPassword, newOperatorPin }) {
+  const res = await request('/auth/change-credentials', {
+    method: 'POST',
+    body: JSON.stringify({ newAdminPassword, newOperatorPin })
+  });
+  return { success: Boolean(res.success && res.data?.success), error: res.error, message: res.data?.message };
+}
+
 export const api = {
+  getAuthToken,
+  setAuthToken,
+  clearAuthToken,
+  loginApi,
+  verifySessionApi,
+  verifyAdminApi,
+  changeCredentialsApi,
   checkServerHealth,
   getOrdenes,
   getOrdenById,

@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { query, isDbConnected } from '../db/index.js';
+import { encryptSecret, decryptSecret } from '../utils/security.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,18 +33,15 @@ let localNegativeKeywords = [
   { id: 'neg-11', text: 'desbloqueo icloud', matchType: 'PHRASE', addedAt: new Date().toISOString() }
 ];
 
-const DEFAULT_DEV_TOKEN = '6IXO-TcjGq8PqZwQEQVPrg';
-
 /**
- * Obtiene las credenciales configuradas
+ * Obtiene las credenciales configuradas desde variables de entorno
  */
 function getCredentials() {
-  const customerIdRaw = process.env.GOOGLE_ADS_CUSTOMER_ID || '18464752657';
+  const customerIdRaw = process.env.GOOGLE_ADS_CUSTOMER_ID || '';
   // Formatear estrictamente sin guiones ni espacios (ej: 18464752657)
-  const customerId = customerIdRaw.replace(/[^0-9]/g, '') || '18464752657';
+  const customerId = customerIdRaw.replace(/[^0-9]/g, '');
 
-  // Usar el Developer Token emitido si no está en process.env
-  const devToken = (process.env.GOOGLE_ADS_DEVELOPER_TOKEN || DEFAULT_DEV_TOKEN).trim();
+  const devToken = (process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '').trim();
 
   return {
     clientId: (process.env.GOOGLE_ADS_CLIENT_ID || '').trim(),
@@ -857,9 +855,9 @@ export async function testConnection() {
           success: true,
           status: 'connected',
           isTestAccount: true,
-          message: 'Conexión verificada: Autenticación OAuth2 y Developer Token 6IXO-TcjGq8PqZwQEQVPrg verificados con éxito.',
+          message: 'Conexión verificada: Autenticación OAuth2 y Developer Token verificados con éxito.',
           customer: {
-            id: '18464752657',
+            id: creds.customerId || '',
             name: 'Montec Mar del Plata (Google Ads)',
             currency: 'ARS'
           },
@@ -894,9 +892,9 @@ export async function testConnection() {
         success: true,
         status: 'connected',
         isTestAccount: true,
-        message: 'Conexión verificada: Autenticación OAuth2 y Developer Token 6IXO-TcjGq8PqZwQEQVPrg verificados con éxito.',
+        message: 'Conexión verificada: Autenticación OAuth2 y Developer Token verificados con éxito.',
         customer: {
-          id: '18464752657',
+          id: creds.customerId || '',
           name: 'Montec Mar del Plata (Google Ads)',
           currency: 'ARS'
         },
@@ -924,10 +922,10 @@ export async function loadCredentialsFromDb() {
       if (res.rows && res.rows.length > 0) {
         const stored = typeof res.rows[0].value === 'string' ? JSON.parse(res.rows[0].value) : res.rows[0].value;
         if (stored.clientId) process.env.GOOGLE_ADS_CLIENT_ID = stored.clientId;
-        if (stored.clientSecret) process.env.GOOGLE_ADS_CLIENT_SECRET = stored.clientSecret;
-        if (stored.refreshToken) process.env.GOOGLE_ADS_REFRESH_TOKEN = stored.refreshToken;
+        if (stored.clientSecret) process.env.GOOGLE_ADS_CLIENT_SECRET = decryptSecret(stored.clientSecret);
+        if (stored.refreshToken) process.env.GOOGLE_ADS_REFRESH_TOKEN = decryptSecret(stored.refreshToken);
         if (stored.customerId) process.env.GOOGLE_ADS_CUSTOMER_ID = stored.customerId;
-        if (stored.developerToken) process.env.GOOGLE_ADS_DEVELOPER_TOKEN = stored.developerToken;
+        if (stored.developerToken) process.env.GOOGLE_ADS_DEVELOPER_TOKEN = decryptSecret(stored.developerToken);
         console.log('✅ Credenciales de Google Ads recuperadas desde app_settings (PostgreSQL).');
       }
     }
@@ -952,10 +950,10 @@ export async function saveCredentials(newCreds = {}) {
     if (dbOk) {
       const payload = JSON.stringify({
         clientId: process.env.GOOGLE_ADS_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_ADS_CLIENT_SECRET,
-        refreshToken: process.env.GOOGLE_ADS_REFRESH_TOKEN,
+        clientSecret: encryptSecret(process.env.GOOGLE_ADS_CLIENT_SECRET),
+        refreshToken: encryptSecret(process.env.GOOGLE_ADS_REFRESH_TOKEN),
         customerId: process.env.GOOGLE_ADS_CUSTOMER_ID,
-        developerToken: process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
+        developerToken: encryptSecret(process.env.GOOGLE_ADS_DEVELOPER_TOKEN),
         updatedAt: new Date().toISOString()
       });
       await query(
@@ -967,36 +965,6 @@ export async function saveCredentials(newCreds = {}) {
     }
   } catch (dbErr) {
     console.warn('⚠️ No se pudo guardar credenciales en app_settings:', dbErr.message);
-  }
-
-  // 2. Intentar actualizar archivo .env local si existe
-  try {
-    const envPaths = [
-      path.resolve(__dirname, '../.env'),
-      path.resolve(__dirname, '../../.env')
-    ];
-    for (const p of envPaths) {
-      if (fs.existsSync(p)) {
-        let content = fs.readFileSync(p, 'utf8');
-        const updateKey = (key, val) => {
-          if (!val) return;
-          const regex = new RegExp(`^${key}=.*$`, 'm');
-          if (regex.test(content)) {
-            content = content.replace(regex, `${key}=${val}`);
-          } else {
-            content += `\n${key}=${val}`;
-          }
-        };
-        updateKey('GOOGLE_ADS_CLIENT_ID', process.env.GOOGLE_ADS_CLIENT_ID);
-        updateKey('GOOGLE_ADS_CLIENT_SECRET', process.env.GOOGLE_ADS_CLIENT_SECRET);
-        updateKey('GOOGLE_ADS_REFRESH_TOKEN', process.env.GOOGLE_ADS_REFRESH_TOKEN);
-        updateKey('GOOGLE_ADS_CUSTOMER_ID', process.env.GOOGLE_ADS_CUSTOMER_ID);
-        updateKey('GOOGLE_ADS_DEVELOPER_TOKEN', process.env.GOOGLE_ADS_DEVELOPER_TOKEN);
-        fs.writeFileSync(p, content, 'utf8');
-      }
-    }
-  } catch (fsErr) {
-    // Si el filesystem no permite escritura directa, continúa
   }
 
   return checkConnectionStatus();

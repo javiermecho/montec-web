@@ -733,9 +733,9 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
   };
 
   // Login de empleados
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    if (loginEmployee(pinInput)) {
+    if (await loginEmployee(pinInput)) {
       setPinInput('');
       setPinError(false);
     } else {
@@ -753,7 +753,7 @@ export default function RepairOrderReceiver({ forceOpen = false, onClose = null 
 
   if (!isTallerOpen && !forceOpen) return null;
 
-  // Si ya está autenticado en la sesión (por PIN 1234 o Admin) o se invoca desde el Cockpit, NUNCA pedir clave
+  // Si ya está autenticado en la sesión (por JWT válido) o se invoca desde el Cockpit, NUNCA pedir clave
   const isAlreadyAuthenticated = Boolean(auth?.isAuthenticated || isEmployeeAuthenticated || forceOpen);
 
   // 1. PANTALLA DE LOGIN SI NO ESTÁ AUTENTICADO

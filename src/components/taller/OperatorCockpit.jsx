@@ -128,15 +128,14 @@ export default function OperatorCockpit({ onClose }) {
   const readyOrdersCount = orders.filter(o => o.service?.status === 'ready').length;
 
   // Manejo de elevación a administrador
-  const handleElevateSubmit = (e) => {
+  const handleElevateSubmit = async (e) => {
     e.preventDefault();
-    const res = elevateToAdmin(elevatePin);
+    const res = await elevateToAdmin(elevatePin);
     if (res.success) {
       setIsElevateModalOpen(false);
       setElevatePin('');
       setElevateError('');
       if (typeof setIsAdminAuthenticated === 'function') setIsAdminAuthenticated(true);
-      if (typeof loginAdmin === 'function') loginAdmin(elevatePin);
       setIsAdminOpen(true);
     } else {
       setElevateError(res.error || 'PIN incorrecto');

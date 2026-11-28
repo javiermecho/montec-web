@@ -108,10 +108,10 @@ export async function queryOrderTracking({ orderNumber, dniOrPhone = '', localOr
   const cleanOrder = String(orderNumber || '').trim().replace(/^#/, '');
   const cleanDni = String(dniOrPhone || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
 
-  if (!cleanOrder) {
+  if (!cleanOrder || !cleanDni || cleanDni.length < 4) {
     return {
       success: false,
-      error: 'Por favor, ingresá un número de orden válido.'
+      error: 'Por seguridad, ingresá tanto el número de orden como tu DNI o teléfono (mínimo 4 caracteres).'
     };
   }
 
@@ -142,21 +142,19 @@ export async function queryOrderTracking({ orderNumber, dniOrPhone = '', localOr
     });
 
     if (foundOrder) {
-      // Si se proporcionó DNI/teléfono, validar coincidencia estricta
-      if (cleanDni) {
-        const cust = foundOrder.customer || foundOrder.client || {};
-        const phone = String(cust.phone || '').replace(/[^0-9]/g, '');
-        const docNum = String(cust.docNumber || cust.dni || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
+      // Validar coincidencia obligatoria con DNI/teléfono
+      const cust = foundOrder.customer || foundOrder.client || {};
+      const phone = String(cust.phone || '').replace(/[^0-9]/g, '');
+      const docNum = String(cust.docNumber || cust.dni || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
 
-        const matchesPhone = phone.includes(cleanDni) || cleanDni.includes(phone.slice(-6));
-        const matchesDoc = docNum.includes(cleanDni) || cleanDni.includes(docNum);
+      const matchesPhone = phone.length >= 4 && (phone === cleanDni || (cleanDni.length >= 6 && phone.endsWith(cleanDni)));
+      const matchesDoc = docNum.length >= 4 && docNum === cleanDni;
 
-        if (!matchesPhone && !matchesDoc) {
-          return {
-            success: false,
-            error: 'No encontramos una reparación que coincida con ese número de orden y DNI / Teléfono. Verificá los datos o consultanos por WhatsApp.'
-          };
-        }
+      if (!matchesPhone && !matchesDoc) {
+        return {
+          success: false,
+          error: 'No encontramos una reparación que coincida con ese número de orden y DNI / Teléfono. Verificá los datos o consultanos por WhatsApp.'
+        };
       }
 
       return {

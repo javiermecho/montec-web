@@ -9,7 +9,9 @@ let pool = null;
 if (process.env.DATABASE_URL) {
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: process.env.NODE_ENV === 'production'
+      ? { rejectUnauthorized: process.env.PG_SSL_STRICT === 'true' }
+      : false
   });
 
   pool.on('error', (err) => {
@@ -171,6 +173,18 @@ export const initDatabaseSchema = async () => {
 
     CREATE INDEX IF NOT EXISTS idx_gastos_fecha ON gastos(fecha);
     CREATE INDEX IF NOT EXISTS idx_gastos_categoria ON gastos(categoria);
+
+    -- Tabla de Usuarios y Roles para Autenticación Real (JWT + Scrypt)
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(60) UNIQUE NOT NULL,
+        role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'operador')),
+        display_name VARCHAR(100) NOT NULL,
+        password_hash TEXT NOT NULL,
+        active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
   `;
 
   try {

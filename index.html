@@ -41,6 +41,12 @@
     <meta name="keywords" content="servicio tecnico independiente mar del plata, taller multimarca celulares mar del plata, reparacion iphone mar del plata, cambio modulo pantalla constitucion, arreglo celulares zona norte mdp, baterias celulares mar del plata, arreglo notebooks mar del plata, repuestos calidad oem celulares, montec" />
     <meta name="author" content="montec" />
     <meta name="robots" content="index, follow" />
+    <script>
+      if (window.location.hostname.toLowerCase().startsWith('taller.') || /^\/(taller|estado|seguimiento|reparacion)(\/|$)/i.test(window.location.pathname)) {
+        var r = document.querySelector('meta[name="robots"]');
+        if (r) r.setAttribute('content', 'noindex, nofollow, noarchive, nosnippet');
+      }
+    </script>
     <link rel="canonical" href="https://montec.ar/" />
 
     <!-- Open Graph para Redes y WhatsApp Preview (Optimizado 1200x630) -->

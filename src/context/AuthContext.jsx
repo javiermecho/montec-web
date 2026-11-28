@@ -1,16 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { api } from '../services/api';
 
 const AuthContext = createContext(null);
 
 const STORAGE_KEYS = {
-  AUTH_SESSION: 'montec_auth_session_v2',
-  OPERATOR_PIN: 'montec_operator_pin_v1',
-  ADMIN_PASSWORD: 'montec_admin_password_v1'
+  AUTH_SESSION: 'montec_auth_session_v2'
 };
-
-// Contraseñas predeterminadas
-const DEFAULT_ADMIN_PASSWORD = 'Milan844@';
-const DEFAULT_OPERATOR_PIN = '1234';
 
 // Comprobación de subdominio o modo taller
 export function checkIsTallerSubdomain() {
@@ -33,7 +28,6 @@ export function checkIsTallerSubdomain() {
 export function AuthProvider({ children }) {
   const [isTallerSubdomain, setIsTallerSubdomain] = useState(checkIsTallerSubdomain);
 
-  // Escuchar cambios de hash o navegación
   useEffect(() => {
     const handleHashChange = () => {
       setIsTallerSubdomain(checkIsTallerSubdomain());
@@ -42,43 +36,32 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Sesión actual: { role: 'operador' | 'admin', name: string, loginAt: string } | null
+  // Sesión actual validada con token JWT del backend
   const [currentUser, setCurrentUser] = useState(() => {
     try {
+      // Limpiar claves inseguras heredadas si existieran en localStorage
+      localStorage.removeItem('montec_admin_password_v1');
+      localStorage.removeItem('montec_operator_pin_v1');
+
+      const token = api.getAuthToken();
+      if (!token) {
+        localStorage.removeItem(STORAGE_KEYS.AUTH_SESSION);
+        localStorage.removeItem('montec_admin_auth');
+        localStorage.removeItem('montec_employee_auth_v1');
+        return null;
+      }
+
       const saved = localStorage.getItem(STORAGE_KEYS.AUTH_SESSION);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-      // Migración desde versiones anteriores si existía auth
-      const legacyAdmin = localStorage.getItem('montec_admin_auth');
-      if (legacyAdmin === 'true') {
-        return { role: 'admin', name: 'Administrador (Dueño)', loginAt: new Date().toISOString() };
-      }
-      const legacyEmployee = localStorage.getItem('montec_employee_auth_v1');
-      if (legacyEmployee === 'true') {
-        return { role: 'operador', name: 'Operador de Mostrador', loginAt: new Date().toISOString() };
-      }
-      return null;
+      return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
     }
   });
 
-  // Claves configurables
-  const [adminPassword, setAdminPassword] = useState(() => {
-    return localStorage.getItem(STORAGE_KEYS.ADMIN_PASSWORD) || DEFAULT_ADMIN_PASSWORD;
-  });
-
-  const [operatorPin, setOperatorPin] = useState(() => {
-    return localStorage.getItem(STORAGE_KEYS.OPERATOR_PIN) || DEFAULT_OPERATOR_PIN;
-  });
-
-  // Guardar sesión
-  const saveSession = (user) => {
+  const saveSession = useCallback((user) => {
     setCurrentUser(user);
     if (user) {
       localStorage.setItem(STORAGE_KEYS.AUTH_SESSION, JSON.stringify(user));
-      // Sincronizar compatibilidad retroactiva con DataContext
       if (user.role === 'admin') {
         localStorage.setItem('montec_admin_auth', 'true');
         localStorage.setItem('montec_employee_auth_v1', 'true');
@@ -87,101 +70,85 @@ export function AuthProvider({ children }) {
         localStorage.setItem('montec_employee_auth_v1', 'true');
       }
     } else {
+      api.clearAuthToken();
       localStorage.removeItem(STORAGE_KEYS.AUTH_SESSION);
       localStorage.removeItem('montec_admin_auth');
       localStorage.removeItem('montec_employee_auth_v1');
     }
-  };
+  }, []);
+
+  // Verificar token JWT al montar y cuando se limpia por 401
+  useEffect(() => {
+    let mounted = true;
+    const validateCurrentSession = async () => {
+      if (!api.getAuthToken()) return;
+      const res = await api.verifySessionApi();
+      if (!mounted) return;
+      if (res.success && res.user) {
+        saveSession({ ...res.user, loginAt: currentUser?.loginAt || new Date().toISOString() });
+      } else if (!res.isOffline) {
+        saveSession(null);
+      }
+    };
+    validateCurrentSession();
+
+    const handleAuthChanged = () => {
+      if (!api.getAuthToken()) {
+        setCurrentUser(null);
+      }
+    };
+    window.addEventListener('montec-auth-changed', handleAuthChanged);
+    return () => {
+      mounted = false;
+      window.removeEventListener('montec-auth-changed', handleAuthChanged);
+    };
+  }, []);
 
   /**
-   * Intenta iniciar sesión con clave o PIN.
-   * @param {string} credential - Clave o PIN ingresado.
-   * @param {string} [preferredRole] - Rol sugerido ('operador' | 'admin') si la clave coincide con ambos.
+   * Inicia sesión autenticando contra el backend (/api/auth/login).
    */
-  const login = (credential, preferredRole = null) => {
+  const login = async (credential, preferredRole = 'auto') => {
     const clean = (credential || '').trim();
     if (!clean) return { success: false, error: 'Ingresa tu PIN o clave de acceso' };
 
-    const cleanAdmin = adminPassword.trim();
-    const cleanOperator = operatorPin.trim();
-
-    // 1. Coincidencia con clave de Administrador
-    const isAdminMatch = clean === cleanAdmin || clean.toLowerCase() === cleanAdmin.toLowerCase() || clean === '1994';
-
-    // 2. Coincidencia con PIN de Operador
-    const isOperatorMatch = 
-      clean === cleanOperator || 
-      clean === '1234' || 
-      clean.toLowerCase() === 'mostrador' || 
-      clean.toLowerCase() === 'operador' ||
-      clean === cleanAdmin; // La clave admin siempre puede acceder como operador
-
-    // Si coincide como Admin
-    if (isAdminMatch && (preferredRole === 'admin' || !preferredRole || preferredRole === 'auto')) {
-      const user = {
-        role: 'admin',
-        name: 'Administrador (Dueño)',
-        loginAt: new Date().toISOString()
-      };
-      saveSession(user);
-      return { success: true, user };
+    const res = await api.loginApi(clean, preferredRole || 'auto');
+    if (res.success && res.user) {
+      saveSession(res.user);
+      return { success: true, user: res.user };
     }
-
-    // Si coincide como Operador
-    if (isOperatorMatch) {
-      const user = {
-        role: 'operador',
-        name: 'Operador de Mostrador',
-        loginAt: new Date().toISOString()
-      };
-      saveSession(user);
-      return { success: true, user };
-    }
-
-    return { success: false, error: 'PIN o contraseña incorrecta' };
+    return { success: false, error: res.error || 'PIN o contraseña incorrecta' };
   };
 
-  // Cierre de sesión
   const logout = () => {
     saveSession(null);
   };
 
-  // Elevar temporalmente a admin si se ingresa la clave admin
-  const elevateToAdmin = (adminCred) => {
+  /**
+   * Eleva la sesión actual a Administrador validando la clave en el backend.
+   */
+  const elevateToAdmin = async (adminCred) => {
     const clean = (adminCred || '').trim();
-    if (clean === adminPassword.trim() || clean.toLowerCase() === adminPassword.toLowerCase() || clean === '1994') {
-      const user = {
-        role: 'admin',
-        name: 'Administrador (Dueño)',
-        loginAt: new Date().toISOString()
-      };
-      saveSession(user);
-      return { success: true };
+    if (!clean) return { success: false, error: 'Ingresa la clave de Administrador' };
+
+    const res = await api.loginApi(clean, 'admin');
+    if (res.success && res.user?.role === 'admin') {
+      saveSession(res.user);
+      return { success: true, user: res.user };
     }
-    return { success: false, error: 'Clave de Administrador inválida' };
+    return { success: false, error: res.error || 'Clave de Administrador inválida' };
   };
 
-  // Alternar a vista operador sin perder credenciales si es admin
   const switchRole = (newRole) => {
-    if (currentUser?.role === 'admin' && newRole === 'operador') {
-      setCurrentUser(prev => ({ ...prev, activeRoleView: 'operador' }));
-    } else if (currentUser?.role === 'admin' && newRole === 'admin') {
-      setCurrentUser(prev => ({ ...prev, activeRoleView: 'admin' }));
+    if (currentUser?.role === 'admin' && (newRole === 'operador' || newRole === 'admin')) {
+      setCurrentUser(prev => ({ ...prev, activeRoleView: newRole }));
     }
   };
 
-  const updateCredentials = ({ newAdminPassword, newOperatorPin }) => {
-    if (newAdminPassword && newAdminPassword.trim().length >= 4) {
-      setAdminPassword(newAdminPassword.trim());
-      localStorage.setItem(STORAGE_KEYS.ADMIN_PASSWORD, newAdminPassword.trim());
-    }
-    if (newOperatorPin && newOperatorPin.trim().length >= 4) {
-      setOperatorPin(newOperatorPin.trim());
-      localStorage.setItem(STORAGE_KEYS.OPERATOR_PIN, newOperatorPin.trim());
-    }
+  const updateCredentials = async ({ newAdminPassword, newOperatorPin }) => {
+    return api.changeCredentialsApi({ newAdminPassword, newOperatorPin });
   };
 
-  const isAuthenticated = Boolean(currentUser);
+  const isAuthenticated = Boolean(currentUser && api.getAuthToken());
   const role = currentUser?.role || null;
   const isOperator = isAuthenticated && (role === 'operador' || role === 'admin');
   const isAdmin = isAuthenticated && role === 'admin';
@@ -199,9 +166,7 @@ export function AuthProvider({ children }) {
         logout,
         elevateToAdmin,
         switchRole,
-        updateCredentials,
-        adminPassword,
-        operatorPin
+        updateCredentials
       }}
     >
       {children}

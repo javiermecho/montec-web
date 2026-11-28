@@ -181,9 +181,9 @@ export default function AdminPanel() {
 
   // 1. Pantalla de Login con PIN (solo si no está autenticado como administrador)
   if (!effectiveIsAdmin) {
-    const handleLoginSubmit = (e) => {
+    const handleLoginSubmit = async (e) => {
       e.preventDefault();
-      if (loginAdmin(pinInput.trim())) {
+      if (await loginAdmin(pinInput.trim())) {
         setPinInput('');
         setLoginError(false);
         showToast('Acceso concedido al panel técnico');

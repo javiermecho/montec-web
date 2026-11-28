@@ -2,9 +2,22 @@ import './polyfill.js';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { query, isDbConnected, initDatabaseSchema } from './db/index.js';
+import {
+  hashPassword,
+  verifyPassword,
+  signToken,
+  encryptSecret,
+  optionalAuth,
+  requireAuth,
+  requireAdmin,
+  checkLoginRateLimit,
+  recordFailedLogin,
+  clearLoginRateLimit
+} from './utils/security.js';
 import { runScraperSync } from './scraper/index.js';
 import { normalizeModelName } from './scraper/normalizer.js';
 import {
@@ -35,8 +48,29 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middlewares
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://montec.ar',
+  'https://www.montec.ar',
+  'https://taller.montec.ar',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173'
+];
+const envOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+const ALLOWED_ORIGINS = new Set([...DEFAULT_ALLOWED_ORIGINS, ...envOrigins]);
+
 app.use(cors({
-  origin: '*', // Permite solicitudes desde montec.ar en Hostinger o localhost
+  origin: (origin, callback) => {
+    // Permitir requests sin origin (ej. apps móviles, curl, mismo servidor) o de orígenes autorizados
+    if (!origin || ALLOWED_ORIGINS.has(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origen CORS no autorizado: ${origin}`));
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-scraper-key']
 }));
@@ -178,8 +212,7 @@ const mapDbOrderToPublicTracking = (row) => {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     client: {
-      name: safeClientName,
-      fullName: rawName
+      name: safeClientName
     },
     device: {
       brand: deviceData.brand || '',
@@ -249,11 +282,178 @@ app.get('/api/health', async (req, res) => {
 });
 
 // ==========================================
+// 1.5 AUTENTICACIÓN Y CONTROL DE ACCESO (JWT + SCRYPT)
+// ==========================================
+
+async function ensureInitialUsers() {
+  try {
+    const dbConnected = await isDbConnected();
+    if (!dbConnected) return;
+
+    const existing = await query('SELECT COUNT(*)::int AS total FROM users');
+    if ((existing.rows[0]?.total || 0) > 0) return;
+
+    const adminPass = (process.env.ADMIN_INITIAL_PASSWORD || '').trim() || crypto.randomBytes(9).toString('base64url');
+    const operatorPin = (process.env.OPERATOR_INITIAL_PIN || '').trim() || String(crypto.randomInt(100000, 999999));
+
+    await query(
+      `INSERT INTO users (username, role, display_name, password_hash)
+       VALUES ($1, 'admin', 'Administrador (Dueño)', $2),
+              ($3, 'operador', 'Operador de Mostrador', $4)
+       ON CONFLICT (username) DO NOTHING`,
+      ['admin', hashPassword(adminPass), 'operador', hashPassword(operatorPin)]
+    );
+
+    if (!process.env.ADMIN_INITIAL_PASSWORD || !process.env.OPERATOR_INITIAL_PIN) {
+      console.warn('🔐 [Seguridad] Usuarios iniciales creados sin variables de entorno. Credenciales temporales generadas:');
+      if (!process.env.ADMIN_INITIAL_PASSWORD) console.warn(`   -> Admin (username: admin): ${adminPass}`);
+      if (!process.env.OPERATOR_INITIAL_PIN) console.warn(`   -> Operador (username: operador): ${operatorPin}`);
+      console.warn('   ⚠️ Cambialas inmediatamente desde Configuración o define ADMIN_INITIAL_PASSWORD / OPERATOR_INITIAL_PIN.');
+    } else {
+      console.log('✅ [Seguridad] Usuarios iniciales creados desde variables de entorno.');
+    }
+  } catch (err) {
+    console.warn('⚠️ No se pudieron inicializar usuarios:', err.message);
+  }
+}
+
+app.post('/api/auth/login', async (req, res) => {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  const rateCheck = checkLoginRateLimit(ip);
+  if (!rateCheck.allowed) {
+    return res.status(429).json({
+      success: false,
+      error: `Demasiados intentos fallidos. Esperá ${Math.ceil(rateCheck.retryAfterSec / 60)} minutos.`
+    });
+  }
+
+  const { credential, role } = req.body || {};
+  const cleanCred = String(credential || '').trim();
+  if (!cleanCred) {
+    return res.status(400).json({ success: false, error: 'Ingresá tu PIN o clave de acceso' });
+  }
+
+  const dbConnected = await isDbConnected();
+  if (!dbConnected) {
+    return res.status(503).json({ success: false, error: 'Servicio de autenticación no disponible (DB offline)' });
+  }
+
+  try {
+    const usersRes = await query(
+      'SELECT id, username, role, display_name, password_hash FROM users WHERE active = TRUE ORDER BY CASE WHEN role = \'admin\' THEN 0 ELSE 1 END'
+    );
+
+    let matchedUser = null;
+    const preferred = role && role !== 'auto' ? String(role).toLowerCase() : null;
+
+    // 1. Si pidió un rol específico, validar primero contra ese rol (y admin puede entrar como operador si quiere)
+    for (const u of usersRes.rows) {
+      if (preferred === 'admin' && u.role !== 'admin') continue;
+      if (verifyPassword(cleanCred, u.password_hash)) {
+        if (preferred === 'operador' && u.role === 'admin') {
+          matchedUser = { ...u, effectiveRole: 'operador', effectiveName: 'Operador (Admin)' };
+        } else {
+          matchedUser = { ...u, effectiveRole: u.role, effectiveName: u.display_name };
+        }
+        break;
+      }
+    }
+
+    if (!matchedUser) {
+      recordFailedLogin(ip);
+      return res.status(401).json({ success: false, error: 'PIN o contraseña incorrecta' });
+    }
+
+    clearLoginRateLimit(ip);
+    const tokenPayload = {
+      id: matchedUser.id,
+      username: matchedUser.username,
+      role: matchedUser.effectiveRole,
+      name: matchedUser.effectiveName
+    };
+    const token = signToken(tokenPayload);
+
+    return res.json({
+      success: true,
+      token,
+      user: {
+        ...tokenPayload,
+        loginAt: new Date().toISOString()
+      }
+    });
+  } catch (err) {
+    console.error('❌ Error en /api/auth/login:', err);
+    return res.status(500).json({ success: false, error: 'Error interno al iniciar sesión' });
+  }
+});
+
+app.get('/api/auth/me', requireAuth, (req, res) => {
+  res.json({
+    success: true,
+    user: {
+      id: req.user.id,
+      username: req.user.username,
+      role: req.user.role,
+      name: req.user.name
+    }
+  });
+});
+
+app.post('/api/auth/verify-admin', requireAuth, async (req, res) => {
+  const { credential } = req.body || {};
+  const cleanCred = String(credential || '').trim();
+  if (!cleanCred) {
+    return res.status(400).json({ success: false, error: 'Ingresá la contraseña de Administrador' });
+  }
+
+  try {
+    const adminRes = await query("SELECT id, username, display_name, password_hash FROM users WHERE role = 'admin' AND active = TRUE");
+    const valid = adminRes.rows.some(u => verifyPassword(cleanCred, u.password_hash));
+    if (!valid) {
+      return res.status(401).json({ success: false, error: 'Contraseña de Administrador incorrecta' });
+    }
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'Error verificando credenciales' });
+  }
+});
+
+app.post('/api/auth/change-credentials', requireAdmin, async (req, res) => {
+  const { newAdminPassword, newOperatorPin } = req.body || {};
+  try {
+    if (newAdminPassword !== undefined && String(newAdminPassword).trim()) {
+      const cleanAdmin = String(newAdminPassword).trim();
+      if (cleanAdmin.length < 6) {
+        return res.status(400).json({ success: false, error: 'La contraseña de Administrador debe tener al menos 6 caracteres.' });
+      }
+      await query(
+        "UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE username = 'admin'",
+        [hashPassword(cleanAdmin)]
+      );
+    }
+    if (newOperatorPin !== undefined && String(newOperatorPin).trim()) {
+      const cleanOp = String(newOperatorPin).trim();
+      if (cleanOp.length < 4) {
+        return res.status(400).json({ success: false, error: 'El PIN de Operador debe tener al menos 4 caracteres.' });
+      }
+      await query(
+        "UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE username = 'operador'",
+        [hashPassword(cleanOp)]
+      );
+    }
+    return res.json({ success: true, message: 'Credenciales actualizadas correctamente en PostgreSQL.' });
+  } catch (err) {
+    console.error('❌ Error al actualizar credenciales:', err);
+    return res.status(500).json({ success: false, error: 'Error al actualizar credenciales' });
+  }
+});
+
+// ==========================================
 // 2. ENDPOINTS DE ÓRDENES DE TALLER
 // ==========================================
 
 // Listar órdenes (con filtros opcionales de status o search)
-app.get('/api/orders', async (req, res) => {
+app.get('/api/orders', requireAuth, async (req, res) => {
   const { status, search } = req.query;
   const dbConnected = await isDbConnected();
 
@@ -296,7 +496,7 @@ app.get('/api/orders', async (req, res) => {
 });
 
 // Obtener orden individual por ID o OrderNumber
-app.get('/api/orders/:id', async (req, res) => {
+app.get('/api/orders/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   const dbConnected = await isDbConnected();
 
@@ -344,21 +544,21 @@ app.get('/api/public/orders/track', async (req, res) => {
   const orderQuery = String(order || '').trim().replace(/^#/, '');
   const dniQuery = String(dni || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
 
-  if (!orderQuery) {
+  if (!orderQuery || !dniQuery || dniQuery.length < 4) {
     return res.status(400).json({ 
       success: false, 
-      error: 'Por favor, indicá el número de orden a consultar.' 
+      error: 'Por seguridad, indicá tanto el número de orden como tu DNI o teléfono (mínimo 4 caracteres).' 
     });
   }
 
   try {
-    // Buscar coincidencia flexible por orden (ej: MON-1042, 1042, #MON-1042)
+    // Coincidencia exacta de número de orden (sin LIKE parcial para evitar enumeración)
     const sql = `
       SELECT * FROM repair_orders 
       WHERE LOWER(order_number) = LOWER($1) 
          OR LOWER(order_number) = LOWER('#' || $1)
-         OR LOWER(order_number) LIKE LOWER('%' || $1)
-         OR (id::text = $1)
+         OR LOWER(order_number) = LOWER('MON-' || $1)
+         OR LOWER(order_number) = LOWER('#MON-' || $1)
       ORDER BY id DESC
       LIMIT 1
     `;
@@ -367,33 +567,31 @@ app.get('/api/public/orders/track', async (req, res) => {
     if (result.rowCount === 0) {
       return res.status(404).json({ 
         success: false, 
-        error: 'No encontramos una reparación con ese número de orden. Verificá los datos o escribinos por WhatsApp.' 
+        error: 'No encontramos una reparación con ese número de orden y DNI o Teléfono.' 
       });
     }
 
     const row = result.rows[0];
 
-    // Si se envió DNI o teléfono, validar coincidencia estricta con el titular
-    if (dniQuery) {
-      let clientData = {};
-      try {
-        clientData = typeof row.client_data === 'object' ? (row.client_data || {}) : JSON.parse(row.client_data || '{}');
-      } catch (e) {
-        clientData = {};
-      }
+    // Validar coincidencia obligatoria con el titular
+    let clientData = {};
+    try {
+      clientData = typeof row.client_data === 'object' ? (row.client_data || {}) : JSON.parse(row.client_data || '{}');
+    } catch (e) {
+      clientData = {};
+    }
 
-      const phoneRaw = String(row.client_phone || '').replace(/[^0-9]/g, '');
-      const docRaw = String(clientData.docNumber || clientData.dni || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
+    const phoneRaw = String(row.client_phone || '').replace(/[^0-9]/g, '');
+    const docRaw = String(clientData.docNumber || clientData.dni || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
 
-      const phoneMatches = phoneRaw.includes(dniQuery) || (dniQuery.length >= 6 && phoneRaw.endsWith(dniQuery));
-      const docMatches = docRaw === dniQuery || docRaw.includes(dniQuery) || (dniQuery.length >= 6 && dniQuery.includes(docRaw));
+    const phoneMatches = phoneRaw.length >= 4 && (phoneRaw === dniQuery || (dniQuery.length >= 6 && phoneRaw.endsWith(dniQuery)));
+    const docMatches = docRaw.length >= 4 && docRaw === dniQuery;
 
-      if (!phoneMatches && !docMatches) {
-        return res.status(404).json({
-          success: false,
-          error: 'No encontramos una reparación con ese número de orden y DNI o Teléfono. Verificá los datos o consultanos por WhatsApp.'
-        });
-      }
+    if (!phoneMatches && !docMatches) {
+      return res.status(404).json({
+        success: false,
+        error: 'No encontramos una reparación con ese número de orden y DNI o Teléfono. Verificá los datos o consultanos por WhatsApp.'
+      });
     }
 
     return res.json({
@@ -409,9 +607,19 @@ app.get('/api/public/orders/track', async (req, res) => {
   }
 });
 
-// Endpoint público por parámetro directo en ruta /api/public/orders/:orderNumber
+// Endpoint público por parámetro directo en ruta /api/public/orders/:orderNumber (exige ?dni= obligatorio)
 app.get('/api/public/orders/:orderNumber', async (req, res) => {
   const { orderNumber } = req.params;
+  const { dni } = req.query;
+  const dniQuery = String(dni || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
+
+  if (!dniQuery || dniQuery.length < 4) {
+    return res.status(400).json({
+      success: false,
+      error: 'Por seguridad, se requiere el DNI o teléfono del titular (?dni=...) para consultar la orden.'
+    });
+  }
+
   const dbConnected = await isDbConnected();
 
   if (!dbConnected) {
@@ -425,8 +633,8 @@ app.get('/api/public/orders/:orderNumber', async (req, res) => {
       SELECT * FROM repair_orders 
       WHERE LOWER(order_number) = LOWER($1) 
          OR LOWER(order_number) = LOWER('#' || $1)
-         OR LOWER(order_number) LIKE LOWER('%' || $1)
-         OR (id::text = $1)
+         OR LOWER(order_number) = LOWER('MON-' || $1)
+         OR LOWER(order_number) = LOWER('#MON-' || $1)
       ORDER BY id DESC
       LIMIT 1
     `;
@@ -436,9 +644,25 @@ app.get('/api/public/orders/:orderNumber', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Orden no encontrada' });
     }
 
+    const row = result.rows[0];
+    let clientData = {};
+    try {
+      clientData = typeof row.client_data === 'object' ? (row.client_data || {}) : JSON.parse(row.client_data || '{}');
+    } catch {
+      clientData = {};
+    }
+    const phoneRaw = String(row.client_phone || '').replace(/[^0-9]/g, '');
+    const docRaw = String(clientData.docNumber || clientData.dni || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase();
+    const phoneMatches = phoneRaw.length >= 4 && (phoneRaw === dniQuery || (dniQuery.length >= 6 && phoneRaw.endsWith(dniQuery)));
+    const docMatches = docRaw.length >= 4 && docRaw === dniQuery;
+
+    if (!phoneMatches && !docMatches) {
+      return res.status(404).json({ success: false, error: 'Orden no encontrada o datos de validación incorrectos' });
+    }
+
     res.json({
       success: true,
-      order: mapDbOrderToPublicTracking(result.rows[0])
+      order: mapDbOrderToPublicTracking(row)
     });
   } catch (error) {
     console.error('❌ Error al obtener tracking público:', error);
@@ -447,7 +671,7 @@ app.get('/api/public/orders/:orderNumber', async (req, res) => {
 });
 
 // Crear nueva orden de reparación (genera #MON-XXXX con secuencia en PostgreSQL)
-app.post('/api/orders', async (req, res) => {
+app.post('/api/orders', requireAuth, async (req, res) => {
   const data = req.body;
   const dbConnected = await isDbConnected();
 
@@ -532,7 +756,7 @@ app.post('/api/orders', async (req, res) => {
 });
 
 // Actualizar estado e informe técnico de una orden
-app.patch('/api/orders/:id/status', async (req, res) => {
+app.patch('/api/orders/:id/status', requireAuth, async (req, res) => {
   const { id } = req.params;
   const { status, technicalReport, operator, internalNotes, budgetTotal, partCost, partSupplier, partName } = req.body;
   const dbConnected = await isDbConnected();
@@ -633,7 +857,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 });
 
 // Actualizar costo de repuesto / proveedor de una orden
-app.patch('/api/orders/:id/part-cost', async (req, res) => {
+app.patch('/api/orders/:id/part-cost', requireAuth, async (req, res) => {
   const { id } = req.params;
   const { partCost, partSupplier, partName, operator } = req.body;
   const dbConnected = await isDbConnected();
@@ -709,7 +933,7 @@ app.patch('/api/orders/:id/part-cost', async (req, res) => {
 });
 
 // Actualizar presupuesto / valor total acordado de una orden
-app.patch('/api/orders/:id/budget', async (req, res) => {
+app.patch('/api/orders/:id/budget', requireAuth, async (req, res) => {
   const { id } = req.params;
   const { budgetTotal, note, operator } = req.body;
   const dbConnected = await isDbConnected();
@@ -778,7 +1002,7 @@ app.patch('/api/orders/:id/budget', async (req, res) => {
 });
 
 // Registrar pago / seña o cobro de saldo
-app.patch('/api/orders/:id/payments', async (req, res) => {
+app.patch('/api/orders/:id/payments', requireAuth, async (req, res) => {
   const { id } = req.params;
   const { amount, method, operator, isFinalPayment } = req.body;
   const dbConnected = await isDbConnected();
@@ -856,7 +1080,7 @@ app.patch('/api/orders/:id/payments', async (req, res) => {
 });
 
 // Eliminar orden por ID o número correlativo
-app.delete('/api/orders/:id', async (req, res) => {
+app.delete('/api/orders/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const dbConnected = await isDbConnected();
 
@@ -890,7 +1114,7 @@ app.delete('/api/orders/:id', async (req, res) => {
 // ==========================================
 
 // Listar productos de inventario
-app.get('/api/inventory', async (req, res) => {
+app.get('/api/inventory', optionalAuth, async (req, res) => {
   const { category, inStockOnly } = req.query;
   const dbConnected = await isDbConnected();
 
@@ -917,7 +1141,14 @@ app.get('/api/inventory', async (req, res) => {
     sql += ' ORDER BY category ASC, name ASC';
 
     const result = await query(sql, params);
-    const products = result.rows.map(mapDbProductToFrontend);
+    const products = result.rows.map(row => {
+      const mapped = mapDbProductToFrontend(row);
+      if (!req.user) {
+        const { costPrice, supplier, ...publicProduct } = mapped;
+        return publicProduct;
+      }
+      return mapped;
+    });
 
     res.json({
       success: true,
@@ -931,7 +1162,7 @@ app.get('/api/inventory', async (req, res) => {
 });
 
 // Crear nuevo producto en inventario
-app.post('/api/inventory', async (req, res) => {
+app.post('/api/inventory', requireAdmin, async (req, res) => {
   const {
     name,
     category = 'Cargadores & Fuentes',
@@ -1109,11 +1340,11 @@ const handleUpdateProduct = async (req, res) => {
   }
 };
 
-app.patch('/api/inventory/:id', handleUpdateProduct);
-app.put('/api/inventory/:id', handleUpdateProduct);
+app.patch('/api/inventory/:id', requireAdmin, handleUpdateProduct);
+app.put('/api/inventory/:id', requireAdmin, handleUpdateProduct);
 
 // Eliminar producto de inventario
-app.delete('/api/inventory/:id', async (req, res) => {
+app.delete('/api/inventory/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const dbConnected = await isDbConnected();
 
@@ -1148,7 +1379,7 @@ app.delete('/api/inventory/:id', async (req, res) => {
 // ==========================================
 
 // Listar ventas históricas
-app.get('/api/sales', async (req, res) => {
+app.get('/api/sales', requireAuth, async (req, res) => {
   const { date, limit = 500 } = req.query;
   const dbConnected = await isDbConnected();
 
@@ -1196,7 +1427,7 @@ app.get('/api/sales', async (req, res) => {
 });
 
 // Registrar venta y descontar stock automáticamente
-app.post('/api/sales', async (req, res) => {
+app.post('/api/sales', requireAuth, async (req, res) => {
   const { 
     items, 
     subtotal, 
@@ -1279,7 +1510,7 @@ app.post('/api/sales', async (req, res) => {
 });
 
 // Actualizar tipo de documento o cliente de una venta existente
-app.patch('/api/sales/:id', async (req, res) => {
+app.patch('/api/sales/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
   const { documentType, documentNumber, customer } = req.body;
   const dbConnected = await isDbConnected();
@@ -1330,7 +1561,7 @@ app.patch('/api/sales/:id', async (req, res) => {
 });
 
 // Eliminar venta
-app.delete('/api/sales/:id', async (req, res) => {
+app.delete('/api/sales/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const dbConnected = await isDbConnected();
 
@@ -1352,7 +1583,7 @@ app.delete('/api/sales/:id', async (req, res) => {
 // ==========================================
 
 // Listar gastos con filtros opcionales (mes, año, categoría, método de pago, búsqueda)
-app.get('/api/gastos', async (req, res) => {
+app.get('/api/gastos', requireAuth, async (req, res) => {
   const { month, year, categoria, metodo_pago, search, limit = 500 } = req.query;
   const dbConnected = await isDbConnected();
 
@@ -1405,7 +1636,7 @@ app.get('/api/gastos', async (req, res) => {
 });
 
 // Registrar nuevo gasto
-app.post('/api/gastos', async (req, res) => {
+app.post('/api/gastos', requireAuth, async (req, res) => {
   const { concepto, descripcion, monto, categoria, metodo_pago, fecha, comprobante_url, notas } = req.body;
   const dbConnected = await isDbConnected();
 
@@ -1548,11 +1779,11 @@ const handleUpdateGasto = async (req, res) => {
   }
 };
 
-app.put('/api/gastos/:id', handleUpdateGasto);
-app.patch('/api/gastos/:id', handleUpdateGasto);
+app.put('/api/gastos/:id', requireAuth, handleUpdateGasto);
+app.patch('/api/gastos/:id', requireAuth, handleUpdateGasto);
 
 // Eliminar gasto
-app.delete('/api/gastos/:id', async (req, res) => {
+app.delete('/api/gastos/:id', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const dbConnected = await isDbConnected();
 
@@ -1578,7 +1809,7 @@ app.delete('/api/gastos/:id', async (req, res) => {
 });
 
 // Balance y Cierre Mensual consolidado
-app.get('/api/finances/monthly-balance', async (req, res) => {
+app.get('/api/finances/monthly-balance', requireAuth, async (req, res) => {
   const dbConnected = await isDbConnected();
   const currentDate = new Date();
   const month = parseInt(req.query.month || (currentDate.getMonth() + 1), 10);
@@ -1735,7 +1966,7 @@ app.get('/api/finances/monthly-balance', async (req, res) => {
 });
 
 // Endpoint para auto-inicializar o verificar esquema en Railway
-app.get('/api/db/init', async (req, res) => {
+app.get('/api/db/init', requireAdmin, async (req, res) => {
   const result = await initDatabaseSchema();
   res.json({
     message: 'Inicialización de esquema solicitada',
@@ -1747,9 +1978,14 @@ app.get('/api/db/init', async (req, res) => {
 // 6. ENDPOINTS DE CONFIGURACIONES & BACKUP
 // ==========================================
 
+const PUBLIC_SETTING_KEYS = new Set(['models', 'issues', 'pricing_rules', 'iphone_configs']);
+
 // Obtener configuración (modelos, fallas/precios, márgenes, configs de iphone)
-app.get('/api/settings/:key', async (req, res) => {
+app.get('/api/settings/:key', optionalAuth, async (req, res) => {
   const { key } = req.params;
+  if (!PUBLIC_SETTING_KEYS.has(key) && req.user?.role !== 'admin') {
+    return res.status(403).json({ success: false, error: 'Acceso restringido a Administrador.' });
+  }
   const dbConnected = await isDbConnected();
 
   if (!dbConnected) {
@@ -1774,7 +2010,7 @@ app.get('/api/settings/:key', async (req, res) => {
 });
 
 // Guardar o actualizar configuración en PostgreSQL
-app.post('/api/settings/:key', async (req, res) => {
+app.post('/api/settings/:key', requireAdmin, async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
   const dbConnected = await isDbConnected();
@@ -1810,7 +2046,7 @@ app.post('/api/settings/:key', async (req, res) => {
 });
 
 // Generar backup completo de todo el sistema (Órdenes, Inventario, Ventas, Modelos, Precios)
-app.get('/api/backup', async (req, res) => {
+app.get('/api/backup', requireAdmin, async (req, res) => {
   const dbConnected = await isDbConnected();
   if (!dbConnected) {
     return res.status(503).json({ error: 'Base de datos no disponible para generar backup' });
@@ -1824,6 +2060,19 @@ app.get('/api/backup', async (req, res) => {
 
     const settingsMap = {};
     settingsRes.rows.forEach(r => {
+      if (r.key === 'google_ads_credentials') return; // Nunca exportar credenciales OAuth en backup
+      if (r.key === 'business_config' && r.value && typeof r.value === 'object') {
+        const sanitized = { ...r.value };
+        if (sanitized.afip) {
+          sanitized.afip = {
+            ...sanitized.afip,
+            hasClaveFiscalPassword: Boolean(sanitized.afip.claveFiscalPassword),
+            claveFiscalPassword: ''
+          };
+        }
+        settingsMap[r.key] = sanitized;
+        return;
+      }
       settingsMap[r.key] = r.value;
     });
 
@@ -1901,12 +2150,42 @@ const DEFAULT_BUSINESS_CONFIG = {
   }
 };
 
+// Helper para sanitizar business_config antes de enviarlo al cliente
+function sanitizeBusinessConfigForResponse(cfg, isAuthenticated) {
+  const base = cfg || DEFAULT_BUSINESS_CONFIG;
+  if (!isAuthenticated) {
+    return {
+      business: {
+        fantasyName: base.business?.fantasyName,
+        address: base.business?.address,
+        city: base.business?.city,
+        state: base.business?.state,
+        zipCode: base.business?.zipCode,
+        country: base.business?.country
+      },
+      contact: base.contact,
+      whatsappTemplates: {
+        quotationWeb: base.whatsappTemplates?.quotationWeb
+      }
+    };
+  }
+  return {
+    ...base,
+    afip: {
+      ...(base.afip || {}),
+      hasClaveFiscalPassword: Boolean(base.afip?.claveFiscalPassword),
+      claveFiscalPassword: '' // Nunca exponer la Clave Fiscal en respuestas HTTP
+    }
+  };
+}
+
 // GET /api/business-config
-app.get('/api/business-config', async (req, res) => {
+app.get('/api/business-config', optionalAuth, async (req, res) => {
+  const isAuthenticated = Boolean(req.user);
   try {
     const dbConnected = await isDbConnected();
     if (!dbConnected) {
-      return res.json({ success: true, config: DEFAULT_BUSINESS_CONFIG, fromFallback: true });
+      return res.json({ success: true, config: sanitizeBusinessConfigForResponse(DEFAULT_BUSINESS_CONFIG, isAuthenticated), fromFallback: true });
     }
 
     const result = await query("SELECT value FROM app_settings WHERE key = 'business_config'");
@@ -1930,20 +2209,31 @@ app.get('/api/business-config', async (req, res) => {
           ...(val.whatsappTemplates || {})
         }
       };
-      return res.json({ success: true, config: merged });
+      return res.json({ success: true, config: sanitizeBusinessConfigForResponse(merged, isAuthenticated) });
     }
 
-    res.json({ success: true, config: DEFAULT_BUSINESS_CONFIG });
+    res.json({ success: true, config: sanitizeBusinessConfigForResponse(DEFAULT_BUSINESS_CONFIG, isAuthenticated) });
   } catch (error) {
     console.error('❌ Error al obtener business-config:', error);
-    res.json({ success: true, config: DEFAULT_BUSINESS_CONFIG, error: error.message });
+    res.json({ success: true, config: sanitizeBusinessConfigForResponse(DEFAULT_BUSINESS_CONFIG, isAuthenticated) });
   }
 });
 
 // POST /api/business-config
-app.post('/api/business-config', async (req, res) => {
+app.post('/api/business-config', requireAdmin, async (req, res) => {
   try {
     const raw = req.body?.config || req.body || {};
+    const dbConnected = await isDbConnected();
+
+    let existingAfipPass = '';
+    if (dbConnected) {
+      const prevRes = await query("SELECT value FROM app_settings WHERE key = 'business_config'");
+      existingAfipPass = prevRes.rows[0]?.value?.afip?.claveFiscalPassword || '';
+    }
+
+    const incomingPass = raw.afip?.claveFiscalPassword ? String(raw.afip.claveFiscalPassword).trim() : '';
+    const finalEncryptedPass = incomingPass ? encryptSecret(incomingPass) : existingAfipPass;
+
     const configToSave = {
       business: {
         ...DEFAULT_BUSINESS_CONFIG.business,
@@ -1955,7 +2245,8 @@ app.post('/api/business-config', async (req, res) => {
       },
       afip: {
         ...DEFAULT_BUSINESS_CONFIG.afip,
-        ...(raw.afip || {})
+        ...(raw.afip || {}),
+        claveFiscalPassword: finalEncryptedPass
       },
       whatsappTemplates: {
         ...DEFAULT_BUSINESS_CONFIG.whatsappTemplates,
@@ -1964,7 +2255,6 @@ app.post('/api/business-config', async (req, res) => {
       updatedAt: new Date().toISOString()
     };
 
-    const dbConnected = await isDbConnected();
     if (dbConnected) {
       await query(
         `INSERT INTO app_settings (key, value, updated_at) 
@@ -1974,15 +2264,15 @@ app.post('/api/business-config', async (req, res) => {
       );
     }
 
-    res.json({ success: true, config: configToSave });
+    res.json({ success: true, config: sanitizeBusinessConfigForResponse(configToSave, true) });
   } catch (error) {
     console.error('❌ Error al guardar business-config:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({ success: false, error: 'Error al guardar configuración del negocio' });
   }
 });
 
 // POST /api/afip/robot-activate (Vinculación automática con Robot de ARCA / AFIP)
-app.post('/api/afip/robot-activate', async (req, res) => {
+app.post('/api/afip/robot-activate', requireAdmin, async (req, res) => {
   try {
     const { cuit, claveFiscalPassword, puntoVenta = 1, environment = 'produccion' } = req.body || {};
     const cleanCuit = String(cuit || '').replace(/[^0-9]/g, '');
@@ -2013,7 +2303,7 @@ app.post('/api/afip/robot-activate', async (req, res) => {
       cuit: cleanCuit,
       puntoVenta: Number(puntoVenta) || 1,
       claveFiscalCuit: cleanCuit,
-      claveFiscalPassword: claveFiscalPassword,
+      claveFiscalPassword: encryptSecret(claveFiscalPassword),
       lastTested: new Date().toISOString()
     };
 
@@ -2056,7 +2346,7 @@ app.post('/api/afip/robot-activate', async (req, res) => {
 });
 
 // POST /api/afip/deactivate (Desactivar facturación electrónica)
-app.post('/api/afip/deactivate', async (req, res) => {
+app.post('/api/afip/deactivate', requireAdmin, async (req, res) => {
   try {
     const updatePayload = {
       status: 'inactive',
@@ -2091,7 +2381,7 @@ app.post('/api/afip/deactivate', async (req, res) => {
 });
 
 // POST /api/afip/test-connection
-app.post('/api/afip/test-connection', async (req, res) => {
+app.post('/api/afip/test-connection', requireAdmin, async (req, res) => {
   try {
     const b = req.body || {};
     const afip = b.afip || b;
@@ -2167,7 +2457,7 @@ function calculateCuilMod11(dni, preferredGender = 'M') {
 }
 
 // GET /api/afip/padron/:doc (Consulta inteligente de Padrón y Clientes por DNI/CUIT)
-app.get('/api/afip/padron/:doc', async (req, res) => {
+app.get('/api/afip/padron/:doc', requireAuth, async (req, res) => {
   const { doc } = req.params;
   const cleanDoc = String(doc || '').replace(/[^0-9]/g, '');
 
@@ -2306,7 +2596,7 @@ app.get('/api/afip/padron/:doc', async (req, res) => {
 });
 
 // POST /api/afip/padron/save-client (Guardar o actualizar cliente en padrón local)
-app.post('/api/afip/padron/save-client', async (req, res) => {
+app.post('/api/afip/padron/save-client', requireAuth, async (req, res) => {
   try {
     const { name, docType = 'DNI', docNumber, cuit, taxCondition = 'Consumidor Final', phone = '', email = '', address = '' } = req.body || {};
     const cleanDoc = String(docNumber || cuit || '').replace(/[^0-9]/g, '');
@@ -2362,7 +2652,7 @@ app.post('/api/afip/padron/save-client', async (req, res) => {
 // ==========================================
 
 // Consulta de estado de credenciales y conexión
-app.get('/api/ads/status', async (req, res) => {
+app.get('/api/ads/status', requireAdmin, async (req, res) => {
   try {
     const status = checkConnectionStatus();
     res.json({ success: true, ...status });
@@ -2372,7 +2662,7 @@ app.get('/api/ads/status', async (req, res) => {
 });
 
 // Métricas de rendimiento y KPIs (hoy, 7 días, 30 días)
-app.get('/api/ads/dashboard', async (req, res) => {
+app.get('/api/ads/dashboard', requireAdmin, async (req, res) => {
   try {
     const period = req.query.period || 'last_7_days';
     const data = await getDashboardMetrics(period);
@@ -2383,7 +2673,7 @@ app.get('/api/ads/dashboard', async (req, res) => {
 });
 
 // Términos de búsqueda reales de usuarios
-app.get('/api/ads/search-terms', async (req, res) => {
+app.get('/api/ads/search-terms', requireAdmin, async (req, res) => {
   try {
     const period = req.query.period || 'last_30_days';
     const data = await getSearchTerms(period);
@@ -2394,7 +2684,7 @@ app.get('/api/ads/search-terms', async (req, res) => {
 });
 
 // Listado de palabras clave negativas actuales
-app.get('/api/ads/negative-keywords', async (req, res) => {
+app.get('/api/ads/negative-keywords', requireAdmin, async (req, res) => {
   try {
     const data = await getNegativeKeywords();
     res.json({ success: true, ...data });
@@ -2404,7 +2694,7 @@ app.get('/api/ads/negative-keywords', async (req, res) => {
 });
 
 // Agregar palabras clave negativas
-app.post('/api/ads/negative-keywords', async (req, res) => {
+app.post('/api/ads/negative-keywords', requireAdmin, async (req, res) => {
   try {
     const { keywords, matchType, campaignId } = req.body;
     const result = await addNegativeKeywords({ keywords, matchType, campaignId });
@@ -2415,7 +2705,7 @@ app.post('/api/ads/negative-keywords', async (req, res) => {
 });
 
 // Eliminar palabra clave negativa
-app.delete('/api/ads/negative-keywords', async (req, res) => {
+app.delete('/api/ads/negative-keywords', requireAdmin, async (req, res) => {
   try {
     const { id, text } = req.body;
     const result = await removeNegativeKeyword({ id, text });
@@ -2426,7 +2716,7 @@ app.delete('/api/ads/negative-keywords', async (req, res) => {
 });
 
 // Probar conexión directa con Google Ads API
-app.post('/api/ads/test-connection', async (req, res) => {
+app.post('/api/ads/test-connection', requireAdmin, async (req, res) => {
   try {
     const result = await testGoogleAdsConnection();
     res.json(result);
@@ -2436,7 +2726,7 @@ app.post('/api/ads/test-connection', async (req, res) => {
 });
 
 // Guardar y sincronizar credenciales recibidas desde formulario o archivo JSON
-app.post('/api/ads/credentials', async (req, res) => {
+app.post('/api/ads/credentials', requireAdmin, async (req, res) => {
   try {
     const newCreds = req.body || {};
     const updatedStatus = await saveCredentials(newCreds);
@@ -2451,7 +2741,7 @@ app.post('/api/ads/credentials', async (req, res) => {
 // ==========================================
 
 // Obtener estado y configuración de auto-pilot
-app.get('/api/ads/autopilot', async (req, res) => {
+app.get('/api/ads/autopilot', requireAdmin, async (req, res) => {
   try {
     const config = await getAutoPilotConfig();
     res.json({ success: true, config });
@@ -2461,7 +2751,7 @@ app.get('/api/ads/autopilot', async (req, res) => {
 });
 
 // Actualizar configuración de auto-pilot
-app.post('/api/ads/autopilot', async (req, res) => {
+app.post('/api/ads/autopilot', requireAdmin, async (req, res) => {
   try {
     const updated = await updateAutoPilotConfig(req.body);
     res.json({ success: true, config: updated });
@@ -2471,7 +2761,7 @@ app.post('/api/ads/autopilot', async (req, res) => {
 });
 
 // Disparar motor de optimización y bloqueo automático
-app.post('/api/ads/optimize', async (req, res) => {
+app.post('/api/ads/optimize', requireAdmin, async (req, res) => {
   try {
     const result = await runOptimizationEngine();
     res.json(result);
@@ -2484,7 +2774,7 @@ app.post('/api/ads/optimize', async (req, res) => {
 // 14. GOOGLE SEARCH CONSOLE API (SEO & ANALYTICS)
 // ==========================================
 
-app.get('/api/seo/performance', async (req, res) => {
+app.get('/api/seo/performance', requireAdmin, async (req, res) => {
   try {
     const days = parseInt(req.query.days || '30', 10);
     const data = await getSearchPerformance({ days });
@@ -2494,7 +2784,7 @@ app.get('/api/seo/performance', async (req, res) => {
   }
 });
 
-app.get('/api/seo/sites', async (req, res) => {
+app.get('/api/seo/sites', requireAdmin, async (req, res) => {
   try {
     const sites = await listVerifiedSites();
     res.json({ success: true, sites });
@@ -2517,6 +2807,7 @@ app.listen(PORT, '0.0.0.0', async () => {
   // Auto-verificación de tablas e índices en PostgreSQL
   try {
     await initDatabaseSchema();
+    await ensureInitialUsers();
     await loadCredentialsFromDb();
   } catch (e) {
     console.warn('⚠️ No se pudo auto-inicializar esquema al arranque:', e.message);

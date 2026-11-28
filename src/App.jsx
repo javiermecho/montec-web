@@ -73,8 +73,10 @@ function AppContent() {
     title: isTallerSubdomain 
       ? 'Panel de Control y Taller | montec' 
       : 'montec | Servicio Técnico Independiente de Celulares, iPhone y Notebooks en Mar del Plata',
-    description: 'Taller multimarca y servicio técnico independiente en Constitución, Mar del Plata. Reparación de celulares, iPhone, Samsung, Motorola y PC. Montes Carballo 943.',
-    canonical: 'https://montec.ar/',
+    description: isTallerSubdomain
+      ? 'Sistema interno de gestión de taller y mostrador de montec.'
+      : 'Taller multimarca y servicio técnico independiente en Constitución, Mar del Plata. Reparación de celulares, iPhone, Samsung, Motorola y PC. Montes Carballo 943.',
+    canonical: isTallerSubdomain ? 'https://taller.montec.ar/' : 'https://montec.ar/',
     noindex: isTallerSubdomain // No indexar jamás el panel de empleados/taller
   });
 

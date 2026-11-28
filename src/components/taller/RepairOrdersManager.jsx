@@ -49,6 +49,7 @@ import {
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
+import { api } from '../../services/api';
 import { getOrderTrackingUrl } from '../../services/orderTrackingService';
 import { PatternThumbnail, getDeviceSecurity, parsePatternSequence } from './PatternLockInput';
 import OrderTicketModal from './OrderTicketModal';
@@ -847,14 +848,13 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
   };
 
   // Eliminar orden (Acceso exclusivo Administrador)
-  const handleDelete = (orderId, orderNum) => {
+  const handleDelete = async (orderId, orderNum) => {
     if (!effectiveIsAdmin) {
       const inputPin = window.prompt('🔒 Acción restringida: Solo el Administrador puede eliminar órdenes de reparación.\n\nIngresá la contraseña de Administrador para autorizar:');
       if (!inputPin) return;
       const cleanPin = inputPin.trim();
-      const savedAdmin = localStorage.getItem('montec_admin_password_v1') || 'Milan844@';
-      const isValid = cleanPin === 'Milan844@' || cleanPin.toLowerCase() === 'milan844@' || cleanPin === savedAdmin || cleanPin === '1994';
-      if (!isValid) {
+      const check = await api.loginApi(cleanPin, 'admin');
+      if (!check.success || check.user?.role !== 'admin') {
         alert('❌ Contraseña incorrecta. Solo el Administrador tiene permisos para eliminar órdenes.');
         return;
       }

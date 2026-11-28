@@ -28,18 +28,17 @@ export default function TallerLoginScreen({ onCancel }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [showPin, setShowPin] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    const res = login(pinInput, selectedRole);
+    const res = await login(pinInput, selectedRole);
     if (!res.success) {
       setErrorMsg(res.error || 'Credenciales incorrectas');
     } else {
       // Si ingresa con rol Administrador (Dueño), abrir directamente el panel de administración
       if (selectedRole === 'admin' || res.user?.role === 'admin') {
         if (typeof setIsAdminAuthenticated === 'function') setIsAdminAuthenticated(true);
-        if (typeof loginAdmin === 'function') loginAdmin(pinInput);
         if (typeof setIsAdminOpen === 'function') setIsAdminOpen(true);
       }
     }

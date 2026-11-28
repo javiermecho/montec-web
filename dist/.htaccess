@@ -1,3 +1,12 @@
+# Bloquear indexación en buscadores para el subdominio interno taller.montec.ar y rutas privadas
+SetEnvIfNoCase Host ^taller\. IS_TALLER_HOST
+SetEnvIfNoCase Request_URI "^/(taller|estado|seguimiento|reparacion)(/|$)" IS_PRIVATE_ROUTE
+
+<IfModule mod_headers.c>
+  Header always set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet" env=IS_TALLER_HOST
+  Header always set X-Robots-Tag "noindex, nofollow, noarchive, nosnippet" env=IS_PRIVATE_ROUTE
+</IfModule>
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
@@ -10,6 +19,10 @@
   # 2. Redirigir www a no-www (evitar duplicados www vs non-www)
   RewriteCond %{HTTP_HOST} ^www\.montec\.ar$ [NC]
   RewriteRule ^(.*)$ https://montec.ar/$1 [L,R=301]
+
+  # 2.5 No exponer sitemap.xml en el subdominio interno taller.montec.ar
+  RewriteCond %{HTTP_HOST} ^taller\.montec\.ar$ [NC]
+  RewriteRule ^sitemap\.xml$ - [G,L]
 
   # 3. SPA Routing estándar (Redirigir rutas virtuales a index.html preservando archivos reales)
   RewriteRule ^index\.html$ - [L]
