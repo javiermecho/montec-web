@@ -1216,7 +1216,7 @@ export default function DiagnosticChatbot() {
                     rel="noopener noreferrer"
                     onClick={() => {
                       if (typeof window.gtag === 'function') {
-                        window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                        window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657/9Hh5CKPxmLwdEJGI1-RE' });
                       }
                       trackWhatsAppClick({
                         source: 'chatbot_diagnostico',

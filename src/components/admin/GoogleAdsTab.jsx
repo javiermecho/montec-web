@@ -107,7 +107,7 @@ export default function GoogleAdsTab() {
     clientId: '',
     clientSecret: '',
     refreshToken: '',
-    customerId: '18464752657',
+    customerId: '5379773770',
     developerToken: ''
   });
   const [uploadSuccess, setUploadSuccess] = useState(null);
@@ -439,7 +439,7 @@ export default function GoogleAdsTab() {
                   Control de Google Ads & Marketing
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-zinc-800 text-zinc-300 border border-zinc-700">
-                  ID: 18464752657
+                  ID: 537-977-3770
                 </span>
                 {status?.isConfigured || status?.hasRefreshToken ? (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
@@ -2037,12 +2037,12 @@ export default function GoogleAdsTab() {
                 <div className="flex items-center justify-between text-xs mb-1">
                   <label className="font-semibold text-zinc-300 flex items-center gap-1.5">
                     3. Customer ID (ID de Cuenta Google Ads de Montec)
-                    <span className="text-[10px] text-emerald-400 font-bold">✅ 18464752657</span>
+                    <span className="text-[10px] text-emerald-400 font-bold">✅ 5379773770</span>
                   </label>
                 </div>
                 <input
                   type="text"
-                  placeholder="18464752657 (sin guiones)"
+                  placeholder="5379773770 (sin guiones)"
                   value={credsForm.customerId}
                   onChange={(e) => setCredsForm({ ...credsForm, customerId: e.target.value })}
                   className="w-full px-3.5 py-2 text-xs rounded-xl border border-zinc-700 bg-zinc-950 text-white font-mono placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-[#FF5500]"

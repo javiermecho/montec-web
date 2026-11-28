@@ -38,7 +38,7 @@ let localNegativeKeywords = [
  */
 function getCredentials() {
   const customerIdRaw = process.env.GOOGLE_ADS_CUSTOMER_ID || '';
-  // Formatear estrictamente sin guiones ni espacios (ej: 18464752657)
+  // Formatear estrictamente sin guiones ni espacios (ej: 5379773770)
   const customerId = customerIdRaw.replace(/[^0-9]/g, '');
 
   const devToken = (process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '').trim();
@@ -872,7 +872,7 @@ export async function testConnection() {
       status: 'connected',
       message: 'Conexión exitosa con la API de Google Ads',
       customer: {
-        id: customerData?.id || '18464752657',
+        id: customerData?.id || creds.customerId || '5379773770',
         name: customerData?.descriptive_name || 'Montec Mar del Plata',
         currency: customerData?.currency_code || 'ARS'
       }

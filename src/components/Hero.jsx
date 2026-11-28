@@ -118,7 +118,7 @@ export default function Hero({ onOpenTracker, onNavigateOrderStatus }) {
             rel="noopener noreferrer"
             onClick={() => {
               if (typeof window.gtag === 'function') {
-                window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657/9Hh5CKPxmLwdEJGI1-RE' });
               }
               trackWhatsAppClick({ source: 'hero_primary_whatsapp', whatsappUrl });
               trackClickLlamadaOMapa({ type: 'whatsapp_hero', label: 'Consultar por WhatsApp Hero', url: whatsappUrl });

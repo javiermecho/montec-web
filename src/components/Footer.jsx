@@ -44,7 +44,7 @@ export default function Footer({ onNavigateStore }) {
                 rel="noopener noreferrer"
                 onClick={() => {
                   if (typeof window.gtag === 'function') {
-                    window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                    window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657/9Hh5CKPxmLwdEJGI1-RE' });
                   }
                   trackWhatsAppClick({ source: 'footer', whatsappUrl });
                   trackClickLlamadaOMapa({ type: 'whatsapp_footer', label: 'WhatsApp Footer', url: whatsappUrl });
@@ -195,7 +195,7 @@ export default function Footer({ onNavigateStore }) {
                   rel="noopener noreferrer"
                   onClick={() => {
                     if (typeof window.gtag === 'function') {
-                      window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657' });
+                      window.gtag('event', 'conversion', { 'send_to': 'AW-18464752657/9Hh5CKPxmLwdEJGI1-RE' });
                     }
                     trackWhatsAppClick({ source: 'footer_cta', whatsappUrl });
                   }}
