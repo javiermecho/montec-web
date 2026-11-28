@@ -26,7 +26,17 @@ export default function LocationContact() {
     { name: 'Tarjetas Débito y Crédito', icon: CreditCard, desc: 'Visa, Mastercard, Cabal' }
   ];
 
-  const address = 'Montes Carballo 943, B7600 Mar del Plata, Provincia de Buenos Aires';
+  const shortAddress = businessConfig?.business?.address || 'Montes Carballo 943';
+  const city = businessConfig?.business?.city || 'Mar del Plata';
+  const state = businessConfig?.business?.state || 'Buenos Aires';
+  const zipCode = businessConfig?.business?.zipCode || 'B7600';
+  const address = `${shortAddress}, ${zipCode} ${city}, ${state}`;
+  const supportPhone = businessConfig?.contact?.supportPhone || '+54 9 223 544-4991';
+  const weekdaysLabel = businessConfig?.hours?.weekdaysLabel || 'Lunes a Viernes';
+  const weekdaysTime = businessConfig?.hours?.weekdaysTime || '09:30 a 19:00 hs';
+  const saturdayLabel = businessConfig?.hours?.saturdayLabel || 'Sábados';
+  const saturdayTime = businessConfig?.hours?.saturdayTime || '10:00 a 14:00 hs';
+  const holidaysText = businessConfig?.hours?.holidaysText || 'Domingos y Feriados: Guardia WhatsApp';
   const googleMapsUrl = businessConfig?.business?.googleMapsUrl || 'https://maps.app.goo.gl/83JQkwGBdY3tLGtd7';
   const googleMapsDirectionsUrl = 'https://www.google.com/maps/dir/?api=1&destination=Montec+-+Servicio+T%C3%A9cnico+Celulares&destination_place_id=ChIJGcB0g5DZhJURvNzYiqMc-J4';
   const instagramUrl = businessConfig?.contact?.instagramUrl || 'https://instagram.com/montec.arg';
@@ -72,10 +82,10 @@ export default function LocationContact() {
                     Dirección Física y Punto de Referencia
                   </div>
                   <h3 className="text-lg font-heading font-bold text-white mt-0.5">
-                    Montes Carballo 943
+                    {shortAddress}
                   </h3>
                   <p className="text-xs sm:text-sm text-zinc-300 mt-1">
-                    Mar del Plata (Zona Norte / Constitución), Bs. As.
+                    {city} (Zona Norte / Constitución), {state}
                   </p>
                   <p className="text-xs text-orange-400 font-medium mt-0.5">
                     📍 Punto de referencia: <strong>A metros del ex Sobremonte</strong>
@@ -89,8 +99,8 @@ export default function LocationContact() {
                   <div className="mt-3 flex items-center gap-2 text-xs text-zinc-300">
                     <Phone className="w-4 h-4 text-[#FF5500] shrink-0" />
                     <span>Teléfono directo:</span>
-                    <a href="tel:+5492235444991" className="text-white hover:text-[#FF5500] font-mono font-bold">
-                      +54 9 223 544-4991
+                    <a href={`tel:+${whatsappNumber}`} className="text-white hover:text-[#FF5500] font-mono font-bold">
+                      {supportPhone}
                     </a>
                   </div>
 
@@ -138,16 +148,15 @@ export default function LocationContact() {
                   </div>
                   <div className="mt-2 space-y-1.5 text-xs sm:text-sm">
                     <div className="flex justify-between text-zinc-300">
-                      <span>Lunes a Viernes:</span>
-                      <strong className="text-white font-mono">09:30 - 19:00 hs</strong>
+                      <span>{weekdaysLabel}:</span>
+                      <strong className="text-white font-mono">{weekdaysTime}</strong>
                     </div>
                     <div className="flex justify-between text-zinc-300">
-                      <span>Sábados:</span>
-                      <strong className="text-white font-mono">10:00 - 14:00 hs</strong>
+                      <span>{saturdayLabel}:</span>
+                      <strong className="text-white font-mono">{saturdayTime}</strong>
                     </div>
                     <div className="flex justify-between text-zinc-500 text-xs">
-                      <span>Domingos y Feriados:</span>
-                      <span>Guardia WhatsApp</span>
+                      <span>{holidaysText}</span>
                     </div>
                   </div>
                 </div>

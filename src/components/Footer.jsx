@@ -10,6 +10,14 @@ export default function Footer({ onNavigateStore }) {
   const rawWhatsapp = businessConfig?.contact?.quotationWhatsapp || businessConfig?.contact?.supportPhone || '5492235444991';
   const whatsappNumber = rawWhatsapp.replace(/[^0-9]/g, '') || '5492235444991';
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('¡Hola montec! Quisiera hacer una consulta sobre servicio técnico.')}`;
+  const address = businessConfig?.business?.address || 'Montes Carballo 943';
+  const city = businessConfig?.business?.city || 'Mar del Plata';
+  const mapsUrl = businessConfig?.business?.googleMapsUrl || businessConfig?.contact?.googleMapsUrl || 'https://maps.app.goo.gl/83JQkwGBdY3tLGtd7';
+  const supportPhone = businessConfig?.contact?.supportPhone || '+54 9 223 544-4991';
+  const weekdaysLabel = businessConfig?.hours?.weekdaysLabel || 'Lun a Vie';
+  const weekdaysTime = businessConfig?.hours?.weekdaysTime || '09:30 a 19:00 hs';
+  const saturdayLabel = businessConfig?.hours?.saturdayLabel || 'Sábados';
+  const saturdayTime = businessConfig?.hours?.saturdayTime || '10:00 a 14:00 hs';
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -149,7 +157,7 @@ export default function Footer({ onNavigateStore }) {
             </h4>
             <div className="space-y-2.5 text-xs">
               <a
-                href="https://maps.app.goo.gl/83JQkwGBdY3tLGtd7"
+                href={mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-start gap-2 hover:text-[#FF5500] transition-colors group"
@@ -157,8 +165,8 @@ export default function Footer({ onNavigateStore }) {
               >
                 <MapPin className="w-4 h-4 text-[#FF5500] shrink-0 mt-0.5" />
                 <span className="text-zinc-300 group-hover:text-white leading-tight transition-colors">
-                  <strong className="text-white block group-hover:text-[#FF5500] transition-colors">Montes Carballo 943</strong>
-                  Mar del Plata (Montec - Servicio Técnico Celulares)
+                  <strong className="text-white block group-hover:text-[#FF5500] transition-colors">{address}</strong>
+                  {city} (Montec - Servicio Técnico Celulares)
                 </span>
               </a>
               <div className="flex items-start gap-2">
@@ -170,14 +178,14 @@ export default function Footer({ onNavigateStore }) {
               <div className="flex items-start gap-2">
                 <Clock className="w-4 h-4 text-[#FF5500] shrink-0 mt-0.5" />
                 <span className="text-zinc-300 text-[11px]">
-                  Lun a Vie: 09:30 a 19:00 hs<br />
-                  Sábados: 10:00 a 14:00 hs
+                  {weekdaysLabel}: {weekdaysTime}<br />
+                  {saturdayLabel}: {saturdayTime}
                 </span>
               </div>
               <div className="flex items-center gap-2 pt-1">
                 <Phone className="w-4 h-4 text-[#FF5500] shrink-0" />
-                <a href="tel:+5492235444991" className="text-white hover:text-[#FF5500] font-mono font-semibold">
-                  +54 9 223 544-4991
+                <a href={`tel:+${whatsappNumber}`} className="text-white hover:text-[#FF5500] font-mono font-semibold">
+                  {supportPhone}
                 </a>
               </div>
               <div className="pt-2">

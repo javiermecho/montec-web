@@ -587,6 +587,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
     const localName = businessConfig?.business?.fantasyName || 'MONTEC';
     const address = businessConfig?.business?.address || 'Montes Carballo 943';
     const city = businessConfig?.business?.city || 'Mar del Plata';
+    const hoursSummary = businessConfig?.hours?.summaryShort || 'Lun a Vie 09:30 a 19:00 | Sáb 10:00 a 14:00';
     const trackingUrl = getOrderTrackingUrl(orderNum);
 
     // Mapa de variables dinámicas disponibles para las plantillas
@@ -605,6 +606,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
       garantia: warrantyStr,
       direccion: address,
       ciudad: city,
+      horarios: hoursSummary,
       local: localName
     };
 
@@ -615,7 +617,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
       case 'ready':
       case 'repaired':
         rawTemplate = templates.orderReady || 
-          '¡Hola {cliente}! 🎉 Te informamos desde *{local}* que tu equipo *{equipo}* (Orden *{orden}*) ya está *REPARADO* y listo para retirar en nuestro local de {direccion}.\n\n⚖️ *Saldo restante a abonar:* {saldo}\n📍 *Dirección:* {direccion}, {ciudad}\n⏱️ *Horarios:* Lun a Sáb 9:30 a 19:30 hs\n🔍 *Ficha de retiro y saldo:* {link_seguimiento}\n\n¡Te esperamos para entregártelo probado y con su garantía escrita!';
+          '¡Hola {cliente}! 🎉 Te informamos desde *{local}* que tu equipo *{equipo}* (Orden *{orden}*) ya está *REPARADO* y listo para retirar en nuestro local de {direccion}.\n\n⚖️ *Saldo restante a abonar:* {saldo}\n📍 *Dirección:* {direccion}, {ciudad}\n⏱️ *Horarios:* {horarios}\n🔍 *Ficha de retiro y saldo:* {link_seguimiento}\n\n¡Te esperamos para entregártelo probado y con su garantía escrita!';
         break;
 
       case 'waiting_auth':
@@ -635,7 +637,7 @@ export default function RepairOrdersManager({ onSelectOrder, onNewOrder, onClose
 
       case 'no_repair':
         rawTemplate = templates.orderNoRepair || 
-          '¡Hola {cliente}! Te contactamos de *{local}* respecto a tu equipo *{equipo}* (Orden *{orden}*).\n\nTe informamos que el equipo ya está disponible para retirar en nuestro local de {direccion}.\n📋 *Informe:* {informe_tecnico}\n📍 *Retiro:* {direccion}, {ciudad} (Lun a Sáb 9:30 a 19:30 hs).\n🔍 *Ficha de orden:* {link_seguimiento}';
+          '¡Hola {cliente}! Te contactamos de *{local}* respecto a tu equipo *{equipo}* (Orden *{orden}*).\n\nTe informamos que el equipo ya está disponible para retirar en nuestro local de {direccion}.\n📋 *Informe:* {informe_tecnico}\n📍 *Retiro:* {direccion}, {ciudad} ({horarios}).\n🔍 *Ficha de orden:* {link_seguimiento}';
         break;
 
       case 'delivered':

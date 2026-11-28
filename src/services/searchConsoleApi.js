@@ -3,6 +3,8 @@
  * montec.ar • SEO & Rendimiento Orgánico
  */
 
+import { getAuthToken } from './api';
+
 const getApiBaseUrl = () => {
   let url = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').trim();
   if (url.endsWith('/')) {
@@ -26,10 +28,12 @@ export const searchConsoleApi = {
     const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
     try {
+      const token = getAuthToken();
       const response = await fetch(`${baseUrl}/seo/performance?days=${days}`, {
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         signal: controller.signal
       });
@@ -54,7 +58,10 @@ export const searchConsoleApi = {
   async getVerifiedSites() {
     const baseUrl = getApiBaseUrl();
     try {
-      const response = await fetch(`${baseUrl}/seo/sites`);
+      const token = getAuthToken();
+      const response = await fetch(`${baseUrl}/seo/sites`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       return await response.json();
     } catch (e) {
       return { success: false, sites: [] };

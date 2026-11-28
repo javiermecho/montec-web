@@ -685,12 +685,12 @@ export default function OrderStatusPage({ onNavigateHome }) {
                   
                   <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-xs space-y-1 mt-2">
                     <div className="flex justify-between">
-                      <span className="text-zinc-400">Lunes a Viernes:</span>
-                      <strong className="text-white">9:30 a 19:00 hs</strong>
+                      <span className="text-zinc-400">{businessConfig?.hours?.weekdaysLabel || 'Lunes a Viernes'}:</span>
+                      <strong className="text-white">{businessConfig?.hours?.weekdaysTime || '09:30 a 19:00 hs'}</strong>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-zinc-400">Sábados:</span>
-                      <strong className="text-white">10:00 a 14:00 hs</strong>
+                      <span className="text-zinc-400">{businessConfig?.hours?.saturdayLabel || 'Sábados'}:</span>
+                      <strong className="text-white">{businessConfig?.hours?.saturdayTime || '10:00 a 14:00 hs'}</strong>
                     </div>
                   </div>
                 </div>

@@ -3,6 +3,8 @@
  * montec.ar • Taller Especializado & Marketing
  */
 
+import { getAuthToken } from './api';
+
 const getApiBaseUrl = () => {
   let url = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').trim();
   if (url.endsWith('/')) {
@@ -23,9 +25,11 @@ async function adsRequest(endpoint, options = {}) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
+  const token = getAuthToken();
   const defaultHeaders = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
   };
 
   const config = {

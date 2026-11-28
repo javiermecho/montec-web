@@ -203,11 +203,14 @@ export default function DiagnosticChatbot() {
     trackEvent('chatbot_quick_chip', { action });
 
     if (action === 'location') {
+      const addr = businessConfig?.business?.address || 'Montes Carballo 943';
+      const city = businessConfig?.business?.city || 'Mar del Plata';
+      const hours = businessConfig?.hours?.summaryShort || 'Lun a Vie 09:30 a 19:00 | Sáb 10:00 a 14:00';
       addUserMessage('📍 Horarios y Ubicación');
       addBotMessage(
         '📍 **Horarios y Ubicación:**\n\n' +
-        '• **Dirección:** Montes Carballo 943 (a metros de ex Sobremonte), Mar del Plata.\n' +
-        '• **Horarios:** Lunes a Sábado de 9:30 a 19:30 hs.\n' +
+        `• **Dirección:** ${addr} (a metros de ex Sobremonte), ${city}.\n` +
+        `• **Horarios:** ${hours}.\n` +
         '• **Comodidad:** Estacionamiento libre en la puerta.'
       );
     } else if (action === 'trust') {

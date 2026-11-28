@@ -476,11 +476,11 @@ export default function StorePage() {
           <div className="flex flex-wrap items-center justify-center gap-6 text-zinc-400 text-xs">
             <span className="flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-[#FF5500]" />
-              Montes Carballo 943, Mar del Plata
+              {businessConfig?.business?.address || 'Montes Carballo 943'}, {businessConfig?.business?.city || 'Mar del Plata'}
             </span>
             <span className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-[#FF5500]" />
-              Lun a Vie 9:30 a 19:00 | Sáb 10:00 a 14:00
+              {businessConfig?.hours?.summaryShort || 'Lun a Vie 09:30 a 19:00 | Sáb 10:00 a 14:00'}
             </span>
             <button
               onClick={navigateToMain}

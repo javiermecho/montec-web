@@ -20,7 +20,8 @@ import {
   FileText,
   BadgeCheck,
   Server,
-  Lock
+  Lock,
+  Clock
 } from 'lucide-react';
 import { useData, DEFAULT_BUSINESS_CONFIG } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
@@ -44,8 +45,9 @@ export default function LocalSettingsTab() {
     const c = config || {};
     const b = c.business || {};
     const ct = c.contact || {};
+    const h = c.hours || {};
     const a = c.afip || {};
-    const def = DEFAULT_BUSINESS_CONFIG || { business: {}, contact: {}, afip: {} };
+    const def = DEFAULT_BUSINESS_CONFIG || { business: {}, contact: {}, hours: {}, afip: {} };
 
     return {
       business: {
@@ -68,6 +70,14 @@ export default function LocalSettingsTab() {
         contactEmail: ct.contactEmail ?? def.contact.contactEmail ?? '',
         billingEmail: ct.billingEmail ?? def.contact.billingEmail ?? '',
         website: ct.website ?? def.contact.website ?? ''
+      },
+      hours: {
+        weekdaysLabel: h.weekdaysLabel ?? def.hours?.weekdaysLabel ?? 'Lunes a Viernes',
+        weekdaysTime: h.weekdaysTime ?? def.hours?.weekdaysTime ?? '09:30 a 19:00 hs',
+        saturdayLabel: h.saturdayLabel ?? def.hours?.saturdayLabel ?? 'Sábados',
+        saturdayTime: h.saturdayTime ?? def.hours?.saturdayTime ?? '10:00 a 14:00 hs',
+        holidaysText: h.holidaysText ?? def.hours?.holidaysText ?? 'Domingos y Feriados: Guardia WhatsApp',
+        summaryShort: h.summaryShort ?? def.hours?.summaryShort ?? 'Lun a Vie 09:30 a 19:00 | Sáb 10:00 a 14:00'
       },
       afip: {
         status: a.status ?? def.afip.status ?? 'inactive',
@@ -129,6 +139,13 @@ export default function LocalSettingsTab() {
     setFormData(prev => ({
       ...prev,
       contact: { ...(prev?.contact || {}), [field]: value }
+    }));
+  };
+
+  const handleHoursChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      hours: { ...(prev?.hours || {}), [field]: value }
     }));
   };
 
@@ -557,6 +574,95 @@ export default function LocalSettingsTab() {
           <div className="mt-5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
             <span>Al presionar "Enviar por WhatsApp", el mensaje incluirá este canal oficial verificado.</span>
+          </div>
+        </div>
+
+        {/* ============================================================== */}
+        {/* CARD 2.5: HORARIOS DE ATENCIÓN AL PÚBLICO                       */}
+        {/* ============================================================== */}
+        <div className={`lg:col-span-2 p-5 sm:p-6 rounded-2xl border ${
+          isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#121217] border-zinc-800/90'
+        }`}>
+          <div className="flex items-center gap-2.5 pb-4 mb-4 border-b border-zinc-800/60">
+            <Clock className="w-5 h-5 text-[#FF5500]" />
+            <div>
+              <h3 className={`font-heading font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                3. Horarios de Atención al Público
+              </h3>
+              <p className="text-[11px] text-zinc-500">
+                Se reflejan automáticamente en la web principal, tienda, seguimiento de órdenes y mensajes de WhatsApp.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs sm:text-sm">
+            <div>
+              <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                Lunes a Viernes
+              </label>
+              <input
+                type="text"
+                value={formData?.hours?.weekdaysTime || ''}
+                onChange={(e) => handleHoursChange('weekdaysTime', e.target.value)}
+                placeholder="09:30 a 19:00 hs"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-[#FF5500]'
+                    : 'bg-zinc-900/90 border-zinc-700 text-white focus:border-[#FF5500]'
+                }`}
+              />
+            </div>
+
+            <div>
+              <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                Sábados
+              </label>
+              <input
+                type="text"
+                value={formData?.hours?.saturdayTime || ''}
+                onChange={(e) => handleHoursChange('saturdayTime', e.target.value)}
+                placeholder="10:00 a 14:00 hs"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-[#FF5500]'
+                    : 'bg-zinc-900/90 border-zinc-700 text-white focus:border-[#FF5500]'
+                }`}
+              />
+            </div>
+
+            <div>
+              <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                Domingos y Feriados
+              </label>
+              <input
+                type="text"
+                value={formData?.hours?.holidaysText || ''}
+                onChange={(e) => handleHoursChange('holidaysText', e.target.value)}
+                placeholder="Domingos y Feriados: Guardia WhatsApp"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-[#FF5500]'
+                    : 'bg-zinc-900/90 border-zinc-700 text-white focus:border-[#FF5500]'
+                }`}
+              />
+            </div>
+
+            <div>
+              <label className={`block mb-1.5 font-semibold ${isLight ? 'text-slate-700' : 'text-zinc-300'}`}>
+                Resumen Corto (WhatsApp / Footer)
+              </label>
+              <input
+                type="text"
+                value={formData?.hours?.summaryShort || ''}
+                onChange={(e) => handleHoursChange('summaryShort', e.target.value)}
+                placeholder="Lun a Vie 09:30 a 19:00 | Sáb 10:00 a 14:00"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-[#FF5500]'
+                    : 'bg-zinc-900/90 border-zinc-700 text-white focus:border-[#FF5500]'
+                }`}
+              />
+            </div>
           </div>
         </div>
 

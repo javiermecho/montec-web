@@ -64,6 +64,14 @@ export const DEFAULT_BUSINESS_CONFIG = {
     billingEmail: 'facturacion@montec.ar',
     website: 'https://montec.ar'
   },
+  hours: {
+    weekdaysLabel: 'Lunes a Viernes',
+    weekdaysTime: '09:30 a 19:00 hs',
+    saturdayLabel: 'Sábados',
+    saturdayTime: '10:00 a 14:00 hs',
+    holidaysText: 'Domingos y Feriados: Guardia WhatsApp',
+    summaryShort: 'Lun a Vie 09:30 a 19:00 | Sáb 10:00 a 14:00'
+  },
   afip: {
     status: 'active', // 'active' | 'inactive' | 'pending'
     certificateExpiration: '5/1/2028',
@@ -78,11 +86,11 @@ export const DEFAULT_BUSINESS_CONFIG = {
   whatsappTemplates: {
     quotationWeb: '¡Hola {local}! Estuve cotizando en la web la reparación de mi {equipo} ({falla}):\n\n📱 *Equipo:* {equipo}\n🛠️ *Falla:* {falla}{detalles_repuesto}\n💰 *Presupuesto estimativo web:* {precio}\n⏱️ *Tiempo estimado de trabajo:* {tiempo}\n🛡️ *Garantía:* {garantia}\n\nQuisiera consultar disponibilidad o coordinar un turno para llevarlo al local de {direccion}.',
     orderReceived: '¡Hola {cliente}! 👋 Te contactamos de *{local}*.\n\n📋 *ORDEN DE REPARACIÓN:* {orden}\n📱 *Equipo:* {equipo}\n🛠️ *Trabajo a realizar:* {falla}\n💰 *Total Acordado:* {total}\n💵 *Seña Recibida:* {sena}\n⚖️ *Saldo al Retirar:* {saldo}\n⏱️ *Plazo estimado:* {fecha_entrega}\n📍 *Taller:* {direccion}, {ciudad}\n🛡️ *Garantía:* {garantia}\n\n🔍 *Seguí el estado de tu reparación en vivo desde acá:*\n{link_seguimiento}\n\nTe avisaremos por este medio cuando tu equipo esté en mesa de trabajo o listo para retirar. ¡Gracias por confiar en {local}!',
-    orderReady: '¡Hola {cliente}! 🎉 Te informamos desde *{local}* que tu equipo *{equipo}* (Orden *{orden}*) ya está *REPARADO* y listo para retirar en nuestro local de {direccion}.\n\n⚖️ *Saldo restante a abonar:* {saldo}\n📍 *Dirección:* {direccion}, {ciudad}\n⏱️ *Horarios:* Lun a Sáb 9:30 a 19:30 hs\n🔍 *Ficha de seguimiento y saldo:* {link_seguimiento}\n\n¡Te esperamos para entregártelo probado y con su garantía escrita!',
+    orderReady: '¡Hola {cliente}! 🎉 Te informamos desde *{local}* que tu equipo *{equipo}* (Orden *{orden}*) ya está *REPARADO* y listo para retirar en nuestro local de {direccion}.\n\n⚖️ *Saldo restante a abonar:* {saldo}\n📍 *Dirección:* {direccion}, {ciudad}\n⏱️ *Horarios:* {horarios}\n🔍 *Ficha de seguimiento y saldo:* {link_seguimiento}\n\n¡Te esperamos para entregártelo probado y con su garantía escrita!',
     orderWaitingAuth: '¡Hola {cliente}! 👋 Te contactamos de *{local}* por tu equipo *{equipo}* (Orden *{orden}*).\n\n🔬 *Diagnóstico técnico realizado:* {informe_tecnico}\n💰 *Presupuesto total estimado:* {total}\n🔍 *Ficha de la orden:* {link_seguimiento}\n\n¿Nos confirmás si estás de acuerdo para comenzar la reparación?',
     orderWaitingPart: '¡Hola {cliente}! Te avisamos desde *{local}* que tu equipo *{equipo}* (Orden *{orden}*) se encuentra a la espera del ingreso del repuesto correspondiente desde el distribuidor para continuar con la reparación.\n\n🔍 *Seguí el estado en vivo:* {link_seguimiento}\n\nApenas ingrese la pieza a mesa de trabajo te mantendremos informado. ¡Muchas gracias por tu paciencia!',
     orderInProgress: '¡Hola {cliente}! Te avisamos de *{local}* que tu equipo *{equipo}* (Orden *{orden}*) ha ingresado a *mesa de trabajo* y nuestro técnico ya está trabajando en su reparación.\n\n🔍 *Seguimiento en vivo:* {link_seguimiento}\n\nTe notificaremos apenas esté listo.',
-    orderNoRepair: '¡Hola {cliente}! Te contactamos de *{local}* respecto a tu equipo *{equipo}* (Orden *{orden}*).\n\nTe informamos que el equipo ya está disponible para retirar en nuestro local de {direccion}.\n📋 *Informe:* {informe_tecnico}\n📍 *Retiro:* {direccion}, {ciudad} (Lun a Sáb 9:30 a 19:30 hs).\n🔍 *Ficha de orden:* {link_seguimiento}',
+    orderNoRepair: '¡Hola {cliente}! Te contactamos de *{local}* respecto a tu equipo *{equipo}* (Orden *{orden}*).\n\nTe informamos que el equipo ya está disponible para retirar en nuestro local de {direccion}.\n📋 *Informe:* {informe_tecnico}\n📍 *Retiro:* {direccion}, {ciudad} ({horarios}).\n🔍 *Ficha de orden:* {link_seguimiento}',
     orderDelivered: '¡Hola {cliente}! Te agradecemos por confiar en *{local}* para la reparación de tu *{equipo}* (Orden *{orden}*).\n\n🛡️ *Garantía escrita activa:* {garantia}.\n🔍 *Ficha y comprobante digital:* {link_seguimiento}\n\nCualquier consulta estamos a tu entera disposición. ¡Que disfrutes tu equipo!'
   }
 };
@@ -771,6 +779,7 @@ export function DataProvider({ children }) {
         return {
           business: { ...DEFAULT_BUSINESS_CONFIG.business, ...(parsed.business || {}) },
           contact: { ...DEFAULT_BUSINESS_CONFIG.contact, ...(parsed.contact || {}) },
+          hours: { ...DEFAULT_BUSINESS_CONFIG.hours, ...(parsed.hours || {}) },
           afip: { ...DEFAULT_BUSINESS_CONFIG.afip, ...(parsed.afip || {}) },
           whatsappTemplates: { ...DEFAULT_BUSINESS_CONFIG.whatsappTemplates, ...(parsed.whatsappTemplates || {}) }
         };
@@ -792,6 +801,10 @@ export function DataProvider({ children }) {
         contact: {
           ...(base.contact || DEFAULT_BUSINESS_CONFIG.contact),
           ...(newConfig?.contact || {})
+        },
+        hours: {
+          ...(base.hours || DEFAULT_BUSINESS_CONFIG.hours),
+          ...(newConfig?.hours || {})
         },
         afip: {
           ...(base.afip || DEFAULT_BUSINESS_CONFIG.afip),
